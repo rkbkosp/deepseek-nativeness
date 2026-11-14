@@ -72,6 +72,9 @@ func (a *app) copySessionMarkdown() {
 		if err == nil && (json.Unmarshal(raw, &receipt) != nil || !receipt.Registered || receipt.OwnerID != p.Owner) {
 			err = errors.New("invalid export owner receipt")
 		}
+		if err != nil {
+			releaseRemoteOwner(p.Client, p.Owner)
+		}
 		a.update(func() {
 			if !a.markdownCopyCurrent(p) {
 				p.Cancel()
@@ -98,6 +101,9 @@ func (a *app) finishSessionMarkdownCopy(p *sessionMarkdownCopy, notice string) {
 }
 func (a *app) readSessionMarkdownCopy(p *sessionMarkdownCopy) {
 	go func() {
+		// The completed/failed read no longer needs a helper owner even if its
+		// UI completion is queued. Keep the clipboard intent alive until that gate.
+		defer releaseRemoteOwner(p.Client, p.Owner)
 		ctx, stop := context.WithTimeout(p.Context, 45*time.Second)
 		defer stop()
 		raw, err := p.Client.Call(ctx, "exportSessionMarkdown", map[string]any{"sessionId": p.Session, "clientScope": map[string]any{"hostId": p.Host, "generation": p.Generation, "sessionId": p.Session, "ownerId": p.Owner}})

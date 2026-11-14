@@ -244,3 +244,23 @@ func TestFullMarkdownUnavailableCapabilityCannotReachClipboardOrHelper(t *testin
 		t.Fatal("unavailable action performed a read or clipboard write")
 	}
 }
+
+func TestFullMarkdownCompletedReadReleasesOwnerBeforeQueuedUIClipboard(t *testing.T) {
+	f := newMarkdownCopyFixture(t)
+	f.a.copySessionMarkdown()
+	f.update(t)
+	var completion func()
+	select {
+	case completion = <-f.updates:
+	case <-f.ctx.Done():
+		t.Fatal(f.ctx.Err())
+	}
+	f.ownersRetired(t)
+	if len(f.writes) != 0 {
+		t.Fatal("queued UI completion already wrote clipboard")
+	}
+	completion()
+	if len(f.writes) != 1 {
+		t.Fatal("releasing the completed read owner canceled a still-current clipboard intent")
+	}
+}
