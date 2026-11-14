@@ -335,8 +335,8 @@
     },
     {
       "endpoint": "sessionReferenceResolver/candidates",
-      "frontend": null,
-      "status": "allowed-not-yet-wired"
+      "frontend": "listSessionReferences",
+      "status": "wired"
     },
     {
       "endpoint": "settings/describe",
@@ -504,6 +504,17 @@
       "status": "wired"
     }
   ],
+  "composed": [
+    {
+      "frontend": "exportSessionMarkdown",
+      "status": "wired-fixture-only-ui-pending",
+      "endpoints": [
+        "session/events",
+        "remote.history.configure"
+      ],
+      "semantics": "complete fixed-cut canonical logical events through original formatSessionMarkdown; optional Host sourcePath metadata omitted; no raw ZIP"
+    }
+  ],
   "dedicated": [
     {
       "endpoint": "workspace.upload.open/chunk/commit/abort",
@@ -584,8 +595,8 @@
       "reason": "无通用静态模块/资源代理；compat只能本地pin具体组件"
     },
     {
-      "feature": "originalSessionLog/Markdown",
-      "endpoint": "GET /api/session.export,/api/session.markdown",
+      "feature": "originalRawSessionLogDownload",
+      "endpoint": "GET /api/session.export",
       "status": "blocked-frozen-remote",
       "reason": "仅commands/export返回请求，实际资源GET不在Remote carrier"
     },
@@ -615,10 +626,12 @@
       "original Shell/Subagent/AgentLoop/WebSearch cards and revision-fenced staged controllers",
       "original Trajectory assembler/definitions/snapshot/Timeline/Table/View with ephemeral passive follow",
       "original TerminalView/Inventory/WindowHold/RemoteStream and xterm renderer with bounded sequential input",
-      "original ModelSelect embedded composer popover with exact source transform"
+      "original ModelSelect embedded composer popover with exact source transform",
+      "original ModelsSection, AgentPresetSection and TaskManagerPage with owner-scoped adapters",
+      "original PluginsSettingsSection and PluginInventorySettingsTab in settings content"
     ],
     "missing": [
-      "other low-frequency settings pages pending next slices",
+      "unported third-party settings and resources",
       "arbitrary third-party slot modules",
       "relative bundle detail images",
       "plugin install/remove"

@@ -6,11 +6,13 @@ const root = dirname(fileURLToPath(import.meta.url));
 const reference = resolve(root, "../remote_reference");
 const output = resolve(
   root,
-  process.argv.includes("--out-perf-next")
-    ? "dist-perf-next"
-    : process.argv.includes("--out-next")
-      ? "dist-next"
-      : "dist",
+  process.argv.includes("--out-export-next")
+    ? "dist-export-next"
+    : process.argv.includes("--out-perf-next")
+      ? "dist-perf-next"
+      : process.argv.includes("--out-next")
+        ? "dist-next"
+        : "dist",
 );
 const { mkdir } = await import("node:fs/promises");
 await mkdir(output, { recursive: true });

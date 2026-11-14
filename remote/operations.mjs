@@ -52,9 +52,24 @@ export const OPERATIONS = {
     "session/rename",
     request(["sessionId", "title"], ["sessionId", "title"]),
   ),
-  forkSession: w(
-    "session/fork",
-    request(["sessionId", "atSeq", "allowMigration"], ["sessionId"]),
+  forkSession: w("session/fork", (p) => {
+    needed(p, "sessionId");
+    if (
+      p.atSeq !== undefined &&
+      (!Number.isSafeInteger(p.atSeq) || p.atSeq < 0)
+    )
+      throw Object.assign(Error("atSeq必须是非负安全整数"), {
+        code: "INVALID_ARGUMENT",
+      });
+    if (p.allowMigration !== undefined && typeof p.allowMigration !== "boolean")
+      throw Object.assign(Error("allowMigration必须是boolean"), {
+        code: "INVALID_ARGUMENT",
+      });
+    return { request: take(p, ["sessionId", "atSeq", "allowMigration"]) };
+  }),
+  readSessionEvents: r(
+    "session/events",
+    request(["address", "throughSeq", "beforeSeq", "maxMessages"], ["address"]),
   ),
   updateQueue: w(
     "session/updateQueue",
@@ -266,20 +281,8 @@ export const OPERATIONS = {
     "messageFeedback/list",
     request(["sessionId"], ["sessionId"]),
   ),
-  putFeedback: w(
-    "messageFeedback/put",
-    request(
-      ["sessionId", "messageId", "rating", "note", "category", "ifVersion"],
-      ["sessionId", "messageId", "rating"],
-    ),
-  ),
-  deleteFeedback: w(
-    "messageFeedback/delete",
-    request(
-      ["sessionId", "messageId", "ifVersion"],
-      ["sessionId", "messageId", "ifVersion"],
-    ),
-  ),
+  putFeedback: w("messageFeedback/put", (p) => feedbackArgs(p, false)),
+  deleteFeedback: w("messageFeedback/delete", (p) => feedbackArgs(p, true)),
   scheduleCatalog: r("schedule/catalog"),
   scheduleDeliveryLimits: r("schedule/deliveryLimits"),
   listSchedules: r("schedule/list", request(["active", "limit", "offset"])),
@@ -401,4 +404,49 @@ export function operationArgs(method, params) {
       code: "REMOTE_PLUGIN_FROZEN",
     });
   return operation.args(params);
+}
+
+function feedbackArgs(p, deleting) {
+  needed(p, "sessionId");
+  needed(p, "messageId");
+  if (
+    !(typeof p.ifVersion === "string" && p.ifVersion.trim()) &&
+    (deleting || p.ifVersion !== null)
+  )
+    throw Object.assign(Error("ifVersion必须是已观察版本；新反馈显式传null"), {
+      code: "INVALID_ARGUMENT",
+    });
+  if (!deleting) {
+    if (!["positive", "negative"].includes(p.rating))
+      throw Object.assign(Error("rating必须是positive或negative"), {
+        code: "INVALID_ARGUMENT",
+      });
+    if (p.note !== undefined && (typeof p.note !== "string" || !p.note.trim()))
+      throw Object.assign(Error("note必须是非空文本或省略"), {
+        code: "INVALID_ARGUMENT",
+      });
+    if (
+      p.category !== undefined &&
+      ![
+        "task-result",
+        "instruction-following",
+        "product-interaction",
+        "service-stability",
+        "resource-cost",
+        "security-privacy-permission",
+        "other",
+      ].includes(p.category)
+    )
+      throw Object.assign(Error("未知feedback category"), {
+        code: "INVALID_ARGUMENT",
+      });
+  }
+  return {
+    request: take(
+      p,
+      deleting
+        ? ["sessionId", "messageId", "ifVersion"]
+        : ["sessionId", "messageId", "rating", "note", "category", "ifVersion"],
+    ),
+  };
 }

@@ -18,6 +18,7 @@ import { PresentationPublisher } from "./updates.mjs";
 import { OPERATIONS, operationArgs } from "./operations.mjs";
 import { promptContent } from "./prompt-content.mjs";
 import { MAX_REQUEST_BYTES } from "./framing.mjs";
+import { collectSessionMarkdown } from "./session-markdown.mjs";
 const fail = (code, message) => {
   throw Object.assign(new Error(message), { code, delivery: "rejected" });
 };
@@ -292,6 +293,8 @@ export class RemoteAdapter {
         return this.capabilities(p);
       case "exportLoadedHistory":
         return this.exportLoadedHistory();
+      case "exportSessionMarkdown":
+        return this.exportSessionMarkdown(p);
       case "status":
         return this.status();
       case "configure":
@@ -932,6 +935,48 @@ export class RemoteAdapter {
       }
       return Promise.resolve(response).then(
         (result) => {
+          if (
+            !result.ok &&
+            endpoint === "session/fork" &&
+            result.error.code === "session/workspace-attach-failed" &&
+            !(
+              typeof result.error.details?.sessionId === "string" &&
+              result.error.details.sessionId.length > 0
+            )
+          )
+            return {
+              status: "unknown",
+              requestId: key,
+              hostId: captured.hostId,
+              connectionGeneration: captured.generation,
+              detail:
+                "Host报告创建后归组失败但未给出子会话标识；请核对状态，不要重试。",
+              error: { code: result.error.code },
+            };
+          if (
+            !result.ok &&
+            endpoint === "session/fork" &&
+            result.error.code === "session/workspace-attach-failed" &&
+            typeof result.error.details?.sessionId === "string" &&
+            result.error.details.sessionId.length > 0
+          )
+            return {
+              status: "partial",
+              requestId: key,
+              hostId: captured.hostId,
+              connectionGeneration: captured.generation,
+              value: {
+                sessionId: result.error.details.sessionId,
+                ...(typeof result.error.details.workspaceId === "string"
+                  ? { workspaceId: result.error.details.workspaceId }
+                  : {}),
+              },
+              error: {
+                code: result.error.code,
+                message:
+                  "会话已创建，但未能加入工作区；请刷新核对，不要再次分叉。",
+              },
+            };
           if (!result.ok)
             throw Object.assign(new Error(result.error.message), {
               code: result.error.code,
@@ -1409,6 +1454,18 @@ export class RemoteAdapter {
           : {}),
       };
     }
+    operations.exportSessionMarkdown =
+      operations.readSessionEvents === true &&
+      metadata.capabilities?.includes("remote.history.compact.v1") === true;
+    details.exportSessionMarkdown = {
+      endpoint: "session/events",
+      mode: "read",
+      available: operations.exportSessionMarkdown,
+      source: "original-formatter+fixed-cut-full-history",
+      ...(!operations.exportSessionMarkdown
+        ? { reason: "Host未授权完整事件读取或未提供未压缩历史协商" }
+        : {}),
+    };
     return {
       operations,
       details,
@@ -1429,6 +1486,37 @@ export class RemoteAdapter {
         "workspaceFileSearch",
       ],
     };
+  }
+  async exportSessionMarkdown(p) {
+    this.validateScope(p);
+    const sessionId = requireString(p.sessionId, "sessionId");
+    const scope = p.clientScope ? { ...p.clientScope } : undefined;
+    const owner = this.owners.get(scope?.ownerId);
+    if (!owner || scope.sessionId !== sessionId)
+      fail("OWNER_REQUIRED", "完整Markdown读取必须绑定当前会话的临时窗口。");
+    const captured = {
+      hostId: this.hostId,
+      generation: this.connectionGeneration,
+      gateway: this.gatewayRequired(),
+      ownerId: scope.ownerId,
+      ownerTicket: owner,
+    };
+    const client = this.connected?.client;
+    if (!client) fail("NOT_CONNECTED", "尚未连接远程主机。");
+    const signal = AbortSignal.any([this.lifetime.signal, owner.abort.signal]);
+    return collectSessionMarkdown({
+      sessionId,
+      gateway: captured.gateway,
+      client,
+      signal,
+      assertCurrent: () => {
+        this.assertCaptured(
+          captured,
+          "读取对应的主机或窗口已经关闭，Markdown结果已丢弃。",
+        );
+        this.validateScope({ clientScope: scope });
+      },
+    });
   }
   exportLoadedHistory() {
     if (!this.projection) fail("NO_SESSION", "请先打开会话。");

@@ -275,7 +275,17 @@ export class FixtureAdapter extends RemoteAdapter {
     await this.disconnect();
     this.hostId = HOST;
     this.connected = {
-      client: { getStats: () => ({ mode: "Fixture" }), close: async () => {} },
+      client: {
+        getStats: () => ({ mode: "Fixture" }),
+        close: async () => {},
+        rpc: async (method, args) => {
+          if (method === "remote.history.configure" && args.compact === false)
+            return { compact: false };
+          if (method === "harness.transport.describe")
+            return { capabilities: ["remote.history.compact.v1"] };
+          throw Error("Unknown fixture client RPC");
+        },
+      },
     };
     this.interactionReady = true;
     this.gateway = {
@@ -335,6 +345,38 @@ export class FixtureAdapter extends RemoteAdapter {
               },
             ],
           };
+        if (namespace === "session" && method === "events") {
+          if (
+            args.request?.address?.kind !== "session" ||
+            args.request.address.sessionId !== SESSION
+          )
+            throw Error("Wrong fixture export session");
+          const records = [
+            {
+              type: "event",
+              event: {
+                seq: 0,
+                type: "session/title",
+                data: { title: "完整Markdown协议夹具" },
+              },
+            },
+            ...history().records.map((row) => ({
+              type: "event",
+              event: {
+                ...row.event,
+                data:
+                  row.event.type === "user/message"
+                    ? {
+                        ...row.event.data,
+                        id: "fixture-user-id",
+                        source: { kind: "user" },
+                      }
+                    : row.event.data,
+              },
+            })),
+          ];
+          return { cursor: 2, hasMore: false, records };
+        }
         if (namespace === "session" && method === "page")
           return { records: history().records, hasMore: false };
         throw Object.assign(new Error("Unknown fixture unary endpoint"), {
@@ -342,6 +384,10 @@ export class FixtureAdapter extends RemoteAdapter {
         });
       },
       open: async function* (endpoint, payload, signal) {
+        if (endpoint === "remoteAccess/follow") {
+          yield { owner: true, grants: [] };
+          return;
+        }
         if (endpoint === "workspace/follow") {
           yield {
             type: "baseline",
