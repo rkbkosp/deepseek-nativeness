@@ -3,9 +3,12 @@ import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 const root = dirname(fileURLToPath(import.meta.url));
 const reference = resolve(root, "../remote_reference");
-const output=resolve(root,process.argv.includes("--out-next")?"dist-next":"dist");
-const {mkdir}=await import("node:fs/promises");
-await mkdir(output,{recursive:true});
+const output = resolve(
+  root,
+  process.argv.includes("--out-next") ? "dist-next" : "dist",
+);
+const { mkdir } = await import("node:fs/promises");
+await mkdir(output, { recursive: true });
 await build({
   entryPoints: [resolve(root, "src/upstream.ts")],
   outfile: resolve(output, "upstream.mjs"),
@@ -53,6 +56,15 @@ await build({
   platform: "node",
   target: "node24",
   external: ["@roamhq/wrtc", "werift"],
-  plugins:[{name:"selected-upstream-output",setup(b){b.onResolve({filter:/[\/]dist[\/]upstream\.mjs$/},()=>({path:resolve(output,"upstream.mjs")}));}}],
+  plugins: [
+    {
+      name: "selected-upstream-output",
+      setup(b) {
+        b.onResolve({ filter: /[\/]dist[\/]upstream\.mjs$/ }, () => ({
+          path: resolve(output, "upstream.mjs"),
+        }));
+      },
+    },
+  ],
   legalComments: "eof",
 });

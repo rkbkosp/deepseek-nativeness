@@ -1349,7 +1349,8 @@ export class RemoteAdapter {
     );
   }
   async consumeEvents(signal, ready) {
-    const hostId=this.hostId,connectionGeneration=this.connectionGeneration;
+    const hostId = this.hostId,
+      connectionGeneration = this.connectionGeneration;
     const stream = await this.gatewayRequired().open(
       "$events",
       { args: {} },
@@ -1382,8 +1383,12 @@ export class RemoteAdapter {
         this.emit("sessions", this.sessionRows);
         continue;
       }
-      if(frame.type==="emit"&&PAGE_INVALIDATIONS.has(frame.event)){
-        this.emit("remoteInvalidation",{event:frame.event,hostId,connectionGeneration});
+      if (frame.type === "emit" && PAGE_INVALIDATIONS.has(frame.event)) {
+        this.emit("remoteInvalidation", {
+          event: frame.event,
+          hostId,
+          connectionGeneration,
+        });
         continue;
       }
       if (frame.type !== "waterfall") continue;

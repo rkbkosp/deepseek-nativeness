@@ -1,16 +1,25 @@
 package main
 
 import (
+	"io/fs"
 	"os"
+	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 )
 
 // Cross-language boundary guard: literal requests in the actual bundled pages
 // must be allowed by Go, rather than passing JS/Node tests in isolation.
 func TestActualCompatPageRequestsAreAllowlisted(t *testing.T) {
-	expressions := []*regexp.Regexp{regexp.MustCompile(`\b(?:request|invoke|mutate|open)\(\s*"([A-Za-z][A-Za-z0-9]+)"`), regexp.MustCompile(`subscribeOwnedStream\(\s*ctx,\s*"([A-Za-z][A-Za-z0-9]+)"`)}
-	for _, file := range []string{"compat/src/main.tsx", "compat/src/trajectory.tsx", "compat/src/terminal-runtime.ts"} {
+	expressions := []*regexp.Regexp{regexp.MustCompile(`\b(?:request|invoke|mutate|open|rpc\.(?:read|mutate|mutateWithId))\(\s*["']([A-Za-z][A-Za-z0-9]+)["']`), regexp.MustCompile(`subscribeOwnedStream\(\s*ctx,\s*["']([A-Za-z][A-Za-z0-9]+)["']`)}
+	err := filepath.WalkDir("compat/src", func(file string, entry fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if entry.IsDir() || (!strings.HasSuffix(file, ".ts") && !strings.HasSuffix(file, ".tsx")) {
+			return nil
+		}
 		data, err := os.ReadFile(file)
 		if err != nil {
 			t.Fatal(err)
@@ -23,5 +32,9 @@ func TestActualCompatPageRequestsAreAllowlisted(t *testing.T) {
 				}
 			}
 		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 }

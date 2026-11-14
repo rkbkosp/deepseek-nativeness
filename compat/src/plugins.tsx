@@ -1,4 +1,3 @@
-
 import { AgentLoopCard } from "../../../deepseek-harness/packages/client/ui-settings-agent-loop/src/client/AgentLoopCard.tsx";
 import {
   AgentLoopCardController,
@@ -21,7 +20,13 @@ import {
   WEB_SEARCH_NS,
 } from "../../../deepseek-harness/packages/client/ui-settings-web-search/src/client/web-search-card-controller.ts";
 import { zh as webZh } from "../../../deepseek-harness/packages/client/ui-settings-web-search/src/client/locales.ts";
-import React,{useEffect,useMemo,useRef,useState,useSyncExternalStore} from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { PluginManagerPage } from "../../../deepseek-harness/packages/client/ui-plugin-manager/src/client/PluginManagerPage.tsx";
 import {
   packageView,
@@ -36,8 +41,8 @@ import {
   PWSH_NS,
 } from "../../../deepseek-harness/packages/client/ui-settings-shell/src/client/shell-card-controller.ts";
 import { zh as shellZh } from "../../../deepseek-harness/packages/client/ui-settings-shell/src/client/locales.ts";
-import {request,store,operationId} from "./bridge";
-import {translate,resolveText,hook} from "./presentation";
+import { request, store, operationId } from "./bridge";
+import { translate, resolveText, hook } from "./presentation";
 function webSearchHook(source: any) {
   return function useWebSearchCard(selector: (s: any) => any) {
     const state = useSyncExternalStore(source.subscribe, source.getSnapshot);

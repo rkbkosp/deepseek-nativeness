@@ -4,6 +4,9 @@
 **/node_modules/
 /remote/dist/
 /compat/dist/
+/compat/dist-next/
+/remote/dist-next/
+/compat/.test-build/
 /qa/captures/
 *.png
 *.jpg
@@ -20,4 +23,5 @@
 *credentials*
 
 /remote/installed_reference/
+/remote/checkpoints/
 .DS_Store

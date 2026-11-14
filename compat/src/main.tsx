@@ -1,21 +1,26 @@
 import "../../../deepseek-harness/packages/client/web/src/base.css";
 import "../../../deepseek-harness/packages/client/ui-theme/src/client/styles.ts";
 import "./shell.css";
-import React,{useEffect,useState} from "react";
-import {createRoot} from "react-dom/client";
-import {installIconSprite} from "../../../deepseek-harness/packages/client/ui-theme/src/client/icon-sprite.ts";
-import {context} from "./bridge";
-import {no} from "./presentation";
-import {loadRoute} from "./route-loader";
+import React, { useEffect, useState } from "react";
+import { createRoot } from "react-dom/client";
+import { installIconSprite } from "../../../deepseek-harness/packages/client/ui-theme/src/client/icon-sprite.ts";
+import { context } from "./bridge";
+import { no } from "./presentation";
+import { loadRoute } from "./route-loader";
 function App() {
-  const [Page, setPage] = useState<React.ComponentType<{ctx:any}> | null>(null);
+  const [Page, setPage] = useState<React.ComponentType<{ ctx: any }> | null>(
+    null,
+  );
   const [ctx, setContext] = useState<any>(),
     [error, setError] = useState("");
   useEffect(() => {
     let disposed = false;
     const page = new URLSearchParams(location.search).get("page") ?? "plugins";
-    document.body.toggleAttribute("data-native-model-menu",page === "model-menu");
-    Promise.all([context(),loadRoute(page)])
+    document.body.toggleAttribute(
+      "data-native-model-menu",
+      page === "model-menu",
+    );
+    Promise.all([context(), loadRoute(page)])
       .then(([c, Component]) => {
         if (disposed) return;
         setContext(c);
@@ -56,7 +61,10 @@ function App() {
           `${c.fontSize ?? 14}px`,
         );
       })
-      .catch((e) => {setError(e.message);fatal();});
+      .catch((e) => {
+        setError(e.message);
+        fatal();
+      });
     const cleanup: Array<() => void> = [];
     installIconSprite(
       {
@@ -85,7 +93,7 @@ function App() {
         正在连接原生客户端…
       </p>
     );
-  return Page ? <Page ctx={ctx}/> : null;
+  return Page ? <Page ctx={ctx} /> : null;
 }
 const fatal = () => {
   void window.mygo

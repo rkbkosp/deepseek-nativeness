@@ -6,10 +6,11 @@ const root = dirname(fileURLToPath(import.meta.url));
 if (!process.argv[2])
   throw Error("Usage: node remote/package-runtime.mjs <destination>");
 const destination = resolve(process.argv[2]);
+const buildDirectory=process.argv.includes('--source-next')?'dist-next':'dist';
 if (destination === root || root.startsWith(destination + "/"))
   throw Error("Choose a separate staging destination.");
 await mkdir(destination, { recursive: true });
-await cp(join(root, "dist/bridge.bundle.mjs"), join(destination, "bridge.mjs"));
+await cp(join(root, buildDirectory,"bridge.bundle.mjs"), join(destination, "bridge.mjs"));
 const lock = JSON.parse(
   await readFile(join(root, "package-lock.json"), "utf8"),
 );
@@ -29,7 +30,7 @@ for (const [path, metadata] of Object.entries(lock.packages)) {
 }
 await cp(join(root, "UPSTREAM-LICENSE"), join(destination, "UPSTREAM-LICENSE"));
 await cp(join(root, "DSH-LICENSE"), join(destination, "DSH-LICENSE"));
-await cp(join(root, "dist/build-meta.json"), join(destination, "source-manifest.json"));
+await cp(join(root, buildDirectory,"build-meta.json"), join(destination, "source-manifest.json"));
 await writeFile(
   join(destination, "runtime-manifest.json"),
   JSON.stringify(

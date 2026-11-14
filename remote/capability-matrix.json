@@ -1,0 +1,629 @@
+{
+  "remoteCommit": "4670ae67cde91e1ac4c9df9d3400fb317c8eedf7",
+  "dshCommit": "39163dd30f703a79079e2d2446545cff3c453738",
+  "scope": "Source capability inventory; not runtime availability, UI parity, or live-write acceptance.",
+  "typert": [
+    {
+      "endpoint": "$events",
+      "frontend": "internal interaction channel",
+      "status": "wired"
+    },
+    {
+      "endpoint": "$events/result",
+      "frontend": "answerApproval/answerQuestions",
+      "status": "wired"
+    },
+    {
+      "endpoint": "agentPresets/list",
+      "frontend": "listAgentPresets",
+      "status": "wired"
+    },
+    {
+      "endpoint": "agentPresets/read",
+      "frontend": "readAgentPreset",
+      "status": "wired"
+    },
+    {
+      "endpoint": "agentPresets/select",
+      "frontend": "selectAgentPreset",
+      "status": "wired"
+    },
+    {
+      "endpoint": "commands/execute",
+      "frontend": "executeCommand",
+      "status": "wired"
+    },
+    {
+      "endpoint": "commands/list",
+      "frontend": "listCommands",
+      "status": "wired"
+    },
+    {
+      "endpoint": "credentials/describe",
+      "frontend": "describeCredentials",
+      "status": "wired"
+    },
+    {
+      "endpoint": "credentials/set",
+      "frontend": "setCredential",
+      "status": "wired"
+    },
+    {
+      "endpoint": "credentials/unset",
+      "frontend": "unsetCredential",
+      "status": "wired"
+    },
+    {
+      "endpoint": "directoryPicker/list",
+      "frontend": "listDirectories",
+      "status": "wired"
+    },
+    {
+      "endpoint": "fileReferences/list",
+      "frontend": "listFileReferences",
+      "status": "wired"
+    },
+    {
+      "endpoint": "goals/clear",
+      "frontend": "clearGoal",
+      "status": "wired"
+    },
+    {
+      "endpoint": "goals/complete",
+      "frontend": "completeGoal",
+      "status": "wired"
+    },
+    {
+      "endpoint": "goals/create",
+      "frontend": "createGoal",
+      "status": "wired"
+    },
+    {
+      "endpoint": "goals/edit",
+      "frontend": "editGoal",
+      "status": "wired"
+    },
+    {
+      "endpoint": "goals/pause",
+      "frontend": "pauseGoal",
+      "status": "wired"
+    },
+    {
+      "endpoint": "goals/resume",
+      "frontend": "resumeGoal",
+      "status": "wired"
+    },
+    {
+      "endpoint": "job/list",
+      "frontend": "watchJobs",
+      "status": "wired"
+    },
+    {
+      "endpoint": "job/follow",
+      "frontend": "watchJob",
+      "status": "wired"
+    },
+    {
+      "endpoint": "job/kill",
+      "frontend": "killJob",
+      "status": "wired"
+    },
+    {
+      "endpoint": "llm/discoverModels",
+      "frontend": "discoverModels",
+      "status": "wired"
+    },
+    {
+      "endpoint": "llm/listConfigurableProviders",
+      "frontend": "listConfigurableProviders",
+      "status": "wired"
+    },
+    {
+      "endpoint": "llm/listProviders",
+      "frontend": "listProviders",
+      "status": "wired"
+    },
+    {
+      "endpoint": "messageFeedback/delete",
+      "frontend": "deleteFeedback",
+      "status": "wired"
+    },
+    {
+      "endpoint": "messageFeedback/list",
+      "frontend": "listFeedback",
+      "status": "wired"
+    },
+    {
+      "endpoint": "messageFeedback/put",
+      "frontend": "putFeedback",
+      "status": "wired"
+    },
+    {
+      "endpoint": "pluginInventory/list",
+      "frontend": "pluginInventory",
+      "status": "wired"
+    },
+    {
+      "endpoint": "pluginManager/listBundles",
+      "frontend": "listBundles",
+      "status": "wired"
+    },
+    {
+      "endpoint": "pluginManager/listPlugins",
+      "frontend": "listPlugins",
+      "status": "wired"
+    },
+    {
+      "endpoint": "pluginManager/listVersions",
+      "frontend": "listPluginVersions",
+      "status": "wired"
+    },
+    {
+      "endpoint": "pluginManager/readBundleDetail",
+      "frontend": "readBundleDetail",
+      "status": "wired"
+    },
+    {
+      "endpoint": "pluginManager/setBundleEnabled",
+      "frontend": "setBundleEnabled",
+      "status": "wired"
+    },
+    {
+      "endpoint": "pluginManager/setPluginEnabled",
+      "frontend": "setPluginEnabled",
+      "status": "wired"
+    },
+    {
+      "endpoint": "pluginManager/updateBundle",
+      "frontend": "updateBundle",
+      "status": "blocked-frozen-compatibility"
+    },
+    {
+      "endpoint": "permissionPresets/catalog",
+      "frontend": "permissionCatalog",
+      "status": "wired"
+    },
+    {
+      "endpoint": "schedule/list",
+      "frontend": "listSchedules",
+      "status": "wired"
+    },
+    {
+      "endpoint": "schedule/catalog",
+      "frontend": "scheduleCatalog",
+      "status": "wired"
+    },
+    {
+      "endpoint": "schedule/history",
+      "frontend": "scheduleHistory",
+      "status": "wired"
+    },
+    {
+      "endpoint": "schedule/create",
+      "frontend": "createSchedule",
+      "status": "blocked-frozen-compatibility"
+    },
+    {
+      "endpoint": "schedule/update",
+      "frontend": null,
+      "status": "allowed-not-yet-wired"
+    },
+    {
+      "endpoint": "schedule/delete",
+      "frontend": null,
+      "status": "allowed-not-yet-wired"
+    },
+    {
+      "endpoint": "schedule/deleteInactive",
+      "frontend": "deleteInactiveSchedules",
+      "status": "wired"
+    },
+    {
+      "endpoint": "schedule/deliveryLimits",
+      "frontend": "scheduleDeliveryLimits",
+      "status": "wired"
+    },
+    {
+      "endpoint": "schedule/edit",
+      "frontend": "editSchedule",
+      "status": "wired"
+    },
+    {
+      "endpoint": "schedule/run",
+      "frontend": "runSchedule",
+      "status": "wired"
+    },
+    {
+      "endpoint": "session/attachment",
+      "frontend": "readAttachment",
+      "status": "wired"
+    },
+    {
+      "endpoint": "session/cancel",
+      "frontend": "cancel",
+      "status": "wired"
+    },
+    {
+      "endpoint": "session/canOpenWorkspacePath",
+      "frontend": "canOpenWorkspacePath",
+      "status": "wired"
+    },
+    {
+      "endpoint": "session/control",
+      "frontend": "internal Native composer projection stream",
+      "status": "wired"
+    },
+    {
+      "endpoint": "session/create",
+      "frontend": "createSession",
+      "status": "wired"
+    },
+    {
+      "endpoint": "session/follow",
+      "frontend": "watchSession",
+      "status": "wired"
+    },
+    {
+      "endpoint": "session/fork",
+      "frontend": "forkSession",
+      "status": "wired"
+    },
+    {
+      "endpoint": "session/list",
+      "frontend": "sessions",
+      "status": "wired"
+    },
+    {
+      "endpoint": "session/events",
+      "frontend": "sessionEvents",
+      "status": "wired"
+    },
+    {
+      "endpoint": "session/modelCatalog",
+      "frontend": "modelCatalog",
+      "status": "wired"
+    },
+    {
+      "endpoint": "session/page",
+      "frontend": "sessionPage",
+      "status": "wired"
+    },
+    {
+      "endpoint": "session/prompt",
+      "frontend": "sendMessage",
+      "status": "wired"
+    },
+    {
+      "endpoint": "remoteAccess/follow",
+      "frontend": null,
+      "status": "allowed-not-yet-wired"
+    },
+    {
+      "endpoint": "session/projections",
+      "frontend": "sessionProjections",
+      "status": "wired"
+    },
+    {
+      "endpoint": "session/initializeDefaultModel",
+      "frontend": "initializeDefaultModel",
+      "status": "wired"
+    },
+    {
+      "endpoint": "session/workspacePathApplications",
+      "frontend": "workspacePathApplications",
+      "status": "wired"
+    },
+    {
+      "endpoint": "session/rename",
+      "frontend": "renameSession",
+      "status": "wired"
+    },
+    {
+      "endpoint": "session/search",
+      "frontend": "searchSessions",
+      "status": "wired"
+    },
+    {
+      "endpoint": "session/selectModel",
+      "frontend": "selectModel",
+      "status": "wired"
+    },
+    {
+      "endpoint": "session/updateQueue",
+      "frontend": "updateQueue",
+      "status": "wired"
+    },
+    {
+      "endpoint": "sessionReferenceResolver/candidates",
+      "frontend": null,
+      "status": "allowed-not-yet-wired"
+    },
+    {
+      "endpoint": "settings/describe",
+      "frontend": "describeSettings",
+      "status": "wired"
+    },
+    {
+      "endpoint": "settings/mutate",
+      "frontend": "mutateSettings",
+      "status": "wired"
+    },
+    {
+      "endpoint": "settings/replace",
+      "frontend": "replaceSettings",
+      "status": "wired"
+    },
+    {
+      "endpoint": "settings/update",
+      "frontend": "updateSettings",
+      "status": "wired"
+    },
+    {
+      "endpoint": "skills/list",
+      "frontend": "listSkills",
+      "status": "wired"
+    },
+    {
+      "endpoint": "subagents/interruptByParent",
+      "frontend": null,
+      "status": "allowed-not-yet-wired"
+    },
+    {
+      "endpoint": "subagents/list",
+      "frontend": null,
+      "status": "allowed-not-yet-wired"
+    },
+    {
+      "endpoint": "subagents/prompt",
+      "frontend": "promptSubagent",
+      "status": "wired"
+    },
+    {
+      "endpoint": "userQuestions/answer",
+      "frontend": null,
+      "status": "allowed-not-yet-wired"
+    },
+    {
+      "endpoint": "userQuestions/attachWait",
+      "frontend": null,
+      "status": "allowed-not-yet-wired"
+    },
+    {
+      "endpoint": "claudeCodeMods/watchBand",
+      "frontend": null,
+      "status": "allowed-not-yet-wired"
+    },
+    {
+      "endpoint": "claudeCodeMods/pressBand",
+      "frontend": null,
+      "status": "allowed-not-yet-wired"
+    },
+    {
+      "endpoint": "workspaceFiles/list",
+      "frontend": "listFiles",
+      "status": "wired"
+    },
+    {
+      "endpoint": "workspaceFiles/stat",
+      "frontend": "statFile",
+      "status": "wired"
+    },
+    {
+      "endpoint": "workspaceFiles/read",
+      "frontend": "readFile",
+      "status": "wired"
+    },
+    {
+      "endpoint": "workspaceFiles/readBytes",
+      "frontend": "readFileBytes",
+      "status": "wired"
+    },
+    {
+      "endpoint": "workspaceFiles/readAll",
+      "frontend": null,
+      "status": "allowed-not-yet-wired"
+    },
+    {
+      "endpoint": "workspaceFiles/readRelated",
+      "frontend": null,
+      "status": "allowed-not-yet-wired"
+    },
+    {
+      "endpoint": "workspaceFiles/changes",
+      "frontend": "watchFile",
+      "status": "wired"
+    },
+    {
+      "endpoint": "officeToPdf/render",
+      "frontend": null,
+      "status": "allowed-not-yet-wired"
+    },
+    {
+      "endpoint": "officeToPdf/generation",
+      "frontend": null,
+      "status": "allowed-not-yet-wired"
+    },
+    {
+      "endpoint": "toolResults/watch",
+      "frontend": "watchToolResult",
+      "status": "wired"
+    },
+    {
+      "endpoint": "workspace/archiveSession",
+      "frontend": "archiveSession",
+      "status": "wired"
+    },
+    {
+      "endpoint": "workspace/create",
+      "frontend": "createWorkspace",
+      "status": "wired"
+    },
+    {
+      "endpoint": "workspace/delete",
+      "frontend": "deleteWorkspace",
+      "status": "wired"
+    },
+    {
+      "endpoint": "workspace/follow",
+      "frontend": "workspaces",
+      "status": "wired"
+    },
+    {
+      "endpoint": "workspace/insertBefore",
+      "frontend": "reorderWorkspace",
+      "status": "wired"
+    },
+    {
+      "endpoint": "workspace/insertSessionBefore",
+      "frontend": "reorderSession",
+      "status": "wired"
+    },
+    {
+      "endpoint": "workspace/rename",
+      "frontend": "renameWorkspace",
+      "status": "wired"
+    },
+    {
+      "endpoint": "workspace/unarchiveSession",
+      "frontend": "unarchiveSession",
+      "status": "wired"
+    },
+    {
+      "endpoint": "workspace/initializeDefault",
+      "frontend": null,
+      "status": "allowed-not-yet-wired"
+    },
+    {
+      "endpoint": "workspace/pinSession",
+      "frontend": "pinSession",
+      "status": "wired"
+    },
+    {
+      "endpoint": "workspace/unpinSession",
+      "frontend": "unpinSession",
+      "status": "wired"
+    }
+  ],
+  "dedicated": [
+    {
+      "endpoint": "workspace.upload.open/chunk/commit/abort",
+      "status": "wired-fixture-verified-no-live-upload",
+      "frontend": "uploadWorkspaceFile",
+      "semantics": "regular local file to Host workspace, device-owned transfer; reference returned workspace path; not composer image attachment receipt",
+      "source": "remote_reference/packages/plugin/src/remote-file-upload.ts"
+    },
+    {
+      "endpoint": "terminal/follow,retain + write,resize",
+      "status": "policy-conditional",
+      "semantics": "Remote TerminalCarrierCompat; current device-owned terminals only; Host must already enable terminal capability"
+    },
+    {
+      "endpoint": "loopback.call describe/http/ws",
+      "status": "protocol-supported-current-deployment-unavailable",
+      "evidence": "dist/live-loopback.json: existing allowedPortCount=0; no configuration changed"
+    },
+    {
+      "endpoint": "plugin.route.v1 POST api/bot",
+      "status": "restricted",
+      "semantics": "Reviewed bot operations only, no arbitrary route or static UI proxy"
+    }
+  ],
+  "gaps": [
+    {
+      "feature": "scheduleCreate",
+      "endpoint": "schedule/create",
+      "status": "blocked-frozen-remote",
+      "reason": "Frozen Remote intercepts legacy schedule.create(sessionId,request), incompatible with current Host typed timing/target API"
+    },
+    {
+      "feature": "updateBundle",
+      "endpoint": "pluginManager/updateBundle",
+      "status": "blocked-frozen-remote",
+      "reason": "Frozen Remote requires updatable:true; current Host reports update registry/git instead"
+    },
+    {
+      "feature": "teamModeWrite",
+      "endpoint": "agentTeams/setEnabled",
+      "status": "blocked-frozen-remote",
+      "reason": "Remote allowlist omits this API; current Team projection can be read"
+    },
+    {
+      "feature": "webProviderCatalog",
+      "endpoint": "web/listProviders",
+      "status": "blocked-frozen-remote",
+      "reason": "Remote allowlist omits provider discovery; settings sections remain readable"
+    },
+    {
+      "feature": "pluginDiscover",
+      "endpoint": "pluginMarket/*",
+      "status": "blocked-frozen-remote",
+      "reason": "Remote has no market discovery API; tab shown disabled when Host enabled it"
+    },
+    {
+      "feature": "sessionDelete",
+      "endpoint": "session/delete",
+      "status": "blocked-frozen-remote",
+      "reason": "Remote未开放且冻结Host无此通用入口"
+    },
+    {
+      "feature": "markRead/unread",
+      "endpoint": "sessionStatus/mark",
+      "status": "blocked-frozen-remote",
+      "reason": "Remote allowlist无此API"
+    },
+    {
+      "feature": "install/uninstallPlugin",
+      "endpoint": "pluginManager/install/uninstall",
+      "status": "blocked-frozen-remote",
+      "reason": "Remote未开放安装及卸载生命周期"
+    },
+    {
+      "feature": "arbitraryPluginPage",
+      "endpoint": "frontend modules/static route",
+      "status": "blocked-frozen-remote",
+      "reason": "无通用静态模块/资源代理；compat只能本地pin具体组件"
+    },
+    {
+      "feature": "originalSessionLog/Markdown",
+      "endpoint": "GET /api/session.export,/api/session.markdown",
+      "status": "blocked-frozen-remote",
+      "reason": "仅commands/export返回请求，实际资源GET不在Remote carrier"
+    },
+    {
+      "feature": "fileSearch",
+      "endpoint": "workspaceFiles/search",
+      "status": "blocked-frozen-remote",
+      "reason": "冻结Remote未列入allowlist"
+    },
+    {
+      "feature": "fileWrite/delete/rename",
+      "endpoint": "workspaceFiles write family",
+      "status": "blocked-frozen-remote",
+      "reason": "文件服务只读，Remote无对应入口"
+    },
+    {
+      "feature": "bundleRelativeImages",
+      "endpoint": "api/plugin-manager/detail-file",
+      "status": "blocked-frozen-remote",
+      "reason": "资源GET不在Remote pluginRoute allowlist"
+    }
+  ],
+  "compat": {
+    "built": [
+      "original PluginManagerPage installed list/detail",
+      "original ModelSelect provider/model/reasoning picker",
+      "original Shell/Subagent/AgentLoop/WebSearch cards and revision-fenced staged controllers",
+      "original Trajectory assembler/definitions/snapshot/Timeline/Table/View with ephemeral passive follow",
+      "original TerminalView/Inventory/WindowHold/RemoteStream and xterm renderer with bounded sequential input",
+      "original ModelSelect embedded composer popover with exact source transform"
+    ],
+    "missing": [
+      "other low-frequency settings pages pending next slices",
+      "arbitrary third-party slot modules",
+      "relative bundle detail images",
+      "plugin install/remove"
+    ]
+  },
+  "writeValidation": "fixture-only; no real Host mutations",
+  "liveReads": "dist/live-surfaces.json"
+}

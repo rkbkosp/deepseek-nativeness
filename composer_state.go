@@ -21,6 +21,9 @@ type composerState struct {
 	composing                                 bool
 	repeatKey                                 bool
 	modelLabel, permissionLabel, presetLabel  string
+	modelName, modelEffort                    string
+	modelCompact                              bool
+	controlsGeometrySignature                 string
 	catalog                                   composerModelCatalog
 	values                                    composerProjectionValues
 	permissions                               []settingsPermissionOption
@@ -269,7 +272,8 @@ func (s *composerState) refreshLabels() {
 	if s.values.ModelSelection.Next != nil {
 		selected = *s.values.ModelSelection.Next
 	}
-	s.modelLabel = "选择模型"
+	s.modelName = "选择模型"
+	s.modelEffort = ""
 	for _, g := range s.catalog.Groups {
 		if g.ID != selected.Provider {
 			continue
@@ -278,7 +282,7 @@ func (s *composerState) refreshLabels() {
 			if m.ID != selected.Model {
 				continue
 			}
-			s.modelLabel = m.Name
+			s.modelName = m.Name
 			if m.Reasoning != nil {
 				effort := selected.ReasoningEffort
 				if effort == "" {
@@ -294,11 +298,15 @@ func (s *composerState) refreshLabels() {
 						break
 					}
 				}
-				s.modelLabel += " " + label
+				s.modelEffort = label
 			} else if selected.ReasoningEffort != "" {
-				s.modelLabel += " " + selected.ReasoningEffort
+				s.modelEffort = selected.ReasoningEffort
 			}
 		}
+	}
+	s.modelLabel = s.modelName
+	if s.modelEffort != "" {
+		s.modelLabel += " " + s.modelEffort
 	}
 	s.permissionLabel = ""
 	if s.values.Permissions != nil {

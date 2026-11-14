@@ -7,16 +7,44 @@ declare global {
     };
   }
 }
+let rpcVersion = 1;
 export async function context() {
   if (!window.mygo) throw Error("请从 Native DSH 打开此本地兼容页面。");
-  return window.mygo.call("CompatAPI.GetContext");
+  const value = await window.mygo.call("CompatAPI.GetContext");
+  rpcVersion = value.rpcVersion ?? 1;
+  return value;
 }
 export async function request(
   method: string,
   params: Record<string, unknown> = {},
 ) {
   if (!window.mygo) throw Error("原生连接不可用。");
-  return window.mygo.call("CompatAPI.Request", method, params);
+  try {
+    if (rpcVersion < 2)
+      return await window.mygo.call("CompatAPI.Request", method, params);
+    const outcome = await window.mygo.call(
+      "CompatAPI.RequestV2",
+      method,
+      params,
+    );
+    if (!outcome?.ok)
+      throw Object.assign(
+        new Error(outcome?.error?.message ?? "远程请求未确认。"),
+        { code: outcome?.error?.code, delivery: outcome?.error?.delivery },
+      );
+    return outcome.value;
+  } catch (error: any) {
+    const literal =
+      method === "setCredential" && typeof params.value === "string"
+        ? params.value
+        : "";
+    if (literal)
+      throw Object.assign(
+        new Error(String(error.message).replaceAll(literal, "[已隐藏]")),
+        { code: error.code, delivery: error.delivery },
+      );
+    throw error;
+  }
 }
 export const operationId = () => randomUUID();
 export function store<T>(initial: T) {

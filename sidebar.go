@@ -46,8 +46,14 @@ func (a *app) sidebarView(c *ui.Context) {
 			}
 		}
 		a.navButton(c, "插件", "plugin-pinwheel-outline", func() { a.openCompat("plugins") }).Disabled(!a.connected).Tooltip("管理工作主机上的插件")
-		a.navButton(c, "自动化任务", "alarm-clock-outline", nil).Disabled(true).Tooltip("当前 Remote 未开放自动化任务界面")
+		a.navButton(c, "自动化任务", "alarm-clock-outline", func() { a.openCompat("automation") }).Disabled(!a.can("scheduleCatalog"))
 		ui.ButtonBase(c).Height(32).Padding(0, 8).Gap(8).Justify(ui.Start).Label("更多").Children(func() { icon(c, "apps-add-compact-outline", 16); ui.Text(c, "更多") }).Menu(func(m *ui.Menu) {
+			if m.Item("模型设置").Disabled(!a.can("listProviders")).Chosen() {
+				a.openSettingsSection("models")
+			}
+			if m.Item("Agent 预设").Disabled(!a.can("listAgentPresets")).Chosen() {
+				a.openSettingsSection("agent-presets")
+			}
 			if m.Item("Remote Web · 独立网页").Chosen() {
 				a.openWeb()
 			}
@@ -149,7 +155,10 @@ func (a *app) sidebarView(c *ui.Context) {
 	a.renameView(c)
 }
 func (a *app) navButton(c *ui.Context, label, name string, fn func()) ui.Element {
-	b := ui.ButtonBase(c).Height(32).Padding(0, 8).Gap(8).Justify(ui.Start).Label(label).Children(func() { icon(c, name, 16); ui.Text(c, label) })
+	b := ui.ButtonBase(c).Height(32).Padding(0, 8).Gap(8).Radius(7).Justify(ui.Start).Label(label).Children(func() { icon(c, name, 16); ui.Text(c, label) })
+	if a.compat != nil && a.compatPlacement == "main" && ((label == "插件" && a.compatPage == "plugins") || (label == "自动化任务" && a.compatPage == "automation")) {
+		b.Background(a.colors.Selected)
+	}
 	if b.Clicked() && fn != nil {
 		fn()
 	}

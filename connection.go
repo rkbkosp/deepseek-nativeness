@@ -98,6 +98,11 @@ func (a *app) acceptStatus(raw json.RawMessage) error {
 		scope = s.AccountScope
 	}
 	a.adoptAccountScope(scope)
+	if a.compat != nil && (!s.Connected || s.HostID != a.compatHost || s.ConnectionGeneration != a.compatGeneration) {
+		// Closing an old model page must not schedule a read on stale scope.
+		a.connected = false
+		a.closeCompat()
+	}
 	a.connected = s.Connected
 	a.remoteGeneration = s.ConnectionGeneration
 	a.authorized = s.Authorized
@@ -113,6 +118,15 @@ func (a *app) acceptStatus(raw json.RawMessage) error {
 }
 
 func (a *app) notification(ev bridge.Notification) {
+	if a.compat != nil && ev.Method == "remoteInvalidation" {
+		var scope struct {
+			HostID     string `json:"hostId"`
+			Generation uint64 `json:"connectionGeneration"`
+		}
+		if json.Unmarshal(ev.Params, &scope) == nil && scope.HostID == a.compatHost && scope.Generation == a.compatGeneration {
+			_ = compatNotifications.EmitPage(a.compat.Page(), ev)
+		}
+	}
 	if a.compat != nil && ev.Method == "status" {
 		_ = compatNotifications.EmitPage(a.compat.Page(), ev)
 	}
@@ -139,6 +153,12 @@ func (a *app) notification(ev bridge.Notification) {
 	case "sessions":
 		if rows, err := decodeRows[session](ev.Params, "sessions", "items"); err == nil {
 			a.sessions = rows
+			a.notifyCompatCatalog("sessions", rows)
+		}
+	case "workspaces":
+		if rows, err := decodeRows[workspace](ev.Params, "workspaces", "items"); err == nil {
+			a.workspaces = rows
+			a.notifyCompatCatalog("workspaces", rows)
 		}
 	case "snapshot":
 		var s snapshot

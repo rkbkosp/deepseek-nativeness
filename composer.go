@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/egoist/mygo/ui"
-	"strings"
 )
 
 // The native card follows InputBar.module.css. The original model menu is
@@ -15,9 +14,11 @@ func (a *app) composerView(c *ui.Context) {
 		a.composer = &composerState{hostID: a.hostID, sessionID: a.sessionID, accountScope: a.accountScope, generation: a.remoteGeneration}
 	}
 	s := a.composer
-	ui.Row(c).Shrink(0).FillWidth().Padding(0, 24, 4).Children(func() {
-		ui.Spacer(c).Grow(1)
-		ui.Column(c).Grow(8).MinWidth(0).MaxWidth(712).Gap(6).Font(a.messageFontFamily()).FontWeight(a.messageNormalWeight()).Children(func() {
+	frame := ui.Row(c.Key("composer-frame")).Shrink(0).FillWidth().Justify(ui.Center).Padding(0, 16, 4)
+	// ConversationRoot.module.css: clamp(680px, column * .64, 920px) +32.
+	cardMax := min(max(frame.LayoutBounds().W*.64, float32(680)), float32(920)) + 32
+	frame.Children(func() {
+		ui.Column(c).FillWidth().Shrink(1).MinWidth(0).MaxWidth(cardMax).Gap(6).Font(a.messageFontFamily()).FontWeight(a.messageNormalWeight()).Children(func() {
 			if len(a.current.Pending) > 0 {
 				ui.Scroll(c).MaxHeight(280).Children(func() {
 					ui.Column(c).Gap(8).Children(func() {
@@ -69,66 +70,7 @@ func (a *app) composerView(c *ui.Context) {
 					_ = input.Shortcut(mods, ui.KeyEnter)
 				}
 				a.composerCompletionView(c, s, input)
-				ui.Row(c).FillWidth().MinWidth(0).AlignItems(ui.Center).Padding(2, 8, 6).Gap(8).Children(func() {
-					if ui.ButtonBase(c).Size(28, 28).Radius(14).Label("指令").Disabled(!a.connected || a.busy).Tooltip("指令").Children(func() { icon(c, "plus-outline", 18).TextColor(a.theme.TextMuted) }).Clicked() {
-						if strings.TrimSpace(a.draft) == "" {
-							input.ReplaceText(0, len([]rune(a.draft)), "/")
-							input.SetTextSelection(1, 1)
-							input.Focus()
-							a.updateComposerCompletions(s, 1)
-						} else {
-							s.dismissedToken = ""
-							s.completionToken = ""
-							a.updateComposerCompletions(s, caret)
-						}
-					}
-					permission := ui.ButtonBase(c).Label("权限模式").Height(28).Padding(0, 6).Radius(14).Gap(5).Disabled(!a.can("executeCommand") || s.values.Permissions == nil).Children(func() {
-						icon(c, "shield-outline", 14).TextColor(a.theme.TextMuted)
-						ui.Text(c, a.composerPermissionLabel()).FontSize(12).TextColor(a.theme.TextMuted)
-						icon(c, "chevron-down-outline", 12).TextColor(a.theme.TextMuted)
-					})
-					permission.Menu(func(m *ui.Menu) {
-						for _, p := range s.permissions {
-							if m.Item(permissionDisplay(p)).Radio(s.values.Permissions != nil && s.values.Permissions.CurrentValue == p.Value).Chosen() {
-								a.chooseComposerPermission(s, p.Value)
-							}
-						}
-					})
-					if plan := s.values.Plan; plan != nil && ((plan.Pending && !plan.Active) || (!plan.Pending && plan.Active)) {
-						if ui.ButtonBase(c).Height(28).Padding(0, 6).Radius(14).Gap(4).Label("退出计划模式").Disabled(!a.can("executeCommand")).Children(func() {
-							icon(c, "plan-outline", 14).TextColor(a.theme.Accent)
-							ui.Text(c, "计划").FontSize(12).TextColor(a.theme.Accent)
-						}).Clicked() {
-							a.composerCommand("/plan off", nil)
-						}
-					}
-					ui.Spacer(c).Grow(1).MinWidth(0)
-					model := ui.ButtonBase(c).Label("选择模型").Height(28).Padding(0, 6).Radius(14).Gap(4).Disabled(!a.can("modelCatalog")).Children(func() {
-						ui.Text(c, a.composerModelLabel()).FontSize(12).TextColor(a.theme.TextMuted).SingleLine()
-						icon(c, "chevron-down-outline", 12).TextColor(a.theme.TextMuted)
-					})
-					if model.Clicked() {
-						a.openCompatAt("model-menu", "modelPopover")
-					}
-					a.composerModelPopover(c, model)
-					if a.current.Running && strings.TrimSpace(a.draft) == "" {
-						if ui.ButtonBase(c).Size(28, 28).Radius(14).Background(a.theme.Accent).Label("停止").Disabled(a.busy || !a.connected).Children(func() { icon(c, "stop-fill", 13).TextColor(ui.RGB(255, 255, 255)) }).Clicked() {
-							a.mutate("cancel", map[string]any{"sessionId": a.sessionID}, nil)
-						}
-					} else {
-						label := "发送消息"
-						if a.current.Running {
-							if composerSubmitMode(a.uiPrefs.SendMode, true, false) == "steer" {
-								label = "立即发送"
-							} else {
-								label = "加入队列"
-							}
-						}
-						if ui.ButtonBase(c).Size(28, 28).Radius(14).Background(a.theme.Accent).Label(label).Tooltip(label).Disabled(a.busy || !a.connected || strings.TrimSpace(a.draft) == "" || a.sessionID == "").Children(func() { icon(c, "send-outline", 16).TextColor(ui.RGB(255, 255, 255)) }).Clicked() {
-							a.composerSubmit(false)
-						}
-					}
-				})
+				a.composerToolbar(c, s, input, caret)
 			})
 			// Reserve the original dock line; unavailable usage/context readings are
 			// not replaced with invented statistics or the connection status.
@@ -138,7 +80,6 @@ func (a *app) composerView(c *ui.Context) {
 				}
 			})
 		})
-		ui.Spacer(c).Grow(1)
 	})
 	a.composerPermissionConfirmation(c, s)
 }

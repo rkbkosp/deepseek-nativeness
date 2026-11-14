@@ -71,6 +71,11 @@ var compatMethods = map[string]bool{
 	"listPlugins": true, "listBundles": true, "listPluginVersions": true, "readBundleDetail": true,
 	"setPluginEnabled": true, "setBundleEnabled": true, "updateBundle": true,
 	"describeCredentials": true, "setCredential": true,
+	"unsetCredential":  true,
+	"listAgentPresets": true, "readAgentPreset": true, "selectAgentPreset": true,
+	"listProviders": true, "listConfigurableProviders": true, "discoverModels": true,
+	"scheduleCatalog": true, "scheduleDeliveryLimits": true, "listSchedules": true, "scheduleHistory": true,
+	"editSchedule": true, "runSchedule": true, "deleteInactiveSchedules": true,
 	"presentation": true, "history": true, "watchToolResult": true, "closeStream": true, "readAttachment": true,
 	"watchSession": true, "sessionPage": true,
 	"listTerminals": true, "terminalEnvironment": true, "terminalShells": true, "createTerminal": true, "renameTerminal": true, "closeTerminal": true, "writeTerminal": true, "resizeTerminal": true, "watchTerminals": true, "retainTerminal": true, "watchTerminal": true,
@@ -80,12 +85,12 @@ func (api *CompatAPI) caller(ctx context.Context) error {
 	var allowed bool
 	mygo.RunOnMain(func() { allowed = api.a.compat != nil && mygo.CallerPage(ctx) == api.a.compat.Page() })
 	if !allowed {
-		return errors.New("此接口仅供本地兼容页面使用")
+		return compatRejectedError("此接口仅供本地兼容页面使用")
 	}
 	p := mygo.CallerPage(ctx)
 	u, err := url.Parse(p.URL())
 	if err != nil || u.Scheme != "mygo" || u.Host != "localhost" {
-		return errors.New("外部网页无法访问客户端连接")
+		return compatRejectedError("外部网页无法访问客户端连接")
 	}
 	return nil
 }
@@ -94,12 +99,21 @@ func (api *CompatAPI) GetContext(ctx context.Context) (map[string]any, error) {
 		return nil, err
 	}
 	var result map[string]any
+	page := mygo.CallerPage(ctx)
 	mygo.RunOnMain(func() {
 		a := api.a
+		if a.compat == nil || a.compat.Page() != page || a.compatHost != a.hostID || a.compatGeneration != a.remoteGeneration {
+			return
+		}
 		ops := map[string]bool{}
 		for name, value := range a.operationCaps {
 			ops[name] = value.Supported
 		}
+		ops["clientOpenSession"] = a.connected
+		// The original creator starts/reuses a blank session. Until that
+		// client navigation flow is connected, do not append to active work.
+		ops["clientStartDraft"] = false
+		ops["clientStartCreatorDraft"] = false
 		theme := "light"
 		if a.theme.Dark {
 			theme = "dark"
@@ -111,7 +125,14 @@ func (api *CompatAPI) GetContext(ctx context.Context) (map[string]any, error) {
 		result["fontFamily"] = a.uiPrefs.TextFontFamily
 		result["codeFontSize"] = a.uiPrefs.CodeFontSize
 		result["codeFontFamily"] = a.uiPrefs.CodeFontFamily
+		result["rpcVersion"] = 2
+		result["placement"] = a.compatPlacement
+		result["sessions"] = append([]session(nil), a.sessions...)
+		result["workspaces"] = append([]workspace(nil), a.workspaces...)
 	})
+	if result == nil {
+		return nil, compatRejectedError("主机或页面已切换，请重新打开页面")
+	}
 	return result, nil
 }
 func (api *CompatAPI) Request(ctx context.Context, method string, params json.RawMessage) (json.RawMessage, error) {
@@ -119,43 +140,48 @@ func (api *CompatAPI) Request(ctx context.Context, method string, params json.Ra
 		return nil, err
 	}
 	if !compatMethods[method] {
-		return nil, fmt.Errorf("本地兼容页面未开放此操作：%s", method)
+		return nil, compatRejectedError(fmt.Sprintf("本地兼容页面未开放此操作：%s", method))
 	}
 	var p map[string]any
 	if len(params) == 0 {
 		params = json.RawMessage(`{}`)
 	}
 	if err := json.Unmarshal(params, &p); err != nil || p == nil {
-		return nil, errors.New("操作参数必须为对象")
+		return nil, compatRejectedError("操作参数必须为对象")
 	}
 	var client *bridge.Client
 	var scope map[string]any
 	var validation error
+	page := mygo.CallerPage(ctx)
 	mygo.RunOnMain(func() {
 		a := api.a
+		if a.compat == nil || a.compat.Page() != page {
+			validation = compatRejectedError("页面已关闭，请重新打开页面")
+			return
+		}
 		client = a.client
 		scope = map[string]any{"hostId": a.compatHost, "generation": a.compatGeneration, "ownerId": a.compatOwner}
 		if a.compatSession != "" {
 			scope["sessionId"] = a.compatSession
 		}
 		if a.compatHost != a.hostID || a.compatSession != a.sessionID {
-			validation = errors.New("主机或会话已切换，请重新打开页面")
+			validation = compatRejectedError("主机或会话已切换，请重新打开页面")
 			return
 		}
 		if !a.connected || client == nil {
-			validation = errors.New("Remote 未连接")
+			validation = compatRejectedError("Remote 未连接")
 			return
 		}
 		if sid, ok := p["sessionId"].(string); ok && sid != a.sessionID {
-			validation = errors.New("会话已切换，请重新打开页面")
+			validation = compatRejectedError("会话已切换，请重新打开页面")
 			return
 		}
 		if wid, ok := p["workspaceId"].(string); ok && wid != a.workspaceID {
-			validation = errors.New("工作区已切换，请重新打开页面")
+			validation = compatRejectedError("工作区已切换，请重新打开页面")
 			return
 		}
 		if method != "capabilities" && method != "presentation" && method != "history" && method != "closeStream" && !a.operationCaps[method].Supported {
-			validation = errors.New("当前主机未授权此操作")
+			validation = compatRejectedError("当前主机未授权此操作")
 		}
 	})
 	if validation != nil {
@@ -169,7 +195,7 @@ func (api *CompatAPI) Request(ctx context.Context, method string, params json.Ra
 		return nil, err
 	}
 	switch method {
-	case "selectModel", "updateSettings", "replaceSettings", "mutateSettings", "setPluginEnabled", "setBundleEnabled", "updateBundle", "setCredential":
+	case "selectModel", "selectAgentPreset", "updateSettings", "replaceSettings", "mutateSettings", "setPluginEnabled", "setBundleEnabled", "updateBundle", "setCredential", "unsetCredential", "editSchedule", "runSchedule", "deleteInactiveSchedules", "createTerminal", "renameTerminal", "closeTerminal", "writeTerminal", "resizeTerminal":
 		var receipt struct {
 			Status     string
 			HostID     string `json:"hostId"`
@@ -223,7 +249,7 @@ func (a *app) openCompatAt(page, placement string) {
 		return
 	}
 	switch page {
-	case "plugins", "models", "model-menu", "trajectory", "terminal":
+	case "plugins", "models", "model-menu", "trajectory", "terminal", "automation", "agent-presets", "model-settings":
 	default:
 		return
 	}
@@ -299,10 +325,10 @@ func (a *app) openCompatAt(page, placement string) {
 	})
 }
 func (a *app) compatView(c *ui.Context) {
-	if a.compatPage == "plugins" {
+	if a.compatPlacement == "main" {
 		ui.Box(c).Height(48).Shrink(0).DragWindow()
 	}
-	if a.compatPage != "plugins" {
+	if a.compatPlacement != "main" {
 		ui.Row(c).Shrink(0).Padding(8, 20).Gap(10).Children(func() {
 			title := "插件"
 			if a.compatPage == "models" {

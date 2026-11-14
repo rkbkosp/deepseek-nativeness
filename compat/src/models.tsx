@@ -1,11 +1,14 @@
-import React,{useEffect,useMemo,useCallback,useState} from "react";
-import {ModelSelect} from "../../../deepseek-harness/packages/client/ui-model-selection/src/client/ModelSelect.tsx";
-import {zh as modelZh} from "../../../deepseek-harness/packages/client/ui-model-selection/src/client/locales.ts";
-import {TeamModeToggle,TeamModePane} from "../../../deepseek-harness/packages/client/ui-agent-team/src/client/TeamModeToggle.tsx";
-import {zh as teamZh} from "../../../deepseek-harness/packages/client/ui-agent-team/src/client/locales.ts";
-import {modelDirectoryState} from "./model-state.mjs";
-import {request,store,operationId,onNotification} from "./bridge";
-import {translate,resolveText,no} from "./presentation";
+import React, { useEffect, useMemo, useCallback, useState } from "react";
+import { ModelSelect } from "../../../deepseek-harness/packages/client/ui-model-selection/src/client/ModelSelect.tsx";
+import { zh as modelZh } from "../../../deepseek-harness/packages/client/ui-model-selection/src/client/locales.ts";
+import {
+  TeamModeToggle,
+  TeamModePane,
+} from "../../../deepseek-harness/packages/client/ui-agent-team/src/client/TeamModeToggle.tsx";
+import { zh as teamZh } from "../../../deepseek-harness/packages/client/ui-agent-team/src/client/locales.ts";
+import { modelDirectoryState } from "./model-state.mjs";
+import { request, store, operationId, onNotification } from "./bridge";
+import { translate, resolveText, no } from "./presentation";
 export default function Models({ ctx }: { ctx: any }) {
   useEffect(() => {
     if (new URLSearchParams(location.search).get("page") !== "model-menu")
@@ -150,36 +153,38 @@ export default function Models({ ctx }: { ctx: any }) {
           select={select}
           resolveText={resolveText}
           t={translate(modelZh) as any}
-          renderSlot={createModelSlot(ctx,projected)}
+          renderSlot={createModelSlot(ctx, projected)}
         />
       )}
     </main>
   );
 }
 
-export function createModelSlot(ctx:any,projected:any) {
- return (name:any,props:any,options:any)=>{
-            const common = {
-              ...props,
-              sessionId: ctx.sessionId,
-              useProjection: (key: string) => projected[key],
-              useSession: (select: any) => select({ subagent: null }),
-              useSessions: (select: any) => select({ byId: {} }),
-              t: translate(teamZh),
-            };
-            return name === "conversation.input.model.options" ? (
-              <div title="当前Remote未开放团队开关API">
-                <TeamModeToggle {...common} />
-              </div>
-            ) : name === "conversation.input.model.pane" ? (
-              <div title="当前Remote未开放agentTeams/setEnabled">
-                <TeamModePane
-                  {...common}
-                  locked={true}
-                  selectTeamMode={async () => "Remote未开放此操作"}
-                  requestDisableConfirmation={no}
-                />
-              </div>
-            ) : options?.fallback ?? null;
- };
+export function createModelSlot(ctx: any, projected: any) {
+  return (name: any, props: any, options: any) => {
+    const common = {
+      ...props,
+      sessionId: ctx.sessionId,
+      useProjection: (key: string) => projected[key],
+      useSession: (select: any) => select({ subagent: null }),
+      useSessions: (select: any) => select({ byId: {} }),
+      t: translate(teamZh),
+    };
+    return name === "conversation.input.model.options" ? (
+      <div title="当前Remote未开放团队开关API">
+        <TeamModeToggle {...common} />
+      </div>
+    ) : name === "conversation.input.model.pane" ? (
+      <div title="当前Remote未开放agentTeams/setEnabled">
+        <TeamModePane
+          {...common}
+          locked={true}
+          selectTeamMode={async () => "Remote未开放此操作"}
+          requestDisableConfirmation={no}
+        />
+      </div>
+    ) : (
+      (options?.fallback ?? null)
+    );
+  };
 }

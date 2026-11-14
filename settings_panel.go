@@ -13,6 +13,45 @@ import (
 
 type settingsOption struct{ value, label string }
 
+func settingsCompatRoute(section string) string {
+	switch section {
+	case "models":
+		return "model-settings"
+	case "agent-presets":
+		return "agent-presets"
+	case "plugins":
+		return "plugins"
+	}
+	return ""
+}
+
+// Sidebar and the modal rail share one user-intent entry point. The requested
+// section is recorded before asynchronous owner registration begins.
+func (a *app) openSettingsSection(section string) {
+	previous := a.settingsPageRequested
+	a.settingsOpen = true
+	a.settingsSection = section
+	a.settingsPageRequested = section
+	route := settingsCompatRoute(section)
+	if route == "" {
+		if a.compatPlacement != "" {
+			a.closeCompat()
+		}
+		return
+	}
+	if a.compatPlacement == "settingsContent" && ((a.compat != nil && a.compatPage == route) || (a.compatPendingOwner != "" && previous == section)) {
+		return
+	}
+	a.openCompatAt(route, "settingsContent")
+}
+func (a *app) closeSettings() {
+	a.settingsOpen = false
+	a.settingsPageRequested = ""
+	if a.compatPlacement == "settingsContent" {
+		a.closeCompat()
+	}
+}
+
 type settingsHostNamespace struct {
 	NS       string                     `json:"ns"`
 	Revision int64                      `json:"revision"`
@@ -49,13 +88,21 @@ func (a *app) settingsView(c *ui.Context) {
 	if a.settingsSection == "" {
 		a.settingsSection = "general"
 	}
+	// A single compatibility page is resident. Opening Settings leaves the
+	// previous global page; closing it returns to the native conversation.
+	if a.compatPlacement != "" && a.compatPlacement != "settingsContent" {
+		a.closeCompat()
+	}
+	if a.settingsPageRequested != a.settingsSection {
+		a.openSettingsSection(a.settingsSection)
+	}
 	var hostSettings *settingsHostState
 	ui.Modal(c, &a.settingsOpen, func() {
 		panel := ui.Row(c).Width(panelWidth).Height(panelHeight).AlignItems(ui.Stretch).Gap(0).FontWeight(300).Clip()
 		hostSettings = ui.Local(panel, fmt.Sprintf("settings-host:%s:%d", a.hostID, a.remoteGeneration), func() settingsHostState {
 			return settingsHostState{HostID: a.hostID, RemoteGeneration: a.remoteGeneration, Namespaces: map[string]settingsHostNamespace{}}
 		})
-		if !hostSettings.Started && !a.demo && a.can("describeSettings") {
+		if (a.settingsSection == "general" || a.settingsSection == "shortcuts") && !hostSettings.Started && !a.demo && a.can("describeSettings") {
 			a.loadHostGeneralSettings(hostSettings)
 		}
 		panel.Children(func() {
@@ -80,7 +127,8 @@ func (a *app) settingsView(c *ui.Context) {
 							ui.Text(c, section.title).FontSize(14).FontWeight(300)
 						})
 						if button.Clicked() {
-							a.settingsSection = section.id
+							hostSettings.ConfirmFull = false
+							a.openSettingsSection(section.id)
 						}
 					}
 				})
@@ -90,25 +138,49 @@ func (a *app) settingsView(c *ui.Context) {
 					ui.Spacer(c)
 					ui.Button(c, "打开配置文件").Disabled(true).Tooltip("当前 Remote 通道不支持打开主机配置文件")
 					if ui.ButtonBase(c).Size(28, 28).Radius(6).Label("关闭设置").Children(func() { icon(c, "close-outline", 14) }).Clicked() {
-						a.settingsOpen = false
+						a.closeSettings()
 					}
 				})
-				ui.Scroll(c.Key("settings-content-" + a.settingsSection)).Grow(1).Shrink(1).MinHeight(0).MinWidth(0).Clip().Children(func() {
-					ui.Column(c).Shrink(0).Padding(0, 24, 24).FontWeight(300).Children(func() {
-						switch a.settingsSection {
-						case "general":
-							a.generalSettings(c, hostSettings)
-						case "shortcuts":
-							a.settingsShortcuts(c)
-						default:
-							ui.Text(c, "此设置页尚未接入").FontSize(16).FontWeight(500).Padding(24, 0, 10)
-							ui.Text(c, "主机上的模型、插件与 Agent 预设保持不变。").Wrap().TextColor(a.theme.TextMuted)
+				if route := settingsCompatRoute(a.settingsSection); route != "" {
+					ui.Column(c.Key("settings-web-content")).Grow(1).Shrink(1).MinHeight(0).MinWidth(0).Clip().Children(func() {
+						if a.compat != nil && a.compatPlacement == "settingsContent" && a.compatPage == route {
+							ui.WebView(c, a.compat).Grow(1).FillWidth().MinHeight(0).MinWidth(0)
+						} else {
+							ui.Column(c).Grow(1).FillWidth().Center().Padding(24).Gap(12).Children(func() {
+								label := "正在加载设置…"
+								if a.compatPendingOwner == "" {
+									label = "无法打开此设置页"
+								}
+								ui.Text(c, label).FontSize(14).TextColor(a.theme.TextMuted)
+								if a.compatPendingOwner == "" {
+									if ui.Button(c, "重新打开设置页").Disabled(!a.connected || a.busy).Clicked() {
+										a.openSettingsSection(a.settingsSection)
+									}
+								}
+							})
 						}
 					})
-				})
+				} else {
+					ui.Scroll(c.Key("settings-content-" + a.settingsSection)).Grow(1).Shrink(1).MinHeight(0).MinWidth(0).Clip().Children(func() {
+						ui.Column(c).Shrink(0).Padding(0, 24, 24).FontWeight(300).Children(func() {
+							switch a.settingsSection {
+							case "general":
+								a.generalSettings(c, hostSettings)
+							case "shortcuts":
+								a.settingsShortcuts(c)
+							default:
+								ui.Text(c, "此设置页尚未接入").FontSize(16).FontWeight(500).Padding(24, 0, 10)
+								ui.Text(c, "主机上的模型、插件与 Agent 预设保持不变。").Wrap().TextColor(a.theme.TextMuted)
+							}
+						})
+					})
+				}
 			})
 		})
 	}).Padding(0).Gap(0).Radius(24).Background(a.colors.Popup).Width(panelWidth).Height(panelHeight).FontWeight(300).Clip().Label("设置")
+	if !a.settingsOpen {
+		a.closeSettings()
+	}
 	if hostSettings != nil && a.settingsOpen && hostSettings.ConfirmFull {
 		s := hostSettings
 		ui.Modal(c, &s.ConfirmFull, func() {

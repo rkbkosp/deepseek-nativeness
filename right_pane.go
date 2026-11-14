@@ -200,7 +200,7 @@ func (a *app) rightPaneView(c *ui.Context) {
 func (a *app) paneStart(c *ui.Context, s *rightPaneState) {
 	ui.Column(c).Grow(1).Justify(ui.Center).Padding(28, 32).Gap(14).Children(func() {
 		ui.Row(c).Justify(ui.Center).Padding(0, 0, 20).Children(func() { icon(c, "browse-outline", 44).TextColor(a.theme.TextMuted) })
-		card := func(title, description, glyph, shortcut string, enabled bool, run func()) {
+		card := func(title, description, glyph, shortcut string, enabled bool, run func()) ui.Element {
 			b := ui.ButtonBase(c.Key(title)).Height(68).Padding(14, 24).Radius(16).Border(1, a.theme.Border).Background(a.theme.Surface).Gap(18).Justify(ui.Start).Label(title).Disabled(!enabled)
 			b.Children(func() {
 				icon(c, glyph, 20).TextColor(a.theme.Accent)
@@ -214,14 +214,28 @@ func (a *app) paneStart(c *ui.Context, s *rightPaneState) {
 					ui.Text(c, shortcut).FontSize(12).TextColor(a.theme.TextMuted)
 				}
 			})
-			if b.Clicked() && run != nil {
+			if b.Clicked() && run != nil && a.rightPane == s && s.HostID == a.hostID && s.SessionID == a.sessionID && s.RemoteGeneration == a.remoteGeneration {
 				run()
 			}
+			return b
 		}
 		card("工作区文件", "浏览会话工作区的文件", "folder-open-outline", "", a.can("listFiles"), func() { s.Tab = "files"; a.loadPaneDirectory(s, "") })
-		card("新建终端", "终端界面尚未接入", "code-outline", "", false, nil)
+		card("新建终端", "打开会话终端", "code-outline", "", a.can("listTerminals"), func() { a.openCompatAt("terminal", "right") })
 		card("浏览器", "浏览网页", "globe-outline", "", true, func() { a.openWeb() })
-		card("更多工具", "更多工具尚未接入", "apps-add-outline", "", false, nil)
+		more := card("更多工具", "选择工作区工具", "apps-add-outline", "", true, nil)
+		more.Menu(func(m *ui.Menu) {
+			current := a.rightPane == s && s.HostID == a.hostID && s.SessionID == a.sessionID && s.RemoteGeneration == a.remoteGeneration
+			if m.Item("工作区文件").Disabled(!current || !a.can("listFiles")).Chosen() {
+				s.Tab = "files"
+				a.loadPaneDirectory(s, "")
+			}
+			if m.Item("终端").Disabled(!current || !a.can("listTerminals")).Chosen() {
+				a.openCompatAt("terminal", "right")
+			}
+			if m.Item("浏览器").Disabled(!current).Chosen() {
+				a.openWeb()
+			}
+		})
 	})
 }
 

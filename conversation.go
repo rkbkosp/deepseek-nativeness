@@ -30,6 +30,9 @@ func (a *app) header(c *ui.Context) {
 			}
 			if ui.ButtonBase(c).Label("切换右侧栏").Padding(4).Children(func() { icon(c, "compare-split-outline", 16).TextColor(a.theme.TextMuted) }).Clicked() {
 				a.rightPaneOpen = !a.rightPaneOpen
+				if !a.rightPaneOpen && a.compatPlacement == "right" {
+					a.closeCompat()
+				}
 			}
 			if a.current.Running {
 				stateIndicator(c, true, a.epoch, a.theme.TextMuted, &a.metrics)

@@ -1,4 +1,4 @@
-import {useSyncExternalStore} from "react";
+import { useSyncExternalStore } from "react";
 export const translate =
   (dictionary: Record<string, string>) =>
   (key: string, params: Record<string, unknown> = {}) =>

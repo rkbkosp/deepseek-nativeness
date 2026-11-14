@@ -6,12 +6,12 @@ The inspected official archive is `/Applications/DeepSeek Harness.app/Contents/R
 
 Selected compiled files and public package metadata were extracted into `installed_reference/` using `@electron/asar@4.0.1`. That directory is derived evidence, not a runtime dependency. The original application archive and installed plugin were only read.
 
-| Artifact | SHA-256 |
-| --- | --- |
-| Official `app.asar` | `c0ce89f77d25e98e11952728d1fc054b6e2300db17402af83a1a225c8b36e843` |
-| Extracted schedule `lib/index.js` | `f06a57f6fd5d7b0d2666b4d1b1a27d96aa3035a66de40ad2fc9cef3eba580040` |
+| Artifact                                | SHA-256                                                            |
+| --------------------------------------- | ------------------------------------------------------------------ |
+| Official `app.asar`                     | `c0ce89f77d25e98e11952728d1fc054b6e2300db17402af83a1a225c8b36e843` |
+| Extracted schedule `lib/index.js`       | `f06a57f6fd5d7b0d2666b4d1b1a27d96aa3035a66de40ad2fc9cef3eba580040` |
 | Extracted plugin-manager `lib/index.js` | `33cbad2bdce9679a9f4fbebe072db87ecbb162e0ceb93237f6a627de07d3ab74` |
-| Installed Remote `dist/index.js` | `805d33ca4dec0c0503fc7458db3f7b5b4e5bd69ad9a27cf0df816b018032af32` |
+| Installed Remote `dist/index.js`        | `805d33ca4dec0c0503fc7458db3f7b5b4e5bd69ad9a27cf0df816b018032af32` |
 
 ## Schedule creation: installed-code-confirmed mismatch
 

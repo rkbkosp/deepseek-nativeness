@@ -33,7 +33,7 @@ const guiRound1URL=new URL('./parity-gui-round1.json',import.meta.url);
 const guiRound1=fs.existsSync(guiRound1URL)?JSON.parse(fs.readFileSync(guiRound1URL,'utf8')):null;
 const guiRound2URL=new URL('./parity-gui-round2.json',import.meta.url);
 const guiRound2=fs.existsSync(guiRound2URL)?JSON.parse(fs.readFileSync(guiRound2URL,'utf8')):null;
-const laterReviews=[3,4,5].map(n=>{const url=new URL(`./parity-gui-round${n}.json`,import.meta.url);return fs.existsSync(url)?{n,value:JSON.parse(fs.readFileSync(url,'utf8'))}:null}).filter(Boolean);
+const laterReviews=[3,4,5,'5.1'].map(n=>{const url=new URL(`./parity-gui-round${n}.json`,import.meta.url);return fs.existsSync(url)?{n,value:JSON.parse(fs.readFileSync(url,'utf8'))}:null}).filter(Boolean);
 const round4Rows={
  'real-history-render':['sidebar-1','header-1','chat-11','composer-3'],
  'real-file-read':['right-pane-1','right-pane-3'],
@@ -51,6 +51,7 @@ const round5Rows={
  'permission-caption':['composer-6'], 'terminal-visible-pane':['right-pane-6','right-pane-9'],
  'narrow-composer':['shell-5','composer-3','composer-4'], 'trajectory-gate':['header-2','chat-15'],
 };
+const round51Rows={'automatic-restore':['extra-6','composer-2'],'composer-scope-reload':['composer-3','composer-17'],'composer-model-caption':['composer-4','composer-5'],'permission-caption':['composer-6'],'trajectory-real-render':['header-2','chat-15'],'trajectory-search-collapse':['chat-15'],'trajectory-close':['header-2','composer-17']};
 for(const row of rows){
  row.evidence.nativeGui={status:'not-observed'};
  if(guiRound1&&observedDomains[row.domain]){
@@ -87,12 +88,90 @@ for(const row of rows){
     }
    }
   }
+  if(review.n==='5.1'){
+   for(const check of (review.value.passedSubchecks??[]).filter(x=>round51Rows[x.id]?.includes(row.id))){
+    row.evidence.nativeGui.retests.push({review:'qa/parity-gui-round5.1.json',candidateNativeSha256:review.value.candidateNativeSha256,finding:check.id,status:'observed-passed-subcheck',evidence:check.evidence??[],scope:check.detail,remaining:'Only the described read-only behavior is qualified. Remaining actions and exact visual parity stay open.'});
+    row.currentNative=`Partial implementation; round 5.1 passed ${check.id}. Other operations and full visual parity remain unaccepted.`;
+   }
+  }
  }
 }
 const composerSourceStatus={1:'Host/account/session draft map and accepted-intent settlement implemented; fixture-qualified, persistence/restart parity partial.',2:'Per-session scroll state and navigation generation implemented; fixture-qualified, full restoration behavior not independently accepted.',3:'Native multiline/marked-text keyboard handling implemented and framework-fixture tested; round5 narrow-width failure and platform IME GUI remain open.',4:'Native trigger + original WK model panes implemented; round5 anchor passed, trigger/provider caption and WK fallback failed; source repairs await GUI.',5:'Original reasoning pane exists; native Default/named/retained-effort source fix tested, actual new package pending.',6:'Authoritative permission catalog/current value and command writer + risk gate implemented. Round5 wording failed; source-only label fix pending GUI.',7:'Native Host command text-completion exists; original plus-menu File/client actions and complete popup/chip parity remain incomplete.',8:'Not implemented: original composer attachment upload/preview/retry. Unsupported File effect is explicitly blocked and draft preserved.',9:'Not implemented: original image/file drag-paste intake.',10:'Host command execution and text completion implemented; original claim chips/parameter popup behavior incomplete; client-only effects blocked.',11:'Scoped @file path completion and quoted Unicode grammar implemented; original rich references/conversation-reference features incomplete.',12:'Idle/busy queue-steer keyboard policy implemented; five policy fixtures passed; no live prompt sent.',13:'Projected next-turn queue edit/remove/steer controls implemented and fixture checked; original complete queue presentation still unaccepted.',14:'Ordinary prompt and typed-command accepted receipts settle only captured account/Host/session matching draft; late receipt fixtures passed.',15:'Unknown prompt/command receipt preserves draft and stable intent and blocks blind redispatch; fixtures passed.',16:'Stop control uses scoped cancel mutation with stable receipt handling; no live cancellation exercised.',17:'Offline/write and scoped-read guards implemented. Round5 early-read race failed, source read-epoch repair fixture passed; packaged reconnect GUI pending.'};
 for(const row of rows.filter(r=>r.domain==='composer'))row.currentNative=composerSourceStatus[Number(row.id.split('-').at(-1))];
+const round51Status={'composer-2':'Same completed session automatically restored at startup in real GUI5.1; complete per-session draft/scroll semantics still require independent acceptance.','composer-3':'Framework multiline/IME/shortcut fixtures passed; real GUI5.1 scope reload passed. Narrow responsive source repair awaits packaged GUI.','composer-4':'Native current-model caption passed real GUI5.1; anchored WK passed GUI5 but its current-value fallback repair is still source-only. Selection writes not tested live.','composer-5':'Native Default caption passed real GUI5.1; original WK reasoning pane remains partial pending complete options/selection acceptance.','composer-6':'Catalog/current permission and original labels passed read-only GUI5.1. Selection/risk gate is fixture-only, no real permission changed.','composer-17':'Initial scoped-read race absent and trajectory return remained connected in real GUI5.1. Actual offline/reconnect write gating not fully qualified.'};
+for(const row of rows)if(laterReviews.some(x=>x.n==='5.1')&&round51Status[row.id])row.currentNative=round51Status[row.id];
+const reviewedSourceStatus={
+ 'sidebar-11':'Original global panel pin/unpin contribution UI is not implemented.',
+ 'header-4':'Right-pane toggle exists and was exercised in real GUI5; individual pane contents and layering remain partial.',
+ 'header-5':'Only explicitly labelled loaded-history snippet export exists; complete original Markdown export is not provided by this control.',
+ 'header-7':'Original open-in-application action is explicitly disabled/unimplemented.',
+ 'header-8':'Original Session-feedback dialog/action is incomplete; typed Host /feedback text is a separate command path.',
+ 'shell-1':'Client theme preferences and source tokens implemented; actual general/font subchecks exist, full light/system theme transitions unqualified.',
+ 'shell-6':'Native menus/popovers/modal Escape and outside-dismiss implementations exist; complete keyboard/focus parity unqualified.',
+ 'sidebar-2':'Grouping preferences are consumed by sidebar_rows.go; source verified, complete GUI menu matrix unqualified.',
+ 'sidebar-3':'Updated/manual sort preference is consumed by sidebar_rows.go; drag-reorder UX is separately incomplete.',
+ 'sidebar-4':'Relative age captions implemented; exact source cadence and all boundary labels unqualified.',
+ 'sidebar-5':'Loaded-catalog title filtering and selection implemented; full source search UX not accepted.',
+ 'sidebar-6':'Workspace disclosure uses private persisted Expanded preference and is consumed by row builder; source/fixture evidence only.',
+ 'sidebar-7':'Pin/unpin Host wrapper and selected/pinned row data exist; full order/presentation not independently exercised.',
+ 'sidebar-8':'Archived filter preference is consumed by row builder; source verified, real archive mutation not tested.',
+ 'sidebar-9':'Native hover menu/selected row implemented; real GUI views observed but complete hover/action matrix not accepted.',
+ 'sidebar-10':'Shared original spinner geometry uses paint-only scheduling; synthetic counters passed, actual M1 CPU/memory not measured.',
+ 'sidebar-12':'Native new-session/workspace paths implemented under capability gates; mutations fixture-only.',
+ 'sidebar-13':'Remote reorder wrappers exist; native drag-and-drop/reorder operation parity remains incomplete.',
+ 'session-menu-1':'Pin/unpin menu invokes exact Host operation with stable mutation receipt; no real mutation acceptance.',
+ 'session-menu-2':'Native rename draft/confirm/target guard implemented; fixture-only writes.',
+ 'session-menu-3':'Session-level fork wrapper exists; precise message-boundary fork UI remains incomplete.',
+ 'session-menu-4':'Native menu copies captured Session ID through clipboard API; complete clipboard GUI acceptance not recorded.',
+ 'session-menu-5':'Archive/unarchive Host wrappers exist; running-task confirmation and full operation parity unaccepted.',
+ 'session-menu-6':'Row callbacks capture session ID; Host/generation and mutation receipt guards exist, fixtures do not replace live write checks.',
+ 'chat-1':'Native user/assistant text and timestamp rows implemented; exact source styling/selection behavior still partial.',
+ 'chat-2':'Semantic turn/step/process grouping implemented; unique/stable row identity independent fixture passed.',
+ 'chat-3':'Source.kind/context producer/form-based folding implemented; no text-substring hiding; core fixtures passed.',
+ 'chat-4':'Reasoning display/fold state implemented; complete current model/tool combinations unqualified.',
+ 'chat-5':'Tool call/result merging and original semantic projection implemented; bespoke tool renderers remain incomplete.',
+ 'chat-6':'Existing fold state consumes detail/completion/next-input preferences; independent fixture passed.',
+ 'chat-7':'Incremental publisher/Go consumption fixture passed, old history not resent per chunk; real runningCount was zero, live stream remains untested.',
+ 'chat-12':'Native selection and code wrap/copy controls exist; complete original selection/clipboard matrix unaccepted.',
+ 'chat-13':'Copy control exists; source feedback and precise message fork controls still incomplete/disabled.',
+ 'chat-14':'Usage/context projections and footer presentation are not completed; no fabricated statistics.',
+ 'chat-8':'Basic running/settlement state exists; complete original failure/cancel/retry/truncation presentation is not accepted.',
+ 'chat-9':'Original WK trajectory renders in GUI5.1; all round/request jump-to-chat scroll behavior remains unqualified.',
+ 'chat-10':'History paging transport exists; exact prepend/scroll anchoring UX has not been independently qualified.',
+ 'chat-16':'Context provenance is retained by projection; full inherited-history/compaction/recovery node presentation remains incomplete.',
+ 'chat-17':'Basic native tool nodes and low-frequency original detail components are partial; all bespoke tool visualizations are not implemented.',
+ 'interactions-1':'Correlated approval result buttons and ready gate implemented; protocol fixtures passed, no real approval answered.',
+ 'interactions-2':'Selected-session/catalog-confirmed-child ownership implemented; independent protocol and Go provenance fixtures passed.',
+ 'interactions-3':'Cancellation/selection/disconnect release and expiry implemented; independent lifecycle fixtures passed, no live approval release drill.',
+ 'interactions-4':'Native single/multi/custom/cancel question forms implemented; fixtures passed, no real question answered.',
+ 'interactions-5':'Original question IDs and source session retained through projection and Go UI; cross-layer fixture passed.',
+ 'interactions-6':'Subagent Remote wrappers exist; complete native child navigation/continuation/interruption UX remains incomplete.',
+ 'interactions-7':'$events readiness and ownership guards implemented; independent simulated multi-context cases passed, live multi-client handoff not exercised.',
+ 'right-pane-4':'Manual file refresh and version-consistent paged reads implemented; live file-change watcher not completed.',
+ 'right-pane-5':'Original diff/workbench panel not completed.',
+ 'right-pane-7':'Terminal runtime preserves existing device-owned inventory boundary; no real terminal attached/created as QA.',
+ 'right-pane-8':'General web preview entry exists; original sidebar browser navigation/pane integration is partial.',
+ 'settings-1':'General native settings implemented; other sections use partial compatibility pages/placeholders, whole navigation not accepted.',
+ 'settings-3':'Only Chinese native locale currently implemented; language change explicitly disabled.',
+ 'settings-4':'Private client theme choices implemented and persisted; complete source visual parity remains open.',
+ 'settings-6':'Detail/collapse/reply preferences implemented and consumed by native grouping; fixtures passed.',
+ 'settings-7':'Private code-work-view preference exists; full original workbench behavior incomplete.',
+ 'settings-8':'Shortcut reference view exists; editing/conflict-resolution UX is incomplete.',
+ 'settings-9':'Link-open preference exists; all browser/pane routing cases are not independently verified.',
+ 'settings-10':'Busy Enter preference is consumed by native composer policy; five mode fixtures passed, no live prompt sent.',
+ 'settings-11':'Preference exists, complete source usage-detail display is not implemented.',
+ 'settings-13':'Native client identity/version is shown separately; official Host updater/channel controls are not equivalent.',
+ 'plugins-4':'Reviewed enable/update wrappers have explicit frozen/capability gates; install/uninstall/discover and live mutations remain unqualified.',
+ 'plugins-7':'Bundled reviewed components are partial; arbitrary contributed slots/custom renderers are not reproduced.',
+ 'extra-1':'Projected Plan chip and Host command writer exist; full goal/plan presentation and actions remain partial.',
+ 'extra-2':'Read-only schedule wrappers exist; full automation catalog/history frontend is incomplete and GUI5 entry remained disabled.',
+ 'extra-3':'Remote command wrappers exist but installed schedule/create signature mismatch is a frozen compatibility boundary; no live schedules created.',
+ 'extra-4':'Authoritative preset header label exists; full preset-management/child/team configuration is incomplete and team setter is capability-disabled.',
+ 'extra-5':'Separate Remote account connection UI works; original account settings/feedback/notifications surface remains partial.',
+};
+for(const row of rows){if(reviewedSourceStatus[row.id]&&(row.currentNative.startsWith('pending implementation')||row.currentNative.startsWith('FAIL at baseline'))){if(row.currentNative.startsWith('FAIL'))row.baselineNative=row.currentNative;row.currentNative=reviewedSourceStatus[row.id];}if(row.currentNative.startsWith('pending implementation')&&(row.remoteSupport.startsWith('blocked:')||row.remoteSupport.startsWith('forbidden')))row.currentNative='Unavailable through the current frozen direct Remote surface; see exact constraint and conditional resource-carrier qualification.';}
 const data={generatedAt:new Date().toISOString(),status:'NOT PARITY ACCEPTED',scope:'Source-grounded operation families. source-inventory.json records discovered packages, files, call sites and contributions for deeper coverage; dynamic third-party plugins cannot be exhaustively specified statically.',originalEvidenceDirectory:'/tmp/native-dsh-parity',guiReviews:guiRound1?['qa/parity-gui-round1.json']:[],viewport:{logical:[1280,820],physical:[2560,1640],theme:'dark'},testPolicy:{live:'Only passive reads and read-only UI navigation authorized in this audit',mutations:'Use fixture to verify exact wire and target identity. No live prompt/cancel/approve/rename/settings/new sessions.',performance:'M4 smoke and synthetic budget are developer evidence; M1 cross-machine CPU/memory still required'},priority:['Correct chat semantic projection and grouping','Dark theme and original shell/header/sidebar','Per-session draft/scroll, offline gating and operation target identity','Model/permission/queue/commands and real menus','Settings/plugins/files/terminal and hard capability boundaries'],hardFrozenBoundaries:rows.filter(r=>r.remoteSupport.startsWith('blocked:')||r.remoteSupport.startsWith('forbidden')).map(r=>r.id),rows};
-data.guiReviews=[1,2,3,4,5].filter(n=>fs.existsSync(new URL(`./parity-gui-round${n}.json`,import.meta.url))).map(n=>`qa/parity-gui-round${n}.json`);
+data.guiReviews=[1,2,3,4,5,'5.1'].filter(n=>fs.existsSync(new URL(`./parity-gui-round${n}.json`,import.meta.url))).map(n=>`qa/parity-gui-round${n}.json`);
 const round4=laterReviews.find(x=>x.n===4)?.value;
 const composerReportURL=new URL('./composer-component-results.json',import.meta.url);
 if(fs.existsSync(composerReportURL)){
@@ -105,5 +184,6 @@ if(fs.existsSync(composerReportURL)){
 }
 if(round4){data.latestCandidate={sha256:round4.candidateNativeSha256,status:round4.status};data.startupDiagnosis=round4.startup;data.remaining=round4.remaining;data.referenceFontDefaults={evidence:round4.referenceFontEvidence,textSize:14,codeSize:11,terminalSize:13,textFamily:'',codeFamily:'',terminalFamily:''};}
 const round5=laterReviews.find(x=>x.n===5)?.value;if(round5){data.latestCandidate={sha256:round5.candidateNativeSha256,status:round5.status};data.remaining=round5.remaining;}
+const round51=laterReviews.find(x=>x.n==='5.1')?.value;if(round51){data.latestCandidate={sha256:round51.candidateNativeSha256,status:round51.status};data.remaining=round51.remaining;}
 fs.writeFileSync(new URL('./parity-matrix.json',import.meta.url),JSON.stringify(data,null,2)+'\n');
 console.log(JSON.stringify({operationFamilies:rows.length,hardFrozenBoundaries:data.hardFrozenBoundaries,status:data.status}));

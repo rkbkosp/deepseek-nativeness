@@ -29,58 +29,137 @@ async function walk(path) {
 }
 
 await walk(join(source, "packages"));
-const primitivesRoot=join(source,"packages/client/ui-primitives/src");
-const primitivesIndex=await readFile(join(primitivesRoot,"index.ts"),"utf8");
-const primitivesIcons=await readFile(join(primitivesRoot,"icons/index.tsx"),"utf8");
-const primitiveLeaves=new Map();
-for(const match of primitivesIndex.matchAll(/export\s+(?:type\s+)?\{([^{}]+)\}\s+from\s+'([^']+)'/gm)) {
-  for(const item of match[1].split(',')) {
-    const parts=item.trim().replace(/^type\s+/,'').split(/\s+as\s+/);
-    primitiveLeaves.set(parts.at(-1),resolve(primitivesRoot,match[2]));
+const primitivesRoot = join(source, "packages/client/ui-primitives/src");
+const primitivesIndex = await readFile(
+  join(primitivesRoot, "index.ts"),
+  "utf8",
+);
+const primitivesIcons = await readFile(
+  join(primitivesRoot, "icons/index.tsx"),
+  "utf8",
+);
+const primitiveLeaves = new Map();
+for (const match of primitivesIndex.matchAll(
+  /export\s+(?:type\s+)?\{([^{}]+)\}\s+from\s+'([^']+)'/gm,
+)) {
+  for (const item of match[1].split(",")) {
+    const parts = item
+      .trim()
+      .replace(/^type\s+/, "")
+      .split(/\s+as\s+/);
+    primitiveLeaves.set(parts.at(-1), resolve(primitivesRoot, match[2]));
   }
 }
 const plugin = {
   name: "frozen-source-workspace",
   setup(b) {
-    b.onLoad({filter:/ui-schedule\/src\/client\/TaskManagerPage\.tsx$/},async(args)=>{
-      let contents=await readFile(args.path,"utf8");
-      const edits=[
-        ["onClick={onNewTask}>{t('new.action')}","disabled={(props as any).nativeStartDraftAvailable === false} onClick={onNewTask}>{t('new.action')}"],
-        ["onSelect={() => { setCreateMenuOpen(false); onNewTask() }}>","disabled={(props as any).nativeStartDraftAvailable === false} onSelect={() => { setCreateMenuOpen(false); onNewTask() }}>"],
-        ["onSelect={() => { setCreateMenuOpen(false); createManually(createTriggerRef.current) }}>","disabled={(props as any).nativeManualCreateAvailable === false} title=\"Remote0.6.4与当前Host创建接口不兼容\" onSelect={() => { setCreateMenuOpen(false); createManually(createTriggerRef.current) }}>"],
-      ];
-      for(const[from,to]of edits){if(!contents.includes(from))throw Error("Frozen schedule capability seam changed");contents=contents.replace(from,to);}
-      return {contents,loader:"tsx",resolveDir:dirname(args.path)};
-    });
-    b.onLoad({filter:/ui-settings\/src\/client\/schema\.ts$/},async(args)=>{
-      let contents=await readFile(args.path,"utf8");
-      const edits=[
-        ["import { Service } from '@deepseek-ai/cordis'", ""],
-        ["export class SettingsSchemaService extends Service {", "export class SettingsSchemaService {"],
-        ["    super(ctx, 'settingsSchema')", "    void ctx"],
-      ];
-      for(const[from,to]of edits){if(!contents.includes(from))throw Error("Frozen settings schema seam changed");contents=contents.replace(from,to);}
-      return {contents,loader:"ts",resolveDir:dirname(args.path)};
-    });
-    b.onResolve({filter:/^@deepseek-ai\/dsh-client-ui-primitives$/},async(args)=>{
-      const importer=await readFile(args.importer,"utf8"),names=new Set();
-      for(const match of importer.matchAll(/import\s*\{([^{}]+)\}\s*from\s*['"]@deepseek-ai\/dsh-client-ui-primitives['"]/gm)) {
-        for(const item of match[1].split(',')) {
-          const name=item.trim();
-          if(name&&!name.startsWith('type '))names.add(name.split(/\s+as\s+/)[0]);
-        }
-      }
-      if(!names.size)throw Error("Primitive imports require an explicit named source seam: "+args.importer);
-      const exports=[...names].map(name=>{
-        const leaf=primitiveLeaves.get(name)??(new RegExp(`\\b${name}\\b`).test(primitivesIcons)?join(primitivesRoot,"icons/index.tsx"):null);
-        if(!leaf)throw Error("Frozen primitive export not found: "+name);
-        return `export {${name}} from ${JSON.stringify(leaf)};`;
-      }).join('\n');
-      return {path:args.importer,namespace:"selected-original-primitives",pluginData:exports};
-    });
-    b.onLoad({filter:/.*/,namespace:"selected-original-primitives"},args=>({contents:args.pluginData,loader:"ts",resolveDir:source}));
+    b.onResolve({ filter: /^\.\/routes\/[a-z-]+\.js$/ }, (args) => ({
+      path: args.path,
+      external: true,
+    }));
+    b.onResolve({ filter: /^rrule$/ }, () => ({
+      path: join(root, "node_modules/rrule/dist/es5/rrule.js"),
+    }));
     b.onLoad(
-      { filter: /ui-model-selection\/src\/client\/ModelSelect\.tsx$/ },
+      {
+        filter: /ui-schedule\/src\/client\/TaskManagerPage\.tsx$/,
+        namespace: "file",
+      },
+      async (args) => {
+        let contents = await readFile(args.path, "utf8");
+        const edits = [
+          [
+            "onClick={onNewTask}>{t('new.action')}",
+            "disabled={(props as any).nativeStartDraftAvailable === false} onClick={onNewTask}>{t('new.action')}",
+          ],
+          [
+            "onSelect={() => { setCreateMenuOpen(false); onNewTask() }}>",
+            "disabled={(props as any).nativeStartDraftAvailable === false} onSelect={() => { setCreateMenuOpen(false); onNewTask() }}>",
+          ],
+          [
+            "onSelect={() => { setCreateMenuOpen(false); createManually(createTriggerRef.current) }}>",
+            'disabled={(props as any).nativeManualCreateAvailable === false} title="Remote0.6.4与当前Host创建接口不兼容" onSelect={() => { setCreateMenuOpen(false); createManually(createTriggerRef.current) }}>',
+          ],
+        ];
+        for (const [from, to] of edits) {
+          if (!contents.includes(from))
+            throw Error("Frozen schedule capability seam changed");
+          contents = contents.replace(from, to);
+        }
+        return { contents, loader: "tsx", resolveDir: dirname(args.path) };
+      },
+    );
+    b.onLoad(
+      { filter: /ui-settings\/src\/client\/schema\.ts$/, namespace: "file" },
+      async (args) => {
+        let contents = await readFile(args.path, "utf8");
+        const edits = [
+          ["import { Service } from '@deepseek-ai/cordis'", ""],
+          [
+            "export class SettingsSchemaService extends Service {",
+            "export class SettingsSchemaService {",
+          ],
+          ["    super(ctx, 'settingsSchema')", "    void ctx"],
+        ];
+        for (const [from, to] of edits) {
+          if (!contents.includes(from))
+            throw Error("Frozen settings schema seam changed");
+          contents = contents.replace(from, to);
+        }
+        return { contents, loader: "ts", resolveDir: dirname(args.path) };
+      },
+    );
+    b.onResolve(
+      { filter: /^@deepseek-ai\/dsh-client-ui-primitives$/ },
+      async (args) => {
+        const importer = await readFile(args.importer, "utf8"),
+          names = new Set();
+        for (const match of importer.matchAll(
+          /import\s*\{([^{}]+)\}\s*from\s*['"]@deepseek-ai\/dsh-client-ui-primitives['"]/gm,
+        )) {
+          for (const item of match[1].split(",")) {
+            const name = item.trim();
+            if (name && !name.startsWith("type "))
+              names.add(name.split(/\s+as\s+/)[0]);
+          }
+        }
+        if (!names.size)
+          throw Error(
+            "Primitive imports require an explicit named source seam: " +
+              args.importer,
+          );
+        const exports = [...names]
+          .map((name) => {
+            const leaf =
+              primitiveLeaves.get(name) ??
+              (new RegExp(`\\b${name}\\b`).test(primitivesIcons)
+                ? join(primitivesRoot, "icons/index.tsx")
+                : null);
+            if (!leaf)
+              throw Error("Frozen primitive export not found: " + name);
+            return `export {${name}} from ${JSON.stringify(leaf)};`;
+          })
+          .join("\n");
+        return {
+          path: args.importer,
+          namespace: "selected-original-primitives",
+          pluginData: exports,
+        };
+      },
+    );
+    b.onLoad(
+      { filter: /.*/, namespace: "selected-original-primitives" },
+      (args) => ({
+        contents: args.pluginData,
+        loader: "ts",
+        resolveDir: source,
+      }),
+    );
+    b.onLoad(
+      {
+        filter: /ui-model-selection\/src\/client\/ModelSelect\.tsx$/,
+        namespace: "file",
+      },
       async (args) => {
         let contents = await readFile(args.path, "utf8");
         const edits = [
@@ -118,19 +197,27 @@ const plugin = {
       },
     );
 
-    b.onLoad({ filter: /PluginManagerPage\.module\.css$/ }, async (args) => {
-      const contents = await readFile(args.path, "utf8"),
-        original = "--plugin-page-inset: clamp(24px, 4vw, 48px);";
-      if (!contents.includes(original))
-        throw Error("Frozen plugin viewport declaration changed");
-      return {
-        contents: contents.replace(
-          original,
-          "--plugin-page-inset: var(--native-dsh-global-page-inset, clamp(24px, 4vw, 48px));",
-        ),
-        loader: "local-css",
-        resolveDir: dirname(args.path),
-      };
+    b.onLoad(
+      { filter: /PluginManagerPage\.module\.css$/, namespace: "file" },
+      async (args) => {
+        const contents = await readFile(args.path, "utf8"),
+          original = "--plugin-page-inset: clamp(24px, 4vw, 48px);";
+        if (!contents.includes(original))
+          throw Error("Frozen plugin viewport declaration changed");
+        return {
+          contents: contents.replace(
+            original,
+            "--plugin-page-inset: var(--native-dsh-global-page-inset, clamp(24px, 4vw, 48px));",
+          ),
+          loader: "local-css",
+          resolveDir: dirname(args.path),
+        };
+      },
+    );
+    b.onLoad({filter:/TaskManagerPage\.module\.css$/,namespace:"file"},async(args)=>{
+      const contents=await readFile(args.path,"utf8"),from="padding: 0 clamp(24px, 4vw, 48px) 48px;";
+      if(!contents.includes(from))throw Error("Frozen automation viewport declaration changed");
+      return {contents:contents.replace(from,"padding: 0 var(--native-dsh-global-page-inset, clamp(24px, 4vw, 48px)) 48px;"),loader:"local-css",resolveDir:dirname(args.path)};
     });
     b.onResolve({ filter: /^@deepseek-ai\// }, (args) => {
       if (
@@ -180,6 +267,9 @@ if (process.argv.includes("--engine-test")) {
       join(root, "src/rpc-adapter.ts"),
       join(root, "src/model-contract.ts"),
       join(root, "src/model-settings.tsx"),
+      join(root, "src/agent-presets.tsx"),
+      join(root, "src/automation.tsx"),
+      join(root, "src/bridge.ts"),
     ],
     outdir: join(root, ".test-build"),
     outExtension: { ".js": ".mjs" },
@@ -189,24 +279,34 @@ if (process.argv.includes("--engine-test")) {
     target: "node24",
     nodePaths: [join(root, "node_modules")],
     plugins: [plugin],
-    jsx:"automatic",
-    external:["react","react/*","react-dom","react-dom/*"],
+    jsx: "automatic",
+    external: ["react", "react/*", "react-dom", "react-dom/*"],
+    loader: {
+      ".woff2": "dataurl",
+      ".woff": "dataurl",
+      ".ttf": "dataurl",
+      ".svg": "dataurl",
+      ".png": "dataurl",
+    },
   });
   process.exit(0);
 }
-const output = join(root, process.argv.includes("--out-next") ? "dist-next" : "dist");
-await rm(output,{recursive:true,force:true});
-await mkdir(output,{recursive:true});
+const output = join(
+  root,
+  process.argv.includes("--out-next") ? "dist-next" : "dist",
+);
+await rm(output, { recursive: true, force: true });
+await mkdir(output, { recursive: true });
 const result = await build({
   entryPoints: {
-    app: join(root,"src/main.tsx"),
-    "routes/models": join(root,"src/models.tsx"),
-    "routes/plugins": join(root,"src/plugins.tsx"),
-    "routes/trajectory": join(root,"src/trajectory.tsx"),
-    "routes/terminal": join(root,"src/terminal.tsx"),
-    "routes/agent-presets": join(root,"src/agent-presets.tsx"),
-    "routes/model-settings": join(root,"src/model-settings.tsx"),
-    "routes/automation": join(root,"src/automation.tsx"),
+    app: join(root, "src/main.tsx"),
+    "routes/models": join(root, "src/models.tsx"),
+    "routes/plugins": join(root, "src/plugins.tsx"),
+    "routes/trajectory": join(root, "src/trajectory.tsx"),
+    "routes/terminal": join(root, "src/terminal.tsx"),
+    "routes/agent-presets": join(root, "src/agent-presets.tsx"),
+    "routes/model-settings": join(root, "src/model-settings.tsx"),
+    "routes/automation": join(root, "src/automation.tsx"),
   },
   outdir: output,
   splitting: true,
@@ -231,28 +331,65 @@ const result = await build({
   metafile: true,
   legalComments: "eof",
 });
-const outputs=result.metafile.outputs;
-const outputBase=Object.keys(outputs).find(key=>key.endsWith("/app.js")).slice(0,-6);
-function staticClosure(key,seen=new Set()) {
-  if(seen.has(key))return seen;
+const outputs = result.metafile.outputs;
+const appOutput = Object.keys(outputs).find((key) => key.endsWith("/app.js"));
+if (!appOutput) throw Error("Initial page entry was not emitted");
+const outputBase = appOutput.slice(0, -6);
+function staticClosure(key, seen = new Set()) {
+  if (seen.has(key)) return seen;
   seen.add(key);
-  for(const entry of outputs[key]?.imports??[])if(!entry.external&&entry.kind!=="dynamic-import")staticClosure(entry.path,seen);
+  for (const entry of outputs[key]?.imports ?? [])
+    if (!entry.external && entry.kind !== "dynamic-import")
+      staticClosure(entry.path, seen);
   return seen;
 }
-const budgets=Object.keys(result.metafile.outputs).filter(key=>key.endsWith('.js')&&outputs[key].entryPoint).map(key=>{
-  const entries=new Set([...staticClosure(outputBase+'app.js'),...staticClosure(key)]);
-  return {
-    entry:key.slice(outputBase.length),
-    initialJavaScriptBytes:[...entries].reduce((total,name)=>total+outputs[name].bytes,0),
-    initialJavaScriptFiles:[...entries].map(name=>name.slice(outputBase.length)),
-    cssBytes:outputs[key.replace(/\.js$/,'.css')]?.bytes??0,
-    cssInputs:[...new Set([outputBase+'app.css',key.replace(/\.js$/,'.css')].flatMap(name=>Object.keys(outputs[name]?.inputs??{})))],
-    inputs:[...new Set([...entries].flatMap(name=>Object.keys(outputs[name].inputs)))],
-  };
-});
-await writeFile(join(output,'route-budgets.json'),JSON.stringify({baseline:{javaScriptBytes:5186481,cssBytes:225393},scope:'Static initial JS closure including app; lazy imports such as original xterm/language loading excluded until requested. Build bytes, not runtime memory.',routes:budgets},null,2)+'\n');
+const budgets = Object.keys(result.metafile.outputs)
+  .filter((key) => key.endsWith(".js") && (key===appOutput||key.startsWith(outputBase+'routes/')))
+  .map((key) => {
+    const entries = new Set([
+      ...staticClosure(outputBase + "app.js"),
+      ...staticClosure(key),
+    ]);
+    return {
+      entry: key.slice(outputBase.length),
+      initialJavaScriptBytes: [...entries].reduce(
+        (total, name) => total + outputs[name].bytes,
+        0,
+      ),
+      initialJavaScriptFiles: [...entries].map((name) =>
+        name.slice(outputBase.length),
+      ),
+      cssBytes: outputs[key.replace(/\.js$/, ".css")]?.bytes ?? 0,
+      cssInputs: [
+        ...new Set(
+          [outputBase + "app.css", key.replace(/\.js$/, ".css")].flatMap(
+            (name) => Object.keys(outputs[name]?.inputs ?? {}),
+          ),
+        ),
+      ],
+      inputs: [
+        ...new Set(
+          [...entries].flatMap((name) => Object.keys(outputs[name].inputs)),
+        ),
+      ],
+    };
+  });
+await writeFile(
+  join(output, "route-budgets.json"),
+  JSON.stringify(
+    {
+      baseline: { javaScriptBytes: 5186481, cssBytes: 225393 },
+      scope:
+        "Static initial JS closure including app; lazy imports such as original xterm/language loading excluded until requested. Build bytes, not runtime memory.",
+      routes: budgets,
+    },
+    null,
+    2,
+  ) + "\n",
+);
 await cp(join(root, "index.html"), join(output, "index.html"));
 await cp(join(source, "LICENSE"), join(output, "DSH-LICENSE"));
+await cp(join(root, "page-contracts.mjs"), join(output, "page-contracts.mjs"));
 await writeFile(
   join(output, "source-manifest.json"),
   JSON.stringify(
@@ -267,12 +404,16 @@ await writeFile(
         "ui-settings-web-search/WebSearchCard + controller",
         "ui-trajectory/TrajectoryView + original assembler/definitions/snapshot/timeline/table",
         "ui-sidebar-terminal/LazyTerminalBody + original TerminalView/Inventory/WindowHold/RemoteStream",
+        "ui-agent-preset/AgentPresetSection + original section controller",
+        "ui-settings-models/ModelsSection + original store/schema/operations and SettingsDescribeMirror",
+        "ui-schedule/TaskManagerPage + original catalog/editor/history/deletion machinery",
       ],
       transforms: [
         "TaskManagerPage keeps original controls and disables manual creation at the known frozen carrier mismatch; native draft navigation is capability-gated",
         "SettingsSchemaService retains original schema/path method bodies with only its Cordis registration inheritance removed for standalone instantiation",
         "Named ui-primitives imports resolve directly to their original exported leaves, avoiding side effects from unrelated barrel exports",
         "PluginManagerPage viewport inset accepts native outer-window token (fallback unchanged)",
+        "TaskManagerPage viewport inset accepts the same outer-window token; settings sections use original modal options padding instead",
         "ModelSelect embedded presentation: initial open, no trigger, native close after original settlement; original panes and keyboard logic retained",
       ],
       inputs: Object.keys(result.metafile.inputs),

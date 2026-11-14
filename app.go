@@ -36,6 +36,7 @@ type app struct {
 	settingsOpen                                             bool
 	fontSettingsOpen                                         bool
 	settingsSection                                          string
+	settingsPageRequested                                    string
 	searchOpen                                               bool
 	viewMenu                                                 bool
 	watermarks                                               map[string]int
@@ -160,7 +161,7 @@ func (a *app) view(c *ui.Context) {
 			a.sidebarFrame(c, a.sidebarShown)
 		}
 		ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Background(a.theme.Background).Children(func() {
-			if a.compat == nil || a.compatPlacement != "main" || a.compatPage != "plugins" {
+			if a.compat == nil || a.compatPlacement != "main" {
 				a.header(c)
 			}
 			if a.demo {
@@ -190,7 +191,18 @@ func (a *app) view(c *ui.Context) {
 			width, _ := c.Size()
 			ui.Column(c).Width(min(576, width*.45)).Shrink(0).MinHeight(0).FillHeight().Background(a.theme.Background).BorderWidth(0, 0, 0, .5).BorderColor(a.theme.Border).Children(func() {
 				if a.compat != nil && a.compatPlacement == "right" {
-					ui.WebView(c, a.compat).Grow(1).MinHeight(0)
+					ui.Row(c).Height(48).Shrink(0).Padding(10, 16).Gap(8).AlignItems(ui.Center).Children(func() {
+						if ui.ButtonBase(c).Label("右侧栏开始页").Children(func() { icon(c, "browse-outline", 16); ui.Text(c, "开始").FontSize(14) }).Clicked() {
+							a.closeCompat()
+						}
+						ui.Text(c, "/ 终端").FontSize(13).TextColor(a.theme.TextMuted)
+						ui.Spacer(c)
+						if ui.ButtonBase(c).Size(24, 24).Label("收起右侧边栏").Children(func() { icon(c, "panel-left-outline", 16) }).Clicked() {
+							a.closeCompat()
+							a.rightPaneOpen = false
+						}
+					})
+					ui.WebView(c.Key("right-compat-"+a.compatOwner), a.compat).Grow(1).MinHeight(0).MinWidth(0)
 				} else {
 					a.rightPaneView(c)
 				}
