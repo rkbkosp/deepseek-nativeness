@@ -8,6 +8,7 @@ export interface MenuPlacementConfig extends PlacementOptions {
   matchWidth?: boolean;
   point?: { x: number; y: number };
 }
+export type MenuPlacementBinding = (() => void) & { schedule: () => void };
 const properties = [
   "--native-menu-x",
   "--native-menu-y",
@@ -22,7 +23,7 @@ export function bindMenuPlacement(
   menu: HTMLElement,
   anchor: HTMLElement,
   config: () => MenuPlacementConfig,
-): () => void {
+): MenuPlacementBinding {
   const doc = menu.ownerDocument,
     win = doc.defaultView!;
   const previous = new Map(
@@ -41,6 +42,9 @@ export function bindMenuPlacement(
       menu.style.setProperty(key, text);
   };
   const place = () => {
+    // A parent card can synchronously move its child/backing while that owner
+    // already has a queued frame. Retire that frame before applying the move.
+    if (frame) win.cancelAnimationFrame(frame);
     frame = 0;
     if (stopped || !menu.isConnected || !anchor.isConnected) return;
     const options = config(),
@@ -140,7 +144,7 @@ export function bindMenuPlacement(
   win.visualViewport?.addEventListener("scroll", schedule);
   anchor.addEventListener("native-menu-position", place);
   place();
-  return () => {
+  const dispose = () => {
     if (stopped) return;
     stopped = true;
     if (frame) win.cancelAnimationFrame(frame);
@@ -162,4 +166,5 @@ export function bindMenuPlacement(
       menu.removeAttribute("data-native-submenu-fallback");
     else menu.setAttribute("data-native-submenu-fallback", oldSubmenu);
   };
+  return Object.assign(dispose, { schedule });
 }

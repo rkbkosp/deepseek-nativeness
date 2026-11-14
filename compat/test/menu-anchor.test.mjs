@@ -821,3 +821,82 @@ test("exact original owner build seams call the tested adapters and all packaged
     "all literal inline anchor declarations are classified too",
   );
 });
+
+test("position-only parent commits move main submenu and backing without business rerender or surviving queued frames", () => {
+  const oldCSS = globalThis.CSS,
+    oldDoc = globalThis.document;
+  try {
+    const w = world();
+    globalThis.CSS = { supports: () => false };
+    globalThis.document = w.doc;
+    w.doc.documentElement.dataset = { platform: "darwin" };
+    w.doc.body = new w.Element(rect(0, 0, 500, 400));
+    const trigger = new w.Element(rect(30, 70, 80, 24)),
+      menu = new w.Element(rect(0, 0, 150, 100)),
+      sub = new w.Element(rect(0, 0, 100, 60)),
+      back = new w.Element(rect(0, 0, 0, 0)),
+      row = new w.Element(rect(30, 118, 80, 20));
+    let renders = 0;
+    function Harness({ revision }) {
+      renders++;
+      const a = useRef(null),
+        p = useRef(null),
+        s = useRef(null),
+        b = useRef(null);
+      useNativeMenuAnchor(p, a, {
+        active: true,
+        portal: true,
+        side: "bottom",
+        align: "start",
+      });
+      useNativeSubmenuAnchor(s, p, { active: true, page: false, trigger: row });
+      useNativeMenuBacking(s, b);
+      return React.createElement(
+        React.Fragment,
+        null,
+        ...[
+          ["a", a],
+          ["p", p],
+          ["s", s],
+          ["b", b],
+        ].map(([id, ref]) => React.createElement("div", { id, key: id, ref })),
+      );
+    }
+    let r;
+    act(() => {
+      r = TestRenderer.create(React.createElement(Harness, { revision: 0 }), {
+        createNodeMock: (e) =>
+          ({ a: trigger, p: menu, s: sub, b: back })[e.props.id],
+      });
+    });
+    const before = menu.getBoundingClientRect().left;
+    trigger.r = rect(150, 70, 80, 24);
+    act(() => r.update(React.createElement(Harness, { revision: 1 })));
+    assert.equal(
+      w.frames.size,
+      3,
+      "one queued frame per active owner, not a loop",
+    );
+    w.flush();
+    assert.equal(menu.getBoundingClientRect().left, before + 120);
+    assert.equal(sub.getBoundingClientRect().left, 304);
+    assert.deepEqual(back.getBoundingClientRect(), sub.getBoundingClientRect());
+    assert.equal(renders, 2, "placement never updates React business state");
+    assert.equal(w.frames.size, 0);
+    act(() => r.update(React.createElement(Harness, { revision: 2 })));
+    act(() => r.update(React.createElement(Harness, { revision: 3 })));
+    assert.equal(w.frames.size, 3, "repeated commits coalesce");
+    act(() => r.unmount());
+    assert.deepEqual(w.stats(), {
+      listeners: 0,
+      frames: 0,
+      resize: 0,
+      mutation: 0,
+    });
+  } finally {
+    if (oldCSS === undefined) delete globalThis.CSS;
+    else globalThis.CSS = oldCSS;
+    if (oldDoc === undefined) delete globalThis.document;
+    else globalThis.document = oldDoc;
+  }
+});

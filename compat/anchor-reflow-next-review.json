@@ -1,0 +1,27 @@
+{
+  "scope": "Position-only parent commit reflow fix for active local owner bindings; no Host/RPC/Go/editor or existing GUI package/resource changes.",
+  "baseline": "68c296531147fad995fa165f397d61075b7abf31 remains frozen in dist-anchor-coverage-next and dist-anchor-coverage-forced-test",
+  "validation": {
+    "compatTests": 30,
+    "authorAnchorTests": 12,
+    "independentSourceTests": 7,
+    "independentScope": "qa/anchor-cross-source.test.mjs: 80 lifetime cycles and four position-only reflow cases; fixtures only, no new WK composed-screen or macOS15.8 proof",
+    "businessRerendersFromPlacement": 0,
+    "globalObserversAdded": 0,
+    "selfSchedulingFrameLoop": false,
+    "reactDoctor": {
+      "scope": "changed, 4 files",
+      "score": 100,
+      "issues": 0
+    }
+  },
+  "normal": {
+    "bytes": 302032,
+    "sha256": "e598c912c4b83d75b0e136a4a1b17eb80ba304831eabaf075e8b5bf4165c7fe1"
+  },
+  "forced": {
+    "bytes": 307869,
+    "sha256": "f95b4860d2c6430937c0ee6fbbd408c90128a63638548c1ffb23ded127690ab1"
+  },
+  "pairSHA256": "7d4450d4e4bfab7dd8a3a93c3eb314a7f9bdea4137712cfec990831d6ed895ea"
+}

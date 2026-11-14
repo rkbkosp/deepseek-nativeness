@@ -443,21 +443,25 @@ if (process.argv.includes("--engine-test")) {
 }
 const output = join(
   root,
-  process.argv.includes("--out-anchor-coverage-next")
+  process.argv.includes("--out-anchor-reflow-next")
     ? forceMenuAnchorFallback
-      ? "dist-anchor-coverage-forced-test"
-      : "dist-anchor-coverage-next"
-    : forceMenuAnchorFallback
-      ? "dist-layout-forced-test"
-      : process.argv.includes("--out-layout-next")
-        ? "dist-layout-next"
-        : process.argv.includes("--out-settings-fix")
-          ? "dist-settings-fix"
-          : process.argv.includes("--out-perf-next")
-            ? "dist-perf-next"
-            : process.argv.includes("--out-next")
-              ? "dist-next"
-              : "dist",
+      ? "dist-anchor-reflow-forced-test"
+      : "dist-anchor-reflow-next"
+    : process.argv.includes("--out-anchor-coverage-next")
+      ? forceMenuAnchorFallback
+        ? "dist-anchor-coverage-forced-test"
+        : "dist-anchor-coverage-next"
+      : forceMenuAnchorFallback
+        ? "dist-layout-forced-test"
+        : process.argv.includes("--out-layout-next")
+          ? "dist-layout-next"
+          : process.argv.includes("--out-settings-fix")
+            ? "dist-settings-fix"
+            : process.argv.includes("--out-perf-next")
+              ? "dist-perf-next"
+              : process.argv.includes("--out-next")
+                ? "dist-next"
+                : "dist",
 );
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
