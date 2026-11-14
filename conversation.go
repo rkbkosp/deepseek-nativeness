@@ -240,7 +240,8 @@ func (a *app) messageView(c *ui.Context, m message) {
 			})
 		}
 		if len(m.AssistantBlocks) > 0 {
-			for i, b := range m.AssistantBlocks {
+			for i := 0; i < len(m.AssistantBlocks); i++ {
+				b := m.AssistantBlocks[i]
 				switch b.Kind {
 				case "text":
 					if m.Streaming {
@@ -249,16 +250,39 @@ func (a *app) messageView(c *ui.Context, m message) {
 						markdown.View(c.Key(fmt.Sprintf("%s:block:%d", m.ID, i)), b.Text, &a.md)
 					}
 				case "image":
-					one := m
-					one.ID = fmt.Sprintf("%s:image:%d", m.ID, i)
-					one.AssistantBlocks = []assistantBlock{b}
-					a.messageImageGallery(c, one)
+					start := i
+					for i+1 < len(m.AssistantBlocks) && m.AssistantBlocks[i+1].Kind == "image" {
+						i++
+					}
+					group := m
+					// Like AssistantMarkdown, the first block keys the group so
+					// appending an image preserves its existing occurrences.
+					group.ID = fmt.Sprintf("%s:image:%d", m.ID, start)
+					group.AssistantBlocks = m.AssistantBlocks[start : i+1]
+					a.messageImageGallery(c, group)
+				case "reasoning", "tool-call":
+					// Reasoning and grouped tool rows are rendered separately.
+				default:
+					a.unknownAssistantBlock(c.Key(fmt.Sprintf("%s:unknown:%d", m.ID, i)), b.Block)
 				}
 			}
 		} else if m.Streaming {
 			markdown.Stream(c.Key(m.ID), m.Text, &a.md)
 		} else {
 			markdown.View(c.Key(m.ID), m.Text, &a.md)
+		}
+		if m.Interrupted {
+			// AssistantMarkdown's terminal tag belongs to the whole response,
+			// after its blocks, including an otherwise empty aborted response.
+			background := ui.RGBA(38, 49, 72, .06)
+			foreground := ui.Hex("#81858c")
+			if a.theme.Dark {
+				background = ui.RGBA(255, 255, 255, .08)
+				foreground = ui.Hex("#adb2b8")
+			}
+			ui.Row(c.Key("stopped:" + m.ID)).Shrink(0).Children(func() {
+				ui.Text(c, "已停止").FontSize(11).FixedLineHeight(18).Height(18).Padding(0, 6).Radius(8).Background(background).TextColor(foreground)
+			})
 		}
 		if m.Text != "" {
 			a.messageActions(c, m, false)

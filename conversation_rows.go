@@ -22,7 +22,7 @@ type chatGather struct {
 
 func (a *app) invalidateChatRows() { a.chatStructureRevision++; a.chatRowsCache = nil }
 func assistantHasVisibleContent(m *message) bool {
-	if m.Text != "" || m.Reasoning != "" || m.ReasoningDisplay != "" {
+	if m.Interrupted || m.Text != "" || m.Reasoning != "" || m.ReasoningDisplay != "" {
 		return true
 	}
 	for _, b := range m.AssistantBlocks {
@@ -56,7 +56,7 @@ func (a *app) chatRows() []chatRow {
 		if m.Role == "user" && m.Kind != "context" && lastUser < 0 {
 			lastUser = i
 		}
-		if m.Role == "assistant" && m.Text != "" {
+		if m.Role == "assistant" && (m.Text != "" || m.Interrupted) {
 			if _, exists := lastAssistant[m.Turn]; !exists {
 				lastAssistant[m.Turn] = i
 			}

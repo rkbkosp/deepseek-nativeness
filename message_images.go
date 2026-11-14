@@ -243,8 +243,12 @@ func (a *app) messageImageGallery(c *ui.Context, m message) {
 	}
 	cache := a.historyImages()
 	previewAvailable := a.hasCompatRoute("image-preview")
+	background, border := ui.RGBA(38, 49, 72, .06), ui.RGBA(0, 0, 0, .1)
+	if a.theme.Dark {
+		background, border = ui.RGBA(255, 255, 255, .08), ui.RGBA(255, 255, 255, .06)
+	}
 	ui.Row(c.Key("images:" + m.ID)).Wrap().Gap(10).MinWidth(0).Children(func() {
-		for _, ref := range refs {
+		for occurrence, ref := range refs {
 			key := imageReferenceKey(ref)
 			entry := cache.Entries[key]
 			if entry == nil {
@@ -263,7 +267,9 @@ func (a *app) messageImageGallery(c *ui.Context, m message) {
 			if ref.Name == "" {
 				label = "打开图片 " + ref.AttachmentID
 			}
-			button := ui.ButtonBase(c.Key(key)).Size(w, h).Padding(0).Shrink(0).Radius(12).Border(.5, a.theme.Border).Background(a.colors.Subtle).Clip().Label(label)
+			// The decoded bitmap is shared by reference, while every visible
+			// occurrence has its own identity, including repeated attachments.
+			button := ui.ButtonBase(c.Key(fmt.Sprintf("%s:occurrence:%d", key, occurrence))).Size(w, h).Padding(0).Shrink(0).Radius(20).Border(.5, border).Background(background).Clip().Label(label)
 			if entry.Bitmap != nil && !previewAvailable {
 				button.Disabled(true).DimDisabled(false).Tooltip("原图预览页面尚未打包")
 			}
@@ -289,16 +295,9 @@ func (a *app) messageImageGallery(c *ui.Context, m message) {
 					a.loadHistoryImage(cache, key, entry)
 				} else if entry.Bitmap != nil {
 					if _, err := os.Stat(filepath.Join(compatPath(), "routes/image-preview.js")); err == nil {
-						selected := 0
-						for i, v := range refs {
-							if imageReferenceKey(v) == key {
-								selected = i
-								break
-							}
-						}
 						a.openCompatAt("image-preview", "imagePreview")
 						a.imagePreviewAttachments = append([]imageAttachment(nil), refs...)
-						a.imagePreviewIndex = selected
+						a.imagePreviewIndex = occurrence
 					} else {
 						a.error = "原图预览页面尚未打包，缩略图已加载。"
 					}
