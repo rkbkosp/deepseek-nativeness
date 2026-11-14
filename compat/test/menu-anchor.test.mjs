@@ -452,3 +452,31 @@ test("React lifecycle gates supported CSS, preserves forwarded refs, and dispose
     else globalThis.document = oldDocument;
   }
 });
+
+test("QA compile define forces the same fallback gate even when all native features report support", async () => {
+  const { build } = await import("esbuild");
+  const result = await build({
+    entryPoints: [
+      new URL("../src/menu-anchor-geometry.ts", import.meta.url).pathname,
+    ],
+    bundle: true,
+    write: false,
+    format: "esm",
+    platform: "node",
+    define: { NATIVE_DSH_FORCE_MENU_ANCHOR_FALLBACK: "true" },
+  });
+  const forced = await import(
+    "data:text/javascript;base64," +
+      Buffer.from(result.outputFiles[0].text).toString("base64")
+  );
+  assert.equal(
+    supportsMenuAnchors({ supports: () => true }),
+    true,
+    "normal test build remains feature-detected",
+  );
+  assert.equal(
+    forced.supportsMenuAnchors({ supports: () => true }),
+    false,
+    "only the compile-time QA artifact bypasses detection",
+  );
+});

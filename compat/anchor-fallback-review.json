@@ -15,8 +15,8 @@
     "cleanup": "observer/listener/pending frame teardown and prior style/ref restoration"
   },
   "tests": {
-    "menuAnchor": 6,
-    "compatTotal": 24,
+    "menuAnchor": 7,
+    "compatTotal": 25,
     "realOS15_8": false,
     "M1": false,
     "GUI": false
@@ -114,8 +114,8 @@
       "sha256": "e5947b791ace14397d3981f8ea13ba6b7cb92ea69e635f7ce78770ff82d01c29"
     },
     "source-manifest.json": {
-      "bytes": 295739,
-      "sha256": "70c0398e595902b905efdbbf9a800540dcb13cd09763232a623f5e850b7cb6e5"
+      "bytes": 295887,
+      "sha256": "7bfd7326f98fd7ed42ca495da943893293082427b73d4f9114d31966b69bf0ca"
     }
   },
   "reactDoctor": {

@@ -1,4 +1,5 @@
 /** Narrow placement substitute for the frozen menu's CSS anchors. No menu behavior lives here. */
+declare const NATIVE_DSH_FORCE_MENU_ANCHOR_FALLBACK: boolean;
 export interface MenuRect {
   left: number;
   top: number;
@@ -17,6 +18,13 @@ export interface PlacementOptions {
 export function supportsMenuAnchors(
   css: Pick<typeof CSS, "supports"> | undefined = globalThis.CSS,
 ): boolean {
+  // Compile-time QA define only: no runtime preference, URL flag or OS feature
+  // override is exposed. Production always compiles this branch to false.
+  if (
+    typeof NATIVE_DSH_FORCE_MENU_ANCHOR_FALLBACK !== "undefined" &&
+    NATIVE_DSH_FORCE_MENU_ANCHOR_FALLBACK
+  )
+    return false;
   return (
     !!css &&
     [

@@ -6,6 +6,12 @@ import { fileURLToPath } from "node:url";
 const root = dirname(fileURLToPath(import.meta.url)),
   source = resolve(root, "../../deepseek-harness"),
   packages = new Map();
+const forceMenuAnchorFallback = process.argv.includes(
+  "--force-menu-anchor-fallback",
+);
+const menuAnchorDefine = {
+  NATIVE_DSH_FORCE_MENU_ANCHOR_FALLBACK: String(forceMenuAnchorFallback),
+};
 async function walk(path) {
   const entries = await readdir(path, { withFileTypes: true });
   await Promise.all(
@@ -353,6 +359,7 @@ if (process.argv.includes("--engine-test")) {
     format: "esm",
     platform: "node",
     target: "node24",
+    define: menuAnchorDefine,
     nodePaths: [join(root, "node_modules")],
     plugins: [plugin],
     jsx: "automatic",
@@ -369,15 +376,17 @@ if (process.argv.includes("--engine-test")) {
 }
 const output = join(
   root,
-  process.argv.includes("--out-layout-next")
-    ? "dist-layout-next"
-    : process.argv.includes("--out-settings-fix")
-      ? "dist-settings-fix"
-      : process.argv.includes("--out-perf-next")
-        ? "dist-perf-next"
-        : process.argv.includes("--out-next")
-          ? "dist-next"
-          : "dist",
+  forceMenuAnchorFallback
+    ? "dist-layout-forced-test"
+    : process.argv.includes("--out-layout-next")
+      ? "dist-layout-next"
+      : process.argv.includes("--out-settings-fix")
+        ? "dist-settings-fix"
+        : process.argv.includes("--out-perf-next")
+          ? "dist-perf-next"
+          : process.argv.includes("--out-next")
+            ? "dist-next"
+            : "dist",
 );
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
@@ -399,7 +408,7 @@ const result = await build({
   assetNames: "assets/[name]-[hash]",
   bundle: true,
   minify: true,
-  define: { "process.env.NODE_ENV": '"production"' },
+  define: { "process.env.NODE_ENV": '"production"', ...menuAnchorDefine },
   format: "esm",
   platform: "browser",
   target: "safari17.4",
@@ -484,6 +493,8 @@ await writeFile(
   JSON.stringify(
     {
       dshCommit: "39163dd30f703a79079e2d2446545cff3c453738",
+      compileDefines: menuAnchorDefine,
+      buildWorkingDirectory: process.cwd(),
       platformBaseline: {
         macOS: "15.8+",
         javascriptTarget: "safari17.4",

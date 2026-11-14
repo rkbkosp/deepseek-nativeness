@@ -2,6 +2,8 @@
 set -eu
 cd "$(dirname "$0")/.."
 bundle="build/Native DSH Remote.app"
+bundle_name="Native DSH Remote"
+bundle_id="cn.rkbkosp.native-dsh.remote"
 # Build a fresh tree so old chunks/dependencies cannot survive a candidate.
 app="build/.native-dsh-stage-$$"
 assets="dist"
@@ -19,8 +21,15 @@ if [ "${1:-}" = "--use-layout-assets" ]; then
   # Preserve the GUI7 review/fallback application byte-for-byte.
   bundle="build/Native DSH Remote GUI8.app"
 fi
+if [ "${1:-}" = "--use-forced-layout-assets" ]; then
+  assets="dist-layout-forced-test"
+  remote_assets="dist-export-next"
+  bundle="build/Native DSH Remote Anchor QA.app"
+  bundle_name="Native DSH Remote Anchor QA"
+  bundle_id="cn.rkbkosp.native-dsh.remote.anchor-qa"
+fi
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources/remote"
-if [ "${1:-}" != "--use-built-assets" ] && [ "${1:-}" != "--use-next-assets" ] && [ "${1:-}" != "--use-perf-assets" ] && [ "${1:-}" != "--use-layout-assets" ]; then
+if [ "${1:-}" != "--use-built-assets" ] && [ "${1:-}" != "--use-next-assets" ] && [ "${1:-}" != "--use-perf-assets" ] && [ "${1:-}" != "--use-layout-assets" ] && [ "${1:-}" != "--use-forced-layout-assets" ]; then
   npm run --prefix remote build
   npm run --prefix compat build
 fi
@@ -43,14 +52,14 @@ cp "remote/$remote_assets/bridge.bundle.mjs" "$app/Contents/Resources/remote/bri
 cp "remote/$remote_assets/build-meta.json" "$app/Contents/Resources/remote/source-manifest.json"
 mkdir -p "$app/Contents/Resources/compat"
 cp -R "compat/$assets/." "$app/Contents/Resources/compat/"
-cat > "$app/Contents/Info.plist" <<'PLIST'
+cat > "$app/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 <key>CFBundleExecutable</key><string>native-dsh</string>
-<key>CFBundleIdentifier</key><string>cn.rkbkosp.native-dsh.remote</string>
-<key>CFBundleName</key><string>Native DSH Remote</string>
-<key>CFBundleDisplayName</key><string>Native DSH Remote</string>
+<key>CFBundleIdentifier</key><string>$bundle_id</string>
+<key>CFBundleName</key><string>$bundle_name</string>
+<key>CFBundleDisplayName</key><string>$bundle_name</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleShortVersionString</key><string>0.1.0</string>
 <key>CFBundleVersion</key><string>1</string>
