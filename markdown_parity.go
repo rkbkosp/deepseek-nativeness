@@ -103,6 +103,7 @@ func (a *app) markdownBlock(c *ui.Context, d *parser.Document, index int) bool {
 		minTotal += floors[k]
 	}
 	if wide {
+		scroll.Focusable()
 		viewport := max(float32(0), a.conversationColumnWidth(c)-64)
 		spare := max(float32(0), (viewport-a.chatContentWidth(c))/2)
 		lead := spare + indent

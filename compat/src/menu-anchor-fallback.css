@@ -1,0 +1,33 @@
+/* Only mounted menus lacking the original CSS anchor feature set receive this attribute. */
+[data-native-anchor-fallback="menu"] {
+  position: fixed !important;
+  inset: auto !important;
+  margin: 0 !important;
+  left: var(--native-menu-x) !important;
+  top: var(--native-menu-y) !important;
+  align-self: start !important;
+  justify-self: start !important;
+  max-width: var(--native-menu-max-w) !important;
+  max-height: var(--native-menu-max-h) !important;
+  height: fit-content !important;
+}
+[data-native-anchor-fallback="menu"][data-match-anchor-width],
+[data-native-anchor-fallback="menu"][data-submenu-layout="page"] {
+  min-width: var(--native-menu-min-w) !important;
+}
+[data-native-anchor-fallback="menu"][data-native-submenu-fallback] {
+  /* The source measures a side card with data-submenu-layout temporarily
+     removed. Keep that measurement natural even after a wider page layout. */
+  max-width: min(360px, var(--native-menu-max-w)) !important;
+}
+[data-native-anchor-fallback="menu"][data-native-submenu-fallback][data-submenu-layout="page"] {
+  max-width: var(--native-menu-max-w) !important;
+}
+[data-native-anchor-fallback="backing"] {
+  position: fixed !important;
+  inset: auto !important;
+  left: var(--native-menu-x) !important;
+  top: var(--native-menu-y) !important;
+  width: var(--native-menu-w) !important;
+  height: var(--native-menu-h) !important;
+}

@@ -126,3 +126,22 @@ func abs(v float32) float32 {
 	}
 	return v
 }
+
+func TestWideTableIsATabStopAndArrowKeysReachOffscreenColumns(t *testing.T) {
+	_, tt := tableParityApp(t, "|甲|乙|丙|丁|\n|---|---|---|---|\n|一|二|三|四|", 1280, true)
+	for i := 0; i < 100 && !tt.Focused("Markdown 表格横向滚动"); i++ {
+		tt.Key(0, ui.KeyTab)
+	}
+	if !tt.Focused("Markdown 表格横向滚动") {
+		t.Fatal("wide table cannot be reached with Tab")
+	}
+	before := parityRoleRects(tt, ui.RoleCell)
+	for i := 0; i < 10; i++ {
+		tt.Key(0, ui.KeyRight)
+		tt.Advance(150000000)
+	}
+	after := parityRoleRects(tt, ui.RoleCell)
+	if after[0].X >= before[0].X || after[3].X+after[3].W > 672.1 {
+		t.Fatalf("arrow keys did not reach last column: before%v after%v", before, after)
+	}
+}

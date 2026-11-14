@@ -1,0 +1,134 @@
+{
+  "scope": "Build-size and deterministic forced-fallback fixtures only; not a macOS 15.8 or M1 runtime acceptance.",
+  "nativeSourceCheckpoint": "3295acb50facd15b56d1f2573acf7b101c1611dc",
+  "featureGate": [
+    "position-anchor: --native-menu",
+    "top: anchor(bottom)",
+    "width: anchor-size(width)",
+    "position-try-fallbacks: flip-block"
+  ],
+  "frozenReferenceEdits": false,
+  "fallback": {
+    "globalObserver": false,
+    "polling": false,
+    "scope": "mounted menu, submenu and darwin backing; bounded 8-level ancestor ResizeObserver; local menu attribute MutationObserver; scroll/viewport resize coalesced requestAnimationFrame",
+    "cleanup": "observer/listener/pending frame teardown and prior style/ref restoration"
+  },
+  "tests": {
+    "menuAnchor": 6,
+    "compatTotal": 24,
+    "realOS15_8": false,
+    "M1": false,
+    "GUI": false
+  },
+  "routes": [
+    {
+      "entry": "routes/plugin-settings.js",
+      "beforeJS": 421657,
+      "afterJS": 426774,
+      "deltaJS": 5117,
+      "beforeCSS": 25278,
+      "afterCSS": 26278,
+      "deltaCSS": 1000
+    },
+    {
+      "entry": "app.js",
+      "beforeJS": 233901,
+      "afterJS": 233901,
+      "deltaJS": 0,
+      "beforeCSS": 46962,
+      "afterCSS": 46962,
+      "deltaCSS": 0
+    },
+    {
+      "entry": "routes/models.js",
+      "beforeJS": 275219,
+      "afterJS": 280192,
+      "deltaJS": 4973,
+      "beforeCSS": 13163,
+      "afterCSS": 14163,
+      "deltaCSS": 1000
+    },
+    {
+      "entry": "routes/plugins.js",
+      "beforeJS": 1388765,
+      "afterJS": 1393882,
+      "deltaJS": 5117,
+      "beforeCSS": 103102,
+      "afterCSS": 104102,
+      "deltaCSS": 1000
+    },
+    {
+      "entry": "routes/trajectory.js",
+      "beforeJS": 1445683,
+      "afterJS": 1450800,
+      "deltaJS": 5117,
+      "beforeCSS": 96517,
+      "afterCSS": 97517,
+      "deltaCSS": 1000
+    },
+    {
+      "entry": "routes/terminal.js",
+      "beforeJS": 304146,
+      "afterJS": 309263,
+      "deltaJS": 5117,
+      "beforeCSS": 20678,
+      "afterCSS": 21678,
+      "deltaCSS": 1000
+    },
+    {
+      "entry": "routes/agent-presets.js",
+      "beforeJS": 1339617,
+      "afterJS": 1339617,
+      "deltaJS": 0,
+      "beforeCSS": 60822,
+      "afterCSS": 60822,
+      "deltaCSS": 0
+    },
+    {
+      "entry": "routes/model-settings.js",
+      "beforeJS": 371380,
+      "afterJS": 371380,
+      "deltaJS": 0,
+      "beforeCSS": 25243,
+      "afterCSS": 25243,
+      "deltaCSS": 0
+    },
+    {
+      "entry": "routes/automation.js",
+      "beforeJS": 734584,
+      "afterJS": 739701,
+      "deltaJS": 5117,
+      "beforeCSS": 41789,
+      "afterCSS": 42789,
+      "deltaCSS": 1000
+    }
+  ],
+  "artifacts": {
+    "app.js": {
+      "bytes": 4939,
+      "sha256": "93471d7ee806848cf8c5905646de64ea8dd73c938bc383f5dc6bef72c7ffca5c"
+    },
+    "app.css": {
+      "bytes": 46962,
+      "sha256": "e5947b791ace14397d3981f8ea13ba6b7cb92ea69e635f7ce78770ff82d01c29"
+    },
+    "source-manifest.json": {
+      "bytes": 295739,
+      "sha256": "70c0398e595902b905efdbbf9a800540dcb13cd09763232a623f5e850b7cb6e5"
+    }
+  },
+  "reactDoctor": {
+    "scope": "changed (5 source files)",
+    "score": 100,
+    "issues": 0
+  },
+  "sourceEvidence": [
+    "packages/client/ui-primitives/src/Menu.tsx",
+    "packages/client/ui-primitives/src/Menu.module.css",
+    "packages/client/ui-primitives/src/useMenuSubmenu.ts",
+    "packages/client/ui-primitives/src/SubmenuPanel.tsx",
+    "packages/client/ui-primitives/src/MenuSurface.tsx",
+    "packages/client/ui-primitives/src/MenuSurface.module.css"
+  ]
+}

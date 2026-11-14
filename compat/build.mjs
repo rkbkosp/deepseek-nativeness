@@ -53,6 +53,65 @@ for (const match of primitivesIndex.matchAll(
 const plugin = {
   name: "frozen-source-workspace",
   setup(b) {
+    // Keep the original menu's business behavior and CSS on capable WebKit.
+    // Older WK receives only a mounted-menu placement observer, never a global
+    // polyfill or a modified copy of the frozen reference repository.
+    b.onLoad(
+      {
+        filter:
+          /ui-primitives\/src\/(Menu\.tsx|MenuSurface\.tsx|useMenuSubmenu\.ts)$/,
+        namespace: "file",
+      },
+      async (args) => {
+        let contents = await readFile(args.path, "utf8");
+        const module = JSON.stringify(
+          join(root, "src/menu-anchor-fallback.ts"),
+        );
+        const swap = (from, to) => {
+          if (!contents.includes(from))
+            throw Error(`Frozen menu anchor seam changed: ${args.path}`);
+          contents = contents.replace(from, to);
+        };
+        if (args.path.endsWith("/Menu.tsx")) {
+          contents =
+            `import {useNativeMenuAnchor} from ${module};\n` + contents;
+          swap(
+            "const positioned = !portal || anchorRef === undefined || externalAnchor !== null",
+            `const positioned = !portal || anchorRef === undefined || externalAnchor !== null
+  useNativeMenuAnchor(listRef,anchorRef ?? rootRef,{active:open || exiting !== undefined,portal,side,align,point,matchWidth:minWidthFromAnchor,external:externalAnchor})`,
+          );
+        } else if (args.path.endsWith("/useMenuSubmenu.ts")) {
+          contents =
+            `import {useNativeSubmenuAnchor} from ${module};\n` + contents;
+          swap(
+            "const focusFirstChild = (): void => {",
+            `useNativeSubmenuAnchor(panelRef,listRef,{active:visible,page,trigger})
+  const focusFirstChild = (): void => {`,
+          );
+        } else {
+          contents =
+            `import {useNativeMenuBacking,useNativeMenuSurfaceRef} from ${module};\n` +
+            contents;
+          swap(
+            "const id = useId()",
+            "const id = useId()\n  const [surfaceRef,captureSurface] = useNativeMenuSurfaceRef(ref)",
+          );
+          swap(
+            "const anchorStyle: CSSProperties",
+            "useNativeMenuBacking(surfaceRef,backingRef)\n  const anchorStyle: CSSProperties",
+          );
+          swap(
+            "<div {...props} ref={ref}",
+            "<div {...props} ref={captureSurface}",
+          );
+        }
+        return {
+          contents,
+          loader: args.path.endsWith("tsx") ? "tsx" : "ts",
+          resolveDir: dirname(args.path),
+        };
+      },
+    );
     b.onResolve({ filter: /^\.\/routes\/[a-z-]+\.js$/ }, (args) => ({
       path: args.path,
       external: true,
@@ -284,6 +343,9 @@ if (process.argv.includes("--engine-test")) {
       join(root, "src/bridge.ts"),
       join(root, "src/plugin-settings.tsx"),
       join(root, "src/settings-keys.ts"),
+      join(root, "src/menu-anchor-geometry.ts"),
+      join(root, "src/menu-anchor-runtime.ts"),
+      join(root, "src/menu-anchor-fallback.ts"),
     ],
     outdir: join(root, ".test-build"),
     outExtension: { ".js": ".mjs" },
@@ -307,13 +369,15 @@ if (process.argv.includes("--engine-test")) {
 }
 const output = join(
   root,
-  process.argv.includes("--out-settings-fix")
-    ? "dist-settings-fix"
-    : process.argv.includes("--out-perf-next")
-      ? "dist-perf-next"
-      : process.argv.includes("--out-next")
-        ? "dist-next"
-        : "dist",
+  process.argv.includes("--out-layout-next")
+    ? "dist-layout-next"
+    : process.argv.includes("--out-settings-fix")
+      ? "dist-settings-fix"
+      : process.argv.includes("--out-perf-next")
+        ? "dist-perf-next"
+        : process.argv.includes("--out-next")
+          ? "dist-next"
+          : "dist",
 );
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
@@ -420,7 +484,11 @@ await writeFile(
   JSON.stringify(
     {
       dshCommit: "39163dd30f703a79079e2d2446545cff3c453738",
-      platformBaseline:{macOS:'15.8+',javascriptTarget:'safari17.4',runtimeAcceptance:'macOS15.8 WK remains unverified'},
+      platformBaseline: {
+        macOS: "15.8+",
+        javascriptTarget: "safari17.4",
+        runtimeAcceptance: "macOS15.8 WK remains unverified",
+      },
       entryComponents: [
         "ui-plugin-manager/PluginManagerPage",
         "ui-model-selection/ModelSelect",
