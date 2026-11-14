@@ -10,6 +10,8 @@ import (
 )
 
 type app struct {
+	markdownCopy                                             *sessionMarkdownCopy
+	testMarkdownClipboard                                    func(string) error
 	messageImages                                            *historyImageCache
 	imagePreviewAttachments                                  []imageAttachment
 	imagePreviewIndex                                        int
@@ -142,6 +144,7 @@ func (a *app) update(fn func()) {
 }
 
 func (a *app) view(c *ui.Context) {
+	a.markdownCopyLifecycle(c)
 	a.builds++
 	a.metrics.Builds++
 	a.applyAppearance(c)

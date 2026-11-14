@@ -42,7 +42,9 @@ func (a *app) header(c *ui.Context) {
 				ui.Text(c, "运行中").TextColor(a.theme.TextMuted).FontSize(12)
 			}
 			ui.ButtonBase(c).Label("会话更多操作").Padding(4).Children(func() { icon(c, "ellipsis-outline", 16).TextColor(a.theme.TextMuted) }).Menu(func(m *ui.Menu) {
-				m.Item("复制会话为 Markdown").Disabled(true).Tooltip("当前冻结 Remote 没有完整会话导出接口")
+				if m.Item("复制会话为 Markdown").Disabled(a.demo || a.sessionID == "" || !a.can("exportSessionMarkdown") || a.markdownCopy != nil).Tooltip(a.operationCaps["exportSessionMarkdown"].Reason).Chosen() {
+					a.copySessionMarkdown()
+				}
 				if m.Item("复制已加载消息为 Markdown").Disabled(len(a.current.Messages) == 0).Chosen() {
 					c.WriteClipboard(a.loadedMarkdown())
 				}
@@ -272,7 +274,7 @@ func (a *app) messageActions(c *ui.Context, m message, user bool) {
 			c.WriteClipboard(m.Text)
 		}
 		if !user {
-			ui.ButtonBase(c).Label("有帮助 " + m.ID).Disabled(true).Tooltip("当前 Remote 未开放消息反馈").Children(func() { icon(c, "like-outline", 14).TextColor(a.theme.TextMuted) })
+			ui.ButtonBase(c).Label("有帮助 " + m.ID).Disabled(true).Tooltip("当前客户端尚未接入消息反馈").Children(func() { icon(c, "like-outline", 14).TextColor(a.theme.TextMuted) })
 			ui.ButtonBase(c).Label("无帮助 " + m.ID).Disabled(true).Children(func() { icon(c, "dislike-outline", 14).TextColor(a.theme.TextMuted) })
 			ui.ButtonBase(c).Label("分叉消息 " + m.ID).Disabled(true).Children(func() { icon(c, "branch-outline", 14).TextColor(a.theme.TextMuted) })
 		}
