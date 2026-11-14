@@ -257,6 +257,10 @@ export const OPERATIONS = {
     ...agent(p),
     query: p.query ?? "",
   })),
+  listSessionReferences: r("sessionReferenceResolver/candidates", (p) => ({
+    ...agent(p),
+    query: p.query ?? "",
+  })),
   listSkills: r("skills/list", request(["sessionId"], ["sessionId"])),
   listFeedback: r(
     "messageFeedback/list",

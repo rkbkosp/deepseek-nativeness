@@ -11,6 +11,9 @@ type sendIntent struct {
 	AccountScope        string
 	Draft               string
 	Unknown             bool
+	Content             []composerContentPart
+	AttachmentIDs       []string
+	StoreKey, IntentKey string
 }
 type operationReceipt struct {
 	Status    string `json:"status"`
@@ -39,12 +42,17 @@ func (a *app) acceptSend(raw json.RawMessage, intent *sendIntent) error {
 	if intent.AccountScope != "" {
 		key = intent.AccountScope + "\x00" + key
 	}
-	if a.drafts[key] == original {
+	if a.drafts != nil && a.drafts[key] == original {
 		a.drafts[key] = ""
 	}
 	if a.pendingSend == intent {
 		a.pendingSend = nil
 	}
-	delete(a.sendIntents, key+"\x00"+intent.Text)
+	intentKey := intent.IntentKey
+	if intentKey == "" {
+		intentKey = key + "\x00" + intent.Text
+	}
+	delete(a.sendIntents, intentKey)
+	a.acceptComposerAttachments(intent)
 	return nil
 }

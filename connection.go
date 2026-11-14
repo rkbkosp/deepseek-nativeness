@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,6 +17,20 @@ func (a *app) request(method string, params any, accept func(json.RawMessage) er
 	a.requestWithFailure(method, params, accept, nil)
 }
 func (a *app) requestWithFailure(method string, params any, accept func(json.RawMessage) error, failed func(error)) {
+	a.requestGuarded(method, params, accept, failed, nil)
+}
+func (a *app) scopedRead(method string, params map[string]any, accept func(json.RawMessage) error) {
+	host, account, generation, client := a.hostID, a.accountScope, a.remoteGeneration, a.client
+	owned := make(map[string]any, len(params)+1)
+	for k, v := range params {
+		owned[k] = v
+	}
+	owned["clientScope"] = map[string]any{"hostId": host, "generation": generation}
+	a.requestGuarded(method, owned, accept, nil, func() bool {
+		return a.hostID == host && a.accountScope == account && a.remoteGeneration == generation && a.client == client
+	})
+}
+func (a *app) requestGuarded(method string, params any, accept func(json.RawMessage) error, failed func(error), current func() bool) {
 	if a.demo {
 		a.error = "当前是本地界面回放。请以正常模式连接 Remote 后操作。"
 		return
@@ -27,13 +42,17 @@ func (a *app) requestWithFailure(method string, params any, accept func(json.Raw
 	a.pendingRequests++
 	a.busy = true
 	a.error = ""
+	client := a.client
 	go func() {
 		ctx, cancel := context.WithTimeout(a.ctx, 45*time.Second)
 		defer cancel()
-		raw, err := a.client.Call(ctx, method, params)
+		raw, err := client.Call(ctx, method, params)
 		a.update(func() {
 			a.pendingRequests--
 			a.busy = a.pendingRequests > 0
+			if current != nil && !current() {
+				return
+			}
 			if err != nil {
 				a.error = err.Error()
 				if failed != nil {
@@ -67,10 +86,17 @@ func (a *app) startBridge(command string, args []string) {
 	go func() {
 		for event := range client.Events {
 			ev := event
-			a.update(func() { a.notification(ev) })
+			a.update(func() {
+				if a.client == client {
+					a.notification(ev)
+				}
+			})
 		}
 		if a.ctx.Err() == nil {
 			a.update(func() {
+				if a.client != client {
+					return
+				}
 				a.status = "Remote 通信已断开"
 				a.error = "客户端通信模块已退出，请重新启动客户端。"
 			})
@@ -92,6 +118,12 @@ func (a *app) acceptStatus(raw json.RawMessage) error {
 	if err := json.Unmarshal(raw, &s); err != nil {
 		return err
 	}
+	if s.ConnectionGeneration < a.remoteGeneration {
+		return nil
+	}
+	// RPC and event status share the same monotonic identity/connection
+	// epoch. Advance it in this callback before adopting the new account.
+	a.remoteGeneration = s.ConnectionGeneration
 	a.detail = s.Detail
 	scope := s.IdentityScope
 	if scope == "" {
@@ -104,7 +136,6 @@ func (a *app) acceptStatus(raw json.RawMessage) error {
 		a.closeCompat()
 	}
 	a.connected = s.Connected
-	a.remoteGeneration = s.ConnectionGeneration
 	a.authorized = s.Authorized
 	if s.Connected {
 		a.status = "Remote 已连接"
@@ -118,6 +149,9 @@ func (a *app) acceptStatus(raw json.RawMessage) error {
 }
 
 func (a *app) notification(ev bridge.Notification) {
+	if !a.notificationScopeCurrent(ev) {
+		return
+	}
 	if a.compat != nil && ev.Method == "remoteInvalidation" {
 		var scope struct {
 			HostID     string `json:"hostId"`
@@ -193,17 +227,21 @@ func (a *app) fetchDevices() {
 		a.error = ""
 		return
 	}
-	a.request("devices", map[string]any{}, func(raw json.RawMessage) error {
+	account, server, client := a.accountScope, a.configuredServer, a.client
+	a.requestGuarded("devices", map[string]any{}, func(raw json.RawMessage) error {
 		rows, err := decodeRows[device](raw, "devices", "items")
 		a.devices = rows
 		if err == nil {
 			a.maybeRestoreConnection()
 		}
 		return err
-	})
+	}, nil, func() bool { return a.accountScope == account && a.configuredServer == server && a.client == client })
 }
 
 func (a *app) connect(id string) {
+	a.releaseComposerImages()
+	a.resetMessageImages()
+	a.invalidateChatRows()
 	a.restoreTarget = nil
 	a.closeCompat()
 	a.closeWeb()
@@ -248,9 +286,9 @@ func (a *app) connect(id string) {
 }
 
 func (a *app) fetchWorkspaces() {
-	host := a.hostID
-	a.request("workspaces", map[string]any{"hostId": a.hostID}, func(raw json.RawMessage) error {
-		if host != a.hostID {
+	host, scope, generation := a.hostID, a.accountScope, a.remoteGeneration
+	a.scopedRead("workspaces", map[string]any{"hostId": a.hostID}, func(raw json.RawMessage) error {
+		if host != a.hostID || scope != a.accountScope || generation != a.remoteGeneration {
 			return nil
 		}
 		rows, err := decodeRows[workspace](raw, "workspaces", "items")
@@ -264,15 +302,15 @@ func (a *app) fetchWorkspaces() {
 
 func (a *app) selectWorkspace(id string) {
 	a.workspaceID = id
-	a.request("selectWorkspace", map[string]any{"workspaceId": id}, func(raw json.RawMessage) error {
+	a.scopedRead("selectWorkspace", map[string]any{"workspaceId": id}, func(raw json.RawMessage) error {
 		a.fetchSessions()
 		return nil
 	})
 }
 func (a *app) fetchSessions() {
-	host := a.hostID
-	a.request("sessions", map[string]any{"all": true}, func(raw json.RawMessage) error {
-		if host != a.hostID {
+	host, scope, generation := a.hostID, a.accountScope, a.remoteGeneration
+	a.scopedRead("sessions", map[string]any{"all": true}, func(raw json.RawMessage) error {
+		if host != a.hostID || scope != a.accountScope || generation != a.remoteGeneration {
 			return nil
 		}
 		rows, err := decodeRows[session](raw, "sessions", "items")
@@ -284,6 +322,9 @@ func (a *app) fetchSessions() {
 	})
 }
 func (a *app) chooseSession(s session) {
+	a.releaseComposerImages()
+	a.resetMessageImages()
+	a.invalidateChatRows()
 	a.closeCompat()
 	a.closeWeb()
 	if a.demo {
@@ -311,7 +352,7 @@ func (a *app) chooseSession(s session) {
 	a.composer = nil
 	a.connectionOpen = false
 	if s.WorkspaceID != "" && s.WorkspaceID != a.workspaceID {
-		a.request("selectWorkspace", map[string]any{"workspaceId": s.WorkspaceID}, func(raw json.RawMessage) error {
+		a.scopedRead("selectWorkspace", map[string]any{"workspaceId": s.WorkspaceID}, func(raw json.RawMessage) error {
 			if generation != a.navigationGeneration {
 				return nil
 			}
@@ -334,10 +375,12 @@ func (a *app) viewKey(id string) string {
 }
 
 func (a *app) openSession(id string) {
+	a.resetMessageImages()
+	a.invalidateChatRows()
 	generation, host := a.navigationGeneration, a.hostID
 	a.sessionID = id
 	a.current = snapshot{SessionID: id}
-	a.request("openSession", map[string]any{"workspaceId": a.workspaceID, "sessionId": id}, func(raw json.RawMessage) error {
+	a.scopedRead("openSession", map[string]any{"workspaceId": a.workspaceID, "sessionId": id}, func(raw json.RawMessage) error {
 		if a.sessionID != id || generation != a.navigationGeneration || host != a.hostID {
 			return nil
 		}
@@ -361,6 +404,21 @@ func (a *app) send() {
 	a.sendWithMode(a.uiPrefs.SendMode)
 }
 func (a *app) sendWithMode(mode string) {
+	text := strings.TrimSpace(a.draft)
+	if text == "" {
+		return
+	}
+	a.sendPayload(mode, text, nil, nil)
+}
+
+func (a *app) sendComposerPayload(mode string, content []composerContentPart, attachmentIDs []string) {
+	if len(content) == 0 {
+		return
+	}
+	a.sendPayload(mode, "", append([]composerContentPart(nil), content...), append([]string(nil), attachmentIDs...))
+}
+
+func (a *app) sendPayload(mode, text string, content []composerContentPart, attachmentIDs []string) {
 	if mode != "queue" && mode != "steer" {
 		a.error = "发送模式无效"
 		return
@@ -369,22 +427,36 @@ func (a *app) sendWithMode(mode string) {
 		a.error = "Remote 未连接，无法发送。"
 		return
 	}
-	text := strings.TrimSpace(a.draft)
-	if text == "" || a.sessionID == "" {
+	if a.sessionID == "" {
 		return
 	}
-	key := a.viewKey(a.sessionID) + "\x00" + text
+	storeKey := a.viewKey(a.sessionID)
+	key := storeKey + "\x00" + text
+	if content != nil {
+		raw, err := json.Marshal(content)
+		if err != nil {
+			a.error = "图片消息格式无效"
+			return
+		}
+		key = storeKey + "\x00content:" + fmt.Sprintf("%x", sha256.Sum256(raw))
+	}
 	if previous := a.sendIntents[key]; previous != nil && previous.Unknown {
 		a.error = "上一条发送结果未确认，请先核对远程会话。请求：" + previous.ID
 		return
 	}
-	intent := &sendIntent{ID: rand.Text(), SessionID: a.sessionID, HostID: a.hostID, AccountScope: a.accountScope, Text: text, Draft: a.draft, Unknown: true}
+	intent := &sendIntent{ID: rand.Text(), SessionID: a.sessionID, HostID: a.hostID, AccountScope: a.accountScope, Text: text, Draft: a.draft, Unknown: true, Content: content, AttachmentIDs: attachmentIDs, StoreKey: storeKey, IntentKey: key}
 	if a.sendIntents == nil {
 		a.sendIntents = map[string]*sendIntent{}
 	}
 	a.sendIntents[key] = intent
 	a.pendingSend = intent
-	a.requestWithFailure("sendMessage", map[string]any{"sessionId": intent.SessionID, "text": text, "requestId": intent.ID, "mode": mode, "clientScope": a.operationScope()}, func(raw json.RawMessage) error { return a.acceptSend(raw, intent) }, func(err error) {
+	params := map[string]any{"sessionId": intent.SessionID, "requestId": intent.ID, "mode": mode, "clientScope": a.operationScope()}
+	if content != nil {
+		params["content"] = content
+	} else {
+		params["text"] = text
+	}
+	a.requestWithFailure("sendMessage", params, func(raw json.RawMessage) error { return a.acceptSend(raw, intent) }, func(err error) {
 		var rejected *bridge.RemoteError
 		if errors.As(err, &rejected) && rejected.Rejected() {
 			intent.Unknown = false

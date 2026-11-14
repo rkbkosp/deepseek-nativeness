@@ -33,7 +33,7 @@ const guiRound1URL=new URL('./parity-gui-round1.json',import.meta.url);
 const guiRound1=fs.existsSync(guiRound1URL)?JSON.parse(fs.readFileSync(guiRound1URL,'utf8')):null;
 const guiRound2URL=new URL('./parity-gui-round2.json',import.meta.url);
 const guiRound2=fs.existsSync(guiRound2URL)?JSON.parse(fs.readFileSync(guiRound2URL,'utf8')):null;
-const laterReviews=[3,4,5,'5.1'].map(n=>{const url=new URL(`./parity-gui-round${n}.json`,import.meta.url);return fs.existsSync(url)?{n,value:JSON.parse(fs.readFileSync(url,'utf8'))}:null}).filter(Boolean);
+const laterReviews=[3,4,5,'5.1',6,'6.1'].map(n=>{const url=new URL(`./parity-gui-round${n}.json`,import.meta.url);return fs.existsSync(url)?{n,value:JSON.parse(fs.readFileSync(url,'utf8'))}:null}).filter(Boolean);
 const round4Rows={
  'real-history-render':['sidebar-1','header-1','chat-11','composer-3'],
  'real-file-read':['right-pane-1','right-pane-3'],
@@ -171,7 +171,7 @@ const reviewedSourceStatus={
 };
 for(const row of rows){if(reviewedSourceStatus[row.id]&&(row.currentNative.startsWith('pending implementation')||row.currentNative.startsWith('FAIL at baseline'))){if(row.currentNative.startsWith('FAIL'))row.baselineNative=row.currentNative;row.currentNative=reviewedSourceStatus[row.id];}if(row.currentNative.startsWith('pending implementation')&&(row.remoteSupport.startsWith('blocked:')||row.remoteSupport.startsWith('forbidden')))row.currentNative='Unavailable through the current frozen direct Remote surface; see exact constraint and conditional resource-carrier qualification.';}
 const data={generatedAt:new Date().toISOString(),status:'NOT PARITY ACCEPTED',scope:'Source-grounded operation families. source-inventory.json records discovered packages, files, call sites and contributions for deeper coverage; dynamic third-party plugins cannot be exhaustively specified statically.',originalEvidenceDirectory:'/tmp/native-dsh-parity',guiReviews:guiRound1?['qa/parity-gui-round1.json']:[],viewport:{logical:[1280,820],physical:[2560,1640],theme:'dark'},testPolicy:{live:'Only passive reads and read-only UI navigation authorized in this audit',mutations:'Use fixture to verify exact wire and target identity. No live prompt/cancel/approve/rename/settings/new sessions.',performance:'M4 smoke and synthetic budget are developer evidence; M1 cross-machine CPU/memory still required'},priority:['Correct chat semantic projection and grouping','Dark theme and original shell/header/sidebar','Per-session draft/scroll, offline gating and operation target identity','Model/permission/queue/commands and real menus','Settings/plugins/files/terminal and hard capability boundaries'],hardFrozenBoundaries:rows.filter(r=>r.remoteSupport.startsWith('blocked:')||r.remoteSupport.startsWith('forbidden')).map(r=>r.id),rows};
-data.guiReviews=[1,2,3,4,5,'5.1'].filter(n=>fs.existsSync(new URL(`./parity-gui-round${n}.json`,import.meta.url))).map(n=>`qa/parity-gui-round${n}.json`);
+data.guiReviews=[1,2,3,4,5,'5.1',6,'6.1'].filter(n=>fs.existsSync(new URL(`./parity-gui-round${n}.json`,import.meta.url))).map(n=>`qa/parity-gui-round${n}.json`);
 const round4=laterReviews.find(x=>x.n===4)?.value;
 const composerReportURL=new URL('./composer-component-results.json',import.meta.url);
 if(fs.existsSync(composerReportURL)){
@@ -185,5 +185,41 @@ if(fs.existsSync(composerReportURL)){
 if(round4){data.latestCandidate={sha256:round4.candidateNativeSha256,status:round4.status};data.startupDiagnosis=round4.startup;data.remaining=round4.remaining;data.referenceFontDefaults={evidence:round4.referenceFontEvidence,textSize:14,codeSize:11,terminalSize:13,textFamily:'',codeFamily:'',terminalFamily:''};}
 const round5=laterReviews.find(x=>x.n===5)?.value;if(round5){data.latestCandidate={sha256:round5.candidateNativeSha256,status:round5.status};data.remaining=round5.remaining;}
 const round51=laterReviews.find(x=>x.n==='5.1')?.value;if(round51){data.latestCandidate={sha256:round51.candidateNativeSha256,status:round51.status};data.remaining=round51.remaining;}
+
+// Keep every historical failed subcheck; passing later slices qualify only the
+// exact operations observed by the independent root GUI reviewer.
+const inputSource={
+ 'composer-7':'Native File picture action, Host command menu and permission parameter picker implemented; author fixture-qualified, full original chip/menu parity remains incomplete.',
+ 'composer-8':'Inline pictures: native picker, rail/remove/lightbox, Host six-limit admission, bounded ImageIO thumbnails and strict actual RemoteAdapter carrier implemented; author fixtures only. Generic staged-file receipt remains unavailable.',
+ 'composer-9':'Framework PNG paste and local file drop intake implemented and author-tested; real macOS clipboard/drop GUI remains pending, no live upload performed.',
+ 'composer-10':'Native permission parameter picker has actual commands/execute branch and accepted-only captured draft settlement. Other rich parameter/chip branches incomplete.',
+ 'composer-11':'Scoped @file plus real Host sessionReferenceResolver/candidates canonical mentions implemented; author cross-layer fixtures, not live reference lookup or full rich-selection parity.'
+};
+for(const row of rows)if(inputSource[row.id])row.currentNative=inputSource[row.id];
+const reviewMap={
+ 'terminal-real-empty-state':['right-pane-6','right-pane-7'], 'terminal-close':['right-pane-9'],
+ 'narrow-composer':['composer-3'], 'models-settings-read':['settings-1'],
+ 'preset-settings-read':['extra-4','settings-1'], 'settings-release':['settings-1'],
+ 'automation-read-filter':['extra-2'], 'split-model-popup':['composer-4','composer-5'],
+ 'settings-background-clip':['settings-1'], 'builtin-settings-route':['settings-1','plugins-3'],
+ 'settings-visual-clip':['settings-1'], 'plugin-settings-correct-page':['settings-1','plugins-3'],
+ 'plugin-inventory-interaction':['plugins-2','plugins-3'], 'settings-button-close':['settings-1'],
+ 'settings-wk-escape':['settings-1','shell-6']
+};
+for(const n of [6,'6.1']){
+ const review=laterReviews.find(x=>x.n===n)?.value;if(!review)continue;
+ for(const [field,status]of [['passedSubchecks','observed-passed-subcheck'],['failedSubchecks','observed-failed-subcheck']]){
+  for(const check of review[field]??[]){for(const id of reviewMap[check.id]??[]){
+   const row=rows.find(x=>x.id===id);if(!row)continue;
+   row.evidence.nativeGui??={};row.evidence.nativeGui.retests??=[];
+   row.evidence.nativeGui.retests.push({review:'qa/parity-gui-round'+n+'.json',candidateNativeSha256:review.candidateNativeSha256,finding:check.id,status,scope:check.detail,evidence:check.evidence??[],remaining:'Only this observed subcheck is qualified; full parity remains unaccepted.'});
+   row.currentNative+=' GUI '+n+' '+check.id+': '+status+'.';
+  }}
+ }
+ data.latestCandidate={sha256:review.candidateNativeSha256,status:review.status};data.remaining=review.remaining;
+}
+data.platformTarget={minimumMacOS:'15.8',architecture:'Apple Silicon',performanceTarget:'MacBook Air M1',qualification:'User-selected deployment target; no 15.8 or M1 acceptance implied. Earlier 13.x/14.x minimum-floor review retained as historical superseded target evidence.'};
+data.sourceOnlyFollowups=['qa/chat-rows-budget-source-followup.json','qa/publisher-metadata-source-followup.json','qa/structured-publisher-source-followup.json'].filter(p=>fs.existsSync(new URL('../'+p,import.meta.url)));
+
 fs.writeFileSync(new URL('./parity-matrix.json',import.meta.url),JSON.stringify(data,null,2)+'\n');
 console.log(JSON.stringify({operationFamilies:rows.length,hardFrozenBoundaries:data.hardFrozenBoundaries,status:data.status}));

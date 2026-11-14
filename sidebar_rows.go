@@ -34,15 +34,31 @@ func (a *app) sidebarRows() []sidebarRow {
 		}
 		return true
 	}
-	sorted := func(rows []session) {
+	sorted := func(rows []session, account string) {
+		positions := map[string]int{}
+		if a.uiPrefs.OrderBy == "manual" {
+			for i, id := range a.uiPrefs.ManualOrder[a.viewKey("sidebar:"+account)] {
+				positions[id] = i
+			}
+		}
 		sort.SliceStable(rows, func(i, j int) bool {
 			if rows[i].Pinned != rows[j].Pinned {
 				return rows[i].Pinned
 			}
-			if a.uiPrefs.OrderBy == "updated" {
+			if a.uiPrefs.OrderBy == "manual" {
+				ri, knownI := positions[rows[i].ID]
+				rj, knownJ := positions[rows[j].ID]
+				if knownI != knownJ {
+					return knownI
+				}
+				if knownI && ri != rj {
+					return ri < rj
+				}
+			}
+			if rows[i].UpdatedAt != rows[j].UpdatedAt {
 				return rows[i].UpdatedAt > rows[j].UpdatedAt
 			}
-			return false
+			return rows[i].ID < rows[j].ID
 		})
 	}
 	var out []sidebarRow
@@ -53,22 +69,31 @@ func (a *app) sidebarRows() []sidebarRow {
 				rows = append(rows, s)
 			}
 		}
-		sorted(rows)
+		sorted(rows, "__flat")
 		for _, s := range rows {
 			out = append(out, sidebarRow{Key: "s:" + s.ID, Kind: "session", Session: s})
 		}
 		return out
 	}
 	groups := append([]workspace(nil), a.workspaces...)
-	var unassigned []string
-	for _, s := range a.sessions {
-		owned := s.WorkspaceID != ""
-		for _, w := range a.workspaces {
-			if containsID(w.SessionIDs, s.ID) {
-				owned = true
-				break
+	owners := map[string]string{}
+	workspaceIDs := map[string]bool{}
+	for _, w := range a.workspaces {
+		workspaceIDs[w.ID] = true
+		for _, id := range w.SessionIDs {
+			if _, exists := owners[id]; !exists {
+				owners[id] = w.ID
 			}
 		}
+	}
+	for _, s := range a.sessions {
+		if _, exists := owners[s.ID]; !exists && s.WorkspaceID != "" && workspaceIDs[s.WorkspaceID] {
+			owners[s.ID] = s.WorkspaceID
+		}
+	}
+	var unassigned []string
+	for _, s := range a.sessions {
+		_, owned := owners[s.ID]
 		if !owned && filter(s) {
 			unassigned = append(unassigned, s.ID)
 		}
@@ -79,11 +104,12 @@ func (a *app) sidebarRows() []sidebarRow {
 	for _, w := range groups {
 		var rows []session
 		for _, s := range a.sessions {
-			if (s.WorkspaceID == w.ID || containsID(w.SessionIDs, s.ID)) && filter(s) {
+			owner, owned := owners[s.ID]
+			if ((w.ID != "" && owned && owner == w.ID) || (w.ID == "" && !owned && containsID(w.SessionIDs, s.ID))) && filter(s) {
 				rows = append(rows, s)
 			}
 		}
-		sorted(rows)
+		sorted(rows, w.ID)
 		depth := 0
 		if a.uiPrefs.GroupBy == "tree" {
 			for _, other := range a.workspaces {

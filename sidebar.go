@@ -167,6 +167,7 @@ func (a *app) navButton(c *ui.Context, label, name string, fn func()) ui.Element
 func (a *app) sessionRow(c *ui.Context, r sidebarRow) {
 	s := r.Session
 	host := a.hostID
+	scope := a.accountScope
 	row := ui.Row(c.Key(r.Key)).Height(34).Padding(0, 12+float32(r.Depth)*12).Gap(7).Radius(8).AlignItems(ui.Center).Label("会话 " + s.Title)
 	if s.ID == a.sessionID {
 		row.Background(a.colors.Selected)
@@ -193,7 +194,7 @@ func (a *app) sessionRow(c *ui.Context, r sidebarRow) {
 		}
 	})
 	row.ContextMenu(func(m *ui.Menu) {
-		if host == a.hostID {
+		if host == a.hostID && scope == a.accountScope {
 			a.sessionMenu(c, m, s)
 		}
 	})
@@ -213,7 +214,7 @@ func (a *app) sidebarViewMenu(m *ui.Menu) {
 	m.Item("排序方式").Disabled(true)
 	for _, v := range []struct{ key, label string }{{"manual", "手动排序"}, {"updated", "最近更新"}} {
 		if m.Item(v.label).Radio(a.uiPrefs.OrderBy == v.key).Chosen() {
-			a.uiPrefs.OrderBy = v.key
+			a.setSidebarOrder(v.key)
 			a.savePreferences()
 		}
 	}

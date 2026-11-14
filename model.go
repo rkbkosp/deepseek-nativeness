@@ -34,6 +34,18 @@ type session struct {
 func (s session) updated() time.Time { return time.UnixMilli(int64(s.UpdatedAt)) }
 
 type message struct {
+	Seq              int64            `json:"seq"`
+	SourceMessageID  json.RawMessage  `json:"sourceMessageId,omitempty"`
+	Blocks           json.RawMessage  `json:"blocks,omitempty"`
+	Usage            json.RawMessage  `json:"usage,omitempty"`
+	Interrupted      bool             `json:"interrupted"`
+	Collapsed        bool             `json:"collapsed"`
+	Command          json.RawMessage  `json:"command,omitempty"`
+	CallID           string           `json:"callId,omitempty"`
+	ToolName         string           `json:"toolName,omitempty"`
+	ToolStatus       string           `json:"toolStatus,omitempty"`
+	Args             string           `json:"args,omitempty"`
+	Result           json.RawMessage  `json:"result,omitempty"`
 	Kind             string           `json:"kind"`
 	Time             float64          `json:"time"`
 	Turn             int              `json:"turn"`
@@ -51,11 +63,16 @@ type message struct {
 	Streaming        bool             `json:"streaming"`
 }
 type contextNode struct {
-	Producer        struct{ Role, Label string }
-	Form            string
-	DefaultExpanded bool
+	Producer struct {
+		Role  string `json:"role"`
+		Label string `json:"label"`
+	} `json:"producer"`
+	Form            string `json:"form"`
+	DefaultExpanded bool   `json:"defaultExpanded"`
 }
 type toolNode struct {
+	ResultSeq    int64           `json:"resultSeq"`
+	ResultTime   float64         `json:"resultTime"`
 	CallID       string          `json:"callId"`
 	Name         string          `json:"name"`
 	ArgsRaw      string          `json:"argsRaw"`
@@ -68,9 +85,14 @@ type toolNode struct {
 	SubCalls     json.RawMessage `json:"subCalls"`
 }
 type assistantBlock struct {
-	Kind    string `json:"kind"`
-	Text    string `json:"text"`
-	Content string `json:"content"`
+	Kind       string          `json:"kind"`
+	Text       string          `json:"text"`
+	Content    string          `json:"content"`
+	Attachment json.RawMessage `json:"attachment,omitempty"`
+	CallID     string          `json:"callId,omitempty"`
+	Name       string          `json:"name,omitempty"`
+	ArgsRaw    string          `json:"argsRaw,omitempty"`
+	Block      json.RawMessage `json:"block,omitempty"`
 }
 type operationCapability struct {
 	Supported bool   `json:"supported"`

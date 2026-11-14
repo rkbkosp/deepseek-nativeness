@@ -1,5 +1,6 @@
 /** Reviewable RPC closure for each locally packaged page. Native keeps its own deny-by-default allowlist. */
 export const PAGE_CONTRACTS = {
+  "plugin-settings": { read: ["pluginInventory"], write: [], native: [] },
   "model-menu": {
     read: ["modelCatalog", "sessionProjections"],
     write: ["selectModel"],

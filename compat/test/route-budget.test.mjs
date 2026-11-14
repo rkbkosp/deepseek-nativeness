@@ -3,8 +3,9 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 test("the composer model popup has a bounded original component closure", async () => {
+  const output = process.env.NATIVE_DSH_COMPAT_OUTPUT ?? "dist-next";
   const report = JSON.parse(
-    await readFile(new URL("../dist-next/route-budgets.json", import.meta.url)),
+    await readFile(new URL(`../${output}/route-budgets.json`, import.meta.url)),
   );
   const models = report.routes.find(
     (route) => route.entry === "routes/models.js",

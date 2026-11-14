@@ -1,11 +1,16 @@
 import { build } from "esbuild";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
 const root = dirname(fileURLToPath(import.meta.url));
 const reference = resolve(root, "../remote_reference");
 const output = resolve(
   root,
-  process.argv.includes("--out-next") ? "dist-next" : "dist",
+  process.argv.includes("--out-perf-next")
+    ? "dist-perf-next"
+    : process.argv.includes("--out-next")
+      ? "dist-next"
+      : "dist",
 );
 const { mkdir } = await import("node:fs/promises");
 await mkdir(output, { recursive: true });
@@ -48,7 +53,7 @@ await build({
   );
 });
 
-await build({
+const helperBuild = await build({
   entryPoints: [resolve(root, "bridge.mjs")],
   outfile: resolve(output, "bridge.bundle.mjs"),
   bundle: true,
@@ -67,4 +72,37 @@ await build({
     },
   ],
   legalComments: "eof",
+  metafile: true,
 });
+const { readFile, writeFile } = await import("node:fs/promises");
+const meta = JSON.parse(
+  await readFile(resolve(output, "build-meta.json"), "utf8"),
+);
+const clientSourceHashes = {};
+for (const input of Object.keys(helperBuild.metafile.inputs)) {
+  const path = resolve(input);
+  if (!path.startsWith(root + "/") || path.includes("/node_modules/")) continue;
+  const source = await readFile(path);
+  clientSourceHashes[path.slice(root.length + 1)] = {
+    bytes: source.length,
+    sha256: createHash("sha256").update(source).digest("hex"),
+  };
+}
+const helper = await readFile(resolve(output, "bridge.bundle.mjs"));
+await writeFile(
+  resolve(output, "build-meta.json"),
+  JSON.stringify(
+    {
+      ...meta,
+      clientInputs: Object.keys(helperBuild.metafile.inputs),
+      clientOutputs: helperBuild.metafile.outputs,
+      clientSourceHashes,
+      helper: {
+        bytes: helper.length,
+        sha256: createHash("sha256").update(helper).digest("hex"),
+      },
+    },
+    null,
+    2,
+  ) + "\n",
+);

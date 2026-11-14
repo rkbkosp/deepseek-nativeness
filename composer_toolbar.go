@@ -65,6 +65,8 @@ func composerPlanActive(s *composerState) bool {
 }
 
 func (a *app) composerToolbar(c *ui.Context, s *composerState, input ui.Element, caret int) {
+	artifacts := a.composerArtifacts()
+	hasInput := strings.TrimSpace(a.draft) != "" || len(artifacts.Images) > 0
 	row := ui.Row(c.Key("composer-controls")).FillWidth().MinWidth(0).Wrap().AlignItems(ui.Center).Padding(2, 8, 6).Gap(12)
 	width, height := c.Size()
 	signature := fmt.Sprintf("%g/%g/%g/%t", width, height, a.sidebarShown, a.rightPaneOpen)
@@ -140,7 +142,7 @@ func (a *app) composerToolbar(c *ui.Context, s *composerState, input ui.Element,
 				a.openCompatAt("model-menu", "modelPopover")
 			}
 			a.composerModelPopover(c, model)
-			if a.current.Running && strings.TrimSpace(a.draft) == "" {
+			if a.current.Running && !hasInput {
 				if ui.ButtonBase(c).Size(34, 34).Translate(0, -2).Shrink(0).Radius(17).Background(a.theme.Accent).Label("停止").Disabled(a.busy || !a.connected).Children(func() { icon(c, "stop-fill", 14).TextColor(ui.RGB(255, 255, 255)) }).Clicked() {
 					a.mutate("cancel", map[string]any{"sessionId": a.sessionID}, nil)
 				}
@@ -153,7 +155,7 @@ func (a *app) composerToolbar(c *ui.Context, s *composerState, input ui.Element,
 						label = "加入队列"
 					}
 				}
-				if ui.ButtonBase(c).Size(34, 34).Translate(0, -2).Shrink(0).Radius(17).Background(a.theme.Accent).Label(label).Tooltip(label).Disabled(a.busy || !a.connected || strings.TrimSpace(a.draft) == "" || a.sessionID == "").Children(func() { icon(c, "send-outline", 16).TextColor(ui.RGB(255, 255, 255)) }).Clicked() {
+				if ui.ButtonBase(c).Size(34, 34).Translate(0, -2).Shrink(0).Radius(17).Background(a.theme.Accent).Label(label).Tooltip(label).Disabled(a.busy || !a.connected || !hasInput || artifacts.Loading || a.sessionID == "").Children(func() { icon(c, "send-outline", 16).TextColor(ui.RGB(255, 255, 255)) }).Clicked() {
 					a.composerSubmit(false)
 				}
 			}

@@ -6,6 +6,8 @@
 /compat/dist/
 /compat/dist-next/
 /remote/dist-next/
+/remote/dist-*/
+/compat/dist-*/
 /compat/.test-build/
 /qa/captures/
 *.png

@@ -69,7 +69,10 @@ func (a *app) composerQueueView(c *ui.Context, s *composerState) {
 	})
 }
 func (a *app) chooseComposerPermission(s *composerState, value string) {
-	if !a.composerCurrent(s) || s.values.Permissions == nil || s.values.Permissions.CurrentValue == value {
+	a.chooseComposerPermissionWithCommit(s, value, nil)
+}
+func (a *app) chooseComposerPermissionWithCommit(s *composerState, value string, done func()) {
+	if !a.composerCurrent(s) || s.values.Permissions == nil || (s.values.Permissions.CurrentValue == value && done == nil) {
 		return
 	}
 	valid := false
@@ -85,9 +88,10 @@ func (a *app) chooseComposerPermission(s *composerState, value string) {
 	if value == "danger-full-access" || value == "auto" {
 		s.confirmPermission = value
 		s.permissionAcknowledged = false
+		s.permissionDone = done
 		return
 	}
-	a.composerCommand("/permission "+value, nil)
+	a.composerCommand("/permission "+value, done)
 }
 func (a *app) composerPermissionConfirmation(c *ui.Context, s *composerState) {
 	if s.confirmPermission == "" {
@@ -124,7 +128,9 @@ func (a *app) composerPermissionConfirmation(c *ui.Context, s *composerState) {
 				if ui.Button(c, button).Disabled(!s.permissionAcknowledged || !a.can("executeCommand")).Clicked() {
 					value := s.confirmPermission
 					s.confirmPermission = ""
-					a.composerCommand("/permission "+value, nil)
+					done := s.permissionDone
+					s.permissionDone = nil
+					a.composerCommand("/permission "+value, done)
 				}
 			})
 		})
@@ -132,7 +138,30 @@ func (a *app) composerPermissionConfirmation(c *ui.Context, s *composerState) {
 	if !open {
 		s.confirmPermission = ""
 		s.permissionAcknowledged = false
+		s.permissionDone = nil
 	}
+}
+func (a *app) composerPickPermission(s *composerState, item composerCompletion, before string) {
+	if !a.composerCurrent(s) || item.Value == "" {
+		return
+	}
+	r := []rune(before)
+	if s.completionStart < 0 || s.completionEnd > len(r) || string(r[s.completionStart:s.completionEnd]) != s.completionToken {
+		return
+	}
+	after := string(r[:s.completionStart]) + string(r[s.completionEnd:])
+	host, sid, account, key := a.hostID, a.sessionID, a.accountScope, a.viewKey(a.sessionID)
+	done := func() {
+		if a.drafts[key] == before {
+			a.drafts[key] = after
+		}
+		if a.hostID == host && a.sessionID == sid && a.accountScope == account && a.draft == before {
+			a.draft = after
+		}
+	}
+	s.completions = nil
+	s.dismissedToken = s.completionToken
+	a.chooseComposerPermissionWithCommit(s, item.Value, done)
 }
 
 // A queue is steered one acknowledged item at a time. A rejection or unknown

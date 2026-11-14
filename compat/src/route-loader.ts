@@ -44,6 +44,11 @@ const routes: Record<
     exportName: "default",
     load: () => import("./routes/automation.js"),
   },
+  "plugin-settings": {
+    file: "plugin-settings",
+    exportName: "default",
+    load: () => import("./routes/plugin-settings.js"),
+  },
 };
 
 /** Independent page entries keep unrelated CSS and renderer code out of a popup. */

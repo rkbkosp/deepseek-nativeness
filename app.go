@@ -10,6 +10,13 @@ import (
 )
 
 type app struct {
+	messageImages                                            *historyImageCache
+	imagePreviewAttachments                                  []imageAttachment
+	imagePreviewIndex                                        int
+	compatRouteCache                                         map[string]bool
+	chatRowsCache                                            *chatRowsCache
+	chatStructureRevision                                    uint64
+	composerDrafts                                           map[string]*composerDraftState
 	composerBaselineKey                                      string
 	sidebarLayoutWidth                                       float32
 	modelMenuWidth, modelMenuHeight                          float32
@@ -25,10 +32,12 @@ type app struct {
 	compatOwner, compatPendingOwner                          string
 	mutationReview, mutationAcknowledge                      bool
 	testDispatch                                             func(func())
+	testDestroyCompat                                        func(*mygo.WebView)
 	remoteGeneration                                         uint64
 	compatGeneration                                         uint64
 	qaListClip                                               bool
 	renameHost                                               string
+	renameScope                                              string
 	mutations                                                map[string]*mutationIntent
 	uiPrefs                                                  viewPreferences
 	colors                                                   palette
@@ -79,6 +88,7 @@ type app struct {
 	md                                                       markdown.Options
 	mdCell                                                   markdown.Options
 	web                                                      *mygo.WebView
+	webPlacement, webTarget                                  string
 	compat                                                   *mygo.WebView
 	compatPage                                               string
 	compatHost, compatSession                                string
@@ -108,6 +118,9 @@ func newApp(demo bool) *app {
 	a.loadPreferences()
 	a.md.Reveal = &markdown.Reveal{Unit: markdown.AtOnce, Fade: -1}
 	a.md.Block = a.markdownBlock
+	a.md.OnLink = a.openMarkdownLink
+	a.md.CodeBlock = a.markdownCodeBlock
+	a.md.WrapCode = true
 	a.list.FollowEnd = true
 	if demo {
 		a.workspaces, a.sessions, a.current = demoData()
@@ -178,7 +191,7 @@ func (a *app) view(c *ui.Context) {
 			ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Children(func() {
 				if a.compat != nil && a.compatPlacement == "main" {
 					a.compatView(c)
-				} else if a.web != nil {
+				} else if a.web != nil && a.webPlacement != "right" {
 					a.webView(c)
 				} else if a.connectionOpen {
 					a.connectionView(c)
@@ -187,10 +200,12 @@ func (a *app) view(c *ui.Context) {
 				}
 			})
 		})
-		if a.rightPaneOpen && a.web == nil && (a.compat == nil || a.compatPlacement != "main") {
+		if a.rightPaneOpen && (a.web == nil || a.webPlacement == "right") && (a.compat == nil || a.compatPlacement != "main") {
 			width, _ := c.Size()
 			ui.Column(c).Width(min(576, width*.45)).Shrink(0).MinHeight(0).FillHeight().Background(a.theme.Background).BorderWidth(0, 0, 0, .5).BorderColor(a.theme.Border).Children(func() {
-				if a.compat != nil && a.compatPlacement == "right" {
+				if a.web != nil && a.webPlacement == "right" {
+					a.browserPaneView(c)
+				} else if a.compat != nil && a.compatPlacement == "right" {
 					ui.Row(c).Height(48).Shrink(0).Padding(10, 16).Gap(8).AlignItems(ui.Center).Children(func() {
 						if ui.ButtonBase(c).Label("右侧栏开始页").Children(func() { icon(c, "browse-outline", 16); ui.Text(c, "开始").FontSize(14) }).Clicked() {
 							a.closeCompat()
@@ -216,4 +231,7 @@ func (a *app) view(c *ui.Context) {
 		a.settingsView(c)
 	}
 	a.mutationReviewView(c)
+	if a.compat != nil && a.compatPlacement == "imagePreview" {
+		a.imagePreviewView(c)
+	}
 }

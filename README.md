@@ -4,7 +4,7 @@ A macOS client prototype using MyGo native UI and an on-demand WKWebView. The ex
 
 ## Run
 
-Requirements: Go 1.27.3+, Node 24.9+, and the adjacent frozen `../mygo` checkout. The Remote helper's locked dependencies and upstream browser-independent client code are described in [remote/README.md](remote/README.md).
+Requirements: macOS 15.8 or newer, Go 1.27.3+, Node 24.9+, and the adjacent frozen `../mygo` checkout. The supported OS range follows the user's requirement; no 13.x or 14.x adaptation is planned. Compatibility JavaScript targets Safari 17.4. Actual GUI evidence is from this M4 Mac only; macOS 15.8 and the M1 MacBook Air remain untested. The Remote helper's locked dependencies and upstream browser-independent client code are described in [remote/README.md](remote/README.md).
 
 ```sh
 cd /Volumes/SuperDisk/native-dsh/desktop

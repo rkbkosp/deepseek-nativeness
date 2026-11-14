@@ -6,6 +6,7 @@ import (
 )
 
 func (a *app) replaceSnapshot(s snapshot) {
+	a.invalidateChatRows()
 	a.current = s
 	a.sessionID = s.SessionID
 	a.reindexMessages()
@@ -53,8 +54,14 @@ func (a *app) applyIncremental(method string, raw json.RawMessage) error {
 		if p.Event.ID == "" {
 			return fmt.Errorf("轨迹事件缺少标识")
 		}
+		if a.chatRowsCache != nil && p.Event.Turn > a.chatRowsCache.activeTurn {
+			a.invalidateChatRows()
+		}
 		for i, v := range a.current.Trajectory {
 			if v.ID == p.Event.ID {
+				if a.chatRowsCache != nil && v.Turn == a.chatRowsCache.activeTurn && p.Event.Turn < v.Turn {
+					a.invalidateChatRows()
+				}
 				a.current.Trajectory[i] = p.Event
 				return nil
 			}
@@ -78,6 +85,9 @@ func (a *app) applyIncremental(method string, raw json.RawMessage) error {
 		}
 		kept := a.current.Trajectory[:0]
 		for _, v := range a.current.Trajectory {
+			if a.chatRowsCache != nil && v.Turn == a.chatRowsCache.activeTurn && containsID(p.IDs, v.ID) {
+				a.invalidateChatRows()
+			}
 			if !containsID(p.IDs, v.ID) {
 				kept = append(kept, v)
 			}
@@ -85,6 +95,7 @@ func (a *app) applyIncremental(method string, raw json.RawMessage) error {
 		clear(a.current.Trajectory[len(kept):])
 		a.current.Trajectory = kept
 	case "messageUpsert":
+		a.invalidateChatRows()
 		var p struct {
 			Message message `json:"message"`
 			Index   int     `json:"index"`
@@ -96,7 +107,16 @@ func (a *app) applyIncremental(method string, raw json.RawMessage) error {
 			return fmt.Errorf("远程消息缺少标识，请重新打开会话")
 		}
 		if index, ok := a.messageIndex[p.Message.ID]; ok {
-			a.current.Messages[index] = p.Message
+			target := max(0, min(p.Index, len(a.current.Messages)-1))
+			if target < index {
+				copy(a.current.Messages[target+1:index+1], a.current.Messages[target:index])
+			} else if target > index {
+				copy(a.current.Messages[index:target], a.current.Messages[index+1:target+1])
+			}
+			a.current.Messages[target] = p.Message
+			if index != target {
+				a.reindexMessages()
+			}
 		} else {
 			index := max(0, min(p.Index, len(a.current.Messages)))
 			a.current.Messages = append(a.current.Messages, message{})
@@ -105,6 +125,7 @@ func (a *app) applyIncremental(method string, raw json.RawMessage) error {
 			a.reindexMessages()
 		}
 	case "messageRemove":
+		a.invalidateChatRows()
 		var p struct {
 			IDs []string `json:"ids"`
 		}
@@ -132,6 +153,8 @@ func (a *app) applyIncremental(method string, raw json.RawMessage) error {
 			Streaming              bool    `json:"streaming"`
 			ReasoningDisplay       *string `json:"reasoningDisplay"`
 			ReasoningDisplayAppend string  `json:"reasoningDisplayAppend"`
+			TextBlockIndex         *int    `json:"textBlockIndex"`
+			ReasoningBlockIndex    *int    `json:"reasoningBlockIndex"`
 		}
 		if err := json.Unmarshal(raw, &p); err != nil {
 			return err
@@ -141,13 +164,33 @@ func (a *app) applyIncremental(method string, raw json.RawMessage) error {
 			return fmt.Errorf("远程增量缺少消息基线，请重新打开会话")
 		}
 		m := &a.current.Messages[index]
+		for _, block := range []struct {
+			index  *int
+			kind   string
+			append string
+		}{{p.TextBlockIndex, "text", p.TextAppend}, {p.ReasoningBlockIndex, "reasoning", p.ReasoningAppend}} {
+			if block.index != nil && (*block.index < 0 || *block.index >= len(m.AssistantBlocks) || m.AssistantBlocks[*block.index].Kind != block.kind) {
+				return fmt.Errorf("远程内容块增量缺少对应基线，请重新打开会话")
+			}
+		}
+		wasVisible := assistantHasVisibleContent(m)
+		hadText := m.Text != ""
 		m.Text += p.TextAppend
 		m.Reasoning += p.ReasoningAppend
 		if p.ReasoningDisplay != nil {
 			m.ReasoningDisplay = *p.ReasoningDisplay
 		}
 		m.ReasoningDisplay += p.ReasoningDisplayAppend
+		if p.TextBlockIndex != nil {
+			m.AssistantBlocks[*p.TextBlockIndex].Text += p.TextAppend
+		}
+		if p.ReasoningBlockIndex != nil {
+			m.AssistantBlocks[*p.ReasoningBlockIndex].Text += p.ReasoningAppend
+		}
 		m.Streaming = p.Streaming
+		if wasVisible != assistantHasVisibleContent(m) || hadText != (m.Text != "") {
+			a.invalidateChatRows()
+		}
 	case "sessionState":
 		var p struct {
 			Running bool  `json:"running"`

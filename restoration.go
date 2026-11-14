@@ -14,6 +14,9 @@ func (a *app) adoptAccountScope(scope string) {
 		return
 	}
 	if a.accountScope != "" && a.accountScope != scope {
+		a.releaseComposerImages()
+		a.resetMessageImages()
+		a.invalidateChatRows()
 		a.rememberSelection()
 		if a.drafts == nil {
 			a.drafts = map[string]string{}
@@ -32,6 +35,9 @@ func (a *app) adoptAccountScope(scope string) {
 		a.sessions = nil
 		a.workspaces = nil
 		a.operationCaps = nil
+		a.renameID = ""
+		a.renameHost = ""
+		a.renameScope = ""
 		a.restoreTarget = nil
 		a.restoreAttempted = ""
 	}

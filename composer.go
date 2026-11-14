@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/egoist/mygo/transfer"
 	"github.com/egoist/mygo/ui"
 )
 
@@ -8,6 +9,9 @@ import (
 // created on demand in an anchored WK view, leaving the transcript native.
 func (a *app) composerView(c *ui.Context) {
 	if !a.composerCurrent(a.composer) {
+		if a.composer != nil && a.composer.artifacts != nil {
+			a.composer.artifacts.releaseDecodedImages()
+		}
 		// Go navigation updates its target before the helper has opened it.
 		// The successful openSession hook starts scoped reads after the peer
 		// has installed the same selection; rendering alone must not race it.
@@ -16,7 +20,7 @@ func (a *app) composerView(c *ui.Context) {
 	s := a.composer
 	frame := ui.Row(c.Key("composer-frame")).Shrink(0).FillWidth().Justify(ui.Center).Padding(0, 16, 4)
 	// ConversationRoot.module.css: clamp(680px, column * .64, 920px) +32.
-	cardMax := min(max(frame.LayoutBounds().W*.64, float32(680)), float32(920)) + 32
+	cardMax := a.chatContentWidth(c) + 32
 	frame.Children(func() {
 		ui.Column(c).FillWidth().Shrink(1).MinWidth(0).MaxWidth(cardMax).Gap(6).Font(a.messageFontFamily()).FontWeight(a.messageNormalWeight()).Children(func() {
 			if len(a.current.Pending) > 0 {
@@ -29,8 +33,34 @@ func (a *app) composerView(c *ui.Context) {
 				})
 			}
 			a.composerQueueView(c, s)
-			ui.Column(c).FillWidth().MinWidth(0).Padding(8, 0, 0).Gap(12).Radius(24).Border(.5, a.theme.Border).Background(a.colors.Composer).Children(func() {
+			card := ui.Column(c).FillWidth().MinWidth(0).Padding(8, 0, 0).Gap(12).Radius(24).Border(.5, a.theme.Border).Background(a.colors.Composer)
+			if a.connected && !a.busy && s.values.ImageLimits.available() && !a.composerArtifacts().Loading {
+				if paths := card.DroppedFiles(); len(paths) > 0 {
+					a.composerAddImageFiles(paths)
+				}
+			}
+			card.Children(func() {
+				a.composerAttachmentRail(c)
 				input := ui.TextAreaBase(c, &a.draft).Placeholder("发消息或创建任务, / 调用指令, @ 文件或对话").Font(a.messageFontFamily()).FontWeight(a.messageNormalWeight()).FontSize(a.uiPrefs.FontSize).FixedLineHeight(a.uiPrefs.FontSize+10).Lines(1, 14).MinHeight(36).Padding(4, 8, 0, 14).MarginEnd(4).Label("消息输入框")
+				if s.pendingPasteText != "" {
+					start, end := input.TextSelection()
+					input.ReplaceText(start, end, s.pendingPasteText)
+					s.pendingPasteText = ""
+				}
+				if a.connected && !a.busy && s.values.ImageLimits.available() {
+					services := c.Services()
+					input.OnPaste(func(text string) bool {
+						data := services.ReadClipboardData(transfer.PNG)
+						if len(data.Items()) == 0 {
+							files := services.ReadClipboardData(transfer.FileList)
+							if paths, err := files.Files(); err == nil && len(paths) > 0 {
+								a.composerAddImageFiles(paths)
+								return true
+							}
+						}
+						return a.composerPasteImages(s, data, text)
+					})
+				}
 				if pending := s.pendingReplacement; pending != nil {
 					s.pendingReplacement = nil
 					if a.draft == pending.Before {
@@ -82,6 +112,7 @@ func (a *app) composerView(c *ui.Context) {
 		})
 	})
 	a.composerPermissionConfirmation(c, s)
+	a.composerImageLightbox(c)
 }
 
 func (a *app) composerModelPopover(c *ui.Context, anchor ui.Element) {
@@ -130,6 +161,18 @@ func (a *app) composerKey(s *composerState, k ui.TextKey) bool {
 				s.error = s.completions[s.highlight].Unavailable
 				return true
 			}
+			if s.completions[s.highlight].Kind == "file-action" {
+				a.composerChooseImages()
+				s.pendingReplacement = &composerReplacement{Before: k.Text(), Start: s.completionStart, End: s.completionEnd, Caret: s.completionStart}
+				s.completions = nil
+				s.completionToken = ""
+				return true
+			}
+			if s.completions[s.highlight].Kind == "permission" {
+				a.draft = k.Text()
+				a.composerPickPermission(s, s.completions[s.highlight], k.Text())
+				return true
+			}
 			if _, caret, ok := composerComplete(s, k.Text()); ok {
 				s.pendingReplacement = &composerReplacement{Before: k.Text(), Start: s.completionStart, End: s.completionEnd, Text: s.completions[s.highlight].Replacement, Caret: caret}
 				s.completions = nil
@@ -166,6 +209,18 @@ func (a *app) composerKey(s *composerState, k ui.TextKey) bool {
 		if k.Mods == 0 {
 			if s.completions[s.highlight].Unavailable != "" {
 				s.error = s.completions[s.highlight].Unavailable
+				return true
+			}
+			if s.completions[s.highlight].Kind == "file-action" {
+				a.composerChooseImages()
+				s.pendingReplacement = &composerReplacement{Before: k.Text(), Start: s.completionStart, End: s.completionEnd, Caret: s.completionStart}
+				s.completions = nil
+				s.completionToken = ""
+				return true
+			}
+			if s.completions[s.highlight].Kind == "permission" {
+				a.draft = k.Text()
+				a.composerPickPermission(s, s.completions[s.highlight], k.Text())
 				return true
 			}
 			if _, caret, ok := composerComplete(s, k.Text()); ok {
@@ -206,7 +261,21 @@ func (a *app) composerCompletionView(c *ui.Context, s *composerState, input ui.E
 		ui.Scroll(c).MaxHeight(240).Children(func() {
 			ui.Column(c).FillWidth().Padding(4).Children(func() {
 				for i, item := range s.completions {
-					row := ui.ButtonBase(c).Key(item.Label).FillWidth().MinHeight(32).Padding(6, 8).Radius(6).Justify(ui.Start).Label(item.Label).Disabled(item.Unavailable != "").Children(func() {
+					key := item.ID
+					if key == "" {
+						key = item.Kind + ":" + item.Replacement
+					}
+					row := ui.ButtonBase(c).Key(key).FillWidth().MinHeight(32).Padding(6, 8).Radius(6).Justify(ui.Start).Label(item.Label).Disabled(item.Unavailable != "").Children(func() {
+						glyph := "code-outline"
+						switch item.Kind {
+						case "directory":
+							glyph = "folder-open-outline"
+						case "session":
+							glyph = "new-chat-outline"
+						case "file-action":
+							glyph = "paperclip-outline"
+						}
+						icon(c, glyph, 16).Shrink(0).TextColor(a.theme.TextMuted)
 						ui.Text(c, item.Label).FontSize(13).SingleLine()
 						ui.Text(c, item.Description).FontSize(11).TextColor(a.theme.TextMuted).Grow(1).SingleLine()
 					})
@@ -215,6 +284,19 @@ func (a *app) composerCompletionView(c *ui.Context, s *composerState, input ui.E
 					}
 					if row.Clicked() {
 						s.highlight = i
+						if item.Kind == "file-action" {
+							a.composerChooseImages()
+							input.ReplaceText(s.completionStart, s.completionEnd, "")
+							input.SetTextSelection(s.completionStart, s.completionStart)
+							input.Focus()
+							s.completions = nil
+							s.completionToken = ""
+							continue
+						}
+						if item.Kind == "permission" {
+							a.composerPickPermission(s, item, a.draft)
+							continue
+						}
 						if text, caret, ok := composerComplete(s, a.draft); ok {
 							input.ReplaceText(0, len([]rune(a.draft)), text)
 							input.SetTextSelection(caret, caret)

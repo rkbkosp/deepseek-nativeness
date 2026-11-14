@@ -59,7 +59,11 @@ func (api *CompatAPI) finishPage(ctx context.Context, failed bool) error {
 		if failed {
 			a.error = "兼容页面出现错误，请重新打开。"
 		}
-		a.closeCompat()
+		if !failed && a.compatPlacement == "settingsContent" {
+			a.closeSettings()
+		} else {
+			a.closeCompat()
+		}
 		a.win.Invalidate()
 	})
 	return nil
@@ -69,6 +73,7 @@ var compatMethods = map[string]bool{
 	"capabilities": true, "modelCatalog": true, "selectModel": true, "sessionProjections": true,
 	"describeSettings": true, "updateSettings": true, "replaceSettings": true, "mutateSettings": true,
 	"listPlugins": true, "listBundles": true, "listPluginVersions": true, "readBundleDetail": true,
+	"pluginInventory":  true,
 	"setPluginEnabled": true, "setBundleEnabled": true, "updateBundle": true,
 	"describeCredentials": true, "setCredential": true,
 	"unsetCredential":  true,
@@ -129,6 +134,9 @@ func (api *CompatAPI) GetContext(ctx context.Context) (map[string]any, error) {
 		result["placement"] = a.compatPlacement
 		result["sessions"] = append([]session(nil), a.sessions...)
 		result["workspaces"] = append([]workspace(nil), a.workspaces...)
+		if a.compatPlacement == "imagePreview" {
+			result["imagePreview"] = map[string]any{"attachments": a.imagePreviewAttachments, "selectedIndex": a.imagePreviewIndex}
+		}
 	})
 	if result == nil {
 		return nil, compatRejectedError("主机或页面已切换，请重新打开页面")
@@ -148,6 +156,16 @@ func (api *CompatAPI) Request(ctx context.Context, method string, params json.Ra
 	}
 	if err := json.Unmarshal(params, &p); err != nil || p == nil {
 		return nil, compatRejectedError("操作参数必须为对象")
+	}
+	if method == "readAttachment" {
+		raw, _ := json.Marshal(p["attachment"])
+		var ref imageAttachment
+		if json.Unmarshal(raw, &ref) != nil || !validImageReference(ref) {
+			return nil, compatRejectedError("图片引用无效")
+		}
+		if ref.Bytes > 8*1024*1024 {
+			return nil, compatRejectedError("图片超过当前客户端读取上限，分块读取尚未接入。")
+		}
 	}
 	var client *bridge.Client
 	var scope map[string]any
@@ -228,10 +246,12 @@ func newPageOwner() string {
 	return fmt.Sprintf("%x-%x-%x-%x-%x", b[:4], b[4:6], b[6:8], b[8:10], b[10:])
 }
 func (a *app) releaseCompatOwner(owner string) {
-	if owner == "" || a.client == nil {
+	releaseRemoteOwner(a.client, owner)
+}
+func releaseRemoteOwner(client *bridge.Client, owner string) {
+	if owner == "" || client == nil {
 		return
 	}
-	client := a.client
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
@@ -249,7 +269,7 @@ func (a *app) openCompatAt(page, placement string) {
 		return
 	}
 	switch page {
-	case "plugins", "models", "model-menu", "trajectory", "terminal", "automation", "agent-presets", "model-settings":
+	case "plugins", "plugin-settings", "models", "model-menu", "trajectory", "terminal", "automation", "agent-presets", "model-settings", "image-preview":
 	default:
 		return
 	}
@@ -257,6 +277,9 @@ func (a *app) openCompatAt(page, placement string) {
 	if _, err := os.Stat(filepath.Join(path, "index.html")); err != nil {
 		a.error = "本地兼容页面未打包，请重新构建客户端。"
 		return
+	}
+	if placement == "main" {
+		a.beginMainNavigation()
 	}
 	a.closeCompat()
 	a.compatPlacement = placement
@@ -352,6 +375,7 @@ func (a *app) closeCompat() {
 	a.compatPage = ""
 	a.compatPlacement = ""
 	a.modelPopoverOpen = false
+	a.imagePreviewAttachments = nil
 	a.releaseCompatOwner(owner)
 	if pending != "" && pending != owner {
 		a.releaseCompatOwner(pending)
@@ -359,7 +383,11 @@ func (a *app) closeCompat() {
 	if a.compat != nil {
 		v := a.compat
 		a.compat = nil
-		v.Destroy()
+		if a.testDestroyCompat != nil {
+			a.testDestroyCompat(v)
+		} else {
+			v.Destroy()
+		}
 	}
 	if reload && a.connected && a.sessionID != "" {
 		a.reloadComposer()

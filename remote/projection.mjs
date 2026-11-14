@@ -31,6 +31,14 @@ export class SessionProjection {
     this.currentTurn = undefined;
     this.currentStep = undefined;
     this.steering = new SteeringHistory();
+    this.positions = new Map();
+    this.messageKeysById = new Map();
+    this.dirtyMessages = new Set();
+    this.removedMessages = new Set();
+    this.dirtyTrajectory = new Map();
+    this.lastActive = new Map();
+    this.cachedActive = undefined;
+    this.changeVersion = (this.changeVersion ?? 0) + 1;
   }
   snapshot(frame) {
     this.events.clear();
@@ -87,6 +95,8 @@ export class SessionProjection {
   }
   event(event) {
     if (!event || !Number.isSafeInteger(event.seq)) return;
+    this.changeVersion++;
+    this.cachedActive = undefined;
     const duplicate = this.events.has(event.seq);
     this.events.set(event.seq, event);
     const data = event.data ?? {};
@@ -135,7 +145,11 @@ export class SessionProjection {
       ...(event.surfaceOp ? { surfaceOp: event.surfaceOp } : {}),
     };
     if (!this.trajectory.has(event.seq)) {
-      const before = this.trajectoryOrder.findIndex((seq) => seq > event.seq);
+      const before =
+        this.trajectoryOrder.length === 0 ||
+        this.trajectoryOrder.at(-1) <= event.seq
+          ? -1
+          : this.trajectoryOrder.findIndex((seq) => seq > event.seq);
       this.trajectoryOrder.splice(
         before < 0 ? this.trajectoryOrder.length : before,
         0,
@@ -143,6 +157,7 @@ export class SessionProjection {
       );
     }
     this.trajectory.set(event.seq, trajectory);
+    this.dirtyTrajectory.set(event.seq, trajectory);
     let key = `event:${event.seq}`,
       id = key,
       position;
@@ -159,9 +174,16 @@ export class SessionProjection {
       if (start >= 0 && end >= start) {
         position = start;
         for (const old of this.order.splice(start, end - start + 1)) {
+          const removed = this.messages.get(old);
+          if (removed) {
+            this.removedMessages.add(removed.id);
+            this.messageKeysById.delete(removed.id);
+          }
           this.messages.delete(old);
+          this.positions.delete(old);
           this.retired.add(old);
         }
+        this.reindexFrom(start);
       }
     }
     let role, kind, blocks, source, context, tool, command;
@@ -283,12 +305,17 @@ export class SessionProjection {
       const previous = this.messages.get(key);
       if (!previous) {
         if (position === undefined) {
-          const later = this.order.findIndex(
-            (k) => this.messages.get(k).seq > event.seq,
-          );
+          const last = this.order.at(-1);
+          const later =
+            last === undefined || this.messages.get(last).seq <= event.seq
+              ? -1
+              : this.order.findIndex(
+                  (k) => this.messages.get(k).seq > event.seq,
+                );
           position = later < 0 ? this.order.length : later;
         }
         this.order.splice(position, 0, key);
+        this.reindexFrom(position);
       }
       const reasoning = reasoningText(blocks),
         text = role === "assistant" ? assistantText(blocks) : blockText(blocks);
@@ -337,6 +364,9 @@ export class SessionProjection {
           : {}),
       };
       this.messages.set(key, message);
+      this.messageKeysById.set(message.id, key);
+      this.dirtyMessages.add(key);
+      this.removedMessages.delete(message.id);
       this.seqKeys.set(event.seq, key);
     }
     if (
@@ -348,10 +378,14 @@ export class SessionProjection {
       this.attempt = undefined;
   }
   start(a) {
+    this.changeVersion++;
+    this.cachedActive = undefined;
     this.attempt = { ...a, nextIndex: 0, blocks: new Map() };
   }
   chunk(chunk) {
     if (!this.attempt) return;
+    this.changeVersion++;
+    this.cachedActive = undefined;
     const i = chunk.index ?? 0,
       old = this.attempt.blocks.get(i) ?? { type: "text", text: "" };
     if (chunk.type === "block-start")
@@ -417,6 +451,8 @@ export class SessionProjection {
       this.chunk(frame.chunk);
     }
     if (frame.type === "end" && this.attempt?.attemptId === frame.attemptId) {
+      this.changeVersion++;
+      this.cachedActive = undefined;
       if (frame.index !== this.attempt.nextIndex)
         throw Object.assign(new Error("Assistant stream settlement gap."), {
           code: "REBASELINE_REQUIRED",
@@ -429,8 +465,52 @@ export class SessionProjection {
       else this.attempt.streaming = false;
     }
   }
-  value() {
-    const messages = this.order.map((key) => this.messages.get(key));
+  reindexFrom(start) {
+    for (let index = start; index < this.order.length; index++)
+      this.positions.set(this.order[index], index);
+  }
+  markPublished(version = this.changeVersion, active = this.activeMessages()) {
+    this.lastActive = new Map(active.map((message) => [message.id, message]));
+    if (version !== this.changeVersion) return;
+    this.dirtyMessages.clear();
+    this.removedMessages.clear();
+    this.dirtyTrajectory.clear();
+  }
+  pullUpdates() {
+    const active = this.activeMessages();
+    const currentActive = new Map(
+      active.map((message) => [message.id, message]),
+    );
+    const removed = new Set(this.removedMessages);
+    for (const id of this.lastActive.keys())
+      if (!currentActive.has(id) && !this.messageKeysById.has(id))
+        removed.add(id);
+    const upserts = [];
+    for (const key of this.dirtyMessages) {
+      const message = this.messages.get(key);
+      if (message) upserts.push({ message, index: this.positions.get(key) });
+    }
+    active.forEach((message, index) => {
+      if (this.lastActive.get(message.id) !== message)
+        upserts.push({ message, index: this.order.length + index });
+    });
+    const update = {
+      sessionId: this.sessionId,
+      upserts,
+      removedIds: [...removed],
+      trajectoryUpserts: [...this.dirtyTrajectory.values()],
+      pending: this.pending,
+      running: this.running,
+      cursor: this.cursor,
+      hasMore: this.hasMore,
+      projections: this.projections,
+    };
+    this.markPublished(this.changeVersion, active);
+    return update;
+  }
+  activeMessages() {
+    if (this.cachedActive) return this.cachedActive;
+    const messages = [];
     if (this.attempt) {
       const blocks = [...this.attempt.blocks.values()],
         reasoning = reasoningText(blocks);
@@ -487,7 +567,17 @@ export class SessionProjection {
           });
         }
     }
-    return {
+    this.cachedActive = messages;
+    return messages;
+  }
+  value() {
+    const active = this.activeMessages(),
+      version = this.changeVersion;
+    const messages = [
+      ...this.order.map((key) => this.messages.get(key)),
+      ...active,
+    ];
+    const value = {
       sessionId: this.sessionId,
       messages,
       pending: this.pending,
@@ -498,6 +588,10 @@ export class SessionProjection {
       turns: [...this.turns.values()],
       trajectory: this.trajectoryOrder.map((seq) => this.trajectory.get(seq)),
     };
+    Object.defineProperty(value, "acknowledge", {
+      value: () => this.markPublished(version, active),
+    });
+    return value;
   }
 }
 export function blockText(blocks) {

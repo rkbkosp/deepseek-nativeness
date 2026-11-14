@@ -60,13 +60,15 @@ func (a *app) connectionView(c *ui.Context) {
 
 func (a *app) openWeb() {
 	a.closeCompat()
-	if a.web != nil {
+	if a.web != nil && a.webPlacement == "main" {
 		return
 	}
 	if !strings.HasPrefix(a.webURL, "https://") && !strings.HasPrefix(a.webURL, "http://127.0.0.1:") {
 		a.error = "兼容页面仅允许 HTTPS 或本机回环地址。"
 		return
 	}
+	a.closeWeb()
+	a.beginMainNavigation()
 	mygo.RunOnMain(func() {
 		v, err := a.win.NewWebView(mygo.WebViewOptions{URL: a.webURL, Page: mygo.PageOptions{Untrusted: true}})
 		if err != nil {
@@ -74,6 +76,8 @@ func (a *app) openWeb() {
 			return
 		}
 		a.web = v
+		a.webPlacement = "main"
+		a.webTarget = a.webURL
 		a.win.Invalidate()
 	})
 }
@@ -90,6 +94,8 @@ func (a *app) webView(c *ui.Context) {
 	}
 }
 func (a *app) closeWeb() {
+	a.webPlacement = ""
+	a.webTarget = ""
 	if a.web != nil {
 		v := a.web
 		a.web = nil

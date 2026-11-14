@@ -24,3 +24,17 @@ func TestNewSessionTargetsCurrentThenRecentAndReusesMatchingBlank(t *testing.T) 
 		t.Fatal("invented workspace")
 	}
 }
+
+func TestNewSessionUsesSelectedContextDuringCatalogMembershipDelay(t *testing.T) {
+	for _, tt := range []struct{ name, sessionWorkspace, selected string }{{"session metadata", "a", ""}, {"selected workspace", "", "a"}, {"selected without session", "", "a"}} {
+		t.Run(tt.name, func(t *testing.T) {
+			a := &app{workspaceID: tt.selected, workspaces: []workspace{{ID: "a", Path: "/a"}, {ID: "b", Path: "/b"}}, sessions: []session{{ID: "current", WorkspaceID: tt.sessionWorkspace, UpdatedAt: 1}, {ID: "recent", WorkspaceID: "b", UpdatedAt: 99}}}
+			if tt.name != "selected without session" {
+				a.sessionID = "current"
+			}
+			if w, _ := a.newSessionTarget(""); w != "a" {
+				t.Fatal("membership lag selected wrong project", w)
+			}
+		})
+	}
+}

@@ -1,5 +1,7 @@
 // Explicit deterministic gateway fixture. Requests run through the real RemoteAdapter validation.
 import { RemoteAdapter } from "./client.mjs";
+import { SessionProjection } from "./projection.mjs";
+import { PresentationPublisher } from "./updates.mjs";
 const WORKSPACE = "fixture-workspace",
   SESSION = "fixture-session",
   HOST = "fixture-host";
@@ -42,10 +44,207 @@ const history = () => ({
   ],
 });
 export class FixtureAdapter extends RemoteAdapter {
+  async request(method, params = {}) {
+    if (method === "fixtureEmitNotifications") {
+      if (!Array.isArray(params.events) || params.events.length > 16)
+        throw Error("Invalid fixture events");
+      const allowed = new Set([
+        "sessions",
+        "workspaces",
+        "snapshot",
+        "sessionState",
+        "messageUpsert",
+        "messageDelta",
+        "sessionProjections",
+      ]);
+      for (const event of params.events) {
+        if (
+          !allowed.has(event.method) ||
+          typeof event.scope?.hostId !== "string" ||
+          !Number.isSafeInteger(event.scope?.generation) ||
+          typeof event.scope?.accountScope !== "string"
+        )
+          throw Error("Invalid fixture notification");
+        this.emit(
+          event.method,
+          event.params,
+          Object.freeze({ ...event.scope }),
+        );
+      }
+      this.emit("fixtureComplete", {
+        marker: params.marker ?? "notification-scope",
+        dataSource: "fixture",
+      });
+      return { emitted: params.events.length };
+    }
+    if (method === "fixtureHoldOwnerRegistration") {
+      this.fixtureHoldRegistrations = params.hold === true;
+      if (!this.fixtureHoldRegistrations)
+        for (const release of this.fixtureRegistrationWaiters.splice(0))
+          release();
+      return this.fixtureUnaryStats();
+    }
+    if (method === "registerOwner" && this.fixtureHoldRegistrations)
+      await new Promise((resolve) =>
+        this.fixtureRegistrationWaiters.push(resolve),
+      );
+    if (method === "fixtureHoldAttachments") {
+      this.fixtureHoldAttachments = params.hold === true;
+      this.fixtureIgnoreAttachmentAbort = params.ignoreAbort === true;
+      if (!this.fixtureHoldAttachments)
+        for (const pending of [...this.fixtureAttachmentReads.values()])
+          pending.release();
+      return this.fixtureUnaryStats();
+    }
+    if (method === "fixtureStats") return this.fixtureUnaryStats();
+    if (method === "fixtureStructuredStream") return this.structuredStream();
+    return super.request(method, params);
+  }
+  fixtureUnaryStats() {
+    return {
+      dataSource: "fixture",
+      activeAttachments: this.fixtureAttachmentReads.size,
+      startedAttachments: this.fixtureAttachmentStarted,
+      abortedAttachments: this.fixtureAttachmentAborted,
+      activeOwners: this.owners.size,
+      heldRegistrations: this.fixtureRegistrationWaiters.length,
+    };
+  }
+  structuredStream() {
+    const sessionId = "fixture-structured-session";
+    const projection = new SessionProjection(sessionId);
+    const image = {
+      attachmentId: "fixture-image",
+      mediaType: "image/png",
+      bytes: 24,
+      width: 2,
+      height: 3,
+      name: "fixture.png",
+    };
+    const file = {
+      attachmentId: "fixture-file",
+      name: "fixture.txt",
+      bytes: 3,
+    };
+    const event = (seq, type, data) => ({ seq, type, time: seq, data });
+    projection.snapshot({
+      cursor: 2,
+      records: [
+        {
+          event: event(1, "assistant/message", {
+            message: {
+              content: [
+                { type: "text", text: "Durable fixture" },
+                { type: "image", attachment: image },
+                { type: "file", attachment: file },
+              ],
+            },
+          }),
+        },
+        {
+          event: event(2, "user/message", {
+            source: { kind: "user" },
+            content: [{ type: "text", text: "Fixture request" }],
+          }),
+        },
+      ],
+    });
+    const publisher = new PresentationPublisher(this.emit);
+    const initial = projection.value();
+    publisher.replace(initial);
+    this.emit("snapshot", initial);
+    let revision = 1,
+      index = 0;
+    projection.frame({
+      type: "start",
+      revision: revision++,
+      attemptId: "fixture-attempt",
+      turn: 1,
+      step: 1,
+    });
+    const chunk = (chunk) =>
+      projection.frame({
+        type: "chunk",
+        revision: revision++,
+        attemptId: "fixture-attempt",
+        index: index++,
+        time: 10,
+        chunk,
+      });
+    const flush = () => publisher.patch(projection.pullUpdates());
+    chunk({ type: "text-delta", index: 0, text: "hello" });
+    chunk({ type: "reasoning-delta", index: 1, text: "Thinking" });
+    flush();
+    chunk({ type: "text-delta", index: 0, text: " world" });
+    chunk({ type: "reasoning-delta", index: 1, text: " more" });
+    flush();
+    chunk({
+      type: "block-end",
+      index: 2,
+      block: { type: "image", attachment: image },
+    });
+    flush();
+    chunk({
+      type: "tool-call-delta",
+      index: 3,
+      id: "fixture-call",
+      name: "fixture-tool",
+      argumentsDelta: '{"text":',
+    });
+    flush();
+    chunk({
+      type: "tool-call-delta",
+      index: 3,
+      id: "fixture-call",
+      argumentsDelta: '"value"}',
+    });
+    flush();
+    projection.event(
+      event(3, "tool/call", {
+        callId: "fixture-call",
+        name: "fixture-tool",
+        arguments: '{"text":"value"}',
+        turn: 1,
+        step: 1,
+      }),
+    );
+    flush();
+    projection.event(
+      event(4, "assistant/message", {
+        turn: 1,
+        step: 1,
+        message: {
+          content: [
+            { type: "text", text: "hello world" },
+            { type: "reasoning", text: "Thinking more" },
+            { type: "image", attachment: image },
+            {
+              type: "tool-call",
+              id: "fixture-call",
+              name: "fixture-tool",
+              arguments: '{"text":"value"}',
+            },
+          ],
+        },
+      }),
+    );
+    flush();
+    const expected = projection.value();
+    this.emit("fixtureComplete", {
+      sessionId,
+      marker: "structured-v1",
+      dataSource: "fixture",
+    });
+    return { expected };
+  }
   constructor(emit) {
     super(emit);
     this.identity = { deviceId: "fixture-client" };
     this.authenticated = true;
+    this.fixtureAttachmentReads = new Map();
+    this.fixtureAttachmentStarted = 0;
+    this.fixtureAttachmentAborted = 0;
+    this.fixtureRegistrationWaiters = [];
     this.server = {
       baseUrl: "fixture://local",
       close() {},
@@ -80,7 +279,41 @@ export class FixtureAdapter extends RemoteAdapter {
     };
     this.interactionReady = true;
     this.gateway = {
-      invoke: async ({ namespace, method, args }) => {
+      invoke: async ({ namespace, method, args, signal }) => {
+        if (namespace === "session" && method === "attachment") {
+          this.fixtureAttachmentStarted++;
+          const value = {
+            attachment: args.request.attachment,
+            data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jBzQAAAAASUVORK5CYII=",
+          };
+          if (!this.fixtureHoldAttachments) return value;
+          return new Promise((resolve, reject) => {
+            const key = this.fixtureAttachmentStarted;
+            const cleanup = () => {
+              signal?.removeEventListener("abort", abort);
+              this.fixtureAttachmentReads.delete(key);
+            };
+            const abort = () => {
+              this.fixtureAttachmentAborted++;
+              if (!this.fixtureIgnoreAttachmentAbort) {
+                cleanup();
+                reject(
+                  Object.assign(Error("Fixture read aborted"), {
+                    code: "CANCELLED",
+                  }),
+                );
+              }
+            };
+            this.fixtureAttachmentReads.set(key, {
+              release: () => {
+                cleanup();
+                resolve(value);
+              },
+            });
+            if (signal?.aborted) abort();
+            else signal?.addEventListener("abort", abort, { once: true });
+          });
+        }
         if (
           namespace === "session" &&
           method === "list" &&

@@ -7,6 +7,7 @@ import { installIconSprite } from "../../../deepseek-harness/packages/client/ui-
 import { context } from "./bridge";
 import { no } from "./presentation";
 import { loadRoute } from "./route-loader";
+import { installSettingsKeys } from "./settings-keys";
 function App() {
   const [Page, setPage] = useState<React.ComponentType<{ ctx: any }> | null>(
     null,
@@ -25,6 +26,13 @@ function App() {
         if (disposed) return;
         setContext(c);
         setPage(() => Component);
+        document.body.dataset.compatPlacement = c.placement ?? "";
+        if (c.placement === "settingsContent")
+          cleanup.push(
+            installSettingsKeys(document, () => {
+              void window.mygo?.call("CompatAPI.Close").catch(() => {});
+            }),
+          );
         const inset =
           c.globalPageInset ??
           Math.min(48, Math.max(24, 0.04 * (c.windowWidth ?? innerWidth)));

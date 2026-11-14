@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"native-dsh/desktop/internal/bridge"
+	"path"
 	"strings"
 	"time"
 	"unicode"
@@ -24,11 +26,13 @@ type composerState struct {
 	modelName, modelEffort                    string
 	modelCompact                              bool
 	controlsGeometrySignature                 string
+	artifacts                                 *composerDraftState
 	catalog                                   composerModelCatalog
 	values                                    composerProjectionValues
 	permissions                               []settingsPermissionOption
 	commands                                  []composerCommand
 	completions                               []composerCompletion
+	referenceFiles, referenceSessions         []composerCompletion
 	completionToken                           string
 	completionStart, completionEnd, highlight int
 	queryGeneration                           uint64
@@ -37,10 +41,13 @@ type composerState struct {
 	editingID, editingText                    string
 	confirmPermission                         string
 	permissionAcknowledged                    bool
+	permissionDone                            func()
 	error                                     string
 	caret                                     int
 	projectionSeq                             int64
 	pendingReplacement                        *composerReplacement
+	pendingPasteText                          string
+	completionCapabilities                    uint8
 	presets                                   []composerPreset
 	presetsLoading                            bool
 	readGeneration                            uint64
@@ -90,6 +97,7 @@ type composerQueueItem struct {
 	Source json.RawMessage `json:"source"`
 }
 type composerProjectionValues struct {
+	ImageLimits    *composerImageLimits            `json:"imageLimits"`
 	AgentPreset    *string                         `json:"agentPreset"`
 	Plan           *struct{ Active, Pending bool } `json:"plan"`
 	ModelSelection struct {
@@ -101,10 +109,18 @@ type composerProjectionValues struct {
 	} `json:"permissions"`
 	Inbox map[string][]composerQueueItem `json:"inbox"`
 }
-type composerCompletion struct{ Label, Description, Replacement, Kind, Unavailable string }
+type composerCompletion struct{ ID, Label, Description, Replacement, Kind, Unavailable, Value string }
+type composerSessionReference struct {
+	SessionID, Label, DisplayTitle, Mention, Cwd string
+	SameWorkspace                                bool
+	CreatedAt                                    float64
+}
 
 func (a *app) reloadComposer() {
 	if !a.composerCurrent(a.composer) {
+		if a.composer != nil && a.composer.artifacts != nil {
+			a.composer.artifacts.releaseDecodedImages()
+		}
 		a.composer = &composerState{hostID: a.hostID, sessionID: a.sessionID, accountScope: a.accountScope, generation: a.remoteGeneration}
 	}
 	s := a.composer
@@ -133,6 +149,7 @@ func (a *app) reloadComposer() {
 			return err
 		}
 		s.permissions = v.Options
+		s.completionToken = ""
 		s.refreshLabels()
 		return nil
 	})
@@ -228,6 +245,10 @@ func (a *app) acceptComposerProjections(raw json.RawMessage) error {
 			}
 		case "plan":
 			if err := json.Unmarshal(v, &s.values.Plan); err != nil {
+				return err
+			}
+		case "imageLimits":
+			if err := json.Unmarshal(v, &s.values.ImageLimits); err != nil {
 				return err
 			}
 		}
@@ -411,7 +432,7 @@ func composerCommandBoundary(line string) string {
 	case "model":
 		return "此斜杠模型选择交互尚未接入，请使用输入框右侧的模型菜单。"
 	case "file":
-		return "原版文件附件选择与上传尚未接入，草稿已保留。"
+		return "此连接仅支持图片，请通过“文件”候选添加；普通文件附件暂不可用。"
 	case "feedback":
 		if len(words) == 1 {
 			return "反馈对话框尚未接入；可输入 /feedback <内容> 使用主机命令。"
@@ -426,6 +447,24 @@ func composerCommandBoundary(line string) string {
 func (a *app) composerSubmit(accelerated bool) {
 	s := a.composer
 	if !a.connected || a.busy || a.sessionID == "" {
+		return
+	}
+	artifacts := a.composerArtifacts()
+	if artifacts.Loading {
+		artifacts.Error = "图片仍在读取，请稍候。"
+		return
+	}
+	if len(artifacts.Images) > 0 {
+		if strings.HasPrefix(strings.TrimSpace(a.draft), "/") {
+			artifacts.Error = "此连接不支持命令携带图片，草稿和图片已保留。"
+			return
+		}
+		content, ids, err := a.composerImagePayload()
+		if err != nil {
+			artifacts.Error = err.Error()
+			return
+		}
+		a.sendComposerPayload(composerSubmitMode(a.uiPrefs.SendMode, a.current.Running, accelerated), content, ids)
 		return
 	}
 	if strings.TrimSpace(a.draft) == "" {
@@ -527,6 +566,9 @@ func composerActiveToken(text string, caret int) (kind, token string, start int)
 	r := []rune(text)
 	caret = min(max(caret, 0), len(r))
 	prefix := string(r[:caret])
+	if strings.HasPrefix(prefix, "/permission ") || strings.HasPrefix(prefix, "/permission\t") {
+		return "permission", prefix, 0
+	}
 	if strings.HasPrefix(prefix, "/") && !strings.ContainsAny(prefix, " \t\n") {
 		return "command", prefix, 0
 	}
@@ -560,6 +602,20 @@ func (a *app) updateComposerCompletions(s *composerState, caret int) {
 	if !a.composerCurrent(s) || s.composing {
 		return
 	}
+	capabilities := uint8(0)
+	if a.operationCaps["listFileReferences"].Supported {
+		capabilities |= 1
+	}
+	if a.operationCaps["listSessionReferences"].Supported {
+		capabilities |= 2
+	}
+	if s.values.ImageLimits.available() {
+		capabilities |= 4
+	}
+	if capabilities != s.completionCapabilities {
+		s.completionCapabilities = capabilities
+		s.completionToken = ""
+	}
 	kind, token, start := composerActiveToken(a.draft, caret)
 	s.caret = caret
 	if token == s.completionToken {
@@ -571,47 +627,148 @@ func (a *app) updateComposerCompletions(s *composerState, caret int) {
 	s.completionStart = start
 	s.completionEnd = caret
 	s.completions = nil
+	s.referenceFiles = nil
+	s.referenceSessions = nil
 	s.highlight = 0
 	if token == "" || token == s.dismissedToken {
 		return
 	}
+	if kind == "permission" {
+		query := strings.ToLower(strings.TrimSpace(strings.TrimPrefix(token, "/permission")))
+		for _, p := range s.permissions {
+			label := permissionDisplay(p)
+			if strings.Contains(strings.ToLower(p.Value+" "+label), query) {
+				s.completions = append(s.completions, composerCompletion{ID: "permission:" + p.Value, Label: label, Description: p.Value, Kind: "permission", Value: p.Value})
+			}
+		}
+		return
+	}
 	if kind == "command" {
 		query := strings.ToLower(strings.TrimPrefix(token, "/"))
+		if strings.Contains("file", query) {
+			reason := ""
+			if !s.values.ImageLimits.available() {
+				reason = "图片限制尚未加载。"
+			}
+			s.completions = append(s.completions, composerCompletion{ID: "client-file", Label: "文件", Description: "添加图片；普通文件附件暂不可用", Kind: "file-action", Unavailable: reason})
+		}
 		for _, cmd := range s.commands {
 			if strings.Contains(strings.ToLower(cmd.Name), query) {
 				description := cmd.Description
 				if cmd.Unavailable != "" {
 					description = cmd.Unavailable
 				}
-				s.completions = append(s.completions, composerCompletion{Label: "/" + cmd.Name, Description: description, Replacement: "/" + cmd.Name + " ", Kind: "command", Unavailable: cmd.Unavailable})
+				s.completions = append(s.completions, composerCompletion{ID: "command:" + cmd.Name, Label: "/" + cmd.Name, Description: description, Replacement: "/" + cmd.Name + " ", Kind: "command", Unavailable: cmd.Unavailable})
 			}
 		}
-		return
-	}
-	if !a.operationCaps["listFileReferences"].Supported {
 		return
 	}
 	query := strings.TrimPrefix(strings.TrimPrefix(token, "@"), "\"")
-	a.composerRead(s, "listFileReferences", map[string]any{"query": query}, func(raw json.RawMessage) error {
-		if generation != s.queryGeneration || token != s.completionToken {
+	if a.operationCaps["listFileReferences"].Supported {
+		a.composerRead(s, "listFileReferences", map[string]any{"query": query}, func(raw json.RawMessage) error {
+			if generation != s.queryGeneration || token != s.completionToken {
+				return nil
+			}
+			var refs []struct{ Path, Kind string }
+			if err := json.Unmarshal(raw, &refs); err != nil {
+				return err
+			}
+			items := []composerCompletion{}
+			for _, ref := range refs {
+				replacement, ok := composerFileMention(ref.Path, ref.Kind, strings.HasPrefix(token, "@\""))
+				if !ok {
+					continue
+				}
+				if ref.Kind != "directory" {
+					replacement += " "
+				}
+				label := path.Base(ref.Path)
+				if ref.Kind == "directory" {
+					label += "/"
+				}
+				parent := path.Dir(ref.Path)
+				if parent == "." {
+					parent = ""
+				}
+				items = append(items, composerCompletion{ID: "file:" + ref.Path, Label: label, Description: parent, Replacement: replacement, Kind: ref.Kind})
+			}
+			s.referenceFiles = items
+			s.mergeReferenceResults()
 			return nil
-		}
-		var refs []struct{ Path, Kind string }
-		if err := json.Unmarshal(raw, &refs); err != nil {
-			return err
-		}
-		for _, ref := range refs {
-			replacement, ok := composerFileMention(ref.Path, ref.Kind, strings.HasPrefix(token, "@\""))
-			if !ok {
-				continue
+		})
+	}
+	if !strings.HasPrefix(token, "@\"") && a.operationCaps["listSessionReferences"].Supported {
+		a.composerRead(s, "listSessionReferences", map[string]any{"query": query}, func(raw json.RawMessage) error {
+			if generation != s.queryGeneration || token != s.completionToken {
+				return nil
 			}
-			if ref.Kind != "directory" {
-				replacement += " "
+			var refs []composerSessionReference
+			if err := json.Unmarshal(raw, &refs); err != nil {
+				return err
 			}
-			s.completions = append(s.completions, composerCompletion{Label: ref.Path, Description: ref.Kind, Replacement: replacement, Kind: ref.Kind})
+			items := []composerCompletion{}
+			for _, ref := range refs {
+				if !composerValidSessionMention(ref) {
+					continue
+				}
+				label := ref.DisplayTitle
+				if label == "" {
+					label = ref.Label
+				}
+				description := relativeTime(ref.CreatedAt, time.Now())
+				if !ref.SameWorkspace {
+					if ref.Cwd != "" {
+						description = ref.Cwd + " · " + description
+					} else {
+						description = "无工作目录 · " + description
+					}
+				}
+				items = append(items, composerCompletion{ID: "session:" + ref.SessionID, Label: label, Description: description, Replacement: ref.Mention + " ", Kind: "session"})
+			}
+			s.referenceSessions = items
+			s.mergeReferenceResults()
+			return nil
+		})
+	}
+}
+func (s *composerState) mergeReferenceResults() {
+	selected := ""
+	if s.highlight >= 0 && s.highlight < len(s.completions) {
+		selected = s.completions[s.highlight].ID
+	}
+	s.completions = append(append([]composerCompletion{}, s.referenceFiles...), s.referenceSessions...)
+	s.highlight = 0
+	if selected != "" {
+		for i, v := range s.completions {
+			if v.ID == selected {
+				s.highlight = i
+				break
+			}
 		}
-		return nil
-	})
+	}
+}
+
+// Accept only the exact canonical mention carried by Host discovery. No
+// catalog title or locally constructed URI is substituted for that authority.
+func composerValidSessionMention(ref composerSessionReference) bool {
+	mention := ref.Mention
+	if !strings.HasPrefix(mention, "@[") || !strings.HasSuffix(mention, ")") {
+		return false
+	}
+	at := strings.LastIndex(mention, "](dsh-session:")
+	if at < 0 {
+		return false
+	}
+	encoded := mention[at+len("](dsh-session:") : len(mention)-1]
+	raw, err := base64.RawURLEncoding.DecodeString(encoded)
+	if err != nil || base64.RawURLEncoding.EncodeToString(raw) != encoded {
+		return false
+	}
+	var id string
+	if json.Unmarshal(raw, &id) != nil || id == "" || id != ref.SessionID {
+		return false
+	}
+	return true
 }
 func composerFileMention(path, kind string, preserveQuote bool) (string, bool) {
 	for _, r := range path {

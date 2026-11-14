@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/json"
 	"errors"
@@ -12,9 +13,9 @@ import (
 )
 
 func (a *app) fetchCapabilities() {
-	host, sid := a.hostID, a.sessionID
-	a.request("capabilities", map[string]any{"sessionId": sid, "workspaceId": a.workspaceID}, func(raw json.RawMessage) error {
-		if host != a.hostID || sid != a.sessionID {
+	host, sid, scope, generation := a.hostID, a.sessionID, a.accountScope, a.remoteGeneration
+	a.scopedRead("capabilities", map[string]any{"sessionId": sid, "workspaceId": a.workspaceID}, func(raw json.RawMessage) error {
+		if host != a.hostID || sid != a.sessionID || scope != a.accountScope || generation != a.remoteGeneration {
 			return nil
 		}
 		var state struct {
@@ -45,13 +46,23 @@ func (a *app) mutate(method string, params map[string]any, accept func(json.RawM
 		a.error = "Remote 未连接，操作未发送。"
 		return
 	}
-	host, generation := a.hostID, a.remoteGeneration
+	host, generation, account := a.hostID, a.remoteGeneration, a.accountScope
 	serialized, err := json.Marshal(params)
 	if err != nil {
 		a.error = err.Error()
 		return
 	}
-	key := a.hostID + "\x00" + method + "\x00" + string(serialized)
+	// Own the complete JSON value before any asynchronous write. UseNumber
+	// preserves revision/sequence integers beyond JavaScript's safe range.
+	var captured map[string]any
+	decoder := json.NewDecoder(bytes.NewReader(serialized))
+	decoder.UseNumber()
+	if err := decoder.Decode(&captured); err != nil {
+		a.error = err.Error()
+		return
+	}
+	params = captured
+	key := a.viewKey("") + method + "\x00" + string(serialized)
 	if a.mutations == nil {
 		a.mutations = map[string]*mutationIntent{}
 	}
@@ -83,7 +94,7 @@ func (a *app) mutate(method string, params map[string]any, accept func(json.RawM
 		}
 		intent.Unknown = false
 		delete(a.mutations, key)
-		if a.hostID != host || a.remoteGeneration != generation {
+		if a.hostID != host || a.remoteGeneration != generation || a.accountScope != account {
 			return nil
 		}
 		if accept != nil {
@@ -115,6 +126,7 @@ func (a *app) sessionMenu(c *ui.Context, m *ui.Menu, s session) {
 	if m.Item("重命名").Disabled(!a.can("renameSession")).Chosen() {
 		a.renameID = s.ID
 		a.renameHost = a.hostID
+		a.renameScope = a.accountScope
 		a.renameTitle = s.Title
 	}
 	if m.Item("分叉会话").Disabled(!a.can("forkSession")).Chosen() {
@@ -143,7 +155,7 @@ func (a *app) renameView(c *ui.Context) {
 			if ui.Button(c, "取消").Clicked() {
 				a.renameID = ""
 			}
-			if ui.PrimaryButton(c, "保存").Disabled(!a.can("renameSession") || a.renameHost != a.hostID || strings.TrimSpace(a.renameTitle) == "").Clicked() {
+			if ui.PrimaryButton(c, "保存").Disabled(!a.can("renameSession") || a.renameHost != a.hostID || a.renameScope != a.accountScope || strings.TrimSpace(a.renameTitle) == "").Clicked() {
 				id, title := a.renameID, strings.TrimSpace(a.renameTitle)
 				a.mutate("renameSession", map[string]any{"sessionId": id, "title": title}, func(json.RawMessage) error { a.renameID = ""; a.fetchSessions(); return nil })
 			}
@@ -176,6 +188,9 @@ func (a *app) createSessionIn(workspaceID string) {
 		if result.SessionID == "" {
 			return errors.New("主机未返回新会话标识，请刷新核对")
 		}
+		if a.navigationGeneration != navigation {
+			return nil
+		}
 		a.refreshCatalog(func() {
 			if a.navigationGeneration != navigation {
 				return
@@ -192,7 +207,19 @@ func (a *app) createSessionIn(workspaceID string) {
 		return nil
 	})
 }
+
+// Global main panels supersede pending session navigation. Modal settings,
+// model popovers and right-pane views leave the main navigation alive, matching
+// LayoutService.selectPanel versus SettingsRoot's local open state.
+func (a *app) beginMainNavigation() {
+	a.resetMessageImages()
+	a.navigationGeneration++
+	a.restoreTarget = nil
+}
 func (a *app) clearMain() {
+	a.releaseComposerImages()
+	a.resetMessageImages()
+	a.invalidateChatRows()
 	if a.drafts == nil {
 		a.drafts = map[string]string{}
 	}
@@ -212,8 +239,30 @@ func (a *app) clearMain() {
 func (a *app) newSessionTarget(explicit string) (string, string) {
 	target := explicit
 	if target == "" && a.sessionID != "" {
+		for _, s := range a.sessions {
+			if s.ID == a.sessionID && s.WorkspaceID != "" {
+				for _, w := range a.workspaces {
+					if w.ID == s.WorkspaceID {
+						target = w.ID
+						break
+					}
+				}
+				break
+			}
+		}
 		for _, w := range a.workspaces {
+			if target != "" {
+				break
+			}
 			if containsID(w.SessionIDs, a.sessionID) {
+				target = w.ID
+				break
+			}
+		}
+	}
+	if target == "" && a.workspaceID != "" {
+		for _, w := range a.workspaces {
+			if w.ID == a.workspaceID {
 				target = w.ID
 				break
 			}
@@ -253,9 +302,9 @@ func (a *app) newSessionTarget(explicit string) (string, string) {
 	return "", ""
 }
 func (a *app) refreshCatalog(after func()) {
-	host := a.hostID
-	a.request("workspaces", map[string]any{}, func(raw json.RawMessage) error {
-		if a.hostID != host {
+	host, scope, generation := a.hostID, a.accountScope, a.remoteGeneration
+	a.scopedRead("workspaces", map[string]any{}, func(raw json.RawMessage) error {
+		if a.hostID != host || a.accountScope != scope || a.remoteGeneration != generation {
 			return nil
 		}
 		rows, err := decodeRows[workspace](raw, "workspaces", "items")
@@ -263,8 +312,8 @@ func (a *app) refreshCatalog(after func()) {
 			return err
 		}
 		a.workspaces = rows
-		a.request("sessions", map[string]any{"all": true}, func(raw json.RawMessage) error {
-			if host != a.hostID {
+		a.scopedRead("sessions", map[string]any{"all": true}, func(raw json.RawMessage) error {
+			if host != a.hostID || scope != a.accountScope || generation != a.remoteGeneration {
 				return nil
 			}
 			rows, err := decodeRows[session](raw, "sessions", "items")
@@ -304,8 +353,10 @@ func (a *app) mutationReviewView(c *ui.Context) {
 	ui.Modal(c, &a.mutationReview, func() {
 		ui.Text(c, "操作结果未确认").FontSize(18).FontWeight(500)
 		ui.Text(c, "请先检查远程状态。会话名称、置顶和归档可刷新列表核对；其它操作请重新打开对应页面。客户端不会自动重新发送。").Width(460).Wrap()
-		for _, intent := range a.mutations {
-			ui.Text(c, "请求："+intent.ID).FontSize(11).Selectable()
+		for key, intent := range a.mutations {
+			if strings.HasPrefix(key, a.viewKey("")) {
+				ui.Text(c, "请求："+intent.ID).FontSize(11).Selectable()
+			}
 		}
 		if ui.Button(c, "刷新会话列表").Disabled(!a.connected || a.busy).Clicked() {
 			a.fetchWorkspaces()
@@ -316,7 +367,11 @@ func (a *app) mutationReviewView(c *ui.Context) {
 				a.mutationReview = false
 			}
 			if ui.PrimaryButton(c, "允许新的操作").Disabled(!a.mutationAcknowledge).Clicked() {
-				a.mutations = map[string]*mutationIntent{}
+				for key := range a.mutations {
+					if strings.HasPrefix(key, a.viewKey("")) {
+						delete(a.mutations, key)
+					}
+				}
 				a.mutationReview = false
 				a.error = ""
 			}

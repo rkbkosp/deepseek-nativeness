@@ -33,6 +33,9 @@ func (a *app) header(c *ui.Context) {
 				if !a.rightPaneOpen && a.compatPlacement == "right" {
 					a.closeCompat()
 				}
+				if !a.rightPaneOpen && a.webPlacement == "right" {
+					a.closeWeb()
+				}
 			}
 			if a.current.Running {
 				stateIndicator(c, true, a.epoch, a.theme.TextMuted, &a.metrics)
@@ -110,16 +113,14 @@ func (a *app) conversation(c *ui.Context) {
 		a.list.Key = func(i int) any { return rows[i].ID }
 		list := ui.List(c, &a.list, len(rows), func(i int) {
 			r := rows[i]
-			ui.Row(c).Children(func() {
-				ui.Spacer(c).Grow(1)
-				ui.Column(c).Grow(8).MaxWidth(680).MinWidth(0).Font(a.messageFontFamily()).FontWeight(a.messageNormalWeight()).Gap(12).Children(func() {
+			ui.Row(c).Justify(ui.Center).MinWidth(0).Children(func() {
+				ui.Column(c).Width(a.chatContentWidth(c)).Shrink(1).MinWidth(0).Font(a.messageFontFamily()).FontWeight(a.messageNormalWeight()).Gap(12).Children(func() {
 					if r.Process {
 						a.processView(c, r)
 					} else {
 						a.messageView(c, r.Messages[0])
 					}
 				})
-				ui.Spacer(c).Grow(1)
 			})
 		}).Grow(1).MinHeight(0).Padding(28, 32).Gap(24)
 		if a.qaListClip {
@@ -137,64 +138,6 @@ type chatRow struct {
 	DefaultOpen bool
 }
 
-func (a *app) chatRows() []chatRow {
-	var out []chatRow
-	lastAssistant := map[int]int{}
-	activeTurn := 0
-	for _, m := range a.current.Messages {
-		activeTurn = max(activeTurn, m.Turn)
-	}
-	for _, ev := range a.current.Trajectory {
-		activeTurn = max(activeTurn, ev.Turn)
-	}
-	for i, m := range a.current.Messages {
-		if m.Role == "assistant" && m.Text != "" {
-			lastAssistant[m.Turn] = i
-		}
-	}
-	for index, m := range a.current.Messages {
-		if m.Role == "assistant" && m.Text == "" && m.Reasoning == "" {
-			onlyTools := true
-			for _, b := range m.AssistantBlocks {
-				if b.Kind != "tool-call" {
-					onlyTools = false
-					break
-				}
-			}
-			if onlyTools {
-				continue
-			}
-		}
-		isProcess := m.Kind == "tool" || m.Kind == "context" || m.Kind == "compaction" || m.Kind == "command" || m.Kind == "retry" || m.Kind == "turn-trigger"
-		if a.uiPrefs.FoldedReplies == "final" && m.Role == "assistant" && lastAssistant[m.Turn] != index {
-			isProcess = true
-		}
-		if isProcess {
-			key := "process:" + m.ID
-			if len(out) > 0 && out[len(out)-1].Process && out[len(out)-1].Turn == m.Turn {
-				out[len(out)-1].Messages = append(out[len(out)-1].Messages, m)
-			} else {
-				open := a.current.Running && m.Turn == activeTurn
-				if a.uiPrefs.StepsCollapse == "next-input" {
-					open = true
-					for _, later := range a.current.Messages[index+1:] {
-						if later.Role == "user" {
-							open = false
-							break
-						}
-					}
-				}
-				if a.uiPrefs.StepsDetail == "verbose" {
-					open = true
-				}
-				out = append(out, chatRow{ID: key, Process: true, Messages: []message{m}, Turn: m.Turn, DefaultOpen: open})
-			}
-		} else {
-			out = append(out, chatRow{ID: m.ID, Messages: []message{m}})
-		}
-	}
-	return out
-}
 func (a *app) managedFold(id string, initial bool) *bool {
 	if a.flowDefaults == nil {
 		a.flowDefaults = map[string]bool{}
@@ -270,13 +213,17 @@ func (a *app) messageView(c *ui.Context, m message) {
 				}
 				text := m.Text
 				ui.Text(c, text).FontSize(a.uiPrefs.FontSize).Wrap().Selectable()
+				a.messageImageGallery(c, m)
 			})
 		})
 	case m.Role == "user":
 		ui.Row(c).Children(func() {
 			ui.Spacer(c)
-			ui.Column(c).MaxWidth(650).Gap(5).Children(func() {
-				ui.Text(c, m.Text).FontSize(a.uiPrefs.FontSize).Selectable().Wrap().Padding(12, 18).Radius(16).Background(a.colors.Subtle)
+			ui.Column(c).MaxWidth(a.chatContentWidth(c)).Gap(5).Children(func() {
+				a.messageImageGallery(c, m)
+				if m.Text != "" {
+					ui.Text(c, m.Text).FontSize(a.uiPrefs.FontSize).Selectable().Wrap().Padding(12, 18).Radius(16).Background(a.colors.Subtle)
+				}
 				a.messageActions(c, m, true)
 			})
 		})
@@ -290,7 +237,23 @@ func (a *app) messageView(c *ui.Context, m message) {
 				ui.Text(c, reasoning).Wrap().Selectable().FontSize(a.uiPrefs.FontSize).TextColor(a.theme.TextMuted)
 			})
 		}
-		if m.Streaming {
+		if len(m.AssistantBlocks) > 0 {
+			for i, b := range m.AssistantBlocks {
+				switch b.Kind {
+				case "text":
+					if m.Streaming {
+						markdown.Stream(c.Key(fmt.Sprintf("%s:block:%d", m.ID, i)), b.Text, &a.md)
+					} else {
+						markdown.View(c.Key(fmt.Sprintf("%s:block:%d", m.ID, i)), b.Text, &a.md)
+					}
+				case "image":
+					one := m
+					one.ID = fmt.Sprintf("%s:image:%d", m.ID, i)
+					one.AssistantBlocks = []assistantBlock{b}
+					a.messageImageGallery(c, one)
+				}
+			}
+		} else if m.Streaming {
 			markdown.Stream(c.Key(m.ID), m.Text, &a.md)
 		} else {
 			markdown.View(c.Key(m.ID), m.Text, &a.md)

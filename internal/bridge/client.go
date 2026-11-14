@@ -16,9 +16,20 @@ import (
 )
 
 type Notification struct {
-	Method string          `json:"method"`
-	Params json.RawMessage `json:"params"`
+	Method string             `json:"method"`
+	Params json.RawMessage    `json:"params"`
+	Scope  *NotificationScope `json:"scope,omitempty"`
 }
+type NotificationScope struct {
+	HostID       string `json:"hostId"`
+	Generation   uint64 `json:"generation"`
+	AccountScope string `json:"accountScope"`
+}
+
+// MaxRequestBytes bounds a single JSON-lines request. Large local attachments
+// need a staged/chunked client transport before this can safely be relaxed.
+const MaxRequestBytes = 1024 * 1024
+
 type RemoteError struct {
 	Code     string `json:"code"`
 	Message  string `json:"message"`
@@ -112,7 +123,11 @@ func (c *Client) write() {
 			go func() {
 				select {
 				case <-req.ctx.Done():
-					c.stop(req.ctx.Err())
+					select {
+					case <-written:
+					default:
+						c.stop(req.ctx.Err())
+					}
 				case <-written:
 				case <-c.done:
 				}
@@ -200,10 +215,10 @@ func (c *Client) Call(ctx context.Context, method string, params any) (json.RawM
 		Params any    `json:"params"`
 	}{id, method, params})
 	if err != nil {
-		return nil, err
+		return nil, &RemoteError{Code: "INVALID_ARGUMENT", Message: err.Error(), Delivery: "rejected"}
 	}
-	if len(data) > 1024*1024 {
-		return nil, errors.New("Remote request exceeds 1 MiB")
+	if len(data) > MaxRequestBytes {
+		return nil, &RemoteError{Code: "REQUEST_TOO_LARGE", Message: "请求超过当前客户端 1 MiB 传输上限，请缩小内容后重试。草稿和附件已保留。", Delivery: "rejected"}
 	}
 	req := writeRequest{ctx: ctx, data: append(data, '\n'), result: make(chan error, 1)}
 	select {

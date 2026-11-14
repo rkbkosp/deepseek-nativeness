@@ -1,28 +1,27 @@
 #!/usr/bin/env node
-import { createInterface } from "node:readline";
+import {
+  createJsonLineInput,
+  requestIdFromPrefix,
+  MAX_REQUEST_BYTES,
+} from "./framing.mjs";
 import { RemoteAdapter } from "./client.mjs";
 import { FixtureAdapter } from "./fixture.mjs";
-const emit = (method, params) =>
-  process.stdout.write(JSON.stringify({ method, params }) + "\n");
+const emit = (method, params, scope) =>
+  process.stdout.write(
+    JSON.stringify({ method, params, ...(scope ? { scope } : {}) }) + "\n",
+  );
 const adapter = process.argv.includes("--fixture")
   ? new FixtureAdapter(emit)
   : new RemoteAdapter(emit);
-const input = createInterface({ input: process.stdin, crlfDelay: Infinity });
+let input;
 let closed = false;
 const finish = async () => {
   if (closed) return;
   closed = true;
-  input.close();
+  input?.close();
   await adapter.close();
 };
-input.on("line", (line) => {
-  if (Buffer.byteLength(line) > 1024 * 1024) {
-    emit("error", {
-      code: "REQUEST_TOO_LARGE",
-      message: "Client request exceeds 1 MiB.",
-    });
-    return;
-  }
+const dispatchLine = (line) => {
   let req;
   try {
     req = JSON.parse(line);
@@ -53,7 +52,7 @@ input.on("line", (line) => {
             error: {
               code:
                 typeof error?.code === "string" ? error.code : "REMOTE_ERROR",
-              message: safeMessage(error),
+              message: safeMessage(error, req),
               ...(error?.delivery === "rejected"
                 ? { delivery: "rejected" }
                 : {}),
@@ -62,13 +61,35 @@ input.on("line", (line) => {
         );
       },
     );
+};
+input = createJsonLineInput(process.stdin, {
+  onLine: dispatchLine,
+  onOversize: (prefix) => {
+    const id = requestIdFromPrefix(prefix),
+      error = {
+        code: "REQUEST_TOO_LARGE",
+        message: "Client request exceeds " + MAX_REQUEST_BYTES + " bytes.",
+        delivery: "rejected",
+      };
+    if (id === undefined) emit("error", error);
+    else process.stdout.write(JSON.stringify({ id, error }) + "\n");
+  },
+  onClose: () => void finish(),
 });
-input.on("close", () => void finish());
 process.on("SIGTERM", () => void finish());
 process.on("SIGINT", () => void finish());
-function safeMessage(error) {
+function safeMessage(error, request) {
   const text =
     error instanceof Error ? error.message : "Remote operation failed.";
   // Error messages must never contain bearer credentials, passwords or key material.
-  return text.replace(/Bearer\s+\S+/gi, "Bearer [redacted]").slice(0, 1000);
+  let safe = text.replace(/Bearer\s+\S+/gi, "Bearer [redacted]");
+  const literal =
+    request?.method === "login"
+      ? request.params?.password
+      : request?.method === "setCredential"
+        ? request.params?.value
+        : undefined;
+  if (typeof literal === "string" && literal)
+    safe = safe.replaceAll(literal, "[redacted]");
+  return safe.slice(0, 1000);
 }

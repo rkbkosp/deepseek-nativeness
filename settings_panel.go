@@ -5,6 +5,8 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -13,6 +15,8 @@ import (
 
 type settingsOption struct{ value, label string }
 
+var settingsLayoutDebug = os.Getenv("NATIVE_DSH_DEBUG_LAYOUT") == "1"
+
 func settingsCompatRoute(section string) string {
 	switch section {
 	case "models":
@@ -20,7 +24,7 @@ func settingsCompatRoute(section string) string {
 	case "agent-presets":
 		return "agent-presets"
 	case "plugins":
-		return "plugins"
+		return "plugin-settings"
 	}
 	return ""
 }
@@ -69,6 +73,8 @@ type settingsHostState struct {
 	Namespaces                                         map[string]settingsHostNamespace
 	DefaultOptions                                     []settingsPermissionOption
 	ConfirmFull, Acknowledged                          bool
+	WKRect                                             ui.Rect
+	WKRectSeen                                         bool
 }
 
 func (a *app) settingsControlFill() ui.Color {
@@ -133,7 +139,8 @@ func (a *app) settingsView(c *ui.Context) {
 					}
 				})
 			})
-			ui.Column(c).Grow(1).Height(panelHeight).MinHeight(0).MinWidth(0).Justify(ui.Start).Children(func() {
+			contentWidth, contentHeight := panelWidth-188, panelHeight-54
+			ui.Column(c).Width(contentWidth).Shrink(0).Height(panelHeight).MinHeight(0).MinWidth(0).Justify(ui.Start).Children(func() {
 				ui.Row(c).Height(54).Shrink(0).Padding(16, 14, 8, 10).Gap(8).AlignItems(ui.Center).Children(func() {
 					ui.Spacer(c)
 					ui.Button(c, "打开配置文件").Disabled(true).Tooltip("当前 Remote 通道不支持打开主机配置文件")
@@ -142,9 +149,15 @@ func (a *app) settingsView(c *ui.Context) {
 					}
 				})
 				if route := settingsCompatRoute(a.settingsSection); route != "" {
-					ui.Column(c.Key("settings-web-content")).Grow(1).Shrink(1).MinHeight(0).MinWidth(0).Clip().Children(func() {
+					ui.Column(c.Key("settings-web-content")).Width(contentWidth).Height(contentHeight).Shrink(0).MinHeight(0).MinWidth(0).Clip().Children(func() {
 						if a.compat != nil && a.compatPlacement == "settingsContent" && a.compatPage == route {
-							ui.WebView(c, a.compat).Grow(1).FillWidth().MinHeight(0).MinWidth(0)
+							ui.WebView(c.Key("settings-wk-"+a.compatOwner), a.compat).Size(contentWidth, contentHeight).Shrink(0).MinHeight(0).MinWidth(0).Clip().Draw(func(_ *ui.Painter, r ui.Rect) {
+								if settingsLayoutDebug && (!hostSettings.WKRectSeen || hostSettings.WKRect != r) {
+									hostSettings.WKRectSeen = true
+									hostSettings.WKRect = r
+									log.Printf("settings-wk route=%s rect=(%.2f,%.2f %.2fx%.2f) modal=%.2fx%.2f content=%.2fx%.2f", route, r.X, r.Y, r.W, r.H, panelWidth, panelHeight, contentWidth, contentHeight)
+								}
+							})
 						} else {
 							ui.Column(c).Grow(1).FillWidth().Center().Padding(24).Gap(12).Children(func() {
 								label := "正在加载设置…"

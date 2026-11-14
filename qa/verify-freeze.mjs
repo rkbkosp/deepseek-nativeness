@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { createReadStream, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -15,8 +15,10 @@ for (const repository of baseline.repositories) {
   checks.push({ kind: 'repository', path, pass: head === repository.head && status === '', headMatches: head === repository.head, clean: status === '' });
 }
 for (const file of baseline.files) {
-  const hash = createHash('sha256').update(readFileSync(file.path)).digest('hex');
-  checks.push({ kind: 'profile-file', path: file.path, pass: hash === file.sha256 });
+  const digest = createHash('sha256');
+  for await (const chunk of createReadStream(file.path)) digest.update(chunk);
+  const hash = digest.digest('hex');
+  checks.push({ kind: file.kind ?? 'profile-file', path: file.path, pass: hash === file.sha256 });
 }
 const pass = checks.every(check => check.pass);
 console.log(JSON.stringify({ checkedAt: new Date().toISOString(), pass, checks }, null, 2));

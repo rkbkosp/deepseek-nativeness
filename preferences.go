@@ -65,6 +65,9 @@ func (a *app) savePreferences() {
 func (a *app) configure(after func()) {
 	server := a.server
 	a.request("configure", map[string]any{"serverUrl": server}, func(raw json.RawMessage) error {
+		if a.statusResponseStale(raw) {
+			return nil
+		}
 		a.configuredServer = server
 		a.savePreferences()
 		var state struct {
@@ -87,6 +90,9 @@ func (a *app) login() {
 	a.password = ""
 	login := func() {
 		a.request("login", map[string]any{"email": email, "password": password}, func(raw json.RawMessage) error {
+			if a.statusResponseStale(raw) {
+				return nil
+			}
 			var state struct {
 				Authorized bool `json:"authorized"`
 			}

@@ -63,6 +63,9 @@ func main() {
 			a.sessions = append(a.sessions, session{ID: id, Title: title, Running: i < *running, WorkspaceID: "demo-workspace"})
 		}
 		a.current.Running = *running > 0
+		if *document == "images" {
+			a.installImageFixture()
+		}
 	}
 	mygo.App.SetName("Native DSH Remote")
 	mygo.App.WhenReady(func() {
@@ -72,8 +75,12 @@ func main() {
 		// Show after assigning the handle. This supported call avoids depending
 		// on the deferred first-show callback or a later capture/getter.
 		a.win.Show()
+		mygo.App.Focus()
 		a.win.Focus()
+		a.win.OnFocus(func() { a.win.Invalidate() })
 		a.win.OnClosed(func() {
+			a.releaseComposerImages()
+			a.resetMessageImages()
 			a.closeCompat()
 			a.closeWeb()
 			a.cancel()

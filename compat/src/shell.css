@@ -60,3 +60,7 @@ body[data-native-model-menu] [data-model-menu] {
 body[data-native-model-menu] [data-model-menu][data-native-model-pane="model"] {
   width: 420px;
 }
+body[data-compat-placement="settingsContent"],
+body[data-compat-placement="settingsContent"] #root {
+  background: var(--dsw-alias-bg-layer-2);
+}

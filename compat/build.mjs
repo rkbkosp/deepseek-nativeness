@@ -214,11 +214,23 @@ const plugin = {
         };
       },
     );
-    b.onLoad({filter:/TaskManagerPage\.module\.css$/,namespace:"file"},async(args)=>{
-      const contents=await readFile(args.path,"utf8"),from="padding: 0 clamp(24px, 4vw, 48px) 48px;";
-      if(!contents.includes(from))throw Error("Frozen automation viewport declaration changed");
-      return {contents:contents.replace(from,"padding: 0 var(--native-dsh-global-page-inset, clamp(24px, 4vw, 48px)) 48px;"),loader:"local-css",resolveDir:dirname(args.path)};
-    });
+    b.onLoad(
+      { filter: /TaskManagerPage\.module\.css$/, namespace: "file" },
+      async (args) => {
+        const contents = await readFile(args.path, "utf8"),
+          from = "padding: 0 clamp(24px, 4vw, 48px) 48px;";
+        if (!contents.includes(from))
+          throw Error("Frozen automation viewport declaration changed");
+        return {
+          contents: contents.replace(
+            from,
+            "padding: 0 var(--native-dsh-global-page-inset, clamp(24px, 4vw, 48px)) 48px;",
+          ),
+          loader: "local-css",
+          resolveDir: dirname(args.path),
+        };
+      },
+    );
     b.onResolve({ filter: /^@deepseek-ai\// }, (args) => {
       if (
         args.path === "@deepseek-ai/dsh-api-gateway/client" &&
@@ -270,6 +282,8 @@ if (process.argv.includes("--engine-test")) {
       join(root, "src/agent-presets.tsx"),
       join(root, "src/automation.tsx"),
       join(root, "src/bridge.ts"),
+      join(root, "src/plugin-settings.tsx"),
+      join(root, "src/settings-keys.ts"),
     ],
     outdir: join(root, ".test-build"),
     outExtension: { ".js": ".mjs" },
@@ -293,7 +307,13 @@ if (process.argv.includes("--engine-test")) {
 }
 const output = join(
   root,
-  process.argv.includes("--out-next") ? "dist-next" : "dist",
+  process.argv.includes("--out-settings-fix")
+    ? "dist-settings-fix"
+    : process.argv.includes("--out-perf-next")
+      ? "dist-perf-next"
+      : process.argv.includes("--out-next")
+        ? "dist-next"
+        : "dist",
 );
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
@@ -307,6 +327,7 @@ const result = await build({
     "routes/agent-presets": join(root, "src/agent-presets.tsx"),
     "routes/model-settings": join(root, "src/model-settings.tsx"),
     "routes/automation": join(root, "src/automation.tsx"),
+    "routes/plugin-settings": join(root, "src/plugin-settings.tsx"),
   },
   outdir: output,
   splitting: true,
@@ -344,7 +365,11 @@ function staticClosure(key, seen = new Set()) {
   return seen;
 }
 const budgets = Object.keys(result.metafile.outputs)
-  .filter((key) => key.endsWith(".js") && (key===appOutput||key.startsWith(outputBase+'routes/')))
+  .filter(
+    (key) =>
+      key.endsWith(".js") &&
+      (key === appOutput || key.startsWith(outputBase + "routes/")),
+  )
   .map((key) => {
     const entries = new Set([
       ...staticClosure(outputBase + "app.js"),
@@ -395,6 +420,7 @@ await writeFile(
   JSON.stringify(
     {
       dshCommit: "39163dd30f703a79079e2d2446545cff3c453738",
+      platformBaseline:{macOS:'15.8+',javascriptTarget:'safari17.4',runtimeAcceptance:'macOS15.8 WK remains unverified'},
       entryComponents: [
         "ui-plugin-manager/PluginManagerPage",
         "ui-model-selection/ModelSelect",
@@ -407,6 +433,7 @@ await writeFile(
         "ui-agent-preset/AgentPresetSection + original section controller",
         "ui-settings-models/ModelsSection + original store/schema/operations and SettingsDescribeMirror",
         "ui-schedule/TaskManagerPage + original catalog/editor/history/deletion machinery",
+        "ui-settings-plugins/PluginsSettingsSection + ui-settings-plugin-inventory/PluginInventorySettingsTab",
       ],
       transforms: [
         "TaskManagerPage keeps original controls and disables manual creation at the known frozen carrier mismatch; native draft navigation is capability-gated",

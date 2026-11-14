@@ -16,6 +16,8 @@ import {
 import { SessionProjection } from "./projection.mjs";
 import { PresentationPublisher } from "./updates.mjs";
 import { OPERATIONS, operationArgs } from "./operations.mjs";
+import { promptContent } from "./prompt-content.mjs";
+import { MAX_REQUEST_BYTES } from "./framing.mjs";
 const fail = (code, message) => {
   throw Object.assign(new Error(message), { code, delivery: "rejected" });
 };
@@ -29,8 +31,15 @@ const PAGE_INVALIDATIONS = new Set([
 ]);
 export class RemoteAdapter {
   constructor(emit = () => {}) {
-    this.emit = emit;
-    this.publisher = new PresentationPublisher(emit);
+    this.emit = (method, params, scope = this.notificationScope()) =>
+      emit(method, params, scope);
+    this.publisher = new PresentationPublisher((method, params) =>
+      this.emit(
+        method,
+        params,
+        this.publicationScope ?? this.notificationScope(),
+      ),
+    );
     this.lifetime = new AbortController();
     this.pending = new Map();
     this.streams = new Map();
@@ -51,6 +60,29 @@ export class RemoteAdapter {
       changes: new Map(),
     };
   }
+  notificationScope() {
+    return Object.freeze({
+      hostId: this.hostId ?? "",
+      generation: this.connectionGeneration,
+      accountScope: this.identityScope ?? "",
+    });
+  }
+  isNotificationScope(scope) {
+    return (
+      scope.hostId === (this.hostId ?? "") &&
+      scope.generation === this.connectionGeneration &&
+      scope.accountScope === (this.identityScope ?? "")
+    );
+  }
+  publish(scope, callback) {
+    const previous = this.publicationScope;
+    this.publicationScope = scope;
+    try {
+      return callback();
+    } finally {
+      this.publicationScope = previous;
+    }
+  }
   status() {
     return {
       connected:
@@ -69,6 +101,11 @@ export class RemoteAdapter {
       backend: "remote-only",
       protocol: "ds-harness-remote@0.6.4",
       connectionGeneration: this.connectionGeneration,
+      transportLimits: {
+        maxRequestBytes: MAX_REQUEST_BYTES,
+        inlineImages: true,
+        stagedFileAttachments: false,
+      },
     };
   }
   notifyStatus(detail) {
@@ -162,11 +199,30 @@ export class RemoteAdapter {
             this.identity.deviceId,
           )
         : undefined;
-    this.identityScope = preferenceIdentityScope(
+    const nextScope = preferenceIdentityScope(
       this.server?.baseUrl,
       stored,
       this.identity?.deviceId,
     );
+    if (nextScope !== this.identityScope) {
+      // Retire the previous authorization carrier before publishing another principal.
+      // disconnect emits the old account at its own generation; the new identity
+      // must have a strictly later epoch in both notifications and RPC replies.
+      if (this.connected) await this.disconnect();
+      this.connectionGeneration++;
+      this.selectionGeneration++;
+      this.identityScope = nextScope;
+      clearTimeout(this.snapshotTimer);
+      this.snapshotTimer = undefined;
+      this.projection = undefined;
+      this.sessionRows = [];
+      this.catalogRows = [];
+      this.workspaceRows = [];
+      this.workspaceId = undefined;
+      this.hostId = undefined;
+      this.runningBySession.clear();
+      this.publisher.replace(this.snapshot());
+    }
     return this.identityScope;
   }
   ensureConfigured() {
@@ -244,11 +300,8 @@ export class RemoteAdapter {
         this.ensureConfigured();
         await this.refreshIdentityScope();
         return {
-          identityScope: this.identityScope,
-          accountScope: this.identityScope,
+          ...this.status(),
           authorized: await this.server.hasStoredAuthorization(),
-          identityReady: !!this.identity,
-          serverUrl: this.server.baseUrl,
         };
       case "authProviders":
         this.ensureConfigured();
@@ -278,12 +331,7 @@ export class RemoteAdapter {
         this.authenticated = true;
         await this.refreshIdentityScope();
         this.notifyStatus("已授权，请选择主机");
-        return {
-          authorized: true,
-          identityScope: this.identityScope,
-          accountScope: this.identityScope,
-          serverUrl: this.server.baseUrl,
-        };
+        return { ...this.status(), authorized: true };
       case "startQr":
         this.ensureConfigured();
         return this.server.startOAuthQrLogin(
@@ -301,13 +349,8 @@ export class RemoteAdapter {
           this.notifyStatus("已授权，请选择主机");
         }
         return {
+          ...(value.status === "complete" ? this.status() : {}),
           status: value.status,
-          ...(value.status === "complete"
-            ? {
-                identityScope: this.identityScope,
-                accountScope: this.identityScope,
-              }
-            : {}),
         };
       }
       case "devices":
@@ -407,6 +450,7 @@ export class RemoteAdapter {
       false,
     );
     this.hostId = hostId;
+    const connectionScope = this.notificationScope();
     this.authenticated = true;
     remote.client.onClose(() => {
       if (this.connected !== remote) return;
@@ -449,13 +493,21 @@ export class RemoteAdapter {
       } finally {
         eventsStop.signal.removeEventListener("abort", cancelled);
       }
+      if (!this.isNotificationScope(connectionScope))
+        fail("CANCELLED", "连接已被替换。");
       this.interactionReady = true;
     }
+    if (!this.isNotificationScope(connectionScope))
+      fail("CANCELLED", "连接已被替换。");
     this.notifyStatus(
       `${readOnly ? "只读连接" : "已连接"} ${remote.target.name}`,
     );
     await this.workspaces();
+    if (!this.isNotificationScope(connectionScope))
+      fail("CANCELLED", "连接已被替换。");
     await this.sessions();
+    if (!this.isNotificationScope(connectionScope))
+      fail("CANCELLED", "连接已被替换。");
     if (!readOnly) {
       const stop = new AbortController();
       this.controlStop = stop;
@@ -519,10 +571,14 @@ export class RemoteAdapter {
   }
   async workspaces() {
     const generation = this.connectionGeneration;
+    const scope = this.notificationScope();
     const frame = await this.first("workspace/follow", {});
     if (frame?.type !== "baseline" || !Array.isArray(frame.value?.items))
       fail("INVALID_SNAPSHOT", "远程工作区快照无效。");
-    if (generation !== this.connectionGeneration)
+    if (
+      generation !== this.connectionGeneration ||
+      !this.isNotificationScope(scope)
+    )
       fail("CANCELLED", "远程主机已切换。");
     this.workspaceRows = frame.value.items;
     this.workspaceBaseline = frame.value;
@@ -535,6 +591,7 @@ export class RemoteAdapter {
     }));
   }
   async sessions({ all = false } = {}) {
+    const scope = this.notificationScope();
     const generation = this.connectionGeneration;
     const requestVersion = (this.catalogRequest ?? 0) + 1;
     this.catalogRequest = requestVersion;
@@ -545,6 +602,7 @@ export class RemoteAdapter {
       signal: this.lifetime.signal,
     });
     if (
+      !this.isNotificationScope(scope) ||
       generation !== this.connectionGeneration ||
       requestVersion !== this.catalogRequest
     )
@@ -579,7 +637,7 @@ export class RemoteAdapter {
     for (const row of this.sessionRows)
       if (!this.runningBySession.has(row.id))
         this.runningBySession.set(row.id, row.running);
-    this.emit("sessions", this.sessionRows);
+    this.emit("sessions", this.sessionRows, scope);
     return all || !ids
       ? this.sessionRows
       : this.sessionRows.filter((s) => ids.has(s.id));
@@ -641,11 +699,17 @@ export class RemoteAdapter {
     );
   }
   async consumeControl(stop, generation) {
+    const scope = this.notificationScope();
     const signal = AbortSignal.any([stop.signal, this.lifetime.signal]),
       gateway = this.gatewayRequired();
     const source = await gateway.open("session/control", { args: {} }, signal);
     for await (const frame of source) {
-      if (signal.aborted || generation !== this.connectionGeneration) return;
+      if (
+        signal.aborted ||
+        generation !== this.connectionGeneration ||
+        !this.isNotificationScope(scope)
+      )
+        return;
       const target =
         this.controlSelection.sessionId ?? this.projection?.sessionId;
       if (!target) continue;
@@ -670,6 +734,8 @@ export class RemoteAdapter {
     }
   }
   async consumeSession(projection, stop, ready) {
+    const scope = this.notificationScope();
+    const gateway = this.gatewayRequired();
     let opened = false;
     let baselinePublished = false;
     for (let repair = 0; repair < 3 && !stop.signal.aborted; repair++) {
@@ -680,7 +746,7 @@ export class RemoteAdapter {
         attempt.signal,
       ]);
       try {
-        const stream = await this.gatewayRequired().open(
+        const stream = await gateway.open(
           "session/follow",
           {
             args: {
@@ -694,7 +760,12 @@ export class RemoteAdapter {
           signal,
         );
         for await (const frame of stream) {
-          if (signal.aborted) return;
+          if (
+            signal.aborted ||
+            !this.isNotificationScope(scope) ||
+            this.projection !== projection
+          )
+            return;
           if (frame.type === "snapshot") {
             projection.snapshot(frame);
             if (this.controlSelection.sessionId === projection.sessionId) {
@@ -714,8 +785,8 @@ export class RemoteAdapter {
               projection.running;
             opened = true;
             const value = this.snapshot();
-            this.publisher.replace(value);
-            if (baselinePublished) this.emit("snapshot", value);
+            this.publish(scope, () => this.publisher.replace(value));
+            if (baselinePublished) this.emit("snapshot", value, scope);
             else {
               baselinePublished = true;
               ready.resolve(value);
@@ -749,13 +820,39 @@ export class RemoteAdapter {
     return this.projection.value();
   }
   scheduleSnapshot() {
-    if (this.snapshotTimer) return;
+    const scope = this.notificationScope();
+    const projection = this.projection;
+    if (this.snapshotTimer) {
+      if (
+        this.isNotificationScope(this.snapshotTimerScope) &&
+        this.snapshotTimerProjection === projection
+      )
+        return;
+      clearTimeout(this.snapshotTimer);
+    }
+    this.snapshotTimerScope = scope;
+    this.snapshotTimerProjection = projection;
     this.snapshotTimer = setTimeout(() => {
       this.snapshotTimer = undefined;
-      this.publisher.flush(this.snapshot());
+      if (!this.isNotificationScope(scope) || projection !== this.projection)
+        return;
+      this.publish(scope, () => {
+        if (
+          !this.projection ||
+          this.publisher.sessionId !== this.projection.sessionId
+        )
+          this.publisher.flush(this.snapshot());
+        else {
+          this.projection.pending = [...this.pending.values()].map(
+            ({ wire, abort, ...view }) => view,
+          );
+          this.publisher.patch(this.projection.pullUpdates());
+        }
+      });
     }, 16);
   }
   async history(p) {
+    const scope = this.notificationScope();
     const projection = this.projection;
     if (!projection) fail("NO_SESSION", "请先打开会话。");
     const first = [...projection.messages.values()]
@@ -775,10 +872,12 @@ export class RemoteAdapter {
       },
       signal: this.lifetime.signal,
     });
+    if (!this.isNotificationScope(scope) || this.projection !== projection)
+      fail("STALE_CONTEXT", "会话已经切换，已丢弃过期历史。");
     projection.mergeHistory(value.records ?? []);
     projection.hasMore = !!value.hasMore;
     const snapshot = this.snapshot();
-    this.publisher.replace(snapshot);
+    this.publish(scope, () => this.publisher.replace(snapshot));
     return snapshot;
   }
   async mutate(endpoint, request, operationId) {
@@ -877,7 +976,10 @@ export class RemoteAdapter {
     )
       fail("STALE_CONTEXT", "页面绑定的主机或会话已经切换，请重新打开。");
   }
-  assertCaptured({ hostId, generation, gateway, ownerId, ownerTicket }) {
+  assertCaptured(
+    { hostId, generation, gateway, ownerId, ownerTicket },
+    message = "请求尚未发送，远程连接已经切换。",
+  ) {
     if (
       this.hostId !== hostId ||
       this.connectionGeneration !== generation ||
@@ -885,7 +987,7 @@ export class RemoteAdapter {
       (ownerId &&
         (!this.owners.has(ownerId) || this.owners.get(ownerId) !== ownerTicket))
     )
-      fail("STALE_CONTEXT", "请求尚未发送，远程连接已经切换。");
+      fail("STALE_CONTEXT", message);
   }
   async runOperation(method, p) {
     this.validateScope(p);
@@ -920,17 +1022,40 @@ export class RemoteAdapter {
       );
     if (operation.stream) return this.openOperation(method, p, args);
     const [namespace, name] = operation.endpoint.split("/");
-    const value = await this.gatewayRequired().invoke({
-      namespace,
-      method: name,
-      args,
-      signal: p.clientScope?.ownerId
-        ? AbortSignal.any([
-            this.lifetime.signal,
-            this.owners.get(p.clientScope.ownerId).abort.signal,
-          ])
-        : this.lifetime.signal,
-    });
+    const bound = {
+      clientScope: p.clientScope ? { ...p.clientScope } : undefined,
+    };
+    const owner = this.owners.get(bound.clientScope?.ownerId);
+    const captured = {
+      hostId: this.hostId,
+      generation: this.connectionGeneration,
+      gateway: this.gatewayRequired(),
+      ownerId: bound.clientScope?.ownerId,
+      ownerTicket: owner,
+    };
+    const signal = owner
+      ? AbortSignal.any([this.lifetime.signal, owner.abort.signal])
+      : this.lifetime.signal;
+    const validate = () => {
+      this.assertCaptured(
+        captured,
+        "读取结果对应的主机或窗口已经关闭，结果已丢弃。",
+      );
+      this.validateScope(bound);
+    };
+    let value;
+    try {
+      value = await captured.gateway.invoke({
+        namespace,
+        method: name,
+        args,
+        signal,
+      });
+    } catch (error) {
+      validate();
+      throw error;
+    }
+    validate();
     if (method === "readFileBytes")
       return {
         ...value,
@@ -973,6 +1098,7 @@ export class RemoteAdapter {
     ]);
   }
   openOperation(method, p, args) {
+    const scope = this.notificationScope();
     const gateway = this.gatewayRequired(),
       ownerId = p.clientScope?.ownerId;
     if (!ownerId || !this.owners.has(ownerId))
@@ -1004,26 +1130,40 @@ export class RemoteAdapter {
           if (
             signal.aborted ||
             generation !== this.connectionGeneration ||
+            !this.isNotificationScope(scope) ||
             !this.owners.has(ownerId)
           )
             break;
-          this.emit("remoteStream", {
-            subscriptionId,
-            ownerId,
-            method,
-            sessionId: p.sessionId ?? p.request?.sessionId,
-            frame,
-          });
+          this.emit(
+            "remoteStream",
+            {
+              subscriptionId,
+              ownerId,
+              method,
+              sessionId: p.sessionId ?? p.request?.sessionId,
+              frame,
+            },
+            scope,
+          );
         }
         if (!signal.aborted && generation === this.connectionGeneration)
-          this.emit("remoteStreamEnd", { subscriptionId, ownerId, method });
+          this.emit(
+            "remoteStreamEnd",
+            { subscriptionId, ownerId, method },
+            scope,
+          );
       } catch (error) {
         if (!signal.aborted && generation === this.connectionGeneration)
-          this.emit("remoteStreamEnd", {
-            subscriptionId,
-            method,
-            error: { code: error.code ?? "STREAM_FAILED" },
-          });
+          this.emit(
+            "remoteStreamEnd",
+            {
+              subscriptionId,
+              ownerId,
+              method,
+              error: { code: error.code ?? "STREAM_FAILED" },
+            },
+            scope,
+          );
       } finally {
         if (this.streams.get(subscriptionId) === stop)
           this.closeStream(subscriptionId);
@@ -1319,7 +1459,7 @@ export class RemoteAdapter {
     );
     if (!this.sessionRows.some((s) => s.id === sessionId))
       fail("SESSION_NOT_FOUND", "会话不在当前远程目录中。");
-    const text = requireString(p.text ?? p.message, "text");
+    const content = promptContent(p, this.projection, sessionId);
     const requestId = requireString(p.requestId, "requestId");
     const mode = p.mode ?? "queue";
     if (mode !== "queue" && mode !== "steer")
@@ -1330,7 +1470,7 @@ export class RemoteAdapter {
         sessionId,
         requestId,
         mode,
-        content: [{ type: "text", text }],
+        content,
       },
       requestId,
     );
@@ -1349,16 +1489,18 @@ export class RemoteAdapter {
     );
   }
   async consumeEvents(signal, ready) {
+    const scope = this.notificationScope();
+    const gateway = this.gatewayRequired();
     const hostId = this.hostId,
       connectionGeneration = this.connectionGeneration;
-    const stream = await this.gatewayRequired().open(
+    const stream = await gateway.open(
       "$events",
       { args: {} },
       AbortSignal.any([signal, this.lifetime.signal]),
     );
     let clientId;
     for await (const frame of stream) {
-      if (signal.aborted) return;
+      if (signal.aborted || !this.isNotificationScope(scope)) return;
       if (frame.type === "ready") {
         clientId = frame.clientId;
         ready.resolve();
@@ -1380,15 +1522,19 @@ export class RemoteAdapter {
           this.projection.running = !!running;
           this.scheduleSnapshot();
         }
-        this.emit("sessions", this.sessionRows);
+        this.emit("sessions", this.sessionRows, scope);
         continue;
       }
       if (frame.type === "emit" && PAGE_INVALIDATIONS.has(frame.event)) {
-        this.emit("remoteInvalidation", {
-          event: frame.event,
-          hostId,
-          connectionGeneration,
-        });
+        this.emit(
+          "remoteInvalidation",
+          {
+            event: frame.event,
+            hostId,
+            connectionGeneration,
+          },
+          scope,
+        );
         continue;
       }
       if (frame.type !== "waterfall") continue;
@@ -1399,7 +1545,7 @@ export class RemoteAdapter {
             ? "questions"
             : undefined;
       if (!known) {
-        await this.gatewayRequired().dispatch(
+        await gateway.dispatch(
           "$events/result",
           {
             args: {
@@ -1414,7 +1560,7 @@ export class RemoteAdapter {
       }
       const request = frame.request ?? {};
       if (!this.ownsSession(frame.agentId)) {
-        await this.gatewayRequired().dispatch(
+        await gateway.dispatch(
           "$events/result",
           {
             args: {
