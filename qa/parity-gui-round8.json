@@ -1,0 +1,99 @@
+{
+  "checkedAt": "2026-11-14T16:24:41.369Z",
+  "reviewer": "root",
+  "status": "observed-subchecks-passed-full-parity-open",
+  "sourceCommit": "a3a38ac3b8e37b37ac6ccea1cd3b832c6df66be0",
+  "candidateNativeSha256": "38df4f7fdbc27415aa7280e5e48f13f52ac42a40306c13646d08f2f51669a286",
+  "candidateHelperSha256": "33b66739e16f742975bf698240be3ff4f0264d8f4e461f7be1bc8a1363fbdb13",
+  "normalApp": "build/Native DSH Remote GUI8.app",
+  "forcedApp": "build/Native DSH Remote Anchor QA.app",
+  "normalManifest": "build/gui-checkpoints/gui8-normal-manifest.json",
+  "forcedManifest": "build/gui-checkpoints/gui8-forced-manifest.json",
+  "integrity": "qa/gui8-integrity-root-review.json",
+  "attempts": [
+    {
+      "app": "GUI8 normal",
+      "result": "CUA cgWindowNotFound; no AX/screenshot returned"
+    },
+    {
+      "app": "Original DeepSeek Harness",
+      "result": "CUA read timed out after30s; kernel reset"
+    },
+    {
+      "app": "GUI8 normal and forced",
+      "result": "Actual windows observed after user unlock; sequential read-only/local-menu tests below."
+    }
+  ],
+  "runtimeProcessCheck": {
+    "status": "running",
+    "executable": "build/Native DSH Remote GUI8.app/Contents/MacOS/native-dsh",
+    "qualification": "Read-only OS process metadata confirms exact package launch; not window display proof"
+  },
+  "environmentDiagnosis": "Initial window reads failed for both clients before user unlock. After explicit unlock, normal and forced packages both yielded actual AX and screen evidence. Initial failures are retained as environment attempts, not app regression proof.",
+  "handoff": "User confirmed unlocked; both fixed packages tested sequentially, then quit and inventory confirmed not running.",
+  "passedSubchecks": [
+    {
+      "id": "activation-auto-restore",
+      "detail": "Normal and forced packages restored own saved login, Host, workspace and completed session, without credential copying or a new login.",
+      "evidence": "/tmp/native-dsh-parity/110-native-core8-restored.png"
+    },
+    {
+      "id": "header-preset-label",
+      "detail": "Actual readonly icon and standard-mode label sit beside the title; no far-right replacement control. Label hides at narrow main-column width. No existing-session preset change attempted.",
+      "evidence": [
+        "/tmp/native-dsh-parity/110-native-core8-restored.png",
+        "/tmp/native-dsh-parity/111-native-core8-narrow.png"
+      ]
+    },
+    {
+      "id": "narrow-table-wrapping",
+      "detail": "With right pane open, actual two-column table paths wrap completely inside the narrow transcript, replacing GUI7 clipping. This does not establish all table sizes or keyboard paths on-screen.",
+      "evidence": "/tmp/native-dsh-parity/111-native-core8-narrow.png"
+    },
+    {
+      "id": "complete-markdown-menu",
+      "detail": "Session menu offers enabled complete-session Markdown and separate loaded-messages Markdown actions; raw Session log remains disabled. No private content copied to clipboard."
+    },
+    {
+      "id": "model-menu-read",
+      "detail": "Normal model root menu and forced model root/catalog read opened and closed. No model leaf selected; model-specific positioning is distinct from generic nested SubmenuPanel.",
+      "evidence": "/tmp/native-dsh-parity/112-native-core8-normal-model-menu.png"
+    },
+    {
+      "id": "forced-menu-placement-escape",
+      "detail": "Compile-only forced fallback package: Settings > Built-in plugins > preset picker shows the actual original portal Menu, four choices and current check visibly beside its trigger inside the modal. First Escape closes picker while settings stays; second closes settings and removes HTML. Source confirmed this is Menu, not HTML select. No preset changed.",
+      "evidence": "/tmp/native-dsh-parity/113-anchorqa-plugin-preset-menu.png"
+    }
+  ],
+  "failedSubchecks": [],
+  "remoteMutations": [],
+  "nextChecks": [
+    "Four additional actual CSS-anchor consumers need source closure repair and separate candidate review",
+    "Generic nested SubmenuPanel forced branch has source tests but no actual GUI exercise",
+    "Independent rich input proof failed candidate-popup visibility; see qa/native-editor-next-gui-review.json"
+  ],
+  "limits": [
+    "Observed subchecks only; full visual and operation parity remains unaccepted",
+    "Actual macOS15.8 and M1 remain untested; these windows ran on M4/macOS27.2.1",
+    "No proof of actual arrow-key focus from AX; do not count Down/Escape exploratory path as keyboard acceptance",
+    "Four custom anchor consumers were discovered after freeze; GUI8 is not a complete compatibility acceptance",
+    "Independent NSTextView component is absent from both GUI8 packages",
+    "No Host mutation, private clipboard copy, live send, install, or settings change"
+  ],
+  "reviews": [
+    "qa/session-actions-root-review.json",
+    "qa/layout-fallback-root-review.json",
+    "qa/remote-layout-cross-review.json"
+  ],
+  "updatedAt": "2026-11-14T16:52:25.939Z",
+  "remaining": [
+    "Observed subchecks only; full visual and operation parity remains unaccepted",
+    "Actual macOS15.8 and M1 remain untested; these windows ran on M4/macOS27.2.1",
+    "No proof of actual arrow-key focus from AX; do not count Down/Escape exploratory path as keyboard acceptance",
+    "Four custom anchor consumers were discovered after freeze; GUI8 is not a complete compatibility acceptance",
+    "Independent NSTextView component is absent from both GUI8 packages",
+    "No Host mutation, private clipboard copy, live send, install, or settings change"
+  ],
+  "exit": "Both packages quit sequentially with Cmd+Q; CUA inventory confirmed isRunning=false. Empty draft and no test attachment; no simultaneous own-client connection.",
+  "privacy": "Private screenshots mode0600 in /tmp/native-dsh-parity; do not publish. JPEG data may carry png suffix."
+}

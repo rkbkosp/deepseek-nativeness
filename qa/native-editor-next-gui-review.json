@@ -1,0 +1,51 @@
+{
+  "checkedAt": "2026-11-14T16:52:25.941Z",
+  "reviewer": "root",
+  "status": "failed-component-gui-not-integrated",
+  "accepted": false,
+  "manifestSha256": "3c5db4535c372732dfdf7697f2ac0b433bcb6cd9346e9ea4162190840c7f3792",
+  "nativeSha256": "4388a8b9e8de3aae511d7fcf93e585599f09d45a0bea1af42ab6ff5b2a9759ab",
+  "dylibSha256": "4fb29912c17b2126dace683dae08f2c3fd95d9d9c91fb12d4f6dda3a859ba0b9",
+  "findings": [
+    {
+      "id": "candidate-popup-invisible",
+      "status": "failed",
+      "detail": "After native focus and typing @, AX exposes three fixture candidates but two actual captures show no visible candidate popup. AX-only clickability is not acceptance.",
+      "evidence": [
+        "/tmp/native-dsh-parity/114-native-editor-next-candidates.png",
+        "/tmp/native-dsh-parity/115-native-editor-next-candidate-refresh.png"
+      ]
+    },
+    {
+      "id": "reference-chip-paint",
+      "status": "partial-pass",
+      "detail": "Clicking invisible Fixture source through AX inserts canonical mention and renders blue native reference glyph plus label. Functional insertion and paint only; no actual pointer selection or full editing parity proved.",
+      "evidence": "/tmp/native-dsh-parity/116-native-editor-next-chip.png"
+    },
+    {
+      "id": "popup-draft-clear",
+      "status": "failed-interactive-test-isolation",
+      "detail": "Clicking Native popup made the ordinary popup visible, while previous chip disappeared and placeholder returned. Cause may be delayed fixture/selftest cleanup; assigned author diagnosis. No claim of confirmed blur defect.",
+      "evidence": "/tmp/native-dsh-parity/117-native-editor-next-popup.png",
+      "diagnosis": "Author source and timestamp review identifies background selftest receipt handler unconditionally applying empty scope immediately before selftest result write; that write coincides with capture117. Interactive/selftest separation is required. This is not evidence of an intrinsic blur defect."
+    }
+  ],
+  "scope": "Independent fixture-only native editor. No Host, auth, network or main GUI8 integration. No physical Pinyin acceptance.",
+  "exit": "120s self-close, CUA inventory confirmed not running; completion summary recorded.",
+  "next": "Author to separate interactive and selftest modes, repair visible candidate positioning, preserve old checkpoint, and return a new fixed proof.",
+  "historicalManifest": "qa/checkpoints/native-editor-next-before-popup-fix/manifest.json",
+  "retest": {
+    "checkedAt": "2026-11-14T17:00:56.824Z",
+    "manifestSha256": "dd9dcef8924dad1ea5846d4e71832b588a8c25b4cd876e60640a961884468e9e",
+    "status": "window-read-blocked-not-accepted",
+    "result": "CUA getApp returned cgWindowNotFound; inventory confirmed own proof running. No actual AX/screenshot or interaction. No new unlock request until consolidated candidates ready.",
+    "selfExitSeconds": 600,
+    "artifactsIndependentlyVerified": 6,
+    "processCleanup": "Root verified exact proof executable PID25043 then terminated that fixture-only process after window-read failure; exact-path process query confirms none remains.",
+    "independentGoTests": {
+      "command": "CGO_ENABLED=0 go test ./composer_native ./qa/native-editor-next -count=1",
+      "exitCode": 0,
+      "scope": "Contract and fixture layout tests; not actual AppKit compositing/IME or main app integration"
+    }
+  }
+}
