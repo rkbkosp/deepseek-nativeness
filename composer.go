@@ -1,0 +1,293 @@
+package main
+
+import (
+	"github.com/egoist/mygo/ui"
+	"strings"
+)
+
+// The native card follows InputBar.module.css. The original model menu is
+// created on demand in an anchored WK view, leaving the transcript native.
+func (a *app) composerView(c *ui.Context) {
+	if !a.composerCurrent(a.composer) {
+		// Go navigation updates its target before the helper has opened it.
+		// The successful openSession hook starts scoped reads after the peer
+		// has installed the same selection; rendering alone must not race it.
+		a.composer = &composerState{hostID: a.hostID, sessionID: a.sessionID, accountScope: a.accountScope, generation: a.remoteGeneration}
+	}
+	s := a.composer
+	ui.Row(c).Shrink(0).FillWidth().Padding(0, 24, 4).Children(func() {
+		ui.Spacer(c).Grow(1)
+		ui.Column(c).Grow(8).MinWidth(0).MaxWidth(712).Gap(6).Font(a.messageFontFamily()).FontWeight(a.messageNormalWeight()).Children(func() {
+			if len(a.current.Pending) > 0 {
+				ui.Scroll(c).MaxHeight(280).Children(func() {
+					ui.Column(c).Gap(8).Children(func() {
+						for _, p := range a.current.Pending {
+							a.pendingView(c, p)
+						}
+					})
+				})
+			}
+			a.composerQueueView(c, s)
+			ui.Column(c).FillWidth().MinWidth(0).Padding(8, 0, 0).Gap(12).Radius(24).Border(.5, a.theme.Border).Background(a.colors.Composer).Children(func() {
+				input := ui.TextAreaBase(c, &a.draft).Placeholder("发消息或创建任务, / 调用指令, @ 文件或对话").Font(a.messageFontFamily()).FontWeight(a.messageNormalWeight()).FontSize(a.uiPrefs.FontSize).FixedLineHeight(a.uiPrefs.FontSize+10).Lines(1, 14).MinHeight(36).Padding(4, 8, 0, 14).MarginEnd(4).Label("消息输入框")
+				if pending := s.pendingReplacement; pending != nil {
+					s.pendingReplacement = nil
+					if a.draft == pending.Before {
+						input.ReplaceText(pending.Start, pending.End, pending.Text)
+						input.SetTextSelection(pending.Caret, pending.Caret)
+					}
+				}
+				if a.focusDraft {
+					input.Focus()
+					a.focusDraft = false
+				}
+				s.composing = input.Composing()
+				input.ObserveInput(func(ev ui.InputEvent) {
+					switch ev.Kind {
+					case ui.InputCompose:
+						s.composing = ev.Text != ""
+					case ui.InputText:
+						s.composing = false
+					case ui.InputKeyDown:
+						s.repeatKey = ev.Repeat
+					}
+				})
+				_, caret := input.TextAnchorCaret()
+				if input.Focused() {
+					a.updateComposerCompletions(s, caret)
+				}
+				input.OnTextKey(func(k ui.TextKey) bool { return a.composerKey(s, k) })
+				// MyGo gives registered shortcuts priority over OnTextKey. Bind
+				// accelerated Enter at the input, so a window shortcut cannot
+				// steal candidate confirmation or receive a second send gesture.
+				cmdEnter := input.Shortcut(ui.Cmd, ui.KeyEnter)
+				ctrlEnter := input.Shortcut(ui.Ctrl, ui.KeyEnter)
+				if (cmdEnter || ctrlEnter) && !s.composing && !s.repeatKey {
+					a.composerSubmit(true)
+				}
+				for _, mods := range []ui.Modifiers{ui.Alt, ui.Cmd | ui.Shift, ui.Ctrl | ui.Shift, ui.Cmd | ui.Ctrl} {
+					_ = input.Shortcut(mods, ui.KeyEnter)
+				}
+				a.composerCompletionView(c, s, input)
+				ui.Row(c).FillWidth().MinWidth(0).AlignItems(ui.Center).Padding(2, 8, 6).Gap(8).Children(func() {
+					if ui.ButtonBase(c).Size(28, 28).Radius(14).Label("指令").Disabled(!a.connected || a.busy).Tooltip("指令").Children(func() { icon(c, "plus-outline", 18).TextColor(a.theme.TextMuted) }).Clicked() {
+						if strings.TrimSpace(a.draft) == "" {
+							input.ReplaceText(0, len([]rune(a.draft)), "/")
+							input.SetTextSelection(1, 1)
+							input.Focus()
+							a.updateComposerCompletions(s, 1)
+						} else {
+							s.dismissedToken = ""
+							s.completionToken = ""
+							a.updateComposerCompletions(s, caret)
+						}
+					}
+					permission := ui.ButtonBase(c).Label("权限模式").Height(28).Padding(0, 6).Radius(14).Gap(5).Disabled(!a.can("executeCommand") || s.values.Permissions == nil).Children(func() {
+						icon(c, "shield-outline", 14).TextColor(a.theme.TextMuted)
+						ui.Text(c, a.composerPermissionLabel()).FontSize(12).TextColor(a.theme.TextMuted)
+						icon(c, "chevron-down-outline", 12).TextColor(a.theme.TextMuted)
+					})
+					permission.Menu(func(m *ui.Menu) {
+						for _, p := range s.permissions {
+							if m.Item(permissionDisplay(p)).Radio(s.values.Permissions != nil && s.values.Permissions.CurrentValue == p.Value).Chosen() {
+								a.chooseComposerPermission(s, p.Value)
+							}
+						}
+					})
+					if plan := s.values.Plan; plan != nil && ((plan.Pending && !plan.Active) || (!plan.Pending && plan.Active)) {
+						if ui.ButtonBase(c).Height(28).Padding(0, 6).Radius(14).Gap(4).Label("退出计划模式").Disabled(!a.can("executeCommand")).Children(func() {
+							icon(c, "plan-outline", 14).TextColor(a.theme.Accent)
+							ui.Text(c, "计划").FontSize(12).TextColor(a.theme.Accent)
+						}).Clicked() {
+							a.composerCommand("/plan off", nil)
+						}
+					}
+					ui.Spacer(c).Grow(1).MinWidth(0)
+					model := ui.ButtonBase(c).Label("选择模型").Height(28).Padding(0, 6).Radius(14).Gap(4).Disabled(!a.can("modelCatalog")).Children(func() {
+						ui.Text(c, a.composerModelLabel()).FontSize(12).TextColor(a.theme.TextMuted).SingleLine()
+						icon(c, "chevron-down-outline", 12).TextColor(a.theme.TextMuted)
+					})
+					if model.Clicked() {
+						a.openCompatAt("model-menu", "modelPopover")
+					}
+					a.composerModelPopover(c, model)
+					if a.current.Running && strings.TrimSpace(a.draft) == "" {
+						if ui.ButtonBase(c).Size(28, 28).Radius(14).Background(a.theme.Accent).Label("停止").Disabled(a.busy || !a.connected).Children(func() { icon(c, "stop-fill", 13).TextColor(ui.RGB(255, 255, 255)) }).Clicked() {
+							a.mutate("cancel", map[string]any{"sessionId": a.sessionID}, nil)
+						}
+					} else {
+						label := "发送消息"
+						if a.current.Running {
+							if composerSubmitMode(a.uiPrefs.SendMode, true, false) == "steer" {
+								label = "立即发送"
+							} else {
+								label = "加入队列"
+							}
+						}
+						if ui.ButtonBase(c).Size(28, 28).Radius(14).Background(a.theme.Accent).Label(label).Tooltip(label).Disabled(a.busy || !a.connected || strings.TrimSpace(a.draft) == "" || a.sessionID == "").Children(func() { icon(c, "send-outline", 16).TextColor(ui.RGB(255, 255, 255)) }).Clicked() {
+							a.composerSubmit(false)
+						}
+					}
+				})
+			})
+			// Reserve the original dock line; unavailable usage/context readings are
+			// not replaced with invented statistics or the connection status.
+			ui.Row(c).Height(22).Shrink(0).AlignSelf(ui.Center).Children(func() {
+				if s.error != "" {
+					ui.Text(c, s.error).FontSize(11).TextColor(a.theme.TextMuted).SingleLine()
+				}
+			})
+		})
+		ui.Spacer(c).Grow(1)
+	})
+	a.composerPermissionConfirmation(c, s)
+}
+
+func (a *app) composerModelPopover(c *ui.Context, anchor ui.Element) {
+	wasOpen := a.modelPopoverOpen
+	panel := ui.PopoverBase(c, anchor, &a.modelPopoverOpen, func(panel ui.Element) {
+		width, height := a.modelMenuWidth, a.modelMenuHeight
+		if width <= 0 {
+			width = 240
+		}
+		if height <= 0 {
+			height = 320
+		}
+		panel.Width(min(max(width, 240), 420)).Height(min(max(height, 40), 360)).Padding(0).Radius(12).Clip().Background(a.colors.Popup)
+		if a.compat != nil && a.compatPlacement == "modelPopover" {
+			ui.WebView(c, a.compat).Fill()
+		} else {
+			ui.Text(c, "正在加载模型…").Padding(16).FontSize(12).TextColor(a.theme.TextMuted)
+		}
+	})
+	if panel.Dismissed() || (wasOpen && !a.modelPopoverOpen) {
+		a.closeCompat()
+	}
+}
+
+func (a *app) composerKey(s *composerState, k ui.TextKey) bool {
+	if !a.composerCurrent(s) {
+		return k.Key == ui.KeyEnter
+	}
+	if k.Key == ui.KeyEnter {
+		// Plain candidate-Enter is filtered by the IME before OnTextKey. Cmd-Enter
+		// can reach this callback while the editor still owns marked text.
+		if k.Mods == ui.Shift {
+			return false
+		}
+		if s.composing {
+			return true
+		}
+		if s.repeatKey {
+			return true
+		}
+		if k.Mods != 0 && k.Mods != ui.Cmd && k.Mods != ui.Ctrl {
+			return true
+		}
+		if len(s.completions) > 0 && k.Mods == 0 {
+			if s.completions[s.highlight].Unavailable != "" {
+				s.error = s.completions[s.highlight].Unavailable
+				return true
+			}
+			if _, caret, ok := composerComplete(s, k.Text()); ok {
+				s.pendingReplacement = &composerReplacement{Before: k.Text(), Start: s.completionStart, End: s.completionEnd, Text: s.completions[s.highlight].Replacement, Caret: caret}
+				s.completions = nil
+				s.completionToken = ""
+				return true
+			}
+		}
+		a.draft = k.Text()
+		a.composerSubmit(k.Mods == ui.Cmd || k.Mods == ui.Ctrl)
+		return true
+	}
+	if s.composing {
+		return false
+	}
+	if len(s.completions) == 0 {
+		return false
+	}
+	switch k.Key {
+	case ui.KeyEscape:
+		s.dismissedToken = s.completionToken
+		s.completions = nil
+		return true
+	case ui.KeyDown:
+		if k.Mods == 0 {
+			s.highlight = (s.highlight + 1) % len(s.completions)
+			return true
+		}
+	case ui.KeyUp:
+		if k.Mods == 0 {
+			s.highlight = (s.highlight + len(s.completions) - 1) % len(s.completions)
+			return true
+		}
+	case ui.KeyTab:
+		if k.Mods == 0 {
+			if s.completions[s.highlight].Unavailable != "" {
+				s.error = s.completions[s.highlight].Unavailable
+				return true
+			}
+			if _, caret, ok := composerComplete(s, k.Text()); ok {
+				s.pendingReplacement = &composerReplacement{Before: k.Text(), Start: s.completionStart, End: s.completionEnd, Text: s.completions[s.highlight].Replacement, Caret: caret}
+				s.completions = nil
+				s.completionToken = ""
+				return true
+			}
+		}
+		if k.Mods == ui.Shift {
+			s.dismissedToken = s.completionToken
+			s.completions = nil
+			return true
+		}
+	}
+	return false
+}
+
+func composerComplete(s *composerState, text string) (string, int, bool) {
+	if len(s.completions) == 0 || s.highlight < 0 || s.highlight >= len(s.completions) || s.completions[s.highlight].Unavailable != "" {
+		return "", 0, false
+	}
+	r := []rune(text)
+	if s.completionStart < 0 || s.completionEnd > len(r) || s.completionStart > s.completionEnd || string(r[s.completionStart:s.completionEnd]) != s.completionToken {
+		return "", 0, false
+	}
+	replacement := s.completions[s.highlight].Replacement
+	return string(r[:s.completionStart]) + replacement + string(r[s.completionEnd:]), s.completionStart + len([]rune(replacement)), true
+}
+
+func (a *app) composerCompletionView(c *ui.Context, s *composerState, input ui.Element) {
+	if len(s.completions) == 0 || s.composing {
+		return
+	}
+	open := true
+	panel := ui.PopoverBase(c, input, &open, func(panel ui.Element) {
+		panel.Width(420).MaxHeight(240).Radius(10).Border(.5, a.theme.Border).Background(a.colors.Popup)
+		ui.Scroll(c).MaxHeight(240).Children(func() {
+			ui.Column(c).FillWidth().Padding(4).Children(func() {
+				for i, item := range s.completions {
+					row := ui.ButtonBase(c).Key(item.Label).FillWidth().MinHeight(32).Padding(6, 8).Radius(6).Justify(ui.Start).Label(item.Label).Disabled(item.Unavailable != "").Children(func() {
+						ui.Text(c, item.Label).FontSize(13).SingleLine()
+						ui.Text(c, item.Description).FontSize(11).TextColor(a.theme.TextMuted).Grow(1).SingleLine()
+					})
+					if i == s.highlight {
+						row.Background(a.colors.Selected)
+					}
+					if row.Clicked() {
+						s.highlight = i
+						if text, caret, ok := composerComplete(s, a.draft); ok {
+							input.ReplaceText(0, len([]rune(a.draft)), text)
+							input.SetTextSelection(caret, caret)
+							input.Focus()
+							s.completions = nil
+							s.completionToken = ""
+						}
+					}
+				}
+			})
+		})
+	})
+	if panel.Dismissed() {
+		s.dismissedToken = s.completionToken
+		s.completions = nil
+	}
+}

@@ -1,0 +1,207 @@
+package main
+
+import (
+	"context"
+	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/ui"
+	"github.com/egoist/mygo/ui/markdown"
+	"native-dsh/desktop/internal/bridge"
+	"time"
+)
+
+type app struct {
+	composerBaselineKey                                      string
+	sidebarLayoutWidth                                       float32
+	modelMenuWidth, modelMenuHeight                          float32
+	sendIntents                                              map[string]*sendIntent
+	accountScope, authServer, restoreAttempted               string
+	savedSelections                                          map[string]savedSelection
+	restoreTarget                                            *savedSelection
+	composer                                                 *composerState
+	sidebarShown                                             float32
+	modelPopoverOpen                                         bool
+	compatPlacement                                          string
+	fontCalibration                                          bool
+	compatOwner, compatPendingOwner                          string
+	mutationReview, mutationAcknowledge                      bool
+	testDispatch                                             func(func())
+	remoteGeneration                                         uint64
+	compatGeneration                                         uint64
+	qaListClip                                               bool
+	renameHost                                               string
+	mutations                                                map[string]*mutationIntent
+	uiPrefs                                                  viewPreferences
+	colors                                                   palette
+	systemDark                                               bool
+	settingsOpen                                             bool
+	fontSettingsOpen                                         bool
+	settingsSection                                          string
+	searchOpen                                               bool
+	viewMenu                                                 bool
+	watermarks                                               map[string]int
+	flowOpen                                                 map[string]*bool
+	flowDefaults                                             map[string]bool
+	currentTab                                               string
+	copyNotice                                               string
+	focusDraft                                               bool
+	operationCaps                                            map[string]operationCapability
+	contentFontSize                                          float32
+	appearanceSignature                                      string
+	connected                                                bool
+	drafts                                                   map[string]string
+	scrolls                                                  map[string]ui.ListState
+	renameID, renameTitle                                    string
+	trajectorySearch                                         string
+	trajectoryList                                           ui.ListState
+	rightPane                                                *rightPaneState
+	rightPaneOpen                                            bool
+	navigationGeneration                                     uint64
+	messageIndex                                             map[string]int
+	reasoningOpen                                            map[string]*bool
+	win                                                      *mygo.Window
+	client                                                   *bridge.Client
+	ctx                                                      context.Context
+	cancel                                                   context.CancelFunc
+	theme                                                    *ui.Theme
+	epoch                                                    time.Time
+	demo                                                     bool
+	connectionOpen                                           bool
+	status, detail, error                                    string
+	busy                                                     bool
+	devices                                                  []device
+	workspaces                                               []workspace
+	sessions                                                 []session
+	current                                                  snapshot
+	hostID, workspaceID, sessionID                           string
+	draft, search, account, password, server, questionAnswer string
+	list, sessionList                                        ui.ListState
+	md                                                       markdown.Options
+	mdCell                                                   markdown.Options
+	web                                                      *mygo.WebView
+	compat                                                   *mygo.WebView
+	compatPage                                               string
+	compatHost, compatSession                                string
+	webURL                                                   string
+	sidebar                                                  bool
+	builds                                                   uint64
+	metrics                                                  renderStats
+	answers                                                  map[string]map[string]*questionDraft
+	pendingRequests                                          int
+	configuredServer                                         string
+	authorized                                               bool
+	pendingSend                                              *sendIntent
+}
+
+func newApp(demo bool) *app {
+	ctx, cancel := context.WithCancel(context.Background())
+	t := ui.LightTheme()
+	t.Background = ui.Hex("#ffffff")
+	t.Text = ui.Hex("#141518")
+	t.TextMuted = ui.Hex("#878a90")
+	t.Accent = ui.Hex("#477be2")
+	t.AccentHover = ui.Hex("#386ed2")
+	t.Radius = 10
+	t.FontSize = 14
+	t.Font = "system-ui, PingFang SC"
+	a := &app{ctx: ctx, cancel: cancel, theme: t, epoch: time.Now(), demo: demo, status: "尚未连接", sidebar: true, server: "https://dsh.rkbkosp.cn", webURL: "https://dsh.rkbkosp.cn/app", uiPrefs: defaultViewPreferences(), watermarks: map[string]int{}, flowOpen: map[string]*bool{}, currentTab: "chat", settingsSection: "general"}
+	a.loadPreferences()
+	a.md.Reveal = &markdown.Reveal{Unit: markdown.AtOnce, Fade: -1}
+	a.md.Block = a.markdownBlock
+	a.list.FollowEnd = true
+	if demo {
+		a.workspaces, a.sessions, a.current = demoData()
+		a.workspaceID = "demo-workspace"
+		a.sessionID = "demo-current"
+		a.status = "本地界面回放"
+	}
+	return a
+}
+
+func (a *app) update(fn func()) {
+	if a.testDispatch != nil {
+		a.testDispatch(fn)
+		return
+	}
+	if a.win != nil {
+		a.win.Update(fn)
+	}
+}
+
+func (a *app) view(c *ui.Context) {
+	a.builds++
+	a.metrics.Builds++
+	a.applyAppearance(c)
+	if a.fontCalibration {
+		a.fontCalibrationView(c)
+		return
+	}
+	if c.Shortcut(ui.Cmd, ui.KeyB) {
+		a.sidebar = !a.sidebar
+	}
+	if c.Shortcut(ui.Cmd, ui.KeyK) {
+		a.sidebar = true
+		a.searchOpen = true
+	}
+	if c.Shortcut(ui.Cmd, ui.KeyComma) {
+		a.settingsOpen = true
+	}
+	c.Root().FontWeight(300)
+	if c.Vibrancy() {
+		c.Root().Background(ui.Transparent)
+	}
+	root := ui.Row(c).Fill().FontWeight(300).AlignItems(ui.Stretch)
+	target := float32(0)
+	if a.sidebar {
+		target = 1
+	}
+	a.sidebarShown = root.AnimateTo("sidebar", target, ui.Animation{Duration: 300 * time.Millisecond, Ease: ui.EaseInOut})
+	root.Children(func() {
+		if a.sidebarShown > 0 {
+			a.sidebarFrame(c, a.sidebarShown)
+		}
+		ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Background(a.theme.Background).Children(func() {
+			if a.compat == nil || a.compatPlacement != "main" || a.compatPage != "plugins" {
+				a.header(c)
+			}
+			if a.demo {
+				ui.Text(c, "本地界面回放 · 未连接真实主机").FontSize(11).TextColor(ui.Hex("#9a6d1d")).Background(ui.Hex("#fff8e8")).Padding(5, 24).FillWidth()
+			}
+			if a.error != "" {
+				ui.Row(c).Padding(8, 24).Background(ui.Hex("#fff1f1")).Children(func() {
+					ui.Text(c, a.error).Grow(1).Wrap().TextColor(ui.Hex("#b53a3a"))
+					if ui.ButtonBase(c).Label("关闭错误").Padding(4).Children(func() { ui.Text(c, "×") }).Clicked() {
+						a.error = ""
+					}
+				})
+			}
+			ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Children(func() {
+				if a.compat != nil && a.compatPlacement == "main" {
+					a.compatView(c)
+				} else if a.web != nil {
+					a.webView(c)
+				} else if a.connectionOpen {
+					a.connectionView(c)
+				} else {
+					a.conversation(c)
+				}
+			})
+		})
+		if a.rightPaneOpen && a.web == nil && (a.compat == nil || a.compatPlacement != "main") {
+			width, _ := c.Size()
+			ui.Column(c).Width(min(576, width*.45)).Shrink(0).MinHeight(0).FillHeight().Background(a.theme.Background).BorderWidth(0, 0, 0, .5).BorderColor(a.theme.Border).Children(func() {
+				if a.compat != nil && a.compatPlacement == "right" {
+					ui.WebView(c, a.compat).Grow(1).MinHeight(0)
+				} else {
+					a.rightPaneView(c)
+				}
+			})
+		}
+	})
+	if !a.sidebar {
+		a.captionControls(c)
+	}
+	if a.settingsOpen {
+		a.settingsView(c)
+	}
+	a.mutationReviewView(c)
+}
