@@ -92,6 +92,8 @@ func (a *app) applyAppearance(c *ui.Context) {
 			md.CodeFont = a.uiPrefs.CodeFontFamily
 		}
 		md.CodeSize = a.uiPrefs.CodeFontSize / a.uiPrefs.FontSize
+		// CodeCard's content inset is 22 DIP, independent of the message font.
+		md.CodeBlockPadding = 22 / a.uiPrefs.FontSize
 		md.LineHeight = 1.7
 		md.BlockSpacing = .85
 		md.CodeBlockBackground = t.Surface

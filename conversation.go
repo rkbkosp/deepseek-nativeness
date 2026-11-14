@@ -24,10 +24,10 @@ func (a *app) header(c *ui.Context) {
 					title = s.Title
 				}
 			}
-			ui.Text(c, title).FontWeight(500).SingleLine().Ellipsis("…").Grow(1)
-			if preset := a.composerPresetLabel(); preset != "" {
-				ui.Text(c, preset).FontSize(13).TextColor(a.theme.TextMuted).SingleLine()
-			}
+			ui.Row(c).Grow(1).MinWidth(0).Gap(8).AlignItems(ui.Center).Children(func() {
+				ui.Text(c, title).FontWeight(500).SingleLine().Ellipsis("…").MinWidth(0).Shrink(1).Label("会话标题")
+				a.headerPresetView(c)
+			})
 			if ui.ButtonBase(c).Label("切换右侧栏").Padding(4).Children(func() { icon(c, "compare-split-outline", 16).TextColor(a.theme.TextMuted) }).Clicked() {
 				a.rightPaneOpen = !a.rightPaneOpen
 				if !a.rightPaneOpen && a.compatPlacement == "right" {

@@ -147,7 +147,7 @@ func (a *app) browserPaneView(c *ui.Context) {
 	}
 }
 func (a *app) markdownCodeBlock(c *ui.Context, b *markdown.CodeBlockView) {
-	box := ui.Column(c).FillWidth().MinWidth(0).Radius(12).Background(a.theme.Surface).Border(1, a.theme.Border).Label("代码块")
+	box := ui.Column(c).FillWidth().MinWidth(0).Radius(12).Background(a.theme.Surface).Label("代码块")
 	type state struct {
 		Wrap   bool
 		Copied time.Time
@@ -186,7 +186,10 @@ func (a *app) markdownCodeBlock(c *ui.Context, b *markdown.CodeBlockView) {
 		old, oldCell := a.md.WrapCode, a.mdCell.WrapCode
 		a.md.WrapCode = s.Wrap
 		a.mdCell.WrapCode = s.Wrap
-		b.Body(c)
+		// The framework's selectable/highlighted body stays intact. Its outer
+		// flex item must be shrinkable, otherwise an unbroken line becomes the
+		// card's intrinsic minimum width even when wrap is enabled.
+		b.Body(c).FillWidth().MinWidth(0).Shrink(1).Margin(6-a.uiPrefs.FontSize*.25, 0, -2, 0).Label("代码内容")
 		a.md.WrapCode = old
 		a.mdCell.WrapCode = oldCell
 	})

@@ -53,8 +53,9 @@ type composerState struct {
 	readGeneration                            uint64
 }
 type composerPreset struct {
-	ID   string  `json:"id"`
-	Name *string `json:"name"`
+	ID          string  `json:"id"`
+	Name        *string `json:"name"`
+	Description *string `json:"description"`
 }
 type composerReplacement struct {
 	Before, Text      string
