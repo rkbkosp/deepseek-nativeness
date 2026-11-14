@@ -20,9 +20,21 @@ export function useNativeMenuAnchor(
     point?: { x: number; y: number };
     matchWidth?: boolean;
     external?: HTMLElement | null;
+    gap?: number;
+    minTop?: number;
   },
 ) {
-  const { active, portal, side, align, point, matchWidth, external } = options;
+  const {
+    active,
+    portal,
+    side,
+    align,
+    point,
+    matchWidth,
+    external,
+    gap,
+    minTop,
+  } = options;
   const pointX = point?.x,
     pointY = point?.y;
   useLayoutEffect(() => {
@@ -48,6 +60,8 @@ export function useNativeMenuAnchor(
           ? undefined
           : { x: pointX, y: pointY },
       matchWidth,
+      gap,
+      minTop,
     }));
   }, [
     menu,
@@ -60,6 +74,8 @@ export function useNativeMenuAnchor(
     pointY,
     matchWidth,
     external,
+    gap,
+    minTop,
   ]);
 }
 export function useNativeSubmenuAnchor(
@@ -111,4 +127,65 @@ export function useNativeMenuBacking(
       kind: "backing",
     }));
   }, [surface, backing]);
+}
+
+// The four independent source owners keep their own forms, keys and dismissal.
+// These adapters name only the original CSS placement contract.
+export function useTaskMenuAnchor(
+  panel: RefObject<HTMLElement>,
+  trigger: RefObject<HTMLElement>,
+  open: boolean,
+  portal: boolean,
+  align: "start" | "end",
+) {
+  useNativeMenuAnchor(panel, trigger, {
+    active: open,
+    portal,
+    side: "bottom",
+    align,
+    gap: 4,
+    minTop: 12,
+  });
+}
+export function useSchedulePickerAnchor(
+  panel: RefObject<HTMLElement>,
+  trigger: RefObject<HTMLElement>,
+  open: boolean,
+) {
+  useNativeMenuAnchor(panel, trigger, {
+    active: open,
+    portal: true,
+    side: "bottom",
+    align: "start",
+    gap: 4,
+    minTop: 12,
+  });
+}
+export function useModelPickerAnchor(
+  panel: RefObject<HTMLElement>,
+  trigger: RefObject<HTMLElement>,
+  open: boolean,
+  embedded: boolean,
+) {
+  useNativeMenuAnchor(panel, trigger, {
+    active: open && !embedded,
+    portal: true,
+    side: "top",
+    align: "end",
+    gap: 8,
+  });
+}
+export function useRegistryPickerAnchor(
+  panel: RefObject<HTMLElement>,
+  trigger: RefObject<HTMLElement>,
+  open: boolean,
+) {
+  useNativeMenuAnchor(panel, trigger, {
+    active: open,
+    portal: true,
+    side: "bottom",
+    align: "end",
+    gap: 6,
+    minTop: 12,
+  });
 }

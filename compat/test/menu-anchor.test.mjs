@@ -480,3 +480,344 @@ test("QA compile define forces the same fallback gate even when all native featu
     "only the compile-time QA artifact bypasses detection",
   );
 });
+
+import {
+  useTaskMenuAnchor,
+  useSchedulePickerAnchor,
+  useModelPickerAnchor,
+  useRegistryPickerAnchor,
+} from "../.test-build/menu-anchor-fallback.mjs";
+import { TaskMenu } from "../.test-build/task-menu-contract.mjs";
+test("four independent original placement profiles keep their source gap/alignment and release all hooks", () => {
+  const oldCSS = globalThis.CSS,
+    oldDoc = globalThis.document;
+  try {
+    globalThis.CSS = { supports: () => false };
+    for (const kind of ["task", "picker", "model", "registry"]) {
+      const w = world();
+      w.doc.documentElement.dataset = { platform: "darwin" };
+      w.doc.body = new w.Element(rect(0, 0, 500, 400));
+      globalThis.document = w.doc;
+      const y = kind === "model" ? 220 : 0,
+        trigger = new w.Element(rect(200, y, 80, 24)),
+        panel = new w.Element(rect(0, 0, 150, 60));
+      function Harness({ open = true, embedded = false }) {
+        const p = useRef(null),
+          a = useRef(null);
+        if (kind === "task") useTaskMenuAnchor(p, a, open, true, "end");
+        if (kind === "picker") useSchedulePickerAnchor(p, a, open);
+        if (kind === "model") useModelPickerAnchor(p, a, open, embedded);
+        if (kind === "registry") useRegistryPickerAnchor(p, a, open);
+        return React.createElement(
+          React.Fragment,
+          null,
+          React.createElement("div", { id: "a", ref: a }),
+          open && React.createElement("div", { id: "p", ref: p }),
+        );
+      }
+      let r;
+      act(() => {
+        r = TestRenderer.create(React.createElement(Harness), {
+          createNodeMock: (el) => (el.props.id === "a" ? trigger : panel),
+        });
+      });
+      assert.equal(
+        panel.getBoundingClientRect().left,
+        kind === "picker" ? 200 : 130,
+        kind,
+      );
+      assert.equal(
+        panel.getBoundingClientRect().top,
+        kind === "model" ? 152 : kind === "registry" ? 30 : 28,
+        kind,
+      );
+      if (kind === "model") {
+        act(() => r.update(React.createElement(Harness, { embedded: true })));
+        assert.equal(
+          w.resizes.size,
+          0,
+          "embedded model keeps its explicit native viewport layout",
+        );
+      }
+      act(() => r.update(React.createElement(Harness, { open: false })));
+      act(() => r.unmount());
+      assert.deepEqual(
+        w.stats(),
+        { listeners: 0, frames: 0, resize: 0, mutation: 0 },
+        kind,
+      );
+    }
+  } finally {
+    if (oldCSS === undefined) delete globalThis.CSS;
+    else globalThis.CSS = oldCSS;
+    if (oldDoc === undefined) delete globalThis.document;
+    else globalThis.document = oldDoc;
+  }
+});
+test("original TaskMenu source retains pinned search and keyboard while its added portal placement follows lifecycle", () => {
+  const names = [
+      "CSS",
+      "document",
+      "window",
+      "Node",
+      "Element",
+      "HTMLElement",
+      "HTMLInputElement",
+      "HTMLIFrameElement",
+    ],
+    old = new Map(
+      names.map((k) => [k, Object.getOwnPropertyDescriptor(globalThis, k)]),
+    );
+  try {
+    const w = world();
+    globalThis.CSS = { supports: () => false };
+    globalThis.document = w.doc;
+    globalThis.window = w.win;
+    w.doc.documentElement.dataset = { platform: "darwin" };
+    w.doc.activeElement = null;
+    w.doc.body = new w.Element(rect(0, 0, 500, 400));
+    w.doc.body.nodeType = 1;
+    w.doc.body.children = [];
+    const root = new w.Element(rect(300, 100, 80, 24)),
+      menu = new w.Element(rect(0, 0, 160, 150)),
+      trigger = new w.Element(rect(300, 100, 80, 24));
+    class Input extends w.Element {}
+    globalThis.Node = w.Element;
+    globalThis.Element = w.Element;
+    globalThis.HTMLElement = w.Element;
+    globalThis.HTMLInputElement = Input;
+    globalThis.HTMLIFrameElement = class extends w.Element {};
+    const search = new Input(rect(0, 0, 100, 20)),
+      first = new w.Element(rect(0, 0, 100, 20)),
+      second = new w.Element(rect(0, 0, 100, 20));
+    let searchFocus = 0,
+      closed = 0,
+      selected = [];
+    for (const el of [root, menu, trigger, search, first, second]) {
+      el.focus = () => {
+        w.doc.activeElement = el;
+        if (el === search) searchFocus++;
+      };
+      el.contains = (n) =>
+        el === n ||
+        (el === root && n === trigger) ||
+        (el === menu && [search, first, second].includes(n));
+      el.querySelector = (selector) =>
+        selector.includes("data-menu-field")
+          ? el === menu
+            ? search
+            : null
+          : el === root
+            ? trigger
+            : el === menu
+              ? first
+              : null;
+      el.querySelectorAll = () => (el === menu ? [first, second] : []);
+    }
+    const mock = (el) =>
+      el.type === "span" && el.props.style?.anchorName
+        ? root
+        : el.props.role === "menu"
+          ? menu
+          : new w.Element(rect(0, 0, 20, 20));
+    w.doc.body.createNodeMock = mock;
+    const props = (open) => ({
+      open,
+      portal: true,
+      align: "end",
+      anchor: React.createElement("button", null, "规则"),
+      header: React.createElement("input", { "data-menu-field": "" }),
+      items: [
+        { id: "one", label: "一" },
+        { id: "disabled", label: "禁用", disabled: true },
+        { id: "two", label: "二" },
+      ],
+      onClose: () => closed++,
+      onSelect: (id) => selected.push(id),
+    });
+    let renderer;
+    act(() => {
+      renderer = TestRenderer.create(
+        React.createElement(TaskMenu, props(true)),
+        { createNodeMock: mock },
+      );
+    });
+    assert.equal(w.resizes.size, 1);
+    assert.equal(menu.getBoundingClientRect().left, 220);
+    assert.equal(menu.getBoundingClientRect().top, 128);
+    assert.equal(searchFocus, 1);
+    assert.equal(
+      renderer.root.findAllByType("input").length,
+      1,
+      "original pinned search remains present",
+    );
+    root.r = rect(100, 180, 80, 24);
+    w.win.dispatchEvent(new Event("resize"));
+    w.flush();
+    assert.equal(menu.getBoundingClientRect().left, 20);
+    assert.equal(
+      searchFocus,
+      1,
+      "geometry changes must not take focus from the user",
+    );
+    const key = (k) => {
+      const e = new Event("keydown", { cancelable: true });
+      Object.defineProperties(e, {
+        key: { value: k },
+        target: { value: w.doc.activeElement },
+      });
+      w.doc.dispatchEvent(e);
+      return e;
+    };
+    act(() => key("Home"));
+    assert.equal(
+      w.doc.activeElement,
+      search,
+      "search Home remains text navigation",
+    );
+    act(() => key("ArrowDown"));
+    assert.equal(
+      w.doc.activeElement,
+      first,
+      "original arrow walk enters enabled row",
+    );
+    act(() => key("Escape"));
+    assert.equal(closed, 1);
+    assert.equal(
+      w.doc.activeElement,
+      trigger,
+      "original close restores trigger focus",
+    );
+    act(() => renderer.update(React.createElement(TaskMenu, props(false))));
+    act(() => renderer.unmount());
+    assert.deepEqual(w.stats(), {
+      listeners: 0,
+      frames: 0,
+      resize: 0,
+      mutation: 0,
+    });
+    assert.deepEqual(selected, [], "placement never selects a rule");
+  } finally {
+    for (const [k, d] of old) {
+      if (d) Object.defineProperty(globalThis, k, d);
+      else delete globalThis[k];
+    }
+  }
+});
+
+import { PickerPopover } from "../.test-build/task-menu-contract.mjs";
+test("original timing PickerPopover keeps its dialog content and external anchor across open/close", () => {
+  const names = ["CSS", "document", "window", "Node"],
+    old = new Map(
+      names.map((k) => [k, Object.getOwnPropertyDescriptor(globalThis, k)]),
+    );
+  try {
+    const w = world();
+    globalThis.CSS = { supports: () => false };
+    globalThis.document = w.doc;
+    globalThis.window = w.win;
+    globalThis.Node = w.Element;
+    w.doc.body = new w.Element(rect(0, 0, 500, 400));
+    w.doc.body.nodeType = 1;
+    w.doc.body.children = [];
+    const trigger = new w.Element(rect(150, 0, 80, 24)),
+      panel = new w.Element(rect(0, 0, 220, 160));
+    trigger.contains = (n) => n === trigger;
+    panel.contains = (n) => n === panel;
+    const mock = () => panel;
+    w.doc.body.createNodeMock = mock;
+    let closes = 0;
+    const props = (open) => ({
+      open,
+      anchorRef: { current: trigger },
+      anchorName: "--timing-fixture",
+      label: "日期和时间",
+      onClose: () => closes++,
+      children: React.createElement("span", null, "原控件内容"),
+    });
+    let renderer;
+    act(() => {
+      renderer = TestRenderer.create(
+        React.createElement(PickerPopover, props(true)),
+        { createNodeMock: mock },
+      );
+    });
+    assert.equal(w.resizes.size, 1);
+    assert.equal(panel.getBoundingClientRect().left, 150);
+    assert.equal(panel.getBoundingClientRect().top, 28);
+    assert.equal(
+      renderer.root.findByProps({ role: "dialog" }).props["aria-label"],
+      "日期和时间",
+    );
+    assert.equal(
+      renderer.root.findAllByType("span")[0].props.children,
+      "原控件内容",
+    );
+    act(() =>
+      renderer.update(React.createElement(PickerPopover, props(false))),
+    );
+    act(() => renderer.unmount());
+    assert.equal(closes, 0, "placement does not dismiss or commit date/time");
+    assert.deepEqual(w.stats(), {
+      listeners: 0,
+      frames: 0,
+      resize: 0,
+      mutation: 0,
+    });
+  } finally {
+    for (const [k, d] of old) {
+      if (d) Object.defineProperty(globalThis, k, d);
+      else delete globalThis[k];
+    }
+  }
+});
+test("exact original owner build seams call the tested adapters and all packaged anchor CSS is classified", async () => {
+  const { readFile } = await import("node:fs/promises");
+  for (const [file, call] of [
+    [
+      "task-menu-contract.mjs",
+      "useTaskMenuAnchor(listRef, rootRef, open, portal, align)",
+    ],
+    [
+      "task-menu-contract.mjs",
+      "useSchedulePickerAnchor(panelRef, anchorRef, open)",
+    ],
+    [
+      "model-contract.mjs",
+      "useModelPickerAnchor(menuRef, triggerRef, open, embedded)",
+    ],
+    [
+      "plugins.mjs",
+      "useRegistryPickerAnchor(registryPanelRef, registryToggleRef, registryShown)",
+    ],
+  ])
+    assert.ok(
+      (
+        await readFile(
+          new URL("../.test-build/" + file, import.meta.url),
+          "utf8",
+        )
+      ).includes(call),
+      file + " misses " + call,
+    );
+  const inventory = JSON.parse(
+    await readFile(
+      new URL("../anchor-coverage-audit.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  assert.deepEqual(inventory.unknown, []);
+  assert.equal(inventory.consumers.length, 7);
+  const next = JSON.parse(
+    await readFile(
+      new URL("../anchor-coverage-next-audit.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  assert.deepEqual(next.unknown, []);
+  assert.equal(
+    next.inlineBindings.length,
+    10,
+    "all literal inline anchor declarations are classified too",
+  );
+});

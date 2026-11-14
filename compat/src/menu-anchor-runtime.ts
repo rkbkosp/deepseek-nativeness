@@ -77,7 +77,8 @@ export function bindMenuPlacement(
     if (options.side === "submenu")
       menu.setAttribute("data-native-submenu-fallback", "");
     const minTop =
-      menu.hasAttribute("data-context-menu") ||
+      options.minTop ??
+      (menu.hasAttribute("data-context-menu") ||
       menu.hasAttribute("data-contextual")
         ? 12
         : Math.max(
@@ -87,7 +88,7 @@ export function bindMenuPlacement(
                 .getComputedStyle(menu)
                 .getPropertyValue("--dsh-frame-overlay-top"),
             ) || 12,
-          );
+          ));
     const maxW = Math.max(0, size.width - 24),
       maxH = Math.max(0, size.height - minTop - 12);
     set(

@@ -1,0 +1,526 @@
+{
+  "scope": "Exhaustive literal CSS anchor consumer inventory of the exact supplied build metafile, not a macOS15.8 or GUI acceptance claim.",
+  "sourceManifest": "/Volumes/SuperDisk/native-dsh/desktop/compat/dist-layout-next/source-manifest.json",
+  "sourceManifestSHA256": "7bfd7326f98fd7ed42ca495da943893293082427b73d4f9114d31966b69bf0ca",
+  "consumers": [
+    {
+      "source": "compat/src/shell.css",
+      "sha256": "71ff8cc3eb58298d148c096cdd6f0a81577bc421e24e96bd1a730c1263235c52",
+      "rules": [
+        {
+          "line": 51,
+          "text": "position-anchor: auto;"
+        }
+      ],
+      "routes": [
+        "routes/plugin-settings.js",
+        "app.js",
+        "routes/models.js",
+        "routes/plugins.js",
+        "routes/trajectory.js",
+        "routes/terminal.js",
+        "routes/agent-presets.js",
+        "routes/model-settings.js",
+        "routes/automation.js"
+      ],
+      "owner": "native embedded model-menu reset",
+      "refs": "none",
+      "side": "explicit absolute viewport",
+      "align": "native viewport",
+      "gap": 0,
+      "GUI8": "position-anchor:auto intentionally disables anchoring",
+      "patch": "unchanged, not an anchor dependency"
+    },
+    {
+      "source": "packages/client/ui-primitives/src/MenuSurface.module.css",
+      "sha256": "9ec1f4b089ac40163475245661d27cc118a73238d3ce5e5fb5dbc4475a6f7589",
+      "rules": [
+        {
+          "line": 15,
+          "text": "anchor-name: var(--dsh-menu-anchor);"
+        },
+        {
+          "line": 41,
+          "text": "position-anchor: var(--dsh-menu-anchor);"
+        },
+        {
+          "line": 42,
+          "text": "top: anchor(top);"
+        },
+        {
+          "line": 43,
+          "text": "left: anchor(left);"
+        },
+        {
+          "line": 44,
+          "text": "width: anchor-size(width, 0px);"
+        },
+        {
+          "line": 45,
+          "text": "height: anchor-size(height, 0px);"
+        }
+      ],
+      "routes": [
+        "routes/plugin-settings.js",
+        "routes/models.js",
+        "routes/plugins.js",
+        "routes/trajectory.js",
+        "routes/terminal.js",
+        "routes/automation.js"
+      ],
+      "owner": "MenuSurface Darwin backing",
+      "refs": "backingRef ↔ captured surfaceRef",
+      "side": "same rect as surface",
+      "align": "same rect",
+      "gap": 0,
+      "GUI8": "bounded backing hook",
+      "patch": "unchanged"
+    },
+    {
+      "source": "packages/client/ui-model-selection/src/client/ModelSelect.module.css",
+      "sha256": "77b051e72e9a93da90754592df0696b192a38b78dd62af1616dc7d17c81682e6",
+      "rules": [
+        {
+          "line": 10,
+          "text": "anchor-name: var(--dsh-model-anchor);"
+        },
+        {
+          "line": 97,
+          "text": "position-anchor: var(--dsh-model-anchor);"
+        },
+        {
+          "line": 101,
+          "text": "right: anchor(right);"
+        },
+        {
+          "line": 102,
+          "text": "bottom: calc(anchor(top) + 8px);"
+        }
+      ],
+      "routes": [
+        "routes/models.js"
+      ],
+      "owner": "ModelSelect direct MenuSurface",
+      "refs": "menuRef ↔ triggerRef",
+      "side": "top",
+      "align": "end",
+      "gap": 8,
+      "GUI8": "embedded native model-menu has explicit absolute viewport override; nonembedded reuse lacks fallback",
+      "patch": "add same bounded hook only for nonembedded menus; leave embedded override"
+    },
+    {
+      "source": "packages/client/ui-primitives/src/Menu.module.css",
+      "sha256": "ac03c6b4777b1b86e0e2ae09591fd2fe3c0da5718c493b458f67cbc7990b7649",
+      "rules": [
+        {
+          "line": 46,
+          "text": "position-area: none;"
+        },
+        {
+          "line": 47,
+          "text": "top: max(var(--dsh-menu-window-top), calc(anchor(bottom) + 4px));"
+        },
+        {
+          "line": 49,
+          "text": "left: max(12px, anchor(left));"
+        },
+        {
+          "line": 54,
+          "text": "position-try-fallbacks: --dsh-menu-wide-below, --dsh-menu-above, --dsh-menu-wide-above, --dsh-menu-window, --dsh-menu-wide-window;"
+        },
+        {
+          "line": 61,
+          "text": "bottom: max(12px, calc(anchor(top) + 4px));"
+        },
+        {
+          "line": 63,
+          "text": "position-try-fallbacks: --dsh-menu-wide-above, --dsh-menu-below, --dsh-menu-wide-below, --dsh-menu-window, --dsh-menu-wide-window;"
+        },
+        {
+          "line": 66,
+          "text": "top: max(var(--dsh-menu-window-top), anchor(top));"
+        },
+        {
+          "line": 68,
+          "text": "left: max(12px, calc(anchor(right) + 4px));"
+        },
+        {
+          "line": 70,
+          "text": "position-try-fallbacks: --dsh-menu-left, --dsh-menu-wide-below, --dsh-menu-window, --dsh-menu-wide-window;"
+        },
+        {
+          "line": 74,
+          "text": "right: max(12px, anchor(right));"
+        },
+        {
+          "line": 78,
+          "text": ".portal[data-match-anchor-width] { min-width: min(anchor-size(width), calc(100vw - 24px)); }"
+        },
+        {
+          "line": 81,
+          "text": "@position-try --dsh-menu-below {"
+        },
+        {
+          "line": 82,
+          "text": "top: max(var(--dsh-menu-window-top), calc(anchor(bottom) + 4px));"
+        },
+        {
+          "line": 86,
+          "text": "@position-try --dsh-menu-above {"
+        },
+        {
+          "line": 88,
+          "text": "bottom: max(12px, calc(anchor(top) + 4px));"
+        },
+        {
+          "line": 91,
+          "text": "@position-try --dsh-menu-wide-below {"
+        },
+        {
+          "line": 92,
+          "text": "top: max(var(--dsh-menu-window-top), calc(anchor(bottom) + 4px));"
+        },
+        {
+          "line": 99,
+          "text": "@position-try --dsh-menu-wide-above {"
+        },
+        {
+          "line": 101,
+          "text": "bottom: max(12px, calc(anchor(top) + 4px));"
+        },
+        {
+          "line": 107,
+          "text": "@position-try --dsh-menu-left {"
+        },
+        {
+          "line": 109,
+          "text": "right: max(12px, calc(anchor(left) + 4px));"
+        },
+        {
+          "line": 113,
+          "text": "@position-try --dsh-menu-window {"
+        },
+        {
+          "line": 119,
+          "text": "@position-try --dsh-menu-wide-window {"
+        },
+        {
+          "line": 128,
+          "text": "/* Open above the anchor (empty-state workspace chip: figma 122:9481). */"
+        },
+        {
+          "line": 384,
+          "text": "position-anchor: var(--dsh-submenu-parent);"
+        },
+        {
+          "line": 400,
+          "text": "calc(anchor(top) + var(--dsh-submenu-row-offset, 0px)),"
+        },
+        {
+          "line": 403,
+          "text": "left: calc(anchor(right) + 4px);"
+        },
+        {
+          "line": 407,
+          "text": "position-try-fallbacks: --dsh-submenu-left;"
+        },
+        {
+          "line": 409,
+          "text": "@position-try --dsh-submenu-left {"
+        },
+        {
+          "line": 411,
+          "text": "right: calc(anchor(left) + 4px);"
+        },
+        {
+          "line": 417,
+          "text": "top: max(var(--dsh-menu-window-top), anchor(top));"
+        },
+        {
+          "line": 419,
+          "text": "left: max(12px, anchor(left));"
+        },
+        {
+          "line": 424,
+          "text": "min-width: min(anchor-size(width), calc(100vw - 24px));"
+        }
+      ],
+      "routes": [
+        "routes/plugin-settings.js",
+        "routes/plugins.js",
+        "routes/trajectory.js",
+        "routes/terminal.js",
+        "routes/automation.js"
+      ],
+      "owner": "Menu / useMenuSubmenu",
+      "refs": "listRef ↔ anchorRef ?? rootRef; panelRef ↔ listRef + trigger",
+      "side": "bottom by default; top/right and nested side/page supported",
+      "align": "prop start/end",
+      "gap": 4,
+      "GUI8": "shared fallback hook",
+      "patch": "unchanged"
+    },
+    {
+      "source": "packages/client/ui-plugin-manager/src/client/PluginManagerPage.module.css",
+      "sha256": "5e40c0fe1a6f7ac59f0670f0543735687a6b00be17d060893fb89d255d6bc2f6",
+      "rules": [
+        {
+          "line": 1002,
+          "text": "position-area: none;"
+        },
+        {
+          "line": 1003,
+          "text": "top: max(12px, calc(anchor(bottom) + 6px));"
+        },
+        {
+          "line": 1006,
+          "text": "right: max(12px, anchor(right));"
+        },
+        {
+          "line": 1007,
+          "text": "position-try-fallbacks: --dsh-registry-window, --dsh-registry-opposite, --dsh-registry-wide-opposite, --dsh-registry-tall, --dsh-registry-viewport;"
+        },
+        {
+          "line": 2275,
+          "text": "@position-try --dsh-registry-window {"
+        },
+        {
+          "line": 2276,
+          "text": "position-area: none;"
+        },
+        {
+          "line": 2277,
+          "text": "top: max(12px, calc(anchor(bottom) + 6px));"
+        },
+        {
+          "line": 2286,
+          "text": "@position-try --dsh-registry-opposite {"
+        },
+        {
+          "line": 2288,
+          "text": "bottom: max(12px, calc(anchor(top) + 6px));"
+        },
+        {
+          "line": 2292,
+          "text": "@position-try --dsh-registry-wide-opposite {"
+        },
+        {
+          "line": 2294,
+          "text": "bottom: max(12px, calc(anchor(top) + 6px));"
+        },
+        {
+          "line": 2301,
+          "text": "@position-try --dsh-registry-tall {"
+        },
+        {
+          "line": 2302,
+          "text": "position-area: none;"
+        },
+        {
+          "line": 2306,
+          "text": "right: max(12px, anchor(right));"
+        },
+        {
+          "line": 2312,
+          "text": "@position-try --dsh-registry-viewport {"
+        },
+        {
+          "line": 2313,
+          "text": "position-area: none;"
+        }
+      ],
+      "routes": [
+        "routes/plugins.js"
+      ],
+      "owner": "InstallSpecForm registry fieldset",
+      "refs": "registryPanelRef ↔ registryToggleRef",
+      "side": "bottom",
+      "align": "end",
+      "gap": 6,
+      "minTop": 12,
+      "GUI8": "independent registry portal lacks fallback",
+      "patch": "add same bounded placement hook; do not alter form or installation business"
+    },
+    {
+      "source": "packages/client/ui-schedule/src/client/PickerPopover.module.css",
+      "sha256": "65c071643bc5480ce735e6ed34c8a35a9a5fe5fd9ab2ef719440e707de4fb639",
+      "rules": [
+        {
+          "line": 5,
+          "text": "position-area: none;"
+        },
+        {
+          "line": 6,
+          "text": "position-try-fallbacks: --dsh-schedule-picker-above, --dsh-schedule-picker-end, --dsh-schedule-picker-above-end, --dsh-schedule-picker-window, --dsh-schedule-picker-viewport;"
+        },
+        {
+          "line": 7,
+          "text": "top: max(12px, calc(anchor(bottom) + 4px));"
+        },
+        {
+          "line": 9,
+          "text": "left: max(12px, anchor(left));"
+        },
+        {
+          "line": 36,
+          "text": "@position-try --dsh-schedule-picker-above {"
+        },
+        {
+          "line": 38,
+          "text": "bottom: max(12px, calc(anchor(top) + 4px));"
+        },
+        {
+          "line": 42,
+          "text": "@position-try --dsh-schedule-picker-end {"
+        },
+        {
+          "line": 44,
+          "text": "right: max(12px, anchor(right));"
+        },
+        {
+          "line": 48,
+          "text": "@position-try --dsh-schedule-picker-above-end {"
+        },
+        {
+          "line": 50,
+          "text": "bottom: max(12px, calc(anchor(top) + 4px));"
+        },
+        {
+          "line": 52,
+          "text": "right: max(12px, anchor(right));"
+        },
+        {
+          "line": 57,
+          "text": "@position-try --dsh-schedule-picker-window {"
+        },
+        {
+          "line": 64,
+          "text": "@position-try --dsh-schedule-picker-viewport {"
+        },
+        {
+          "line": 65,
+          "text": "position-area: none;"
+        }
+      ],
+      "routes": [
+        "routes/automation.js"
+      ],
+      "owner": "PickerPopover used by ClockPicker / DatePicker",
+      "refs": "panelRef ↔ anchorRef",
+      "side": "bottom",
+      "align": "start",
+      "gap": 4,
+      "minTop": 12,
+      "GUI8": "independent timing portal lacks fallback",
+      "patch": "add same bounded hook; retain dialog keyboard/dismissal and timing behavior"
+    },
+    {
+      "source": "packages/client/ui-schedule/src/client/TaskMenu.module.css",
+      "sha256": "6003892a498b494cb6eb29dee5b28a7c9f0f9df8273c0f7be562d6f9bd3c0ee3",
+      "rules": [
+        {
+          "line": 41,
+          "text": "position-area: none;"
+        },
+        {
+          "line": 42,
+          "text": "position-try-fallbacks: --dsh-schedule-task-above, --dsh-schedule-task-end, --dsh-schedule-task-above-end, --dsh-schedule-task-window, --dsh-schedule-task-viewport;"
+        },
+        {
+          "line": 43,
+          "text": "top: max(12px, calc(anchor(bottom) + 4px));"
+        },
+        {
+          "line": 45,
+          "text": "left: max(12px, anchor(left));"
+        },
+        {
+          "line": 62,
+          "text": "right: max(12px, anchor(right));"
+        },
+        {
+          "line": 64,
+          "text": "position-try-fallbacks: --dsh-schedule-task-above, --dsh-schedule-task-start, --dsh-schedule-task-above-start, --dsh-schedule-task-window, --dsh-schedule-task-viewport;"
+        },
+        {
+          "line": 209,
+          "text": "@position-try --dsh-schedule-task-above {"
+        },
+        {
+          "line": 211,
+          "text": "bottom: max(12px, calc(anchor(top) + 4px));"
+        },
+        {
+          "line": 215,
+          "text": "@position-try --dsh-schedule-task-end {"
+        },
+        {
+          "line": 217,
+          "text": "right: max(12px, anchor(right));"
+        },
+        {
+          "line": 221,
+          "text": "@position-try --dsh-schedule-task-above-end {"
+        },
+        {
+          "line": 223,
+          "text": "bottom: max(12px, calc(anchor(top) + 4px));"
+        },
+        {
+          "line": 225,
+          "text": "right: max(12px, anchor(right));"
+        },
+        {
+          "line": 230,
+          "text": "@position-try --dsh-schedule-task-start {"
+        },
+        {
+          "line": 231,
+          "text": "left: max(12px, anchor(left));"
+        },
+        {
+          "line": 236,
+          "text": "@position-try --dsh-schedule-task-above-start {"
+        },
+        {
+          "line": 238,
+          "text": "bottom: max(12px, calc(anchor(top) + 4px));"
+        },
+        {
+          "line": 239,
+          "text": "left: max(12px, anchor(left));"
+        },
+        {
+          "line": 245,
+          "text": "@position-try --dsh-schedule-task-window {"
+        },
+        {
+          "line": 252,
+          "text": "@position-try --dsh-schedule-task-viewport {"
+        },
+        {
+          "line": 253,
+          "text": "position-area: none;"
+        }
+      ],
+      "routes": [
+        "routes/automation.js"
+      ],
+      "owner": "TaskMenu via RuleSelectRow: target/project/repeat/timezone",
+      "refs": "listRef ↔ rootRef",
+      "side": "bottom",
+      "align": "prop start/end (rule fields use end)",
+      "gap": 4,
+      "minTop": 12,
+      "GUI8": "independent schedule-local Menu copy lacks fallback",
+      "patch": "add same bounded hook; pinned header/search and keyboard remain source-owned"
+    }
+  ],
+  "unknown": [],
+  "requiredAdditionalAdapters": [
+    "packages/client/ui-model-selection/src/client/ModelSelect.module.css",
+    "packages/client/ui-plugin-manager/src/client/PluginManagerPage.module.css",
+    "packages/client/ui-schedule/src/client/PickerPopover.module.css",
+    "packages/client/ui-schedule/src/client/TaskMenu.module.css"
+  ]
+}

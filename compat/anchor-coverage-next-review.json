@@ -1,0 +1,105 @@
+{
+  "scope": "Four independent anchor owner placement adapters; no Host/Remote/Go/NSText editor or GUI8 package change.",
+  "baseline": "GUI8 source a3a38ac3b8e37b37ac6ccea1cd3b832c6df66be0",
+  "classification": {
+    "CSSFiles": 7,
+    "surfaces": 8,
+    "unclassified": 0,
+    "inlineBindings": 10
+  },
+  "validation": {
+    "fallbackAndSourceComponentTests": 11,
+    "totalCompatTests": 29,
+    "reactDoctor": {
+      "scope": "changed, 7 files",
+      "score": 100,
+      "issues": 0
+    },
+    "actualWKNewOwners": false,
+    "actualMacOS15_8": false,
+    "M1": false
+  },
+  "routes": [
+    {
+      "entry": "routes/plugin-settings.js",
+      "previousInitialJS": 426774,
+      "newInitialJS": 427211,
+      "deltaJS": 437,
+      "previousCSS": 26278,
+      "newCSS": 26278
+    },
+    {
+      "entry": "app.js",
+      "previousInitialJS": 233901,
+      "newInitialJS": 233901,
+      "deltaJS": 0,
+      "previousCSS": 46962,
+      "newCSS": 46962
+    },
+    {
+      "entry": "routes/models.js",
+      "previousInitialJS": 280192,
+      "newInitialJS": 280653,
+      "deltaJS": 461,
+      "previousCSS": 14163,
+      "newCSS": 14163
+    },
+    {
+      "entry": "routes/plugins.js",
+      "previousInitialJS": 1393882,
+      "newInitialJS": 1394342,
+      "deltaJS": 460,
+      "previousCSS": 104102,
+      "newCSS": 104102
+    },
+    {
+      "entry": "routes/trajectory.js",
+      "previousInitialJS": 1450800,
+      "newInitialJS": 1451237,
+      "deltaJS": 437,
+      "previousCSS": 97517,
+      "newCSS": 97517
+    },
+    {
+      "entry": "routes/terminal.js",
+      "previousInitialJS": 309263,
+      "newInitialJS": 309700,
+      "deltaJS": 437,
+      "previousCSS": 21678,
+      "newCSS": 21678
+    },
+    {
+      "entry": "routes/agent-presets.js",
+      "previousInitialJS": 1339617,
+      "newInitialJS": 1339617,
+      "deltaJS": 0,
+      "previousCSS": 60822,
+      "newCSS": 60822
+    },
+    {
+      "entry": "routes/model-settings.js",
+      "previousInitialJS": 371380,
+      "newInitialJS": 371380,
+      "deltaJS": 0,
+      "previousCSS": 25243,
+      "newCSS": 25243
+    },
+    {
+      "entry": "routes/automation.js",
+      "previousInitialJS": 739701,
+      "newInitialJS": 740187,
+      "deltaJS": 486,
+      "previousCSS": 42789,
+      "newCSS": 42789
+    }
+  ],
+  "normal": {
+    "bytes": 303700,
+    "sha256": "6b4b5d2574b9d3dce7698e347f250e2f712c29db11fe43ce54820997c2d48fca"
+  },
+  "forced": {
+    "bytes": 309537,
+    "sha256": "b70cd8cb50fa987e0924d850e34d8e1f1dd58fe19e61d608e2a26bd78bf7fd20"
+  },
+  "pairReportSHA256": "b85d14109c59ccd80626853e9c36c4e3b692b3f735b35aee10bdf51a1f87535e"
+}

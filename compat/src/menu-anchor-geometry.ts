@@ -14,6 +14,7 @@ export interface PlacementOptions {
   page?: boolean;
   rowOffset?: number;
   minTop?: number;
+  gap?: number;
 }
 export function supportsMenuAnchors(
   css: Pick<typeof CSS, "supports"> | undefined = globalThis.CSS,
@@ -47,21 +48,23 @@ export function menuPlacement(
     bottom = viewport.height - 12;
   const w = Math.min(width, Math.max(0, viewport.width - 24)),
     h = Math.min(height, Math.max(0, bottom - minTop));
+  const gap = options.gap ?? 4;
   let x = options.align === "end" ? anchor.right - w : anchor.left,
-    y = anchor.bottom + 4;
+    y = anchor.bottom + gap;
   if (options.side === "top") {
-    y = anchor.top - 4 - h;
-    if (y < minTop && anchor.bottom + 4 + h <= bottom) y = anchor.bottom + 4;
+    y = anchor.top - gap - h;
+    if (y < minTop && anchor.bottom + gap + h <= bottom)
+      y = anchor.bottom + gap;
   } else if (options.side === "right" || options.side === "submenu") {
-    x = anchor.right + 4;
+    x = anchor.right + gap;
     y = anchor.top + (options.rowOffset ?? 0);
-    if (x + w > right && anchor.left - 4 - w >= 12) x = anchor.left - 4 - w;
+    if (x + w > right && anchor.left - gap - w >= 12) x = anchor.left - gap - w;
     if (options.page) {
       x = anchor.left;
       y = anchor.top;
     }
-  } else if (y + h > bottom && anchor.top - 4 - h >= minTop)
-    y = anchor.top - 4 - h;
+  } else if (y + h > bottom && anchor.top - gap - h >= minTop)
+    y = anchor.top - gap - h;
   x = Math.max(12, Math.min(x, Math.max(12, right - w)));
   y = Math.max(minTop, Math.min(y, Math.max(minTop, bottom - h)));
   return {

@@ -59,6 +59,64 @@ for (const match of primitivesIndex.matchAll(
 const plugin = {
   name: "frozen-source-workspace",
   setup(b) {
+    b.onLoad(
+      { filter: /ui-schedule\/src\/client\/TaskMenu\.tsx$/, namespace: "file" },
+      async (args) => {
+        let contents = await readFile(args.path, "utf8");
+        const module = JSON.stringify(
+          join(root, "src/menu-anchor-fallback.ts"),
+        );
+        const seam = "const listRef = useRef<HTMLDivElement>(null)";
+        if (!contents.includes(seam))
+          throw Error("Frozen TaskMenu anchor seam changed");
+        contents =
+          `import {useTaskMenuAnchor} from ${module};\n` +
+          contents.replace(
+            seam,
+            `${seam}\n  useTaskMenuAnchor(listRef,rootRef,open,portal,align)`,
+          );
+        return { contents, loader: "tsx", resolveDir: dirname(args.path) };
+      },
+    );
+    b.onLoad(
+      {
+        filter: /ui-schedule\/src\/client\/PickerPopover\.tsx$/,
+        namespace: "file",
+      },
+      async (args) => {
+        let contents = await readFile(args.path, "utf8");
+        const seam = "const panelRef = useRef<HTMLDivElement>(null)";
+        if (!contents.includes(seam))
+          throw Error("Frozen PickerPopover anchor seam changed");
+        contents =
+          `import {useSchedulePickerAnchor} from ${JSON.stringify(join(root, "src/menu-anchor-fallback.ts"))};\n` +
+          contents.replace(
+            seam,
+            `${seam}\n  useSchedulePickerAnchor(panelRef,anchorRef,open)`,
+          );
+        return { contents, loader: "tsx", resolveDir: dirname(args.path) };
+      },
+    );
+    b.onLoad(
+      {
+        filter: /ui-plugin-manager\/src\/client\/PluginManagerPage\.tsx$/,
+        namespace: "file",
+      },
+      async (args) => {
+        let contents = await readFile(args.path, "utf8");
+        const seam =
+          "const registryAnchorName = `--dsh-registry-${registryId.replaceAll(':', '')}`";
+        if (!contents.includes(seam))
+          throw Error("Frozen registry anchor seam changed");
+        contents =
+          `import {useRegistryPickerAnchor} from ${JSON.stringify(join(root, "src/menu-anchor-fallback.ts"))};\n` +
+          contents.replace(
+            seam,
+            `${seam}\n  useRegistryPickerAnchor(registryPanelRef,registryToggleRef,registryShown)`,
+          );
+        return { contents, loader: "tsx", resolveDir: dirname(args.path) };
+      },
+    );
     // Keep the original menu's business behavior and CSS on capable WebKit.
     // Older WK receives only a mounted-menu placement observer, never a global
     // polyfill or a modified copy of the frozen reference repository.
@@ -227,7 +285,14 @@ const plugin = {
       },
       async (args) => {
         let contents = await readFile(args.path, "utf8");
+        contents =
+          `import {useModelPickerAnchor} from ${JSON.stringify(join(root, "src/menu-anchor-fallback.ts"))};\n` +
+          contents;
         const edits = [
+          [
+            "const menuRef = useRef<HTMLDivElement | null>(null)",
+            "const menuRef = useRef<HTMLDivElement | null>(null)\n  useModelPickerAnchor(menuRef,triggerRef,open,embedded)",
+          ],
           [
             "  const [open, setOpen] = useState(false)",
             "  const embedded = new URLSearchParams(location.search).get('page') === 'model-menu'\n  const [open, setOpen] = useState(embedded)",
@@ -352,6 +417,8 @@ if (process.argv.includes("--engine-test")) {
       join(root, "src/menu-anchor-geometry.ts"),
       join(root, "src/menu-anchor-runtime.ts"),
       join(root, "src/menu-anchor-fallback.ts"),
+      join(root, "src/task-menu-contract.tsx"),
+      join(root, "src/plugins.tsx"),
     ],
     outdir: join(root, ".test-build"),
     outExtension: { ".js": ".mjs" },
@@ -376,17 +443,21 @@ if (process.argv.includes("--engine-test")) {
 }
 const output = join(
   root,
-  forceMenuAnchorFallback
-    ? "dist-layout-forced-test"
-    : process.argv.includes("--out-layout-next")
-      ? "dist-layout-next"
-      : process.argv.includes("--out-settings-fix")
-        ? "dist-settings-fix"
-        : process.argv.includes("--out-perf-next")
-          ? "dist-perf-next"
-          : process.argv.includes("--out-next")
-            ? "dist-next"
-            : "dist",
+  process.argv.includes("--out-anchor-coverage-next")
+    ? forceMenuAnchorFallback
+      ? "dist-anchor-coverage-forced-test"
+      : "dist-anchor-coverage-next"
+    : forceMenuAnchorFallback
+      ? "dist-layout-forced-test"
+      : process.argv.includes("--out-layout-next")
+        ? "dist-layout-next"
+        : process.argv.includes("--out-settings-fix")
+          ? "dist-settings-fix"
+          : process.argv.includes("--out-perf-next")
+            ? "dist-perf-next"
+            : process.argv.includes("--out-next")
+              ? "dist-next"
+              : "dist",
 );
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
@@ -515,6 +586,7 @@ await writeFile(
         "ui-settings-plugins/PluginsSettingsSection + ui-settings-plugin-inventory/PluginInventorySettingsTab",
       ],
       transforms: [
+        "CSS-anchor fallback preserves original shared Menu/Submenu/MenuSurface behavior and adds only bounded placement to independent TaskMenu, PickerPopover, nonembedded ModelSelect and registry fieldset; embedded model uses its native viewport override",
         "TaskManagerPage keeps original controls and disables manual creation at the known frozen carrier mismatch; native draft navigation is capability-gated",
         "SettingsSchemaService retains original schema/path method bodies with only its Cordis registration inheritance removed for standalone instantiation",
         "Named ui-primitives imports resolve directly to their original exported leaves, avoiding side effects from unrelated barrel exports",
