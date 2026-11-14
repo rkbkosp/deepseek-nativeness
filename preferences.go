@@ -15,7 +15,16 @@ func preferencePath() string {
 	return filepath.Join(root, "Native DSH Remote", "preferences.json")
 }
 func (a *app) loadPreferences() {
-	data, err := os.ReadFile(preferencePath())
+	if a.demo {
+		return
+	}
+	a.loadPreferencesFrom(preferencePath())
+}
+func (a *app) loadPreferencesFrom(path string) {
+	if a.demo {
+		return
+	}
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return
 	}
@@ -42,7 +51,12 @@ func (a *app) loadPreferences() {
 	}
 }
 func (a *app) savePreferences() {
-	path := preferencePath()
+	if a.demo {
+		return
+	}
+	a.savePreferencesTo(preferencePath())
+}
+func (a *app) savePreferencesTo(path string) {
 	if path == "" || a.demo {
 		return
 	}

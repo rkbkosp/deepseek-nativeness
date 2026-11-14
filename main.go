@@ -24,7 +24,7 @@ func main() {
 	hideSidebar := flag.Bool("hide-sidebar", false, "start with sidebar collapsed (QA only)")
 	theme := flag.String("theme", "", "client appearance: system, light, dark")
 	windowDiagnostics := flag.String("window-diagnostics", "", "write this client's own window visibility and bounds after startup")
-	document := flag.String("demo-document", "", "explicit demo only: long or table native render regression")
+	document := flag.String("demo-document", "", "explicit demo only: long/table/images/structured native render regression")
 	listClip := flag.Bool("qa-list-clip", false, "explicit demo only: reproduce redundant list clip")
 	defaultTables := flag.Bool("qa-default-tables", false, "explicit demo only: use framework table renderer")
 	demoPane := flag.Bool("demo-right-pane", false, "explicit demo only: constrain conversation with right pane")
@@ -37,9 +37,6 @@ func main() {
 		a.qaListClip = *listClip
 		if *defaultTables {
 			a.md.Block = nil
-		}
-		if *document != "" {
-			a.current.Messages = []message{{ID: "render-fixture", Role: "assistant", Kind: "assistant", Text: renderFixture(*document)}}
 		}
 	}
 	mygo.Bind(&CompatAPI{a: a})
@@ -63,9 +60,7 @@ func main() {
 			a.sessions = append(a.sessions, session{ID: id, Title: title, Running: i < *running, WorkspaceID: "demo-workspace"})
 		}
 		a.current.Running = *running > 0
-		if *document == "images" {
-			a.installImageFixture()
-		}
+		a.applyDemoDocument(*document)
 	}
 	mygo.App.SetName("Native DSH Remote")
 	mygo.App.WhenReady(func() {

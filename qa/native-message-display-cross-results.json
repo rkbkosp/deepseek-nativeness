@@ -1,0 +1,74 @@
+{
+  "scope": "Independent native_client review of remote_wire renderer source; actual a.view headless geometry, exact incremental consumption and actual local Node JSON.stringify oracle. No GUI application or Host/provider invoked.",
+  "rendererSourceCheckpoint": {
+    "path": "qa/checkpoints/_message-display-surrogate-final-20261115/manifest.json",
+    "sha256": "cdb970aeedc852ad0b71a3467870f31cc37e5a8d4404077bb8d355cade18cd69",
+    "files": {
+      "conversation.go": {
+        "bytes": 13336,
+        "sha256": "6be96812f2eb0ac4604b4d3413a309d43188681fc80eaee8c8337d42fb581069"
+      },
+      "conversation_rows.go": {
+        "bytes": 4170,
+        "sha256": "0a245f337016be5d511b69b58299750d6ef3e33bcc288eb7a23db8f815ddb492"
+      },
+      "message_images.go": {
+        "bytes": 10889,
+        "sha256": "b6cc96dff6a9fb8de10493fdffdd688dca328e17099ffd961f210197880083c1"
+      },
+      "assistant_json.go": {
+        "bytes": 7452,
+        "sha256": "ff523619cdd2504b4a69fe7e3d126ffec8fe24bb88f5c57d68eb5c6a642ed5bb"
+      },
+      "assistant_json_test.go": {
+        "bytes": 4220,
+        "sha256": "5589c9c0cf340d4172c909b67f1fec0549e189f5f31862e051b75fdd184cca82"
+      },
+      "assistant_render_test.go": {
+        "bytes": 1318,
+        "sha256": "4c23f545203bcbce03b8d663a97fb650e0b11162e2a3b0126e41b1720faa2a7e"
+      }
+    }
+  },
+  "test": {
+    "path": "qa/native-message-display-cross.gotest",
+    "sha256": "1f1563e945846f86460d5cd86b6560a7aa2bdfe34390d1680f22b2939fffdc2d",
+    "command": "CGO_ENABLED=0 go test -overlay=qa/native-message-display-cross-overlay.json -run '^TestNativeMessageCross' -count=1 -v .",
+    "groups": 5,
+    "passed": true,
+    "cases": [
+      "unknown/file collapsed then bounded217px JSON viewport; full raw unchanged; no file navigation",
+      "duplicate image occurrence IDs distinct; first-index group append preserves old IDs; 360px width wrap; one shared cache/ref",
+      "text boundary splits image runs; singleton retains240x120 natural fit",
+      "empty interrupted arrives via actual incremental handler, both all/final preferences; normal completed negative",
+      "four actual local Node canonical wire + original JSON.stringify oracles incl escaped backslash/lone surrogate mix and UTF16 cap"
+    ]
+  },
+  "deepJSONLocalBenchmark": {
+    "device": "Apple M4, Go darwin arm64",
+    "benchtime": "20ms, single local sample",
+    "depths": [
+      {
+        "depth": 500,
+        "nsPerOp": 80352,
+        "bytesPerOp": 117036,
+        "allocsPerOp": 540
+      },
+      {
+        "depth": 1000,
+        "nsPerOp": 117784,
+        "bytesPerOp": 137071,
+        "allocsPerOp": 1043
+      },
+      {
+        "depth": 2000,
+        "nsPerOp": 191207,
+        "bytesPerOp": 177962,
+        "allocsPerOp": 2046
+      }
+    ],
+    "limit": "Formatter-only development evidence; not full-app CPU/memory, peak native memory, macOS15.8 or M1 acceptance."
+  },
+  "result": "No blocking issue found within these three declared rendering fixes.",
+  "remaining": "Full reasoning block order/grouping, final answerStep semantics and original-image preview remain separate frontend work; no full chat parity claim."
+}

@@ -4,7 +4,8 @@ import {execFileSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 const [normalPath,forcedPath,outPath]=process.argv.slice(2),normal=JSON.parse(await readFile(normalPath)),forced=JSON.parse(await readFile(forcedPath));
 assert.equal(normal.sourceCommit,forced.sourceCommit);assert.deepEqual(normal.nativeInputs,forced.nativeInputs);
-const pair=JSON.parse(await readFile(resolve(import.meta.dirname,'../compat/anchor-qa-builds.json')));
+const pairPath=process.argv[5]??resolve(import.meta.dirname,'../compat/anchor-qa-builds.json');
+const pair=JSON.parse(await readFile(pairPath));
 const differences=[],sameNative=[];
 for(const path of new Set([...Object.keys(normal.assets),...Object.keys(forced.assets)])){
  const a=normal.assets[path],b=forced.assets[path];
@@ -19,5 +20,5 @@ const plist=app=>JSON.parse(execFileSync('plutil',['-convert','json','-o','-',`$
 const a=plist(normal.app),b=plist(forced.app),allowed=['CFBundleIdentifier','CFBundleName','CFBundleDisplayName'];
 for(const key of new Set([...Object.keys(a),...Object.keys(b)])){if(allowed.includes(key)){differences.push({key,normal:a[key],forced:b[key]});continue}assert.deepEqual(a[key],b[key],`unexpected plist difference: ${key}`)}
 assert.equal(b.CFBundleIdentifier,'cn.rkbkosp.native-dsh.remote.anchor-qa');assert.equal(a.CFBundleIdentifier,'cn.rkbkosp.native-dsh.remote');
-const report={sourceCommit:normal.sourceCommit,normal:normal.app,forced:forced.app,identicalNonWKFiles:sameNative.length,sameGo:normal.assets['Contents/MacOS/native-dsh'],sameNode:normal.assets['Contents/MacOS/node'],sameHelper:normal.assets['Contents/Resources/remote/bridge.mjs'],plistDifferences:differences,compatibility:'Full packaged trees exactly match the separately frozen normal/compile-forced resource trees. Their source inputs are identical; compile define false/true is recorded in anchor-qa-builds.json.',actualAcceptance:'Static bundle comparison only; no application launched.'};
+const report={sourceCommit:normal.sourceCommit,normal:normal.app,forced:forced.app,identicalNonWKFiles:sameNative.length,sameGo:normal.assets['Contents/MacOS/native-dsh'],sameNode:normal.assets['Contents/MacOS/node'],sameHelper:normal.assets['Contents/Resources/remote/bridge.mjs'],plistDifferences:differences,compatibility:'Full packaged trees exactly match the separately frozen normal/compile-forced resource trees. Their source inputs are identical; compile define false/true is recorded in the referenced pair report.',compatibilityPair:pairPath,actualAcceptance:'Static bundle comparison only; no application launched.'};
 await writeFile(outPath,JSON.stringify(report,null,2)+'\n',{mode:0o600});console.log(outPath);

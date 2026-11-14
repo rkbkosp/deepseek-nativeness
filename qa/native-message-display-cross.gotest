@@ -1,0 +1,235 @@
+package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"github.com/egoist/mygo/ui"
+	"math"
+	"os/exec"
+	"reflect"
+	"strings"
+	"testing"
+	"unicode/utf16"
+)
+
+type messageCrossNode struct {
+	ID    uint64
+	Label string
+	Rect  ui.Rect
+}
+
+func messageCrossNodes(tt *ui.Tester) []messageCrossNode {
+	c := reflect.ValueOf(tt).Elem().FieldByName("rt").Elem().FieldByName("c")
+	seen := map[uintptr]bool{}
+	out := []messageCrossNode{}
+	var walk func(reflect.Value)
+	walk = func(p reflect.Value) {
+		if !p.IsValid() || p.IsNil() || seen[p.Pointer()] {
+			return
+		}
+		seen[p.Pointer()] = true
+		n := p.Elem()
+		label := n.FieldByName("label").String()
+		if strings.HasPrefix(label, "打开图片 ") || label == "未知内容块 JSON" {
+			out = append(out, messageCrossNode{ID: n.FieldByName("id").Uint(), Label: label, Rect: ui.Rect{X: float32(n.FieldByName("x").Float()), Y: float32(n.FieldByName("y").Float()), W: float32(n.FieldByName("w").Float()), H: float32(n.FieldByName("h").Float())}})
+		}
+		walk(n.FieldByName("first"))
+		walk(n.FieldByName("next"))
+	}
+	walk(c.FieldByName("root"))
+	return out
+}
+func messageCrossApp(t *testing.T, messages []message, right bool) (*app, *ui.Tester) {
+	t.Helper()
+	a := newApp(true)
+	t.Cleanup(a.cancel)
+	t.Cleanup(a.resetMessageImages)
+	a.sessionID = "cross-message-session"
+	a.current = snapshot{SessionID: a.sessionID, Messages: messages}
+	a.sessions = []session{{ID: a.sessionID, Title: "独立消息fixture"}}
+	a.currentTab = "chat"
+	a.rightPaneOpen = right
+	a.uiPrefs.FoldedReplies = "all"
+	a.reindexMessages()
+	tt := ui.NewTester(a.view, 1280, 820)
+	tt.Frame()
+	return a, tt
+}
+func messageCrossImage(id, name string) assistantBlock {
+	raw, _ := json.Marshal(imageAttachment{AttachmentID: id, Name: name, MediaType: "image/png", Width: 600, Height: 300, Bytes: 4})
+	return assistantBlock{Kind: "image", Attachment: raw}
+}
+func TestNativeMessageCrossUnknownFileIsCollapsedLocalBoundedAndKeepsRaw(t *testing.T) {
+	raw := json.RawMessage(`{"type":"file","attachment":{"attachmentId":"csv-id","name":"fixture-result.csv","bytes":4},"uri":"file:///private/not-opened","detail":"` + strings.Repeat("中😀", 15000) + `"}`)
+	before := append([]byte(nil), raw...)
+	a, tt := messageCrossApp(t, []message{{ID: "unknown-file", Kind: "assistant", Role: "assistant", AssistantBlocks: []assistantBlock{{Kind: "other", Block: raw}}}}, false)
+	if !tt.HasText("未知内容块") || tt.HasText("fixture-result.csv") {
+		t.Fatal("unknown file must have a visible collapsed source-JSON control, without eager body")
+	}
+	if err := tt.Click("未知内容块"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	var body string
+	for _, text := range tt.Texts() {
+		if strings.Contains(text, "fixture-result.csv") {
+			body = text
+		}
+	}
+	if body == "" || !strings.Contains(body, "已截断") || len(utf16.Encode([]rune(body))) > 20100 {
+		t.Fatal("bounded expanded body lost metadata or displays the entire source", len(utf16.Encode([]rune(body))))
+	}
+	var viewport ui.Rect
+	for _, n := range messageCrossNodes(tt) {
+		if n.Label == "未知内容块 JSON" {
+			viewport = n.Rect
+		}
+	}
+	if viewport.W <= 0 || viewport.W > 680.1 || viewport.H <= 0 || viewport.H > 217.1 {
+		t.Fatal("JSON escaped original capped scroll region", viewport)
+	}
+	if !bytes.Equal(before, a.current.Messages[0].AssistantBlocks[0].Block) || a.web != nil || a.compat != nil || a.rightPaneOpen {
+		t.Fatal("display changed raw data or navigated to the file URI")
+	}
+	if err := tt.Click("未知内容块"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if tt.HasText("fixture-result.csv") {
+		t.Fatal("closing retained a visible full JSON body")
+	}
+}
+func TestNativeMessageCrossGalleryOccurrenceIdentityWrapAndStreamingAppend(t *testing.T) {
+	one := messageCrossImage("repeated", "repeated.png")
+	blocks := []assistantBlock{one, one}
+	a, tt := messageCrossApp(t, []message{{ID: "gallery", Kind: "assistant", Role: "assistant", AssistantBlocks: blocks}}, true)
+	before := messageCrossNodes(tt)
+	if len(before) != 2 || before[0].ID == before[1].ID {
+		t.Fatal("duplicate reference occurrences must have different retained identities", before)
+	}
+	for _, n := range before {
+		if n.Rect.W != 64 || n.Rect.H != 64 {
+			t.Fatal("consecutive images did not share original 64px gallery", n)
+		}
+	}
+	for i := 2; i < 7; i++ {
+		blocks = append(blocks, messageCrossImage(fmt.Sprint(i), fmt.Sprintf("tile-%d.png", i)))
+	}
+	m := a.current.Messages[0]
+	m.AssistantBlocks = blocks
+	raw, _ := json.Marshal(map[string]any{"sessionId": a.sessionID, "message": m, "index": 0})
+	if err := a.applyIncremental("messageUpsert", raw); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	after := messageCrossNodes(tt)
+	if len(after) != 7 || after[0].ID != before[0].ID || after[1].ID != before[1].ID {
+		t.Fatal("growing first-index image group remounted its existing occurrences", before, after)
+	}
+	for _, n := range after {
+		if n.Rect.W != 64 || n.Rect.H != 64 || n.Rect.X < 312-.1 || n.Rect.X+n.Rect.W > 672.1 {
+			t.Fatal("tile escaped the 360px chat axis", n)
+		}
+	}
+	if after[5].Rect.Y <= after[0].Rect.Y {
+		t.Fatal("gallery did not wrap after filling its row", after)
+	}
+	if a.messageImages == nil || len(a.messageImages.Entries) != 6 || a.messageImages.Active != 0 {
+		t.Fatal("occurrences must share only 6 reference-cache entries and never read Host in demo")
+	}
+}
+func TestNativeMessageCrossTextSeparatesGalleryRunsAndLoneImagesKeepFit(t *testing.T) {
+	a, tt := messageCrossApp(t, []message{{ID: "mixed", Role: "assistant", Kind: "assistant", Text: "separator", AssistantBlocks: []assistantBlock{messageCrossImage("a", "a.png"), messageCrossImage("b", "b.png"), {Kind: "text", Text: "separator"}, messageCrossImage("c", "c.png")}}}, false)
+	_ = a
+	nodes := messageCrossNodes(tt)
+	if len(nodes) != 3 {
+		t.Fatal(nodes)
+	}
+	if nodes[0].Rect.W != 64 || nodes[1].Rect.W != 64 || nodes[2].Rect.W != 240 || nodes[2].Rect.H != 120 {
+		t.Fatal("a text block must split image runs; singleton keeps original natural fit", nodes)
+	}
+}
+func TestNativeMessageCrossStoppedMetadataFromIncrementalHasNoCompletedFalsePositive(t *testing.T) {
+	for _, final := range []bool{false, true} {
+		t.Run(fmt.Sprint(final), func(t *testing.T) {
+			a, tt := messageCrossApp(t, []message{{ID: "finished", Role: "assistant", Kind: "assistant", Text: "normal completed", Turn: 1}, {ID: "terminal", Role: "assistant", Kind: "assistant", Turn: 2}}, false)
+			if final {
+				a.uiPrefs.FoldedReplies = "final"
+				a.invalidateChatRows()
+				tt.Frame()
+			}
+			if tt.HasText("已停止") {
+				t.Fatal("normal completion was marked stopped")
+			}
+			m := a.current.Messages[1]
+			m.Interrupted = true
+			raw, _ := json.Marshal(map[string]any{"sessionId": a.sessionID, "message": m, "index": 1})
+			if err := a.applyIncremental("messageUpsert", raw); err != nil {
+				t.Fatal(err)
+			}
+			tt.Frame()
+			count := 0
+			for _, s := range tt.Texts() {
+				if s == "已停止" {
+					count++
+				}
+			}
+			if count != 1 {
+				t.Fatal("empty stopped message was dropped/duplicated or folded behind completed history", tt.Texts())
+			}
+			r, ok := tt.Find("已停止")
+			if !ok || math.Abs(float64(r.H-18)) > .01 {
+				t.Fatal("stopped tag original 18px box lost", r)
+			}
+		})
+	}
+}
+func BenchmarkNativeMessageCrossDeepUnknownFormatting(b *testing.B) {
+	for _, depth := range []int{500, 1000, 2000} {
+		b.Run(fmt.Sprint(depth), func(b *testing.B) {
+			raw := json.RawMessage(strings.Repeat("[", depth) + "0" + strings.Repeat("]", depth))
+			b.SetBytes(int64(len(raw)))
+			b.ReportAllocs()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				_ = formatUnknownJSON(raw)
+			}
+		})
+	}
+}
+
+func TestNativeMessageCrossUnknownJSONMatchesActualJavaScriptOracle(t *testing.T) {
+	cases := []string{`{"high":"\ud800","low":"\udfff"}`, `{"literal":"\\ud800","mixed":"x\\\ud800z","pair":"\ud83d\ude00"}`, `{"unicode":"中文😀<>&\n\t","order":{"2":"b","1":"a"},"number":1e+21}`, `{"prefix":"` + strings.Repeat("中", 19988) + `😀tail"}`}
+	for i, input := range cases {
+		t.Run(fmt.Sprint(i), func(t *testing.T) {
+			cmd := exec.Command("node", "-e", `const fs=require('node:fs');const p=JSON.parse(fs.readFileSync(0,'utf8'));const full=JSON.stringify(p,null,2);process.stdout.write(JSON.stringify({canonical:p,expected:full.length>20000?full.slice(0,20000)+'\n… 已截断，共 '+full.length+' 字符':full}));`)
+			cmd.Stdin = strings.NewReader(input)
+			out, err := cmd.Output()
+			if err != nil {
+				t.Fatal(err)
+			}
+			var oracle struct {
+				Canonical json.RawMessage `json:"canonical"`
+				Expected  string          `json:"expected"`
+			}
+			if json.Unmarshal(out, &oracle) != nil {
+				t.Fatal("invalid local oracle reply")
+			}
+			before := append([]byte(nil), oracle.Canonical...)
+			got := formatUnknownJSON(oracle.Canonical)
+			if got != oracle.Expected {
+				t.Fatalf("native JSON differs from the actual normalized wire+original JS formatting, case %d: got prefix %q expected prefix %q", i, firstCrossChars(got), firstCrossChars(oracle.Expected))
+			}
+			if !bytes.Equal(before, oracle.Canonical) {
+				t.Fatal("formatter rewrote the underlying original JSON")
+			}
+		})
+	}
+}
+func firstCrossChars(s string) string {
+	if len(s) > 100 {
+		return s[:100]
+	}
+	return s
+}
