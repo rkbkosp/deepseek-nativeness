@@ -315,6 +315,10 @@ export class RemoteAdapter {
         return this.exportLoadedHistory();
       case "exportSessionMarkdown":
         return this.exportSessionMarkdown(p);
+      case "exportSessionZip":
+        return this.exportSessionZip(p);
+      case "readDetailImage":
+        return this.readDetailImage(p);
       case "status":
         return this.status();
       case "configure":
@@ -1136,6 +1140,56 @@ export class RemoteAdapter {
     )
       fail("STALE_CONTEXT", message);
   }
+  /**
+   * Why this carrier cannot serve a declared operation, if it cannot.
+   *
+   * The frozen Remote allowlist is the default authority: an operation it
+   * refuses carries its reason and is rejected before any write, exactly as
+   * before. A carrier whose Host answers the same endpoint itself (the local
+   * loopback carrier) overrides the two hooks below; nothing here inspects the
+   * carrier, so remote behaviour stays the frozen one.
+   */
+  carrierRefusal(operation) {
+    return operation.blockedReason;
+  }
+  /** Products the frozen Remote cannot proxy, listed for capability consumers. */
+  unsupportedOperations() {
+    return [
+      "sessionDelete",
+      "markRead",
+      "markUnread",
+      "installPlugin",
+      "uninstallPlugin",
+      "arbitraryPluginPage",
+      "rawSessionLogDownload",
+      "workspaceFileWrite",
+      "workspaceFileDelete",
+      "workspaceFileRename",
+      "workspaceFileSearch",
+    ];
+  }
+  /** Why this carrier cannot deliver a Host resource a command asks for. */
+  resourceRefusal(kind) {
+    return kind === "exportSessionZip"
+      ? "Remote缺少原始日志下载资源"
+      : "Remote未代理bundle相对图片资源";
+  }
+  /** Why this carrier cannot complete a Host command (`commands/list` rows). */
+  commandRefusal(command) {
+    return command?.name === "export" ? this.resourceRefusal("exportSessionZip") : undefined;
+  }
+  /**
+   * Download the Session's complete log ZIP from the Host's own raw route.
+   * The frozen Remote has no such resource carrier, so this is refused unless a
+   * carrier overrides it (see `LocalAdapter`).
+   */
+  async exportSessionZip() {
+    fail("UNSUPPORTED_REMOTE_RESOURCE", this.resourceRefusal("exportSessionZip"));
+  }
+  /** Download one bundle/market detail image through the Host's image route. */
+  async readDetailImage() {
+    fail("UNSUPPORTED_REMOTE_RESOURCE", this.resourceRefusal("readDetailImage"));
+  }
   async runOperation(method, p) {
     this.validateScope(p);
     const operation = OPERATIONS[method],
@@ -1147,8 +1201,8 @@ export class RemoteAdapter {
           throw error;
         }
       })();
-    if (operation.blockedReason)
-      fail("FROZEN_REMOTE_INCOMPATIBLE", operation.blockedReason);
+    const refusal = this.carrierRefusal(operation);
+    if (refusal) fail("FROZEN_REMOTE_INCOMPATIBLE", refusal);
     if (operation.feature && !this.connected?.features?.[operation.feature])
       fail("FEATURE_NOT_SUPPORTED", "Host未提供此功能。");
     if (operation.mode === "write" && this.readOnly)
@@ -1210,12 +1264,12 @@ export class RemoteAdapter {
         dataBase64: Buffer.from(value.data).toString("base64"),
       };
     if (method === "listCommands")
-      return value.map((command) => ({
-        ...command,
-        ...(command.name === "export"
-          ? { clientUnavailableReason: "Remote缺少原始日志下载资源" }
-          : {}),
-      }));
+      return value.map((command) => {
+        const refusal = this.commandRefusal(command);
+        return refusal === undefined
+          ? command
+          : { ...command, clientUnavailableReason: refusal };
+      });
     return value;
   }
   closeStream(subscriptionId) {
@@ -1549,9 +1603,10 @@ export class RemoteAdapter {
               grant.resource.id === p.sessionId ||
               grant.resource.id === p.workspaceId),
         );
+      const refusal = this.carrierRefusal(operation);
       const available =
         !!this.connected &&
-        !operation.blockedReason &&
+        !refusal &&
         granted &&
         (!operation.feature ||
           this.connected.features?.[operation.feature] === true) &&
@@ -1566,7 +1621,7 @@ export class RemoteAdapter {
         ...(!available
           ? {
               reason:
-                operation.blockedReason ??
+                refusal ??
                 (!granted
                   ? "Host未授权"
                   : this.readOnly && operation.mode === "write"
@@ -1590,25 +1645,30 @@ export class RemoteAdapter {
         ? { reason: "Host未授权完整事件读取或未提供未压缩历史协商" }
         : {}),
     };
+    // Host resource downloads are not Typert endpoints, so they are reported
+    // beside the operations instead of inside that table.
+    for (const [method, endpoint, mode] of [
+      ["exportSessionZip", "GET /api/session.export", "read"],
+      ["readDetailImage", "GET /api/plugin-manager/detail-file", "read"],
+    ]) {
+      const refusal = this.resourceRefusal(method);
+      const available = !!this.connected && refusal === undefined;
+      operations[method] = available;
+      details[method] = {
+        endpoint,
+        mode,
+        available,
+        source: "host-raw-resource-route",
+        ...(!available ? { reason: refusal ?? "连接尚未就绪" } : {}),
+      };
+    }
     return {
       operations,
       details,
       hostId: this.hostId,
       readOnly: this.readOnly === true,
       owner: access.owner === true,
-      unsupported: [
-        "sessionDelete",
-        "markRead",
-        "markUnread",
-        "installPlugin",
-        "uninstallPlugin",
-        "arbitraryPluginPage",
-        "rawSessionLogDownload",
-        "workspaceFileWrite",
-        "workspaceFileDelete",
-        "workspaceFileRename",
-        "workspaceFileSearch",
-      ],
+      unsupported: this.unsupportedOperations(),
     };
   }
   async exportSessionMarkdown(p) {

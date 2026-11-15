@@ -28,9 +28,10 @@
 
 import { randomUUID } from "node:crypto";
 import { constants } from "node:fs";
-import { open } from "node:fs/promises";
+import { mkdtemp, open, rm } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { join } from "node:path";
+import { tmpdir } from "node:os";
+import { basename, join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 /** Stable Host id the local device advertises. */
@@ -45,8 +46,24 @@ const LOCAL_CAPABILITIES = ["workspace.upload.v1"];
 /** Exact raw-byte upload route the Host's file-upload service registers. */
 export const FILE_UPLOAD_PATH = "/api/session/uploadFileBinary";
 
+/**
+ * Session log ZIP route (a plain GET on the same `/api` channel): the Host
+ * streams `application/zip` with `content-disposition` naming the archive.
+ */
+export const SESSION_EXPORT_PATH = "/api/session.export";
+
+/** Bundle-relative detail image route (`{bundle,document,path,sources}`). */
+export const PLUGIN_MANAGER_DETAIL_FILE_PATH =
+  "/api/plugin-manager/detail-file";
+
+/** Market-entry detail image route (`{document,path}`). */
+export const PLUGIN_MARKET_DETAIL_FILE_PATH = "/api/plugin-market/detail-file";
+
 /** Read granularity for one upload; also the progress cadence. */
 const UPLOAD_CHUNK_BYTES = 64 * 1024;
+
+/** Temp roots holding one downloaded resource each; the caller deletes them. */
+const DOWNLOAD_DIRECTORY_PREFIX = "native-dsh-download-";
 
 const ENDPOINT_SEGMENT_PATTERN = /^[A-Za-z0-9_$.-]+$/;
 const CONNECT_PATH = "/connect";
@@ -499,6 +516,96 @@ export class LocalTransport {
     }
   }
 
+  /**
+   * Download one Host resource route to a fresh temporary file.
+   *
+   * The Host serves some resources as plain authenticated GETs rather than
+   * Typert endpoints — the Session log ZIP and the plugin detail images. Those
+   * bodies can exceed the stdio helpers' request/response framing (a ZIP is
+   * megabytes), so they never cross as JSON or base64: the bytes are streamed
+   * to a private temporary directory and the path is returned instead.
+   *
+   * The caller owns the returned file and its directory and must delete it.
+   *
+   * @param options.apiPath - one `/api/...` route on this Host.
+   * @param options.query - optional query parameters; `undefined` is omitted.
+   * @param options.fallbackName - file name when the Host sends no
+   *   `content-disposition` file name.
+   * @param options.accept - media types accepted, each exact or `type/*`.
+   * @param options.signal - caller cancellation, also ends the body stream.
+   * @returns `{path, bytes, name, mediaType}` for the written file.
+   */
+  async downloadFile({ apiPath, query = {}, fallbackName, accept = [], signal } = {}) {
+    if (this.closed) throw localFailure("CANCELLED", "本地 Host 连接已关闭。");
+    const route = requireApiPath(apiPath);
+    const target = new URL(route, this.origin);
+    for (const [name, value] of Object.entries(query)) {
+      if (value !== undefined && value !== null)
+        target.searchParams.set(name, String(value));
+    }
+    signal?.throwIfAborted();
+    this.requests += 1;
+    let response;
+    try {
+      response = await this.fetchImpl(target, {
+        method: "GET",
+        headers: { cookie: this.cookie },
+        ...(signal === undefined ? {} : { signal }),
+      });
+    } catch (error) {
+      if (signal?.aborted) throw signal.reason ?? error;
+      throw localFailure("TRANSPORT_CLOSED", "无法连接本地 Host。", {
+        cause: String(error?.message ?? error),
+      });
+    }
+    if (!response.ok) throw await downloadHttpFailure(response, route);
+    const mediaType = response.headers
+      .get("content-type")
+      ?.split(";", 1)[0]
+      ?.trim()
+      .toLowerCase();
+    if (!mediaTypeAccepted(mediaType, accept)) {
+      await cancelBody(response.body);
+      throw localFailure(
+        "PROTOCOL_ERROR",
+        "本地 Host 返回的资源类型与请求不符。",
+        { mediaType: mediaType ?? null, accept: [...accept] },
+      );
+    }
+    const directory = await mkdtemp(join(tmpdir(), DOWNLOAD_DIRECTORY_PREFIX));
+    const name = parseDownloadName(
+      response.headers.get("content-disposition"),
+      fallbackName,
+    );
+    const path = join(directory, name);
+    let handle;
+    try {
+      handle = await open(path, "wx", 0o600);
+      let bytes = 0;
+      for await (const chunk of bodyChunks(response.body)) {
+        signal?.throwIfAborted();
+        const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+        let offset = 0;
+        while (offset < buffer.byteLength)
+          offset += (await handle.write(buffer, offset)).bytesWritten;
+        bytes += buffer.byteLength;
+      }
+      await handle.sync();
+      await handle.close();
+      handle = undefined;
+      return { path, bytes, name, mediaType };
+    } catch (error) {
+      await handle?.close().catch(() => undefined);
+      await rm(directory, { recursive: true, force: true }).catch(() => undefined);
+      if (signal?.aborted) throw signal.reason ?? error;
+      const fault = codedFault(error);
+      if (fault !== undefined) throw fault;
+      throw localFailure("DOWNLOAD_FAILED", "本地资源的落盘写入失败。", {
+        cause: String(error?.message ?? error),
+      });
+    }
+  }
+
   async close() {
     if (this.closed) return;
     this.closed = true;
@@ -564,6 +671,149 @@ function requireNonEmptyString(value, name) {
   if (typeof value !== "string" || value === "")
     throw localFailure("INVALID_ARGUMENT", `本地上传缺少 ${name}。`);
   return value;
+}
+
+/** One route on this Host's `/api` channel, never another origin. */
+function requireApiPath(apiPath) {
+  if (
+    typeof apiPath !== "string" ||
+    !apiPath.startsWith("/api/") ||
+    apiPath.startsWith("/api/../") ||
+    /[\s\u0000-\u001f]/u.test(apiPath)
+  )
+    throw localFailure("INVALID_ARGUMENT", "本地资源路由必须是 /api/ 下的路径。");
+  return apiPath;
+}
+
+/** Whether a response media type is one the caller accepts. */
+function mediaTypeAccepted(mediaType, accept) {
+  if (accept.length === 0) return true;
+  if (typeof mediaType !== "string" || mediaType === "") return false;
+  return accept.some((entry) =>
+    entry.endsWith("/*")
+      ? mediaType.startsWith(`${entry.slice(0, -1)}`)
+      : mediaType === entry,
+  );
+}
+
+async function cancelBody(body) {
+  if (body === null || body === undefined) return;
+  if (typeof body.cancel === "function") {
+    await body.cancel().catch(() => undefined);
+    return;
+  }
+  try {
+    for await (const _chunk of body) {
+      // Drain so the carrier can release the connection.
+    }
+  } catch {
+    /* a refused resource body is discarded either way */
+  }
+}
+
+/** Ordered bytes of one response body, whichever stream shape it has. */
+async function* bodyChunks(body) {
+  if (body === null || body === undefined) return;
+  if (typeof body.getReader === "function") {
+    const reader = body.getReader();
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done === true) return;
+        yield value;
+      }
+    } finally {
+      reader.releaseLock?.();
+    }
+  } else {
+    for await (const chunk of body) yield chunk;
+  }
+}
+
+/**
+ * The file name a download is written under.
+ *
+ * The Host names the archive in `content-disposition`; only the trailing file
+ * name of that header is used, so a header can never choose a directory.
+ *
+ * @param contentDisposition - the response header, when the Host sent one.
+ * @param fallbackName - used when the header carries no usable file name.
+ */
+export function parseDownloadName(contentDisposition, fallbackName) {
+  const fallback = requireDownloadName(fallbackName);
+  if (typeof contentDisposition !== "string") return fallback;
+  const extended = /filename\*\s*=\s*([^;]+)/iu.exec(contentDisposition);
+  if (extended !== null) {
+    const value = extended[1].trim().replace(/^"(.*)"$/u, "$1");
+    // RFC 5987: charset'language'percent-encoded-name
+    const encoded = /^[^']*'[^']*'(.*)$/u.exec(value);
+    try {
+      return requireDownloadName(
+        encoded === null ? value : decodeURIComponent(encoded[1]),
+      );
+    } catch {
+      return encoded === null ? fallback : requireDownloadName(encoded[1]);
+    }
+  }
+  const plain = /filename\s*=\s*("([^"]*)"|[^;]+)/iu.exec(contentDisposition);
+  if (plain === null) return fallback;
+  try {
+    return requireDownloadName((plain[2] ?? plain[1]).trim());
+  } catch {
+    return fallback;
+  }
+}
+
+/** One safe file name, never a path segment or a hidden file. */
+function requireDownloadName(value) {
+  if (typeof value !== "string")
+    throw localFailure("INVALID_ARGUMENT", "下载文件名缺失。");
+  // Header values arrive percent-encoded for non-ASCII names, so decode before
+  // judging the segments; RFC 5987 may already have decoded them.
+  let name = value.trim();
+  try {
+    if (/%[0-9A-Fa-f]{2}/u.test(name)) name = decodeURIComponent(name);
+  } catch {
+    /* keep the undecoded name and let the checks below refuse it */
+  }
+  const segment = basename(name);
+  if (
+    segment === "" ||
+    segment === "." ||
+    segment === ".." ||
+    segment !== name ||
+    segment.startsWith(".") ||
+    /[\\/\u0000-\u001f]/u.test(segment)
+  )
+    throw localFailure("INVALID_ARGUMENT", "下载文件名不能是路径或隐藏文件。");
+  return segment;
+}
+
+async function downloadHttpFailure(response, route) {
+  const body = await response.text?.().catch(() => undefined);
+  const detail = typeof body === "string" ? body.slice(0, 120) : undefined;
+  const details = {
+    status: response.status,
+    route,
+    ...(detail ? { detail } : {}),
+  };
+  if (response.status === 401)
+    return localFailure("AUTH_REQUIRED", "本地 Host 拒绝了启动凭据。", details);
+  if (response.status === 403)
+    return localFailure("PERMISSION_DENIED", "本地 Host 拒绝了该资源请求。", details);
+  if (response.status === 404)
+    return localFailure(
+      "NOT_FOUND",
+      "本地 Host 没有该资源：路由未启用，或会话/文件不存在。",
+      details,
+    );
+  if (response.status === 400)
+    return localFailure("INVALID_ARGUMENT", "本地 Host 拒绝了资源请求参数。", details);
+  return localFailure(
+    "DOWNLOAD_FAILED",
+    `本地 Host 返回 HTTP ${response.status}。`,
+    details,
+  );
 }
 
 /**
