@@ -50,13 +50,17 @@ export class RemoteAdapter {
   constructor(emit = () => {}) {
     this.emit = (method, params, scope = this.notificationScope()) =>
       emit(method, params, scope);
-    this.publisher = new PresentationPublisher((method, params) =>
+    this.publisher = new PresentationPublisher((method, params) => {
+      // A live title projection also renames the cached list row, so a later
+      // status push (which re-emits these rows) cannot restore the provisional
+      // "新会话" label.
+      if (method === "sessionProjections") this.syncRowTitle(params);
       this.emit(
         method,
         params,
         this.publicationScope ?? this.notificationScope(),
-      ),
-    );
+      );
+    });
     this.lifetime = new AbortController();
     this.pending = new Map();
     this.streams = new Map();
@@ -619,6 +623,20 @@ export class RemoteAdapter {
       sessionIds: w.sessionIds ?? [],
     }));
   }
+  /**
+   * Rename a cached list row from a live title projection value.
+   * @param {object} params - the sessionProjections payload.
+   */
+  syncRowTitle({ sessionId, projections } = {}) {
+    const values = projections?.values ?? projections;
+    const title = values?.title;
+    if (typeof sessionId !== "string" || typeof title !== "string") return;
+    const trimmed = title.trim();
+    if (trimmed === "") return;
+    for (const row of this.sessionRows)
+      if (row.id === sessionId) row.title = trimmed;
+  }
+
   async sessions({ all = false } = {}) {
     const scope = this.notificationScope();
     const generation = this.connectionGeneration;

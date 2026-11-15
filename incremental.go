@@ -58,6 +58,7 @@ func (a *app) replaceSnapshotMode(s snapshot, history bool) bool {
 	}
 	a.reindexMessages()
 	if len(s.Projections) > 0 {
+		a.applySessionTitle(s.SessionID, s.Projections)
 		_ = a.acceptComposerProjections(s.Projections)
 	}
 	valid := make(map[string]bool, len(s.Pending))

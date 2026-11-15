@@ -189,6 +189,21 @@ func (a *app) notification(ev bridge.Notification) {
 	}
 	switch ev.Method {
 	case "sessionProjections":
+		var p struct {
+			SessionID   string          `json:"sessionId"`
+			Projections json.RawMessage `json:"projections"`
+		}
+		if err := json.Unmarshal(ev.Params, &p); err != nil {
+			a.error = err.Error()
+			return
+		}
+		// The name is log-backed and its own sequence fences it, so it applies
+		// whatever the presentation baseline says, and for a Session a cached
+		// passive follow publishes after the reader left.
+		a.applySessionTitle(p.SessionID, p.Projections)
+		if p.SessionID != a.sessionID {
+			return
+		}
 		var header chatFrameHeader
 		if err := json.Unmarshal(ev.Params, &header); err != nil {
 			a.error = err.Error()
@@ -200,14 +215,8 @@ func (a *app) notification(ev bridge.Notification) {
 			}
 			return
 		}
-		var p struct {
-			SessionID   string          `json:"sessionId"`
-			Projections json.RawMessage `json:"projections"`
-		}
-		if json.Unmarshal(ev.Params, &p) == nil && p.SessionID == a.sessionID {
-			a.current.Projections = p.Projections
-			_ = a.acceptComposerProjections(p.Projections)
-		}
+		a.current.Projections = p.Projections
+		_ = a.acceptComposerProjections(p.Projections)
 	case "status":
 		_ = a.acceptStatus(ev.Params)
 	case "sessions":

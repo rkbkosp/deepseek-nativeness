@@ -189,7 +189,10 @@ func (a *app) reloadComposer() {
 	// behind the composer only change through Host invalidation rows, so a Host
 	// or Session scope answer is reused instead of re-read on every open.
 	hostScope, sessionScope := a.hostScope(), a.sessionScope()
-	a.composerRead(s, "sessionProjections", nil, func(raw json.RawMessage) error { return a.acceptComposerProjections(raw) })
+	a.composerRead(s, "sessionProjections", nil, func(raw json.RawMessage) error {
+		a.applySessionTitle(s.sessionID, raw)
+		return a.acceptComposerProjections(raw)
+	})
 	if a.scopeCache != nil {
 		if catalog, ok := a.scopeCache.modelCatalog[hostScope]; ok {
 			s.catalog = catalog

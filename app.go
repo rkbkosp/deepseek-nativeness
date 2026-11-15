@@ -123,6 +123,10 @@ type app struct {
 	// list's Selected while a search is open (see searchView).
 	searchPick string
 	searchRow  int
+
+	// titleSeq fences the title projection per Session so a late read cannot
+	// restore an older name over a newer one.
+	titleSeq map[string]int64
 }
 
 func newApp(demo bool) *app {
