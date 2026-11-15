@@ -39,6 +39,16 @@ func (u messageUsage) total() int64 {
 	return u.InputTokens + u.OutputTokens + u.CacheReadTokens + u.CacheWriteTokens
 }
 
+// formatTokensPerSecond matches the original speed ladder: 34.4 → 34,
+// 3.14 → 3.1, and a negative reading clamps to 0.
+func formatTokensPerSecond(tps float64) string {
+	clamped := math.Max(0, tps)
+	if clamped >= 10 {
+		return fmt.Sprint(math.Round(clamped))
+	}
+	return fmt.Sprint(math.Round(clamped*10) / 10)
+}
+
 // formatTokenCount matches the original compact ladder: 517 / 12.2K / 517K / 1.2M.
 func formatTokenCount(value int64) string {
 	if value < 1_000 {

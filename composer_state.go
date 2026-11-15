@@ -125,7 +125,41 @@ type composerProjectionValues struct {
 		ProjectedTokens *int64 `json:"projectedTokens"`
 		ContextWindow   *int64 `json:"contextWindow"`
 	} `json:"contextPressure"`
+	// SessionStats and TokenUsage are the Host's whole-log projections. They
+	// outlive paging and compaction, so the composer footer reads them instead
+	// of folding whatever history happens to be loaded.
+	SessionStats *sessionStatsProjection `json:"sessionStats"`
+	TokenUsage   *tokenUsageProjection   `json:"tokenUsage"`
 }
+
+// sessionStatsProjection mirrors @deepseek-ai/dsh-session-stats
+// SessionStatsProjection field for field.
+type sessionStatsProjection struct {
+	Turns        int     `json:"turns"`
+	Steps        int     `json:"steps"`
+	LLMMs        float64 `json:"llmMs"`
+	ToolMs       float64 `json:"toolMs"`
+	TTFTMs       float64 `json:"ttftMs"`
+	TTFTSteps    int     `json:"ttftSteps"`
+	DecodeMs     float64 `json:"decodeMs"`
+	DecodeTokens int64   `json:"decodeTokens"`
+}
+
+// tokenUsageProjection mirrors @deepseek-ai/dsh-token-meter
+// TokenUsageProjection field for field.
+type tokenUsageProjection struct {
+	UncachedInputTokens int64 `json:"uncachedInputTokens"`
+	OutputTokens        int64 `json:"outputTokens"`
+	CacheReadTokens     int64 `json:"cacheReadTokens"`
+	CacheWriteTokens    int64 `json:"cacheWriteTokens"`
+}
+
+func (u tokenUsageProjection) billedInput() int64 {
+	return u.UncachedInputTokens + u.CacheReadTokens + u.CacheWriteTokens
+}
+
+func (u tokenUsageProjection) total() int64 { return u.billedInput() + u.OutputTokens }
+
 type composerCompletion struct{ ID, Label, Description, Replacement, Kind, Unavailable, Value string }
 type composerSessionReference struct {
 	SessionID, Label, DisplayTitle, Mention, Cwd string
@@ -330,6 +364,14 @@ func (a *app) acceptComposerProjections(raw json.RawMessage) error {
 			}
 		case "contextPressure":
 			if err := json.Unmarshal(v, &s.values.ContextPressure); err != nil {
+				return err
+			}
+		case "sessionStats":
+			if err := json.Unmarshal(v, &s.values.SessionStats); err != nil {
+				return err
+			}
+		case "tokenUsage":
+			if err := json.Unmarshal(v, &s.values.TokenUsage); err != nil {
 				return err
 			}
 		case "todos":
