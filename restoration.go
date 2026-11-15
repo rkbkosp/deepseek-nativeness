@@ -41,6 +41,7 @@ func (a *app) adoptAccountScope(scope string) {
 		a.renameScope = ""
 		a.restoreTarget = nil
 		a.restoreAttempted = ""
+		a.invalidateScopeAnswers()
 	}
 	a.accountScope = scope
 	a.authServer = a.configuredServer

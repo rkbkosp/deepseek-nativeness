@@ -134,14 +134,53 @@ func (a *app) reloadComposer() {
 	if !a.connected || a.client == nil || a.sessionID == "" || a.demo {
 		return
 	}
+	// Projections stay a live read: another client can change this Session's
+	// model, preset or permission while it is in the background. The catalogs
+	// behind the composer only change through Host invalidation rows, so a Host
+	// or Session scope answer is reused instead of re-read on every open.
+	hostScope, sessionScope := a.hostScope(), a.sessionScope()
 	a.composerRead(s, "sessionProjections", nil, func(raw json.RawMessage) error { return a.acceptComposerProjections(raw) })
+	if a.scopeCache != nil {
+		if catalog, ok := a.scopeCache.modelCatalog[hostScope]; ok {
+			s.catalog = catalog
+			s.refreshLabels()
+		} else {
+			a.loadModelCatalog(s, hostScope)
+		}
+		if options, ok := a.scopeCache.permissions[hostScope]; ok {
+			s.permissions = append([]settingsPermissionOption(nil), options...)
+			s.completionToken = ""
+			s.refreshLabels()
+		} else {
+			a.loadPermissionCatalog(s, hostScope)
+		}
+		if commands, ok := a.scopeCache.commands[sessionScope]; ok {
+			s.commands = usableCommands(commands)
+			s.completionToken = ""
+		} else {
+			a.loadCommands(s, sessionScope)
+		}
+		return
+	}
+	a.loadModelCatalog(s, hostScope)
+	a.loadPermissionCatalog(s, hostScope)
+	a.loadCommands(s, sessionScope)
+}
+
+func (a *app) loadModelCatalog(s *composerState, scope string) {
 	a.composerRead(s, "modelCatalog", nil, func(raw json.RawMessage) error {
-		if err := json.Unmarshal(raw, &s.catalog); err != nil {
+		var catalog composerModelCatalog
+		if err := json.Unmarshal(raw, &catalog); err != nil {
 			return err
 		}
+		s.catalog = catalog
 		s.refreshLabels()
+		a.rememberModelCatalog(scope, catalog)
 		return nil
 	})
+}
+
+func (a *app) loadPermissionCatalog(s *composerState, scope string) {
 	a.composerRead(s, "permissionCatalog", nil, func(raw json.RawMessage) error {
 		var v struct {
 			Options []settingsPermissionOption `json:"options"`
@@ -152,19 +191,34 @@ func (a *app) reloadComposer() {
 		s.permissions = v.Options
 		s.completionToken = ""
 		s.refreshLabels()
+		a.rememberPermissionCatalog(scope, v.Options)
 		return nil
 	})
+}
+
+func (a *app) loadCommands(s *composerState, scope string) {
 	a.composerRead(s, "listCommands", nil, func(raw json.RawMessage) error {
-		var err error
-		s.commands, err = decodeRows[composerCommand](raw, "commands", "items")
-		for i := range s.commands {
-			if reason := composerCommandBoundary("/" + s.commands[i].Name); reason != "" && s.commands[i].Name != "permission" {
-				s.commands[i].Unavailable = reason
-			}
+		commands, err := decodeRows[composerCommand](raw, "commands", "items")
+		if err != nil {
+			return err
 		}
+		s.commands = usableCommands(commands)
 		s.completionToken = ""
-		return err
+		a.rememberCommands(scope, commands)
+		return nil
 	})
+}
+
+// usableCommands copies the catalog before applying client-side boundaries, so a
+// remembered answer never carries one composer's availability results.
+func usableCommands(commands []composerCommand) []composerCommand {
+	out := append([]composerCommand(nil), commands...)
+	for i := range out {
+		if reason := composerCommandBoundary("/" + out[i].Name); reason != "" && out[i].Name != "permission" {
+			out[i].Unavailable = reason
+		}
+	}
+	return out
 }
 func (a *app) composerCurrent(s *composerState) bool {
 	return s != nil && a.composer == s && s.hostID == a.hostID && s.sessionID == a.sessionID && s.accountScope == a.accountScope && s.generation == a.remoteGeneration

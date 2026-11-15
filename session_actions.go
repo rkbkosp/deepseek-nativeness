@@ -14,6 +14,7 @@ import (
 
 func (a *app) fetchCapabilities() {
 	host, sid, scope, generation := a.hostID, a.sessionID, a.accountScope, a.remoteGeneration
+	answers := a.sessionScope()
 	a.scopedRead("capabilities", map[string]any{"sessionId": sid, "workspaceId": a.workspaceID}, func(raw json.RawMessage) error {
 		if host != a.hostID || sid != a.sessionID || scope != a.accountScope || generation != a.remoteGeneration {
 			return nil
@@ -27,10 +28,12 @@ func (a *app) fetchCapabilities() {
 		if err := json.Unmarshal(raw, &state); err != nil {
 			return err
 		}
-		a.operationCaps = map[string]operationCapability{}
+		caps := map[string]operationCapability{}
 		for name, supported := range state.Operations {
-			a.operationCaps[name] = operationCapability{Supported: supported, Reason: state.Details[name].Reason}
+			caps[name] = operationCapability{Supported: supported, Reason: state.Details[name].Reason}
 		}
+		a.operationCaps = caps
+		a.rememberCapabilities(answers, caps)
 		return nil
 	})
 }

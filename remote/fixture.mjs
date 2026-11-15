@@ -107,6 +107,7 @@ export class FixtureAdapter extends RemoteAdapter {
   fixtureUnaryStats() {
     return {
       dataSource: "fixture",
+      fixtureReads: { ...this.fixtureReads },
       activeAttachments: this.fixtureAttachmentReads.size,
       startedAttachments: this.fixtureAttachmentStarted,
       abortedAttachments: this.fixtureAttachmentAborted,
@@ -360,6 +361,7 @@ export class FixtureAdapter extends RemoteAdapter {
     super(emit);
     this.identity = { deviceId: "fixture-client" };
     this.authenticated = true;
+    this.fixtureReads = {};
     this.fixtureAttachmentReads = new Map();
     this.fixtureWorkspaces = [
       {
@@ -420,6 +422,8 @@ export class FixtureAdapter extends RemoteAdapter {
     const fixture = this;
     this.gateway = {
       invoke: async ({ namespace, method, args, signal }) => {
+        const readKey = `${namespace}/${method}`;
+        fixture.fixtureReads[readKey] = (fixture.fixtureReads[readKey] ?? 0) + 1;
         if (namespace === "session" && method === "attachment") {
           this.fixtureAttachmentStarted++;
           const value = {
@@ -509,6 +513,31 @@ export class FixtureAdapter extends RemoteAdapter {
         }
         if (namespace === "session" && method === "page")
           return { records: history().records, hasMore: false };
+        if (namespace === "session" && method === "projections")
+          return { values: {}, asOfSeq: 1 };
+        if (namespace === "session" && method === "modelCatalog")
+          return {
+            default: { provider: "fixture", model: "fixture-model" },
+            groups: [
+              {
+                id: "fixture",
+                name: "Fixture",
+                models: [{ id: "fixture-model", name: "Fixture Model" }],
+              },
+            ],
+          };
+        if (namespace === "permissionPresets" && method === "catalog")
+          return { options: [{ value: "default", name: "默认" }] };
+        // The frozen Host answers this one with a bare array; the helper maps it.
+        if (namespace === "commands" && method === "list")
+          return [
+            {
+              definitionId: "fixture-command",
+              name: "fixture",
+              description: "夹具命令",
+              input: null,
+            },
+          ];
         if (namespace === "directoryPicker" && method === "list") {
           const requested =
             typeof args?.path === "string" && args.path.trim()
@@ -537,6 +566,8 @@ export class FixtureAdapter extends RemoteAdapter {
         });
       },
       open: async function* (endpoint, payload, signal) {
+        const openKey = `open:${endpoint}`;
+        fixture.fixtureReads[openKey] = (fixture.fixtureReads[openKey] ?? 0) + 1;
         if (endpoint === "remoteAccess/follow") {
           yield { owner: true, grants: [] };
           return;

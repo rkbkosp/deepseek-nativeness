@@ -105,6 +105,7 @@ type app struct {
 	answers                                                  map[string]map[string]*questionDraft
 	pendingRequests                                          int
 	workspaceCreate                                          *workspaceCreateState
+	scopeCache                                               *scopeAnswers
 	configuredServer                                         string
 	authorized                                               bool
 	pendingSend                                              *sendIntent

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"os/exec"
 	"path/filepath"
 	"sync"
@@ -78,6 +79,35 @@ func (f *fixtureApp) read(read func() any) any {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	return read()
+}
+
+// hostReads reports the Host calls the client made through the fixture gateway.
+func (f *fixtureApp) hostReads(t *testing.T) map[string]int {
+	t.Helper()
+	raw, err := f.client.Call(f.ctx, "fixtureStats", map[string]any{})
+	if err != nil {
+		t.Fatalf("fixtureStats: %v", err)
+	}
+	var stats struct {
+		FixtureReads map[string]int `json:"fixtureReads"`
+	}
+	if err := json.Unmarshal(raw, &stats); err != nil {
+		t.Fatalf("fixtureStats: %v", err)
+	}
+	return stats.FixtureReads
+}
+
+// waitReads waits for one Host counter to reach an exact value.
+func (f *fixtureApp) waitReads(t *testing.T, key string, want int) {
+	t.Helper()
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		if f.hostReads(t)[key] == want {
+			return
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	t.Fatalf("timeout waiting for %s = %d (reads %v)", key, want, f.hostReads(t))
 }
 
 func (f *fixtureApp) wait(t *testing.T, label string, ok func() bool) {

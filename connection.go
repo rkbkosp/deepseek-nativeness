@@ -164,6 +164,11 @@ func (a *app) notification(ev bridge.Notification) {
 			_ = compatNotifications.EmitPage(a.compat.Page(), ev)
 		}
 	}
+	if ev.Method == "remoteInvalidation" {
+		// Adapters, settings and credential rows can change catalogs, grants and
+		// the command list; the original client refreshes its stores here too.
+		a.invalidateScopeAnswers()
+	}
 	if a.compat != nil && ev.Method == "status" {
 		_ = compatNotifications.EmitPage(a.compat.Page(), ev)
 	}
@@ -253,6 +258,7 @@ func (a *app) fetchDevices() {
 }
 
 func (a *app) connect(id string) {
+	a.invalidateScopeAnswers()
 	a.releaseComposerImages()
 	a.resetMessageImages()
 	a.invalidateChatRows()
@@ -456,7 +462,9 @@ func (a *app) openSessionWith(id string, failed func(error)) {
 			return err
 		}
 		a.replaceSnapshot(s)
-		a.fetchCapabilities()
+		if !a.applyCachedCapabilities() {
+			a.fetchCapabilities()
+		}
 		a.reloadComposer()
 		a.composerBaselineKey = a.currentComposerBaselineKey()
 		a.rememberSelection()
