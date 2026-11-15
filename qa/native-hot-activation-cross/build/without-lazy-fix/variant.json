@@ -1,0 +1,6 @@
+{
+  "source": "composer_native/ComposerEditor.swift",
+  "sourceSha256": "394762b5d799381adda6ce419d3edc24e5f04e77b6b657a8d5ca888574988fa2",
+  "mutation": "Remove only pre-enumeration ensureAttributesAreFixed from a private QA copy; never modify composer_native",
+  "mutatedSha256": "031d7d75a158c04e0eb7cdf934db09e223fa6270a3500e35b63fc2e3a04e662b"
+}

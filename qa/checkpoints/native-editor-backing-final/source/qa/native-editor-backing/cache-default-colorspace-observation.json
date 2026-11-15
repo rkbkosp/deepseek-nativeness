@@ -1,0 +1,170 @@
+{
+  "checks" : {
+    "control-appearance-without-backing-reproduces-white" : true,
+    "host-dark-forced-dark-composited-alpha" : false,
+    "host-dark-forced-dark-opaque" : false,
+    "host-dark-forced-light-composited-alpha" : false,
+    "host-dark-forced-light-opaque" : true,
+    "host-light-forced-dark-composited-alpha" : false,
+    "host-light-forced-dark-opaque" : false,
+    "host-light-forced-light-composited-alpha" : false,
+    "host-light-forced-light-opaque" : true
+  },
+  "passed" : false,
+  "samples" : [
+    {
+      "case" : "host-light-forced-light-opaque",
+      "clipDrawsBackground" : true,
+      "expected" : [
+        255,
+        255,
+        255,
+        255
+      ],
+      "nativeAppearance" : "NSAppearanceNameAqua",
+      "pixel" : [
+        255,
+        255,
+        255,
+        255
+      ],
+      "textDrawsBackground" : true
+    },
+    {
+      "case" : "host-light-forced-light-composited-alpha",
+      "clipDrawsBackground" : true,
+      "expected" : [
+        235,
+        235,
+        235,
+        255
+      ],
+      "nativeAppearance" : "NSAppearanceNameAqua",
+      "pixel" : [
+        239,
+        239,
+        239,
+        255
+      ],
+      "textDrawsBackground" : true
+    },
+    {
+      "case" : "host-light-forced-dark-opaque",
+      "clipDrawsBackground" : true,
+      "expected" : [
+        44,
+        44,
+        46,
+        255
+      ],
+      "nativeAppearance" : "NSAppearanceNameDarkAqua",
+      "pixel" : [
+        58,
+        58,
+        60,
+        255
+      ],
+      "textDrawsBackground" : true
+    },
+    {
+      "case" : "host-light-forced-dark-composited-alpha",
+      "clipDrawsBackground" : true,
+      "expected" : [
+        49,
+        49,
+        51,
+        255
+      ],
+      "nativeAppearance" : "NSAppearanceNameDarkAqua",
+      "pixel" : [
+        64,
+        64,
+        66,
+        255
+      ],
+      "textDrawsBackground" : true
+    },
+    {
+      "case" : "control-transparent-over-white",
+      "pixel" : [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "case" : "host-dark-forced-light-opaque",
+      "clipDrawsBackground" : true,
+      "expected" : [
+        255,
+        255,
+        255,
+        255
+      ],
+      "nativeAppearance" : "NSAppearanceNameAqua",
+      "pixel" : [
+        255,
+        255,
+        255,
+        255
+      ],
+      "textDrawsBackground" : true
+    },
+    {
+      "case" : "host-dark-forced-light-composited-alpha",
+      "clipDrawsBackground" : true,
+      "expected" : [
+        235,
+        235,
+        235,
+        255
+      ],
+      "nativeAppearance" : "NSAppearanceNameAqua",
+      "pixel" : [
+        239,
+        239,
+        239,
+        255
+      ],
+      "textDrawsBackground" : true
+    },
+    {
+      "case" : "host-dark-forced-dark-opaque",
+      "clipDrawsBackground" : true,
+      "expected" : [
+        44,
+        44,
+        46,
+        255
+      ],
+      "nativeAppearance" : "NSAppearanceNameDarkAqua",
+      "pixel" : [
+        58,
+        58,
+        60,
+        255
+      ],
+      "textDrawsBackground" : true
+    },
+    {
+      "case" : "host-dark-forced-dark-composited-alpha",
+      "clipDrawsBackground" : true,
+      "expected" : [
+        49,
+        49,
+        51,
+        255
+      ],
+      "nativeAppearance" : "NSAppearanceNameDarkAqua",
+      "pixel" : [
+        64,
+        64,
+        66,
+        255
+      ],
+      "textDrawsBackground" : true
+    }
+  ],
+  "scope" : "actual AppKit NSView subtree pixels in explicit light\/dark NSWindow hosts; windows never ordered onscreen; no OS\/NSApp theme changes; MyGo compositor\/CUA acceptance remains pending"
+}

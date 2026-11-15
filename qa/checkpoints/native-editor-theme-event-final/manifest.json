@@ -1,0 +1,145 @@
+{
+  "createdAt": "2026-11-15T01:36:30.535Z",
+  "app": "/Volumes/SuperDisk/native-dsh/desktop/qa/native-editor-themed-next3/build/Native Composer Theme Proof 3.app",
+  "defaultLifetimeSeconds": 600,
+  "defaultSelftests": false,
+  "defaultFrameDriver": false,
+  "themeEventFenceDefault": true,
+  "architecture": "arm64",
+  "minimumMacOS": "15.8",
+  "cgo": 0,
+  "source": [
+    {
+      "path": "composer_native/.gitignore",
+      "sha256": "c8c8f6a3398afb1b5060f94675305af0e29e35ef0cb14a99f733c35e608cd747"
+    },
+    {
+      "path": "composer_native/ComposerEditor.swift",
+      "sha256": "c5cba826a9dc281f0819d9521a74a659156428d6d21ac5a52cd8c47ddbf2c36b"
+    },
+    {
+      "path": "composer_native/ReferenceGlyphs.swift",
+      "sha256": "027819f71ad9cc2fba67c335f4c5261ff2d010e549695ff7327b6c9322824388"
+    },
+    {
+      "path": "composer_native/SemanticDocument.swift",
+      "sha256": "ec63ee5b4991b7bc175d355235dfaf9e57983f6c9de02edf5222a9dca13cb05f"
+    },
+    {
+      "path": "composer_native/backing.go",
+      "sha256": "6e7f196736637733b1800c537facb5fbe7742647c7e32f81499c2887bfd02ef1"
+    },
+    {
+      "path": "composer_native/backing_test.go",
+      "sha256": "789148b2094d290ec5f556fb296a4a49a59d0aa61c239d6c681914b509c2d47b"
+    },
+    {
+      "path": "composer_native/document_store.go",
+      "sha256": "527f8363b1e2ec0326d6bfffca9d0cb9f02484968fd9469d8bd25505cc383971"
+    },
+    {
+      "path": "composer_native/document_store_test.go",
+      "sha256": "406afcb0dc7a3124f4bae0dfcb9e87c19596fed18fcc98866f0ead138569e2d4"
+    },
+    {
+      "path": "composer_native/editor.go",
+      "sha256": "690ab33549a75dfac85529310b790d40aaf0a7fbd2fabd61f83f795878829a9c"
+    },
+    {
+      "path": "composer_native/editor_darwin.go",
+      "sha256": "4d3b711e193daa5a8f2372bd19066e3528346e156cc17ff87f4cd236313cb3f3"
+    },
+    {
+      "path": "composer_native/editor_other.go",
+      "sha256": "64cc28da3dc1a149f927325ca877170e712651a0dbb69b01f0da5adb779989fd"
+    },
+    {
+      "path": "composer_native/editor_test.go",
+      "sha256": "65562efa93d0ed823e82ac7fa2b2f0afee074b3963f89fc0d85046246db1a668"
+    },
+    {
+      "path": "composer_native/queue_fence_test.go",
+      "sha256": "e6bbd50a5d43065ac165ea6f7d9c25046517042df9e1cff8d6fe41d4ca03572c"
+    },
+    {
+      "path": "composer_native/receiver_darwin_test.go",
+      "sha256": "a7af93c8355e00e4e008e625e19b1c988e2253cde8f147c9ae88289b76e8a26e"
+    },
+    {
+      "path": "composer_native/semantic.go",
+      "sha256": "5655d9d7a2cbbe0b08d8886eb576f17ca5b1b59c25e688b84795a87ae36bb974"
+    },
+    {
+      "path": "qa/native-editor-themed-next3/.gitignore",
+      "sha256": "020c2606e8ed484089c2083e0be438b9d0736bee1558a6b76af0d58bd23f69cf"
+    },
+    {
+      "path": "qa/native-editor-themed-next3/Probe.swift",
+      "sha256": "a5733a52355acca796ed76222f99013ebdec501d78e7bd71e08f4f3b4ef8b6d6"
+    },
+    {
+      "path": "qa/native-editor-themed-next3/build-and-run.sh",
+      "sha256": "31ed8a0af6ce83a3e64a1225fbb15547803b76eaa8491ab9df04ffb7070dd7ef"
+    },
+    {
+      "path": "qa/native-editor-themed-next3/candidates.go",
+      "sha256": "d0484e643cc108fce41b91b8b0762173f2d4dc7ae6973125b61e140832383fff"
+    },
+    {
+      "path": "qa/native-editor-themed-next3/integration.go",
+      "sha256": "5a317d19489742e82217255daa61aedd34c6aa89292ba0132c3c60e4462df593"
+    },
+    {
+      "path": "qa/native-editor-themed-next3/main.go",
+      "sha256": "d7559d64637b61b69c10bf202e863596949e4e589139d2e7a528b06457cd0fa0"
+    },
+    {
+      "path": "qa/native-editor-themed-next3/probe.go",
+      "sha256": "b7474a47d4fc2130488e38f83aa138ef0882d05f12923393b19a279f7af9f337"
+    },
+    {
+      "path": "qa/native-editor-themed-next3/theme_binding.go",
+      "sha256": "f423fbb36021fa1aa38a08955993a88c5b628f36e5acd5eceeaad6ce8db2b9bf"
+    },
+    {
+      "path": "qa/native-editor-themed-next3/theme_binding_test.go",
+      "sha256": "8de076fb42bc544f19ccf46337f3c9e05b520afe2c2acef3342a06cc65a5aa91"
+    },
+    {
+      "path": "qa/native-editor-themed-next3/write-report.mjs",
+      "sha256": "76de012b7ab625817146ec86f6428abe5a364f51c414dc90e046f8d2aa3bb6e4"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "Contents/Frameworks/libNativeComposer.dylib",
+      "sha256": "9a3e3052461a628f3b782f1656800c8b7d32579986fe9f6bacdb6788842208d9",
+      "bytes": 422096
+    },
+    {
+      "path": "Contents/Info.plist",
+      "sha256": "fb516e111e545358cb9dc1b69b1070d003a93abd445c7449dd766421468fc49b",
+      "bytes": 572
+    },
+    {
+      "path": "Contents/MacOS/native-composer-theme-proof3",
+      "sha256": "adc7da885d7352d8efdbef87a73290acb07a874756e460b1750f943d0bb6ad22",
+      "bytes": 15493632
+    },
+    {
+      "path": "Contents/Resources/composer-wire-fixture.mjs",
+      "sha256": "d67b9d84be55df723ba018e8fd903d2d8c5922ea96a69ea7dc9349737527ddb9",
+      "bytes": 1431510
+    },
+    {
+      "path": "Contents/Resources/runtime/node",
+      "sha256": "1781eb7d1b56241a6ac5176120a8fc75df51fadc0d0714f02cfeef56ce96f508",
+      "bytes": 120582384
+    },
+    {
+      "path": "Contents/_CodeSignature/CodeResources",
+      "sha256": "5134d33b53a8a87a3ea2aeb9b8f21855e310eda59972de4565ce0458a7a4c83d",
+      "bytes": 2940
+    }
+  ]
+}

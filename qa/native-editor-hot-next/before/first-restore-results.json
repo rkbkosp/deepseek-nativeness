@@ -1,0 +1,303 @@
+{
+  "checks" : {
+    "ack-is-small-typed-body-free-and-requires-validation" : true,
+    "all-source-target-size-account-number-rejections-precede-mutation" : true,
+    "close-retires-hot-documents-undo-binding-and-generation" : true,
+    "closed-owner-rejects-activation" : true,
+    "invalid-internal-ack-metadata-rejected-before-native-switch" : true,
+    "invalid-source-hot-body-retained-without-seed-validation-or-overwrite" : true,
+    "legacy-explicit-scope-behavior-remains-unchanged" : true,
+    "old-command-replay-cannot-activate-or-clear-current-hot-text" : true,
+    "oversize-callback-is-bounded-invalid-with-current-revision" : true,
+    "oversize-hot-restores-exact-body-selection-undo-and-commits" : false,
+    "oversize-snapshot-result-preserves-higher-binding-barrier" : true,
+    "receiver-barrier-above-native-revision-rejects-before-binding-or-body-mutation" : true,
+    "repeated-A-B-uses-constant-namespace-counter-not-epoch-history" : true,
+    "same-document-activation-is-nondestructive-and-has-new-native-epoch" : true,
+    "valid-edit-after-hot-activation-produces-new-body-revision" : true
+  },
+  "corpus" : {
+    "firstRestoreDiagnostics" : {
+      "ackDigest" : "d398fc8bf8152da066f13392e373c1c8ea3b3df4758ad7b74803df8318d9f583",
+      "aDigest" : "d398fc8bf8152da066f13392e373c1c8ea3b3df4758ad7b74803df8318d9f583",
+      "firstDigest" : "abd96155fdcc2143911e294d765a9cc9811648c75e8320a3b7c165ea50c68e26",
+      "firstRawHash" : "93eafec8ddd8c12628e6da17fec86f9ae8cc9b4cfa2a6e173af50048873abd52",
+      "firstRawUTF16" : 400000,
+      "laterDigest" : "d398fc8bf8152da066f13392e373c1c8ea3b3df4758ad7b74803df8318d9f583",
+      "normalized" : {
+        "digest" : "abd96155fdcc2143911e294d765a9cc9811648c75e8320a3b7c165ea50c68e26",
+        "partitions" : [
+          {
+            "hash" : "762c8241a535fa120e7822b2bbf30714a8d94676fedf2b136cb8acdddbe44b06",
+            "kind" : "text",
+            "utf16" : 65536
+          },
+          {
+            "hash" : "3c66a538664b1a966cdf3de1d71bb2343e9e1f3694e256a5325f825287bb9fc4",
+            "kind" : "text",
+            "utf16" : 131072
+          },
+          {
+            "hash" : "a6d3da47ac4f8aac791ab74513ffea7b4c51c2639bbdd6a28976a40c9febd0ca",
+            "kind" : "text",
+            "utf16" : 196608
+          },
+          {
+            "hash" : "7028aad83ac22210479300fa8d9b03b86618d800c52cd5528b1b11706fc2c6f7",
+            "kind" : "text",
+            "utf16" : 262144
+          },
+          {
+            "hash" : "f20fbbd090111353c0c73c6f4e93c65a7bcdc9e050643ceebc5ae39566e0203b",
+            "kind" : "text",
+            "utf16" : 327680
+          },
+          {
+            "hash" : "2e28fcd7f32c4d67080f54d0f3932cc1400b7c2d33b086742629a5ceb2984dc4",
+            "kind" : "text",
+            "utf16" : 393216
+          },
+          {
+            "hash" : "93eafec8ddd8c12628e6da17fec86f9ae8cc9b4cfa2a6e173af50048873abd52",
+            "kind" : "text",
+            "utf16" : 400000
+          }
+        ]
+      },
+      "savedActualDigest" : "d398fc8bf8152da066f13392e373c1c8ea3b3df4758ad7b74803df8318d9f583",
+      "savedMetadataDigest" : "d398fc8bf8152da066f13392e373c1c8ea3b3df4758ad7b74803df8318d9f583",
+      "savedSemanticRevision" : 3
+    },
+    "highBarrier" : {
+      "after" : {
+        "accountScope" : "account",
+        "canonicalText" : "A",
+        "detectText" : "A",
+        "docKey" : "barrier-A",
+        "epoch" : "cold-barrier-A",
+        "focused" : false,
+        "id" : 8003,
+        "kind" : "snapshot",
+        "liveOwners" : 3,
+        "liveSurfaces" : 3,
+        "liveTextViews" : 3,
+        "liveUndoManagers" : 9,
+        "marked" : false,
+        "retainedDocuments" : 2,
+        "revision" : 2,
+        "runs" : [
+          {
+            "kind" : "text",
+            "text" : "A"
+          }
+        ],
+        "selectedCommand" : "",
+        "selectionEnd" : 1,
+        "selectionStart" : 1,
+        "semanticDigest" : "59d950c80f94e4575aa25e007e383aed9cd659adb8ec485cf75001e9e077d558",
+        "semanticRevision" : 1,
+        "surfaceCount" : 3
+      },
+      "before" : {
+        "accountScope" : "account",
+        "canonicalText" : "A",
+        "detectText" : "A",
+        "docKey" : "barrier-A",
+        "epoch" : "cold-barrier-A",
+        "focused" : false,
+        "id" : 8003,
+        "kind" : "snapshot",
+        "liveOwners" : 3,
+        "liveSurfaces" : 3,
+        "liveTextViews" : 3,
+        "liveUndoManagers" : 9,
+        "marked" : false,
+        "retainedDocuments" : 2,
+        "revision" : 2,
+        "runs" : [
+          {
+            "kind" : "text",
+            "text" : "A"
+          }
+        ],
+        "selectedCommand" : "",
+        "selectionEnd" : 1,
+        "selectionStart" : 1,
+        "semanticDigest" : "59d950c80f94e4575aa25e007e383aed9cd659adb8ec485cf75001e9e077d558",
+        "semanticRevision" : 1,
+        "surfaceCount" : 3
+      },
+      "reply" : {
+        "error" : "STALE_ACTIVATION_REVISION"
+      },
+      "request" : {
+        "accountScope" : "account",
+        "activationNamespace" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "afterRevision" : 1002,
+        "docKey" : "barrier-A",
+        "epoch" : "cold-barrier-A",
+        "expectedActivationGeneration" : 0,
+        "id" : 8003,
+        "op" : "activateHot",
+        "targetAccountScope" : "account",
+        "targetDocKey" : "barrier-B"
+      }
+    },
+    "invalidAck" : {
+      "accountScope" : "account",
+      "activationGeneration" : 1,
+      "docKey" : "invalid-A",
+      "epoch" : "native-hot:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:1",
+      "id" : 8002,
+      "kind" : "hotActivated",
+      "requiresSnapshot" : true,
+      "revision" : 3,
+      "semanticDigest" : "25b133b64b1dd91f45849671eb8564a1c0717289bef70f7300450b084e04f7b5",
+      "semanticRevision" : 2
+    },
+    "invalidBody" : {
+      "accountScope" : "account",
+      "canonicalText" : "@bad",
+      "detectText" : "￼",
+      "docKey" : "invalid-A",
+      "epoch" : "native-hot:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:1",
+      "focused" : false,
+      "id" : 8002,
+      "kind" : "snapshot",
+      "liveOwners" : 2,
+      "liveSurfaces" : 2,
+      "liveTextViews" : 2,
+      "liveUndoManagers" : 6,
+      "marked" : false,
+      "retainedDocuments" : 2,
+      "revision" : 4,
+      "runs" : [
+        {
+          "clipboardText" : "@bad",
+          "id" : "bad",
+          "kind" : "reference",
+          "label" : "bad",
+          "ref" : "@bad",
+          "source" : "unknown-plugin"
+        }
+      ],
+      "selectedCommand" : "",
+      "selectionEnd" : 1,
+      "selectionStart" : 1,
+      "semanticDigest" : "25b133b64b1dd91f45849671eb8564a1c0717289bef70f7300450b084e04f7b5",
+      "semanticRevision" : 2,
+      "surfaceCount" : 2
+    },
+    "invalidRequest" : {
+      "accountScope" : "account",
+      "activationNamespace" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "afterRevision" : 2,
+      "docKey" : "invalid-B",
+      "epoch" : "cold-invalid-B",
+      "expectedActivationGeneration" : 0,
+      "id" : 8002,
+      "op" : "activateHot",
+      "targetAccountScope" : "account",
+      "targetDocKey" : "invalid-A"
+    },
+    "oldB" : {
+      "accountScope" : "account",
+      "canonicalText" : "small B",
+      "detectText" : "small B",
+      "docKey" : "B",
+      "epoch" : "cold-B",
+      "focused" : false,
+      "id" : 8001,
+      "kind" : "snapshot",
+      "liveOwners" : 1,
+      "liveSurfaces" : 1,
+      "liveTextViews" : 1,
+      "liveUndoManagers" : 3,
+      "marked" : false,
+      "retainedDocuments" : 2,
+      "revision" : 5,
+      "runs" : [
+        {
+          "kind" : "text",
+          "text" : "small B"
+        }
+      ],
+      "selectedCommand" : "",
+      "selectionEnd" : 7,
+      "selectionStart" : 7,
+      "semanticDigest" : "0dde565882a76dc8d71ca4a4b9d8635b8fcceca71fe4be1e59d3ea2a7010e878",
+      "semanticRevision" : 1,
+      "surfaceCount" : 1
+    },
+    "oversizeAck" : {
+      "accountScope" : "account",
+      "activationGeneration" : 1,
+      "docKey" : "A",
+      "epoch" : "native-hot:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:1",
+      "id" : 8001,
+      "kind" : "hotActivated",
+      "requiresSnapshot" : true,
+      "revision" : 6,
+      "semanticDigest" : "d398fc8bf8152da066f13392e373c1c8ea3b3df4758ad7b74803df8318d9f583",
+      "semanticRevision" : 3
+    },
+    "oversizeFence" : {
+      "accountScope" : "account",
+      "docKey" : "A",
+      "epoch" : "native-hot:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:1",
+      "error" : "NATIVE_FRAME_TOO_LARGE",
+      "id" : 8001,
+      "invalid" : true,
+      "kind" : "invalid",
+      "revision" : 7,
+      "semanticDigest" : "d398fc8bf8152da066f13392e373c1c8ea3b3df4758ad7b74803df8318d9f583",
+      "semanticRevision" : 3
+    },
+    "oversizeRequest" : {
+      "accountScope" : "account",
+      "activationNamespace" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "afterRevision" : 5,
+      "docKey" : "B",
+      "epoch" : "cold-B",
+      "expectedActivationGeneration" : 0,
+      "id" : 8001,
+      "op" : "activateHot",
+      "targetAccountScope" : "account",
+      "targetDocKey" : "A"
+    },
+    "validRecovery" : {
+      "accountScope" : "account",
+      "canonicalText" : "valid repaired A",
+      "detectText" : "valid repaired A",
+      "docKey" : "A",
+      "epoch" : "native-hot:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:1",
+      "focused" : false,
+      "id" : 8001,
+      "kind" : "snapshot",
+      "liveOwners" : 1,
+      "liveSurfaces" : 1,
+      "liveTextViews" : 1,
+      "liveUndoManagers" : 3,
+      "marked" : false,
+      "retainedDocuments" : 2,
+      "revision" : 10,
+      "runs" : [
+        {
+          "kind" : "text",
+          "text" : "valid repaired A"
+        }
+      ],
+      "selectedCommand" : "",
+      "selectionEnd" : 16,
+      "selectionStart" : 16,
+      "semanticDigest" : "88e4a73766327d2b92fa1da062d35c6131d1c6cc74dd94e4723cd4c3250bc50d",
+      "semanticRevision" : 4,
+      "surfaceCount" : 1
+    }
+  },
+  "HostOrNetwork" : false,
+  "kind" : "local-AppKit-hot-activation-program",
+  "minimumMacOS" : "15.8",
+  "passed" : 14,
+  "total" : 15
+}

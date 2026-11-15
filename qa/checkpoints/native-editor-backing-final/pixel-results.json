@@ -1,0 +1,430 @@
+{
+  "checks" : {
+    "control-appearance-without-backing-reproduces-white" : true,
+    "host-dark-forced-dark-composited-alpha" : true,
+    "host-dark-forced-dark-opaque" : true,
+    "host-dark-forced-light-composited-alpha" : true,
+    "host-dark-forced-light-opaque" : true,
+    "host-dark-initial-dark-same-instance-toggle-0" : true,
+    "host-dark-initial-dark-same-instance-toggle-1" : true,
+    "host-dark-initial-dark-same-instance-toggle-2" : true,
+    "host-dark-initial-dark-same-instance-toggle-3" : true,
+    "host-dark-initial-light-same-instance-toggle-0" : true,
+    "host-dark-initial-light-same-instance-toggle-1" : true,
+    "host-dark-initial-light-same-instance-toggle-2" : true,
+    "host-dark-initial-light-same-instance-toggle-3" : true,
+    "host-false-initial-false-unresolved-alpha-rejected" : true,
+    "host-false-initial-true-unresolved-alpha-rejected" : true,
+    "host-light-forced-dark-composited-alpha" : true,
+    "host-light-forced-dark-opaque" : true,
+    "host-light-forced-light-composited-alpha" : true,
+    "host-light-forced-light-opaque" : true,
+    "host-light-initial-dark-same-instance-toggle-0" : true,
+    "host-light-initial-dark-same-instance-toggle-1" : true,
+    "host-light-initial-dark-same-instance-toggle-2" : true,
+    "host-light-initial-dark-same-instance-toggle-3" : true,
+    "host-light-initial-light-same-instance-toggle-0" : true,
+    "host-light-initial-light-same-instance-toggle-1" : true,
+    "host-light-initial-light-same-instance-toggle-2" : true,
+    "host-light-initial-light-same-instance-toggle-3" : true,
+    "host-true-initial-false-unresolved-alpha-rejected" : true,
+    "host-true-initial-true-unresolved-alpha-rejected" : true
+  },
+  "passed" : true,
+  "samples" : [
+    {
+      "case" : "host-light-forced-light-opaque",
+      "clipDrawsBackground" : true,
+      "expected" : [
+        255,
+        255,
+        255,
+        255
+      ],
+      "nativeAppearance" : "NSAppearanceNameAqua",
+      "pixel" : [
+        255,
+        255,
+        255,
+        255
+      ],
+      "textDrawsBackground" : true
+    },
+    {
+      "case" : "host-light-forced-light-composited-alpha",
+      "clipDrawsBackground" : true,
+      "expected" : [
+        235,
+        235,
+        235,
+        255
+      ],
+      "nativeAppearance" : "NSAppearanceNameAqua",
+      "pixel" : [
+        235,
+        235,
+        235,
+        255
+      ],
+      "textDrawsBackground" : true
+    },
+    {
+      "case" : "host-light-initial-light-same-instance-toggle-0",
+      "expected" : [
+        255,
+        255,
+        255,
+        255
+      ],
+      "pixel" : [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "case" : "host-light-initial-light-same-instance-toggle-1",
+      "expected" : [
+        44,
+        44,
+        46,
+        255
+      ],
+      "pixel" : [
+        44,
+        44,
+        46,
+        255
+      ]
+    },
+    {
+      "case" : "host-light-initial-light-same-instance-toggle-2",
+      "expected" : [
+        255,
+        255,
+        255,
+        255
+      ],
+      "pixel" : [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "case" : "host-light-initial-light-same-instance-toggle-3",
+      "expected" : [
+        44,
+        44,
+        46,
+        255
+      ],
+      "pixel" : [
+        44,
+        44,
+        46,
+        255
+      ]
+    },
+    {
+      "case" : "host-light-forced-dark-opaque",
+      "clipDrawsBackground" : true,
+      "expected" : [
+        44,
+        44,
+        46,
+        255
+      ],
+      "nativeAppearance" : "NSAppearanceNameDarkAqua",
+      "pixel" : [
+        44,
+        44,
+        46,
+        255
+      ],
+      "textDrawsBackground" : true
+    },
+    {
+      "case" : "host-light-forced-dark-composited-alpha",
+      "clipDrawsBackground" : true,
+      "expected" : [
+        49,
+        49,
+        51,
+        255
+      ],
+      "nativeAppearance" : "NSAppearanceNameDarkAqua",
+      "pixel" : [
+        49,
+        49,
+        51,
+        255
+      ],
+      "textDrawsBackground" : true
+    },
+    {
+      "case" : "host-light-initial-dark-same-instance-toggle-0",
+      "expected" : [
+        255,
+        255,
+        255,
+        255
+      ],
+      "pixel" : [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "case" : "host-light-initial-dark-same-instance-toggle-1",
+      "expected" : [
+        44,
+        44,
+        46,
+        255
+      ],
+      "pixel" : [
+        44,
+        44,
+        46,
+        255
+      ]
+    },
+    {
+      "case" : "host-light-initial-dark-same-instance-toggle-2",
+      "expected" : [
+        255,
+        255,
+        255,
+        255
+      ],
+      "pixel" : [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "case" : "host-light-initial-dark-same-instance-toggle-3",
+      "expected" : [
+        44,
+        44,
+        46,
+        255
+      ],
+      "pixel" : [
+        44,
+        44,
+        46,
+        255
+      ]
+    },
+    {
+      "case" : "control-transparent-over-white",
+      "pixel" : [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "case" : "host-dark-forced-light-opaque",
+      "clipDrawsBackground" : true,
+      "expected" : [
+        255,
+        255,
+        255,
+        255
+      ],
+      "nativeAppearance" : "NSAppearanceNameAqua",
+      "pixel" : [
+        255,
+        255,
+        255,
+        255
+      ],
+      "textDrawsBackground" : true
+    },
+    {
+      "case" : "host-dark-forced-light-composited-alpha",
+      "clipDrawsBackground" : true,
+      "expected" : [
+        235,
+        235,
+        235,
+        255
+      ],
+      "nativeAppearance" : "NSAppearanceNameAqua",
+      "pixel" : [
+        235,
+        235,
+        235,
+        255
+      ],
+      "textDrawsBackground" : true
+    },
+    {
+      "case" : "host-dark-initial-light-same-instance-toggle-0",
+      "expected" : [
+        255,
+        255,
+        255,
+        255
+      ],
+      "pixel" : [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "case" : "host-dark-initial-light-same-instance-toggle-1",
+      "expected" : [
+        44,
+        44,
+        46,
+        255
+      ],
+      "pixel" : [
+        44,
+        44,
+        46,
+        255
+      ]
+    },
+    {
+      "case" : "host-dark-initial-light-same-instance-toggle-2",
+      "expected" : [
+        255,
+        255,
+        255,
+        255
+      ],
+      "pixel" : [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "case" : "host-dark-initial-light-same-instance-toggle-3",
+      "expected" : [
+        44,
+        44,
+        46,
+        255
+      ],
+      "pixel" : [
+        44,
+        44,
+        46,
+        255
+      ]
+    },
+    {
+      "case" : "host-dark-forced-dark-opaque",
+      "clipDrawsBackground" : true,
+      "expected" : [
+        44,
+        44,
+        46,
+        255
+      ],
+      "nativeAppearance" : "NSAppearanceNameDarkAqua",
+      "pixel" : [
+        44,
+        44,
+        46,
+        255
+      ],
+      "textDrawsBackground" : true
+    },
+    {
+      "case" : "host-dark-forced-dark-composited-alpha",
+      "clipDrawsBackground" : true,
+      "expected" : [
+        49,
+        49,
+        51,
+        255
+      ],
+      "nativeAppearance" : "NSAppearanceNameDarkAqua",
+      "pixel" : [
+        49,
+        49,
+        51,
+        255
+      ],
+      "textDrawsBackground" : true
+    },
+    {
+      "case" : "host-dark-initial-dark-same-instance-toggle-0",
+      "expected" : [
+        255,
+        255,
+        255,
+        255
+      ],
+      "pixel" : [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "case" : "host-dark-initial-dark-same-instance-toggle-1",
+      "expected" : [
+        44,
+        44,
+        46,
+        255
+      ],
+      "pixel" : [
+        44,
+        44,
+        46,
+        255
+      ]
+    },
+    {
+      "case" : "host-dark-initial-dark-same-instance-toggle-2",
+      "expected" : [
+        255,
+        255,
+        255,
+        255
+      ],
+      "pixel" : [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "case" : "host-dark-initial-dark-same-instance-toggle-3",
+      "expected" : [
+        44,
+        44,
+        46,
+        255
+      ],
+      "pixel" : [
+        44,
+        44,
+        46,
+        255
+      ]
+    }
+  ],
+  "scope" : "actual AppKit NSView subtree pixels in explicit light\/dark NSWindow hosts; windows never ordered onscreen; no OS\/NSApp theme changes; MyGo compositor\/CUA acceptance remains pending"
+}

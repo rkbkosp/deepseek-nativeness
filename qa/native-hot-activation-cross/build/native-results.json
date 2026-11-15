@@ -1,0 +1,81 @@
+{
+  "barrierCase" : {
+    "ack" : {
+      "error" : "STALE_ACTIVATION_REVISION"
+    },
+    "after" : {
+      "account" : "account",
+      "digest" : "316d8363ab86ec78b984daf3cc13471b5576cf936dfa1d389d5336f5b72b505a",
+      "doc" : "A",
+      "epoch" : "native-hot:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:1",
+      "generation" : "1",
+      "nativeBody" : "seed-A native-new",
+      "revision" : "5",
+      "saved" : "1",
+      "selection" : "{17, 0}",
+      "semanticRevision" : "4",
+      "undo" : "true"
+    },
+    "before" : {
+      "account" : "account",
+      "digest" : "316d8363ab86ec78b984daf3cc13471b5576cf936dfa1d389d5336f5b72b505a",
+      "doc" : "A",
+      "epoch" : "native-hot:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:1",
+      "generation" : "1",
+      "nativeBody" : "seed-A native-new",
+      "revision" : "5",
+      "saved" : "1",
+      "selection" : "{17, 0}",
+      "semanticRevision" : "4",
+      "undo" : "true"
+    },
+    "request" : {
+      "accountScope" : "account",
+      "activationNamespace" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "afterRevision" : 105,
+      "docKey" : "A",
+      "epoch" : "native-hot:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:1",
+      "expectedActivationGeneration" : 1,
+      "id" : 7301,
+      "op" : "activateHot",
+      "targetAccountScope" : "account",
+      "targetDocKey" : "B"
+    }
+  },
+  "checks" : {
+    "ack-body-free-bounded-and-fenced" : true,
+    "close-clears-native-bindings-and-nonce" : true,
+    "first-large-restored-read-not-overlapping-or-duplicated" : true,
+    "hot-restores-newest-native-not-stale-seed" : true,
+    "hot-retains-real-undo-redo-document-actions" : true,
+    "invalid-body-A-B-A-keeps-native-content" : true,
+    "oversize-body-A-B-A-keeps-native-content" : true,
+    "oversize-native-produces-bounded-invalid-header" : true,
+    "reject-before-mutation-account" : true,
+    "reject-before-mutation-boolean-generation" : true,
+    "reject-before-mutation-fractional-fence" : true,
+    "reject-before-mutation-fractional-generation" : true,
+    "reject-before-mutation-fractional-id" : true,
+    "reject-before-mutation-high-invalid-fence" : true,
+    "reject-before-mutation-nonce" : true,
+    "reject-before-mutation-old-epoch" : true,
+    "reject-before-mutation-old-generation" : true,
+    "repeated-A-B-constant-document-count-one-surface" : true,
+    "valid-native-edit-recovers-after-hot-oversize" : true
+  },
+  "firstReadDiagnostics" : {
+    "ackDigest" : "b0ee9a918f7e9dda4761856ffaf4d91175c0bcfc9daed9b86d50b980fe51e109",
+    "expectedDigest" : "b0ee9a918f7e9dda4761856ffaf4d91175c0bcfc9daed9b86d50b980fe51e109",
+    "firstDigest" : "b0ee9a918f7e9dda4761856ffaf4d91175c0bcfc9daed9b86d50b980fe51e109",
+    "firstPartitions" : [
+      600000
+    ],
+    "rawUTF16" : 600000,
+    "secondDigest" : "b0ee9a918f7e9dda4761856ffaf4d91175c0bcfc9daed9b86d50b980fe51e109",
+    "secondPartitions" : [
+      600000
+    ]
+  },
+  "gui" : false,
+  "host" : false
+}

@@ -1,0 +1,165 @@
+{
+  "createdAt": "2026-11-15T01:20:41.578Z",
+  "accepted": false,
+  "app": "/Volumes/SuperDisk/native-dsh/desktop/qa/native-editor-themed-next2/build/Native Composer Theme Proof 2.app",
+  "manifestSha256": "7b27f736a6468d9d582706766f255b7413d2b77f56e3256bce2248816a31e70f",
+  "checkpoint": "qa/checkpoints/native-editor-theme-transaction-final",
+  "preserved": [
+    {
+      "manifest": "qa/native-editor-next/build/manifest.json",
+      "sha256": "dd9dcef8924dad1ea5846d4e71832b588a8c25b4cd876e60640a961884468e9e",
+      "artifactHashesVerified": 6
+    },
+    {
+      "manifest": "qa/native-editor-themed-next/build/manifest.json",
+      "sha256": "574651f13a2ac44449c92d763571c42d56dc0d61978564f9a42ea7824cf4d09e",
+      "artifactHashesVerified": 6
+    }
+  ],
+  "rootFailure": "574651 old theme proof passed startup dark but one click cached new dark=false with old palette surface, leaving a deep pane/light foreground mismatch; old failure remains unresolved until root observes this new proof.",
+  "rootCause": "The old view captured theme before Button.Clicked mutated dark in the same build. It then built the native style from NEW dark but OLD theme.Surface, and confirmed a cache keyed only by boolean light/dark. Following frames painted/AX-reported the new palette but did not reissue the cached native style.",
+  "minimalFix": [
+    "Only the new QA host changes; composer_native/MyGo/backend/normal app unchanged in this slice.",
+    "Palette/host intents enqueue through Window.Update; each view frame captures one immutable palette/style scalar snapshot for painting/native command/debug.",
+    "Native binding compares all captured style fields (including background, foreground, font, appearance); commits the signature only after successful apply.",
+    "The original local-fixture Source=reference/replaceSpan CAS/accepted semantic commit remain; this is not a production adapter."
+  ],
+  "verification": {
+    "mygoTester": "2 tests: actual button Click→one queued transaction→first new frame sends exactly1 native style, six toggles; host-only sends0; full signature detects same-dark surface/font changes; failed sink retries without confirming cache.",
+    "naturalRuntime": {
+      "passed": true,
+      "steps": 7,
+      "scope": "actual natural MyGo Window.Update/Content rebuild -> FFI -> mounted public NativeView property reads; no CapturePage or bitmap draw; not physical click/external-screen CUA acceptance",
+      "singleIntentStyleDeltas": [
+        {
+          "step": "startup",
+          "delta": 1
+        },
+        {
+          "step": "single-click-light",
+          "delta": 1
+        },
+        {
+          "step": "single-click-dark",
+          "delta": 1
+        },
+        {
+          "step": "host-opposite-light",
+          "delta": 0
+        },
+        {
+          "step": "single-click-light-on-dark-host",
+          "delta": 1
+        },
+        {
+          "step": "single-click-dark-on-light-host",
+          "delta": 1
+        },
+        {
+          "step": "host-follow-again",
+          "delta": 0
+        }
+      ],
+      "file": "qa/checkpoints/native-editor-theme-transaction-final/natural-runtime.json"
+    },
+    "diagnosticRuntime": {
+      "passed": true,
+      "steps": 7,
+      "scope": "diagnostic public CapturePage frame driver -> FFI mounted NativeView properties and native-subtree RGBA; not external-screen CUA acceptance",
+      "nativeSubtreePixels": [
+        {
+          "step": "startup",
+          "pixel": [
+            39,
+            39,
+            42,
+            255
+          ]
+        },
+        {
+          "step": "single-click-light",
+          "pixel": [
+            244,
+            244,
+            245,
+            255
+          ]
+        },
+        {
+          "step": "single-click-dark",
+          "pixel": [
+            39,
+            39,
+            42,
+            255
+          ]
+        },
+        {
+          "step": "host-opposite-light",
+          "pixel": [
+            39,
+            39,
+            42,
+            255
+          ]
+        },
+        {
+          "step": "single-click-light-on-dark-host",
+          "pixel": [
+            244,
+            244,
+            245,
+            255
+          ]
+        },
+        {
+          "step": "single-click-dark-on-light-host",
+          "pixel": [
+            39,
+            39,
+            42,
+            255
+          ]
+        },
+        {
+          "step": "host-follow-again",
+          "pixel": [
+            39,
+            39,
+            42,
+            255
+          ]
+        }
+      ],
+      "file": "qa/checkpoints/native-editor-theme-transaction-final/diagnostic-runtime.json"
+    },
+    "defaultRuntime": {
+      "selftests": false,
+      "frameDriver": false,
+      "hostCommandCounts": {
+        "scope": 1,
+        "style": 1
+      },
+      "file": "qa/checkpoints/native-editor-theme-transaction-final/defaults-runtime.json"
+    },
+    "processExit": "Author checked pgrep for own app/helper bundle path after both explicit selftests; none remained. Default smoke exited after2s.",
+    "oldObservation": "The first combined bitmap-polling natural run stalled Content after startup; preserved no-display-frame-observation.json. We did not infer a framework defect. Final natural run uses property reads only and passes without CapturePage/bitmap; separate explicit diagnostic mode passes pixels.",
+    "codesign": "strict deep verify passed",
+    "pixel29AndSemantic48": "Component source unchanged from574651; source-identified subtree/semantic author evidence retained. These do not replace actual new external GUI."
+  },
+  "defaultBehavior": "10min lifetime, both selftest flags false, no automatic theme transitions or draft cleanup. The diagnostic CapturePage/native-subtree driver is reachable only with explicit --integration-selftest --integration-frame-driver.",
+  "rootGuiChecklist": [
+    "Launch Native Composer Theme Proof 2.app, not 574651 or dd9d.",
+    "Single click 深色/浅色 and observe actual input background/text/caret after at least2 full light↔dark round trips; no doubleclick needed.",
+    "宿主跟随/反向 changes host chrome while logical Go/native palette remains target; verify deep NativeView on light host and light on dark host.",
+    "@Fi/native filter, Down/Escape, pointer candidate selection and generic popup preserve text/chip.",
+    "Use no real Host/tasks: this app contains only the frozen mock-Host helper/runtime."
+  ],
+  "productionApplicationGoModified": false,
+  "composerNativeModifiedByThisFix": false,
+  "frameworkModified": false,
+  "backendModified": false,
+  "realHostWrites": false,
+  "actualNewGUIAccepted": false,
+  "M1Qualified": false
+}

@@ -1,0 +1,99 @@
+{
+  "createdAt": "2026-11-14T16:43:09.482Z",
+  "app": "/Volumes/SuperDisk/native-dsh/desktop/qa/native-editor-next/build/Native Composer Next.app",
+  "defaultLifetimeSeconds": 120,
+  "minimumMacOS": "15.8",
+  "architecture": "arm64",
+  "cgo": 0,
+  "kind": "independent-component-author-tests; normal GUI8 unchanged",
+  "source": [
+    {
+      "path": "composer_native/ComposerEditor.swift",
+      "sha256": "ba1b0bb8d6016d5e502a8c1ed9a84e2654874d4c78573744a59f898c10cf6b31"
+    },
+    {
+      "path": "composer_native/ReferenceGlyphs.swift",
+      "sha256": "027819f71ad9cc2fba67c335f4c5261ff2d010e549695ff7327b6c9322824388"
+    },
+    {
+      "path": "composer_native/editor.go",
+      "sha256": "8feb9b3466285ee41c50f96e9ec99b6a9995d222a203e238cd4d1ace6823f750"
+    },
+    {
+      "path": "composer_native/editor_darwin.go",
+      "sha256": "7cb5e55cf835faf849ccf5ccc206daf389323ed7e22dcbb602b27111576fd5d9"
+    },
+    {
+      "path": "composer_native/editor_other.go",
+      "sha256": "64cc28da3dc1a149f927325ca877170e712651a0dbb69b01f0da5adb779989fd"
+    },
+    {
+      "path": "composer_native/editor_test.go",
+      "sha256": "699757670b2cd1a9dd7b7e1ad37daceff49ce71b9d07b2c705e86b221a47b266"
+    },
+    {
+      "path": "composer_native/receiver_darwin_test.go",
+      "sha256": "a13c0e70b106ebdb42ae880c96af7a85aff7ce7ec0d7d010e944980cc1fa805b"
+    },
+    {
+      "path": "composer_native/.gitignore",
+      "sha256": "c8c8f6a3398afb1b5060f94675305af0e29e35ef0cb14a99f733c35e608cd747"
+    },
+    {
+      "path": "qa/native-editor-next/main.go",
+      "sha256": "862c89b080c29d82bff88428107515118d781aa2caec4ea74d1c939d0855de12"
+    },
+    {
+      "path": "qa/native-editor-next/build-and-run.sh",
+      "sha256": "0e60c3d744435be3416b5a4f292866082b762e45879a72dbb5dc781c2f80f20d"
+    },
+    {
+      "path": "qa/native-editor-next/bundle-fixture.mjs",
+      "sha256": "ec970b537ab3b6ea711bc2d2c22e2c69f2a357255a74cc967bbf3ccc2b6c7fe9"
+    },
+    {
+      "path": "qa/native-editor-next/.gitignore",
+      "sha256": "020c2606e8ed484089c2083e0be438b9d0736bee1558a6b76af0d58bd23f69cf"
+    },
+    {
+      "path": "qa/nstext-proof/EditorChecks.swift",
+      "sha256": "744770dfaa41642d9b357b09de9818e2774e8a14af9e7fe3854c84b0779c9d33"
+    },
+    {
+      "path": "qa/nstext-proof/reference-glyph-source.json",
+      "sha256": "99a93e548931ca46d6cfea6ddb0a16fa2c5dfa6f988f3e65ab2fe15eba4e4fba"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "Contents/Frameworks/libNativeComposer.dylib",
+      "sha256": "4fb29912c17b2126dace683dae08f2c3fd95d9d9c91fb12d4f6dda3a859ba0b9",
+      "bytes": 364160
+    },
+    {
+      "path": "Contents/Info.plist",
+      "sha256": "9cb169a6e64fde7131905244f17955c2bde1c0bc1ba2786b2d3179c43c551575",
+      "bytes": 547
+    },
+    {
+      "path": "Contents/MacOS/native-composer-next",
+      "sha256": "4388a8b9e8de3aae511d7fcf93e585599f09d45a0bea1af42ab6ff5b2a9759ab",
+      "bytes": 15405456
+    },
+    {
+      "path": "Contents/Resources/composer-wire-fixture.mjs",
+      "sha256": "d67b9d84be55df723ba018e8fd903d2d8c5922ea96a69ea7dc9349737527ddb9",
+      "bytes": 1431510
+    },
+    {
+      "path": "Contents/Resources/runtime/node",
+      "sha256": "1781eb7d1b56241a6ac5176120a8fc75df51fadc0d0714f02cfeef56ce96f508",
+      "bytes": 120582384
+    },
+    {
+      "path": "Contents/_CodeSignature/CodeResources",
+      "sha256": "7f8e808ca324d0198dc8cda77c2a1f53153a934f5957765ab1b6fcca41533806",
+      "bytes": 2940
+    }
+  ]
+}

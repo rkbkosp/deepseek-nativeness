@@ -1,0 +1,506 @@
+{
+  "createdAt": "2026-11-15T00:19:17.015Z",
+  "accepted": false,
+  "app": "/Volumes/SuperDisk/native-dsh/desktop/qa/native-editor-themed-next/build/Native Composer Theme Proof.app",
+  "manifestSha256": "574651f13a2ac44449c92d763571c42d56dc0d61978564f9a42ea7824cf4d09e",
+  "checkpoint": "qa/checkpoints/native-editor-backing-final",
+  "sourceHashes": 31,
+  "newAppArtifacts": 6,
+  "defaultLifetimeSeconds": 600,
+  "neverLaunchedYet": true,
+  "preserved": {
+    "dd9dManifestSha256": "dd9dcef8924dad1ea5846d4e71832b588a8c25b4cd876e60640a961884468e9e",
+    "dd9dArtifactHashesVerified": 6,
+    "f8ManifestSha256": "f8e450e8fb1e1e70aa6156321572d1d06b4d0f096df7324fccda3599539b5192",
+    "f8SnapshotSourceHashesVerified": 20
+  },
+  "rootObservedBefore": {
+    "candidateVisibility": "Root actual dd9d passed visible3/click-by-screen-coordinate/continued-Fi-filter/nativefocus/Down/Escape; these observations are for dd9d only.",
+    "blur": "Root dd9d actual generic Popup input and Escape preserved chip.",
+    "appearance": "Root system light forced dark still showed white foreign-view rectangle; unresolved until new actual GUI.",
+    "privateEvidence": [
+      "/tmp/native-dsh-parity/121-next-candidates-theme.png",
+      "/tmp/native-dsh-parity/122-next-arrow-highlight.png",
+      "/tmp/native-dsh-parity/123-next-pointer-chip.png",
+      "/tmp/native-dsh-parity/124-next-blur-preserved.png",
+      "/tmp/native-dsh-parity/125-next-light.png",
+      "/tmp/native-dsh-parity/126-next-forced-dark-white-surface.png"
+    ]
+  },
+  "cause": {
+    "source": "MyGo NativeView creates a transparent compositor hole and retains a foreign scroll view; foreign EmbedView does not fill a theme background. Old component scroll/text drawsBackground=false and only NSAppearance/text colors changed, exposing a system-colored underlying backing.",
+    "separateShellIssue": "Production mygo.Theme.SetSource sync is owned by native_client. This proof uses only that same public API on startup/user intent; OS theme is untouched."
+  },
+  "fix": {
+    "instance": "Captured opaque sRGB background explicitly fills app-owned scroll/clip/text; all receive per-instance NSAppearance; selection/placeholder/foreground remain captured. No private MyGo or OS/global private AppKit property.",
+    "alpha": "OpaqueBackingToken performs one straight-alpha sRGB source-over against the actual resolved opaque Go host, tested against ui.Color.Over; unresolved translucent host rejected. Native style accepts only #rrggbb backing, rejects raw alpha tokens before mutation.",
+    "host": "New independent fixture host adds Source=reference and replaceSpan semantic CAS, reliable invalid notification gate, explicit accepted semantic commit; no startup selftests/automatic draft cleanup. Fixture sender remains local QA only, not production integration.",
+    "crossAppearance": "Proof button 宿主跟随/反向 changes only this proof app public Theme.Source while keeping Go logical palette/native target; proves owned background independent of unrelated light/dark shell."
+  },
+  "authorVerification": {
+    "pixelChecks": 29,
+    "pixelsPassed": true,
+    "semanticAppKitChecks": 48,
+    "semanticPassed": true,
+    "goTopLevelPasses": 16,
+    "vet": "passed",
+    "codesign": "codesign --verify --deep --strict passed",
+    "floor": "dylib LC_BUILD_VERSION minos15.8; Info15.8; GoCGO0",
+    "pixelScope": "actual AppKit NSView subtree pixels in explicit light/dark NSWindow hosts; windows never ordered onscreen; no OS/NSApp theme changes; MyGo compositor/CUA acceptance remains pending",
+    "actualExternalMyGoGUI": "not yet observed; native subtree pixels are author evidence only",
+    "imagesViewed": [
+      "qa/native-editor-backing/build/pixels/host-light-forced-dark-opaque.png",
+      "qa/native-editor-backing/build/pixels/host-dark-forced-light-opaque.png"
+    ],
+    "calibration": "PNG produced from actual native subtree drawing into explicit sRGB CGContext. Tests read declared raw RGBA bytes; calibrated NSColor.colorAt gamma reinterpretation is retained as failed initial calibration observation, not hidden by tolerance."
+  },
+  "rootGuiChecklist": [
+    "Launch the new distinct Native Composer Theme Proof.app, not old dd9d.",
+    "System currently light: startup shell+Go palette/native should all be dark with visible light text and blue chip on dark surface.",
+    "Type @Fi, choose reference by screen coordinates, then toggle 深色/浅色 light→dark repeatedly: owned surface/color/selection preserved.",
+    "Toggle 宿主跟随/反向: with logical target dark, shell becomes light while NativeView must remain captured dark. Reverse target to light with dark shell too.",
+    "Open generic popup, type local popup, Escape; chip/draft preserved and keyboard focus can return.",
+    "No real Host, credentials, files, permissions or model tasks are connected; all helper calls local fixture."
+  ],
+  "productionApplicationGoModified": false,
+  "normalDefaultChanged": false,
+  "backendModified": false,
+  "realHostWrites": false,
+  "M1Qualified": false,
+  "pending": [
+    "Actual new MyGo compositor GUI acceptance by root",
+    "Physical IME",
+    "Production adapter/image PNG paste/drop/dynamic height and existing ledger integration",
+    "Real public NativeView multiwindow/early-close lifecycle and M1 total-process performance"
+  ],
+  "pixelResult": {
+    "checks": {
+      "control-appearance-without-backing-reproduces-white": true,
+      "host-dark-forced-dark-composited-alpha": true,
+      "host-dark-forced-dark-opaque": true,
+      "host-dark-forced-light-composited-alpha": true,
+      "host-dark-forced-light-opaque": true,
+      "host-dark-initial-dark-same-instance-toggle-0": true,
+      "host-dark-initial-dark-same-instance-toggle-1": true,
+      "host-dark-initial-dark-same-instance-toggle-2": true,
+      "host-dark-initial-dark-same-instance-toggle-3": true,
+      "host-dark-initial-light-same-instance-toggle-0": true,
+      "host-dark-initial-light-same-instance-toggle-1": true,
+      "host-dark-initial-light-same-instance-toggle-2": true,
+      "host-dark-initial-light-same-instance-toggle-3": true,
+      "host-false-initial-false-unresolved-alpha-rejected": true,
+      "host-false-initial-true-unresolved-alpha-rejected": true,
+      "host-light-forced-dark-composited-alpha": true,
+      "host-light-forced-dark-opaque": true,
+      "host-light-forced-light-composited-alpha": true,
+      "host-light-forced-light-opaque": true,
+      "host-light-initial-dark-same-instance-toggle-0": true,
+      "host-light-initial-dark-same-instance-toggle-1": true,
+      "host-light-initial-dark-same-instance-toggle-2": true,
+      "host-light-initial-dark-same-instance-toggle-3": true,
+      "host-light-initial-light-same-instance-toggle-0": true,
+      "host-light-initial-light-same-instance-toggle-1": true,
+      "host-light-initial-light-same-instance-toggle-2": true,
+      "host-light-initial-light-same-instance-toggle-3": true,
+      "host-true-initial-false-unresolved-alpha-rejected": true,
+      "host-true-initial-true-unresolved-alpha-rejected": true
+    },
+    "passed": true,
+    "samples": [
+      {
+        "case": "host-light-forced-light-opaque",
+        "clipDrawsBackground": true,
+        "expected": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "nativeAppearance": "NSAppearanceNameAqua",
+        "pixel": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "textDrawsBackground": true
+      },
+      {
+        "case": "host-light-forced-light-composited-alpha",
+        "clipDrawsBackground": true,
+        "expected": [
+          235,
+          235,
+          235,
+          255
+        ],
+        "nativeAppearance": "NSAppearanceNameAqua",
+        "pixel": [
+          235,
+          235,
+          235,
+          255
+        ],
+        "textDrawsBackground": true
+      },
+      {
+        "case": "host-light-initial-light-same-instance-toggle-0",
+        "expected": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "pixel": [
+          255,
+          255,
+          255,
+          255
+        ]
+      },
+      {
+        "case": "host-light-initial-light-same-instance-toggle-1",
+        "expected": [
+          44,
+          44,
+          46,
+          255
+        ],
+        "pixel": [
+          44,
+          44,
+          46,
+          255
+        ]
+      },
+      {
+        "case": "host-light-initial-light-same-instance-toggle-2",
+        "expected": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "pixel": [
+          255,
+          255,
+          255,
+          255
+        ]
+      },
+      {
+        "case": "host-light-initial-light-same-instance-toggle-3",
+        "expected": [
+          44,
+          44,
+          46,
+          255
+        ],
+        "pixel": [
+          44,
+          44,
+          46,
+          255
+        ]
+      },
+      {
+        "case": "host-light-forced-dark-opaque",
+        "clipDrawsBackground": true,
+        "expected": [
+          44,
+          44,
+          46,
+          255
+        ],
+        "nativeAppearance": "NSAppearanceNameDarkAqua",
+        "pixel": [
+          44,
+          44,
+          46,
+          255
+        ],
+        "textDrawsBackground": true
+      },
+      {
+        "case": "host-light-forced-dark-composited-alpha",
+        "clipDrawsBackground": true,
+        "expected": [
+          49,
+          49,
+          51,
+          255
+        ],
+        "nativeAppearance": "NSAppearanceNameDarkAqua",
+        "pixel": [
+          49,
+          49,
+          51,
+          255
+        ],
+        "textDrawsBackground": true
+      },
+      {
+        "case": "host-light-initial-dark-same-instance-toggle-0",
+        "expected": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "pixel": [
+          255,
+          255,
+          255,
+          255
+        ]
+      },
+      {
+        "case": "host-light-initial-dark-same-instance-toggle-1",
+        "expected": [
+          44,
+          44,
+          46,
+          255
+        ],
+        "pixel": [
+          44,
+          44,
+          46,
+          255
+        ]
+      },
+      {
+        "case": "host-light-initial-dark-same-instance-toggle-2",
+        "expected": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "pixel": [
+          255,
+          255,
+          255,
+          255
+        ]
+      },
+      {
+        "case": "host-light-initial-dark-same-instance-toggle-3",
+        "expected": [
+          44,
+          44,
+          46,
+          255
+        ],
+        "pixel": [
+          44,
+          44,
+          46,
+          255
+        ]
+      },
+      {
+        "case": "control-transparent-over-white",
+        "pixel": [
+          255,
+          255,
+          255,
+          255
+        ]
+      },
+      {
+        "case": "host-dark-forced-light-opaque",
+        "clipDrawsBackground": true,
+        "expected": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "nativeAppearance": "NSAppearanceNameAqua",
+        "pixel": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "textDrawsBackground": true
+      },
+      {
+        "case": "host-dark-forced-light-composited-alpha",
+        "clipDrawsBackground": true,
+        "expected": [
+          235,
+          235,
+          235,
+          255
+        ],
+        "nativeAppearance": "NSAppearanceNameAqua",
+        "pixel": [
+          235,
+          235,
+          235,
+          255
+        ],
+        "textDrawsBackground": true
+      },
+      {
+        "case": "host-dark-initial-light-same-instance-toggle-0",
+        "expected": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "pixel": [
+          255,
+          255,
+          255,
+          255
+        ]
+      },
+      {
+        "case": "host-dark-initial-light-same-instance-toggle-1",
+        "expected": [
+          44,
+          44,
+          46,
+          255
+        ],
+        "pixel": [
+          44,
+          44,
+          46,
+          255
+        ]
+      },
+      {
+        "case": "host-dark-initial-light-same-instance-toggle-2",
+        "expected": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "pixel": [
+          255,
+          255,
+          255,
+          255
+        ]
+      },
+      {
+        "case": "host-dark-initial-light-same-instance-toggle-3",
+        "expected": [
+          44,
+          44,
+          46,
+          255
+        ],
+        "pixel": [
+          44,
+          44,
+          46,
+          255
+        ]
+      },
+      {
+        "case": "host-dark-forced-dark-opaque",
+        "clipDrawsBackground": true,
+        "expected": [
+          44,
+          44,
+          46,
+          255
+        ],
+        "nativeAppearance": "NSAppearanceNameDarkAqua",
+        "pixel": [
+          44,
+          44,
+          46,
+          255
+        ],
+        "textDrawsBackground": true
+      },
+      {
+        "case": "host-dark-forced-dark-composited-alpha",
+        "clipDrawsBackground": true,
+        "expected": [
+          49,
+          49,
+          51,
+          255
+        ],
+        "nativeAppearance": "NSAppearanceNameDarkAqua",
+        "pixel": [
+          49,
+          49,
+          51,
+          255
+        ],
+        "textDrawsBackground": true
+      },
+      {
+        "case": "host-dark-initial-dark-same-instance-toggle-0",
+        "expected": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "pixel": [
+          255,
+          255,
+          255,
+          255
+        ]
+      },
+      {
+        "case": "host-dark-initial-dark-same-instance-toggle-1",
+        "expected": [
+          44,
+          44,
+          46,
+          255
+        ],
+        "pixel": [
+          44,
+          44,
+          46,
+          255
+        ]
+      },
+      {
+        "case": "host-dark-initial-dark-same-instance-toggle-2",
+        "expected": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "pixel": [
+          255,
+          255,
+          255,
+          255
+        ]
+      },
+      {
+        "case": "host-dark-initial-dark-same-instance-toggle-3",
+        "expected": [
+          44,
+          44,
+          46,
+          255
+        ],
+        "pixel": [
+          44,
+          44,
+          46,
+          255
+        ]
+      }
+    ],
+    "scope": "actual AppKit NSView subtree pixels in explicit light/dark NSWindow hosts; windows never ordered onscreen; no OS/NSApp theme changes; MyGo compositor/CUA acceptance remains pending"
+  }
+}

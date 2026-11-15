@@ -1,0 +1,73 @@
+{
+  "pass": true,
+  "review": "/Volumes/SuperDisk/native-dsh/desktop/qa/native-hot-activation-cross/review.json",
+  "commands": [
+    {
+      "command": [
+        "sw_vers",
+        "-productVersion"
+      ],
+      "status": 0
+    },
+    {
+      "command": [
+        "uname",
+        "-m"
+      ],
+      "status": 0
+    },
+    {
+      "command": [
+        "swiftc",
+        "--version"
+      ],
+      "status": 0
+    },
+    {
+      "command": [
+        "swiftc",
+        "-swift-version",
+        "5",
+        "-target",
+        "arm64-apple-macos15.8",
+        "composer_native/ComposerEditor.swift",
+        "composer_native/HotActivation.swift",
+        "composer_native/ReferenceGlyphs.swift",
+        "composer_native/SemanticDocument.swift",
+        "/Volumes/SuperDisk/native-dsh/desktop/qa/native-hot-activation-cross/main.swift",
+        "-o",
+        "/Volumes/SuperDisk/native-dsh/desktop/qa/native-hot-activation-cross/build/native-hot-cross"
+      ],
+      "status": 0
+    },
+    {
+      "command": [
+        "/Volumes/SuperDisk/native-dsh/desktop/qa/native-hot-activation-cross/build/native-hot-cross",
+        "/Volumes/SuperDisk/native-dsh/desktop/qa/native-hot-activation-cross/build/native-results.json"
+      ],
+      "status": 0
+    },
+    {
+      "command": [
+        "go",
+        "test",
+        "-overlay=/Volumes/SuperDisk/native-dsh/desktop/qa/native-hot-activation-cross/build/overlay.json",
+        "./composer_native",
+        "-run",
+        "^TestCross",
+        "-count=1",
+        "-v"
+      ],
+      "status": 0
+    },
+    {
+      "command": [
+        "go",
+        "vet",
+        "-overlay=/Volumes/SuperDisk/native-dsh/desktop/qa/native-hot-activation-cross/build/overlay.json",
+        "./composer_native"
+      ],
+      "status": 0
+    }
+  ]
+}

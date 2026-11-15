@@ -1,0 +1,150 @@
+{
+  "createdAt": "2026-11-14T16:59:33.697Z",
+  "accepted": false,
+  "app": "/Volumes/SuperDisk/native-dsh/desktop/qa/native-editor-next/build/Native Composer Next.app",
+  "manifestSha256": "dd9dcef8924dad1ea5846d4e71832b588a8c25b4cd876e60640a961884468e9e",
+  "oldGui": {
+    "status": "failed-live-preserved",
+    "manifestSha256": "3c5db4535c372732dfdf7697f2ac0b433bcb6cd9346e9ea4162190840c7f3792",
+    "checkpoint": "qa/checkpoints/native-editor-next-before-popup-fix",
+    "verifiedOldSourceHashes": 14,
+    "privateEvidence": [
+      "/tmp/native-dsh-parity/114-native-editor-next-candidates.png",
+      "/tmp/native-dsh-parity/115-native-editor-next-candidate-refresh.png",
+      "/tmp/native-dsh-parity/116-native-editor-next-chip.png",
+      "/tmp/native-dsh-parity/117-native-editor-next-popup.png"
+    ]
+  },
+  "findings": [
+    {
+      "issue": "Candidate AX exists but real panel invisible",
+      "cause": "Not yet isolated. Old ordinary-flow layout has valid bounds in static/dynamic pure-MyGo Tester; those tests do not reproduce actual external NativeView composition.",
+      "change": "Dedicated PopoverBase overlay anchored to NativeView, explicit bounded panel/scroll/button geometry, no AutoFocus, query callbacks gated by captured query and owner. Native arrows/Escape retained; mouse pick restores native input focus.",
+      "verification": "420/900 Tester bounds and actual Tester pointer choose pass; actual external NativeView GUI remains pending."
+    },
+    {
+      "issue": "Chip disappeared when ordinary popup opened",
+      "cause": "Old launch-time destructive delayed-receipt check completed at 00:46:12, unconditionally scope(empty), then wrote its result at exactly the 117 screenshot second; not evidence of a blur document defect.",
+      "change": "Default interactive mode never starts destructive check; only explicit --selftest-late starts it. Default idle runtime reports one startup scope and no delayed receipt stage. Added actual AppKit blur reference/document preservation gate."
+    }
+  ],
+  "authorCheckCount": 31,
+  "author": {
+    "appKitPassed": true,
+    "checks": {
+      "atomic-reference-delete": true,
+      "blur-preserves-reference-document": true,
+      "canonical-clipboard": true,
+      "closed-owner-rejects-command": true,
+      "command-arrow-clears-painted-selection": true,
+      "command-blur-clears-painted-selection": true,
+      "command-first-delete-selects": true,
+      "command-second-delete-removes": true,
+      "committed-enter-one-intent": true,
+      "completion-arrows-and-escape-retain-document": true,
+      "displaced-command-becomes-literal": true,
+      "document-selection-restored": true,
+      "document-undo-isolation": true,
+      "fifty-scopes-one-native-view": true,
+      "font-10-line-fragment": true,
+      "font-14-line-fragment": true,
+      "font-22-line-fragment": true,
+      "forced-dark-native-appearance": true,
+      "forced-light-native-appearance": true,
+      "marked-cmd-enter-no-submit": true,
+      "marked-plain-return-forwarded-no-submit": true,
+      "native-commit-no-extra-submit": true,
+      "parameter-replacement-preserves-command-occurrence": true,
+      "restored-plain-text-current-style": true,
+      "same-detect-new-reference-not-restored-old": true,
+      "second-window-close-independent": true,
+      "separate-window-surface": true,
+      "stale-epoch-rejected": true,
+      "undo-identity": true,
+      "undo-plain-text-current-global-style": true,
+      "utf16-native-caret": true
+    },
+    "crossLayerPassed": true,
+    "crossLayerSelftestEnabled": true,
+    "goCGO": 0,
+    "hostCommandCounts": {
+      "replace": 1,
+      "scope": 3,
+      "style": 1
+    },
+    "lateCanonical": "fixture delayed image",
+    "latePending": 1,
+    "lateReceiptPreservesNewDraft": true,
+    "lateReceiptPreservesNewReferenceIdentity": true,
+    "lateStage": "entered-host",
+    "lateStatus": "",
+    "lateWireCalls": "{\"calls\":[],\"requests\":[{\"method\":\"sendMessage\",\"params\":{\"clientScope\":{\"generation\":7,\"hostId\":\"composer-host\",\"sessionId\":\"composer-session\"},\"mode\":\"queue\",\"requestId\":\"SPTRO4AO4IZ7NTZFEA4KY7VPNZ\",\"sessionId\":\"composer-session\",\"text\":\"fixture delayed image\"}}]}",
+    "passed": true,
+    "scope": "actual AppKit component + actual Go->RemoteAdapter mockHost; no network/identity",
+    "surfaceCreated": 2
+  },
+  "interactive": {
+    "appKitPassed": true,
+    "checks": {
+      "atomic-reference-delete": true,
+      "blur-preserves-reference-document": true,
+      "canonical-clipboard": true,
+      "closed-owner-rejects-command": true,
+      "command-arrow-clears-painted-selection": true,
+      "command-blur-clears-painted-selection": true,
+      "command-first-delete-selects": true,
+      "command-second-delete-removes": true,
+      "committed-enter-one-intent": true,
+      "completion-arrows-and-escape-retain-document": true,
+      "displaced-command-becomes-literal": true,
+      "document-selection-restored": true,
+      "document-undo-isolation": true,
+      "fifty-scopes-one-native-view": true,
+      "font-10-line-fragment": true,
+      "font-14-line-fragment": true,
+      "font-22-line-fragment": true,
+      "forced-dark-native-appearance": true,
+      "forced-light-native-appearance": true,
+      "marked-cmd-enter-no-submit": true,
+      "marked-plain-return-forwarded-no-submit": true,
+      "native-commit-no-extra-submit": true,
+      "parameter-replacement-preserves-command-occurrence": true,
+      "restored-plain-text-current-style": true,
+      "same-detect-new-reference-not-restored-old": true,
+      "second-window-close-independent": true,
+      "separate-window-surface": true,
+      "stale-epoch-rejected": true,
+      "undo-identity": true,
+      "undo-plain-text-current-global-style": true,
+      "utf16-native-caret": true
+    },
+    "crossLayerPassed": "not-run-in-interactive-mode",
+    "crossLayerSelftestEnabled": false,
+    "goCGO": 0,
+    "hostCommandCounts": {
+      "scope": 1,
+      "style": 1
+    },
+    "passed": true,
+    "scope": "actual AppKit component; fixture helper idle until user requests; no network/identity",
+    "surfaceCreated": 2
+  },
+  "tests": [
+    "CGO_ENABLED=0 go test ./composer_native ./qa/native-editor-next",
+    "CGO_ENABLED=0 go vet ./composer_native ./qa/native-editor-next ./qa/nstext-proof",
+    "codesign --verify --deep --strict <Next.app>",
+    "qa/verify-freeze.mjs 8/8"
+  ],
+  "remaining": [
+    "Root actual candidate visibility and coordinate pointer selection",
+    "Native keyboard filter/arrow/Escape with current actual NativeView first responder",
+    "Generic popup blur/return must preserve document on actual GUI",
+    "Physical Pinyin composition confirmation",
+    "Formal normal-app integration, existing image/file intake and receipts",
+    "M1 memory/render performance"
+  ],
+  "normalGui8Changed": false,
+  "frameworkChanged": false,
+  "backendChanged": false,
+  "realHostWrites": false
+}

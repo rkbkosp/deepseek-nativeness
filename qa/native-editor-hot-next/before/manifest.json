@@ -1,0 +1,116 @@
+{
+  "kind": "before-source-component-checkpoint",
+  "proofManifest": {
+    "path": "qa/native-editor-themed-next3/build/manifest.json",
+    "sha256": "854c02cf325367e1b1aa0906e89f08ea1aca58f4dde7bb2b36cddad430de819b"
+  },
+  "sources": [
+    {
+      "path": "composer_native/.gitignore",
+      "sha256": "c8c8f6a3398afb1b5060f94675305af0e29e35ef0cb14a99f733c35e608cd747",
+      "origin": "composer_native/.gitignore"
+    },
+    {
+      "path": "composer_native/ComposerEditor.swift",
+      "sha256": "c5cba826a9dc281f0819d9521a74a659156428d6d21ac5a52cd8c47ddbf2c36b",
+      "origin": "composer_native/ComposerEditor.swift"
+    },
+    {
+      "path": "composer_native/ReferenceGlyphs.swift",
+      "sha256": "027819f71ad9cc2fba67c335f4c5261ff2d010e549695ff7327b6c9322824388",
+      "origin": "composer_native/ReferenceGlyphs.swift"
+    },
+    {
+      "path": "composer_native/SemanticDocument.swift",
+      "sha256": "ec63ee5b4991b7bc175d355235dfaf9e57983f6c9de02edf5222a9dca13cb05f",
+      "origin": "composer_native/SemanticDocument.swift"
+    },
+    {
+      "path": "composer_native/backing.go",
+      "sha256": "6e7f196736637733b1800c537facb5fbe7742647c7e32f81499c2887bfd02ef1",
+      "origin": "composer_native/backing.go"
+    },
+    {
+      "path": "composer_native/backing_test.go",
+      "sha256": "789148b2094d290ec5f556fb296a4a49a59d0aa61c239d6c681914b509c2d47b",
+      "origin": "composer_native/backing_test.go"
+    },
+    {
+      "path": "composer_native/document_store.go",
+      "sha256": "527f8363b1e2ec0326d6bfffca9d0cb9f02484968fd9469d8bd25505cc383971",
+      "origin": "qa/checkpoints/native-editor-backing-final/source/composer_native/document_store.go"
+    },
+    {
+      "path": "composer_native/document_store_test.go",
+      "sha256": "406afcb0dc7a3124f4bae0dfcb9e87c19596fed18fcc98866f0ead138569e2d4",
+      "origin": "composer_native/document_store_test.go"
+    },
+    {
+      "path": "composer_native/editor.go",
+      "sha256": "690ab33549a75dfac85529310b790d40aaf0a7fbd2fabd61f83f795878829a9c",
+      "origin": "composer_native/editor.go"
+    },
+    {
+      "path": "composer_native/editor_darwin.go",
+      "sha256": "4d3b711e193daa5a8f2372bd19066e3528346e156cc17ff87f4cd236313cb3f3",
+      "origin": "composer_native/editor_darwin.go"
+    },
+    {
+      "path": "composer_native/editor_other.go",
+      "sha256": "64cc28da3dc1a149f927325ca877170e712651a0dbb69b01f0da5adb779989fd",
+      "origin": "composer_native/editor_other.go"
+    },
+    {
+      "path": "composer_native/editor_test.go",
+      "sha256": "65562efa93d0ed823e82ac7fa2b2f0afee074b3963f89fc0d85046246db1a668",
+      "origin": "composer_native/editor_test.go"
+    },
+    {
+      "path": "composer_native/queue_fence_test.go",
+      "sha256": "e6bbd50a5d43065ac165ea6f7d9c25046517042df9e1cff8d6fe41d4ca03572c",
+      "origin": "composer_native/queue_fence_test.go"
+    },
+    {
+      "path": "composer_native/receiver_darwin_test.go",
+      "sha256": "a7af93c8355e00e4e008e625e19b1c988e2253cde8f147c9ae88289b76e8a26e",
+      "origin": "composer_native/receiver_darwin_test.go"
+    },
+    {
+      "path": "composer_native/semantic.go",
+      "sha256": "5655d9d7a2cbbe0b08d8886eb576f17ca5b1b59c25e688b84795a87ae36bb974",
+      "origin": "composer_native/semantic.go"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/Volumes/SuperDisk/native-dsh/desktop/qa/native-editor-themed-next3/build/Native Composer Theme Proof 3.app/Contents/Frameworks/libNativeComposer.dylib",
+      "sha256": "9a3e3052461a628f3b782f1656800c8b7d32579986fe9f6bacdb6788842208d9",
+      "bytes": 422096
+    },
+    {
+      "path": "/Volumes/SuperDisk/native-dsh/desktop/qa/native-editor-themed-next3/build/Native Composer Theme Proof 3.app/Contents/Info.plist",
+      "sha256": "fb516e111e545358cb9dc1b69b1070d003a93abd445c7449dd766421468fc49b",
+      "bytes": 572
+    },
+    {
+      "path": "/Volumes/SuperDisk/native-dsh/desktop/qa/native-editor-themed-next3/build/Native Composer Theme Proof 3.app/Contents/MacOS/native-composer-theme-proof3",
+      "sha256": "adc7da885d7352d8efdbef87a73290acb07a874756e460b1750f943d0bb6ad22",
+      "bytes": 15493632
+    },
+    {
+      "path": "/Volumes/SuperDisk/native-dsh/desktop/qa/native-editor-themed-next3/build/Native Composer Theme Proof 3.app/Contents/Resources/composer-wire-fixture.mjs",
+      "sha256": "d67b9d84be55df723ba018e8fd903d2d8c5922ea96a69ea7dc9349737527ddb9",
+      "bytes": 1431510
+    },
+    {
+      "path": "/Volumes/SuperDisk/native-dsh/desktop/qa/native-editor-themed-next3/build/Native Composer Theme Proof 3.app/Contents/Resources/runtime/node",
+      "sha256": "1781eb7d1b56241a6ac5176120a8fc75df51fadc0d0714f02cfeef56ce96f508",
+      "bytes": 120582384
+    },
+    {
+      "path": "/Volumes/SuperDisk/native-dsh/desktop/qa/native-editor-themed-next3/build/Native Composer Theme Proof 3.app/Contents/_CodeSignature/CodeResources",
+      "sha256": "5134d33b53a8a87a3ea2aeb9b8f21855e310eda59972de4565ce0458a7a4c83d",
+      "bytes": 2940
+    }
+  ]
+}

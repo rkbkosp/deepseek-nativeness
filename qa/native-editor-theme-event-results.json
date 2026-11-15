@@ -1,0 +1,94 @@
+{
+  "createdAt": "2026-11-15T01:36:30.544Z",
+  "accepted": false,
+  "app": "/Volumes/SuperDisk/native-dsh/desktop/qa/native-editor-themed-next3/build/Native Composer Theme Proof 3.app",
+  "manifestSha256": "854c02cf325367e1b1aa0906e89f08ea1aca58f4dde7bb2b36cddad430de819b",
+  "checkpoint": "qa/checkpoints/native-editor-theme-event-final",
+  "preserved": [
+    {
+      "manifest": "qa/native-editor-next/build/manifest.json",
+      "sha256": "dd9dcef8924dad1ea5846d4e71832b588a8c25b4cd876e60640a961884468e9e",
+      "artifacts": 6,
+      "allMatch": true
+    },
+    {
+      "manifest": "qa/native-editor-themed-next/build/manifest.json",
+      "sha256": "574651f13a2ac44449c92d763571c42d56dc0d61978564f9a42ea7824cf4d09e",
+      "artifacts": 6,
+      "allMatch": true
+    },
+    {
+      "manifest": "qa/native-editor-themed-next2/build/manifest.json",
+      "sha256": "7b27f736a6468d9d582706766f255b7413d2b77f56e3256bce2248816a31e70f",
+      "artifacts": 6,
+      "allMatch": true
+    }
+  ],
+  "actualGuiFailureStillOpen": true,
+  "priorActualGui": {
+    "manifestSha256": "7b27f736a6468d9d582706766f255b7413d2b77f56e3256bce2248816a31e70f",
+    "review": "qa/native-editor-theme2-gui-review.json",
+    "passed": "Root actual screen verified native backing/foreground/accent follow each click; references survive theme/popup; real pointer candidates work.",
+    "failed": "Root 138/139 actual Go canvas stays light while native pane/titlebar and AX become dark; extra focus input later presents dark. This report does not close that failure."
+  },
+  "sourceDiagnosis": {
+    "confirmed": "Proof2 omitted production main.go Theme.OnUpdated -> Window.Update. SetSource itself calls contentThemeChanged; the omission alone does not prove why a drawable was not presented.",
+    "ordering": "Pinned MyGo runtime.runFrame calls present before updateAccessibility; new AX means a new scene attempted present, not that WindowServer displayed it. Darwin surface updateLayer documents transactions that may defer/show older drawable.",
+    "control": "Root independently tested frozen GUI10 system→dark→light→dark→system, single clicks all painted correctly with its OnUpdated handler. Own preference restored, no Host writes.",
+    "minimalCandidate": "Proof3 adds only the production-equivalent public Theme.OnUpdated -> queued Window.Update. Callback does not write Theme.Source. It retires on close and late queued callbacks are inert. No MyGo/production/component code changed."
+  },
+  "finiteAB": {
+    "sameBinary": true,
+    "fenceOff": {
+      "passed": true,
+      "events": 6,
+      "eventUpdates": 0,
+      "file": "qa/checkpoints/native-editor-theme-event-final/off-runtime.json"
+    },
+    "fenceOn": {
+      "passed": true,
+      "events": 6,
+      "eventUpdates": 6,
+      "file": "qa/checkpoints/native-editor-theme-event-final/on-runtime.json"
+    },
+    "causality": "Both sides pass builder/Go Draw/native property author checks; the author A/B did NOT reproduce or independently prove closure of the external-screen failure. Event fence is a minimal candidate; root must test actual single clicks."
+  },
+  "verification": {
+    "goTests": {
+      "groups": 4,
+      "scope": "public Tester click→deferred single intent→one native style; full style retry; one queued appearance update/close-safe retirement; six first-new-frame Go canvas pixel transitions. Not external WindowServer evidence."
+    },
+    "natural": "Seven bounded local fixture steps use Window.Update plus property reads and Go Draw counters, without CapturePage.",
+    "diagnostic": {
+      "passed": true,
+      "scope": "diagnostic public CapturePage frame driver -> FFI mounted NativeView properties and native-subtree RGBA; not external-screen CUA acceptance",
+      "file": "qa/checkpoints/native-editor-theme-event-final/diagnostic-runtime.json"
+    },
+    "default": {
+      "selftests": false,
+      "frameDriver": false,
+      "scopeCommands": 1,
+      "styleCommands": 1,
+      "file": "qa/checkpoints/native-editor-theme-event-final/defaults-runtime.json"
+    },
+    "vet": "CGO_ENABLED=0 go vet ./qa/native-editor-themed-next3 passed",
+    "codesign": "codesign --verify --deep --strict passed",
+    "processes": "Author verified own proof3 executable and mock helper absent after all tests, before handing off."
+  },
+  "noWindowServerOrScreenRecordingPath": true,
+  "noPollingOrTimerInThemeFix": true,
+  "noDefaultCaptureDriver": true,
+  "frameworkModified": false,
+  "productionApplicationGoModified": false,
+  "composerNativeUnchangedFrom7b27": true,
+  "backendModified": false,
+  "realHostWrites": false,
+  "M1Qualified": false,
+  "rootGate": [
+    "Use only Native Composer Theme Proof 3.app; old7b27 failure remains preserved.",
+    "Single-click light/dark at least two complete round trips, pause and reobserve after each; Go body/buttons/text/mirror must match native pane and target without extra focus/second click.",
+    "Host reversal may change chrome while target Go/native palette remains unchanged.",
+    "Keep reference chip through toggles, native @ filtering, real candidate pointer click and generic popup blur/Escape.",
+    "Default lifetime10min; no startup selftests, no automatic draft cleanup; root quits app after acceptance."
+  ]
+}

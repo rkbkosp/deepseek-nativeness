@@ -1,0 +1,86 @@
+{
+  "createdAt": "2026-11-14T16:43:09.495Z",
+  "accepted": false,
+  "componentAuthorResults": {
+    "appKitPassed": true,
+    "checks": {
+      "atomic-reference-delete": true,
+      "canonical-clipboard": true,
+      "closed-owner-rejects-command": true,
+      "command-arrow-clears-painted-selection": true,
+      "command-blur-clears-painted-selection": true,
+      "command-first-delete-selects": true,
+      "command-second-delete-removes": true,
+      "committed-enter-one-intent": true,
+      "displaced-command-becomes-literal": true,
+      "document-selection-restored": true,
+      "document-undo-isolation": true,
+      "fifty-scopes-one-native-view": true,
+      "font-10-line-fragment": true,
+      "font-14-line-fragment": true,
+      "font-22-line-fragment": true,
+      "forced-dark-native-appearance": true,
+      "forced-light-native-appearance": true,
+      "marked-cmd-enter-no-submit": true,
+      "marked-plain-return-forwarded-no-submit": true,
+      "native-commit-no-extra-submit": true,
+      "parameter-replacement-preserves-command-occurrence": true,
+      "restored-plain-text-current-style": true,
+      "same-detect-new-reference-not-restored-old": true,
+      "second-window-close-independent": true,
+      "separate-window-surface": true,
+      "stale-epoch-rejected": true,
+      "undo-identity": true,
+      "undo-plain-text-current-global-style": true,
+      "utf16-native-caret": true
+    },
+    "crossLayerPassed": true,
+    "goCGO": 0,
+    "lateCanonical": "fixture delayed image",
+    "latePending": 1,
+    "lateReceiptPreservesNewDraft": true,
+    "lateReceiptPreservesNewReferenceIdentity": true,
+    "lateStage": "entered-host",
+    "lateStatus": "",
+    "lateWireCalls": "{\"calls\":[],\"requests\":[]}",
+    "passed": true,
+    "scope": "actual AppKit component + actual Go->RemoteAdapter mockHost; no network/identity",
+    "surfaceCreated": 2
+  },
+  "appKitCheckCount": 29,
+  "manifestSha256": "3c5db4535c372732dfdf7697f2ac0b433bcb6cd9346e9ea4162190840c7f3792",
+  "app": "/Volumes/SuperDisk/native-dsh/desktop/qa/native-editor-next/build/Native Composer Next.app",
+  "sourceSha256": "ba1b0bb8d6016d5e502a8c1ed9a84e2654874d4c78573744a59f898c10cf6b31",
+  "buildCommand": "qa/native-editor-next/build-and-run.sh --build-only",
+  "runCommand": "/usr/bin/open -n \"/Volumes/SuperDisk/native-dsh/desktop/qa/native-editor-next/build/Native Composer Next.app\"",
+  "tests": [
+    "CGO_ENABLED=0 go test ./composer_native",
+    "CGO_ENABLED=0 go vet ./composer_native ./qa/native-editor-next ./qa/nstext-proof"
+  ],
+  "scopeLifetime": {
+    "surface": "one stable native view per host window; scope switch changes document and callback epoch, not view identity",
+    "tested": "50 scope switches one native surface; two independent ComposerOwner objects and logical early close",
+    "notTested": "two simultaneous public NativeView host windows; actual window early-close at startup; framework foreign-view retain release at window teardown"
+  },
+  "pending": [
+    "Root CUA actual surface/chip glyph/appearance/popup/blur acceptance",
+    "Physical system Pinyin candidate confirmation; programmatic marked-text forwarding is not physical IME evidence",
+    "Normal application integration including existing Go PNG/file paste/drop/ImageIO intake and image-rail receipts; current Next host emits pasteAttachments only",
+    "Full reference popup/candidate geometry and command parameter document behaviors beyond demonstrated permission branch",
+    "Original per-entry undo retention limits and selection semantics require integrated validation",
+    "M1 Air total process memory/render performance; native/GPU peak not measured"
+  ],
+  "distribution": {
+    "newProductionBinary": "Swift app-owned dylib, approximately 364160 bytes for this proof (includes selftests)",
+    "frameworkChanges": false,
+    "normalAppUnchanged": true,
+    "nodeRuntime": "Proof bundles a signed copy of existing Node runtime; no new backend or credential store",
+    "untrackedBinaryIgnored": true
+  },
+  "sourceNotLive": {
+    "noNetwork": true,
+    "noRealHostWrites": true,
+    "noIdentityReads": true,
+    "noPaidModels": true
+  }
+}

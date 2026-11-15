@@ -1,0 +1,17 @@
+{
+  "automaticStartupSelftestsEnabled": false,
+  "diagnosticFrameDriverRequested": false,
+  "goCGO": 0,
+  "hostCommandCounts": {
+    "scope": 1,
+    "style": 1
+  },
+  "hostThemeSource": "dark",
+  "integrationSelftestRequested": false,
+  "scope": "interactive local fixture; no automatic draft cleanup",
+  "startupSelftestsEnabled": false,
+  "targetDark": true,
+  "themeEventFenceEnabled": true,
+  "themeEventUpdates": 0,
+  "themeEvents": 0
+}
