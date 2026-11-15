@@ -1,0 +1,26 @@
+{
+  "checkedAt": "2026-11-14T17:23:14.597Z",
+  "reviewer": "root",
+  "status": "pure-Go-semantic-subchecks-passed",
+  "command": "CGO_ENABLED=0 go test -overlay=qa/native-semantic-root-overlay.json ./composer_native -run ^TestRoot -count=1 -v",
+  "groups": 2,
+  "scope": "Independent normalized partitions/occurrence source+identity/accepted-prefix suffix preservation+nonmutation. Not Swift bridge digest parity, native Undo, actual GUI, production ledger or memory acceptance.",
+  "files": [
+    {
+      "path": "composer_native/semantic.go",
+      "sha256": "446a7143415a8facf585a7a3be9f6a6d72086406f364ed7ac8ac385d611bf884"
+    },
+    {
+      "path": "qa/native-semantic-root.gotest",
+      "sha256": "723307f7601f3d41c961ac627442ddf16d9f000eafb359256202cac2cd427183"
+    },
+    {
+      "path": "qa/native-semantic-root-overlay.json",
+      "sha256": "c76dee5e5f7f6596e307938881ac96aec952b42d313aa4a2c5cbf979b1d2e720"
+    }
+  ],
+  "limits": [
+    "Independent semantic source slice only; fixed dd9d proof unchanged",
+    "Current/next full AppKit parity and production integration remain unaccepted"
+  ]
+}

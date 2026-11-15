@@ -1,0 +1,77 @@
+{
+  "createdAt": "2026-11-14T17:57:59.692Z",
+  "fixedStage": "qa/checkpoints/native-editor-semantic-stage3-final/manifest.json",
+  "fixedManifestSHA256": "45d2c937536ace8fa62c42fc405d68dbc05582a6a55585523c2ed726e3052605",
+  "fixedSourceFiles": 18,
+  "files": {
+    "qa/native-semantic-cross.gotest": {
+      "sha256": "9241d1014317dee7933100d0d829d7bdf5a66d3cc5fc5e06d1d18e3521661a84",
+      "bytes": 4896
+    },
+    "qa/native-semantic-cross-overlay.json": {
+      "sha256": "21098d274226eb27130c2e6a9ae26f5bb4f57dea4683ddc6dd64be29bdf67bae",
+      "bytes": 1860
+    },
+    "qa/native-semantic-cross-current-overlay.json": {
+      "sha256": "210252c3b4da455ef98599d2dffc65191ce7762b955c67b74ceb34a500daa244",
+      "bytes": 182
+    },
+    "qa/native-semantic-cross-results.log": {
+      "sha256": "181f2e1109cfbbf22cd1eb8f136e83de31aaae9e18573930164b3bed4f8d3842",
+      "bytes": 641
+    },
+    "qa/_native-semantic-cross/main.swift": {
+      "sha256": "b3cccd5e7d9d48e8c8ccd5a961db94e82376838d085af6ab711832ccdb1b177e",
+      "bytes": 3589
+    },
+    "qa/_native-semantic-cross/build/independent-swift-results.json": {
+      "sha256": "e04d27418c856745c4ac5c2212fe7a315c6f465385829de747d196412562c21b",
+      "bytes": 711
+    },
+    "qa/_native-semantic-cross/build/stage3-author-recompiled-results.json": {
+      "sha256": "4823d46bcbccc2481809041ffaeaba058611935978e19ee1525ef3d59dae6005",
+      "bytes": 9753
+    },
+    "qa/_native-semantic-cross/build/stage3-author-and-root-go.log": {
+      "sha256": "2c147f69ef1dd4d7594dc6135399737c1e4f319f575176cfd644e066edd9d92b",
+      "bytes": 2898
+    }
+  },
+  "scope": "Independent QA only. Recompiled from immutable stage3 snapshot; no GUI/window operations, production composer integration, dd9d rebuild, Host/network/clipboard or app resources.",
+  "checks": {
+    "recompiledAuthorAppKit": 47,
+    "recompiledAuthorAppKitPassed": true,
+    "authorGoIncludingActualSwiftDigestAndRootTwoPureSemanticGroups": "passed",
+    "independentGo": {
+      "passed": 2,
+      "failed": 1
+    },
+    "independentAppKit": {
+      "passed": 4,
+      "failed": 1
+    }
+  },
+  "blockers": [
+    {
+      "id": "invalid-producer-loses-frame-fence",
+      "source": "composer_native/editor_darwin.go deliver err branch",
+      "trigger": "Actual DecodeSnapshot rejects malformed current frame12 after valid11 callback queued. Editor emits invalid snapshot with Revision0. Apply invalid to Store first, then queued valid11: Store Capture becomes allowed while Editor remains invalid.",
+      "evidence": "qa/native-semantic-cross.gotest TestCrossActualEditorInvalidProducerFencesQueuedPriorValidStoreFrame",
+      "requested": "Carry producer monotonic invalid fence revision with its captured scope through notification; validate Store never accepts an older queued valid."
+    },
+    {
+      "id": "swift-literal-object-placeholder-silently-erases",
+      "source": "composer_native/ComposerEditor.swift validRuns/attributed",
+      "trigger": "scope seed text new U+FFFC tail passes validRuns but attributed strips U+FFFC, changes doc/epoch and replaces previous unsent draft without error. Go NormalizeRuns rejects this input.",
+      "evidence": "qa/_native-semantic-cross/build/independent-swift-results.json",
+      "requested": "Reject invalid plain text placeholder before any scope/content mutation; match Go normalization."
+    }
+  ],
+  "positiveBoundaries": [
+    "Cold epoch preserves semantic revision and CJK/emoji selection while resetting surface frame revision; old epoch refused and same-epoch Bind cannot reset invalid fence.",
+    "Accepted prefix removes exact5UTF16 units with reference atom, retains fresh emoji suffix; duplicate receipt inert.",
+    "Actual AppKit rejects stale retirement digest, clears hot undo only with matching export proof, cold restore preserves reference identity and explicit zero selection endpoint."
+  ],
+  "lifecycleBoundary": "Author47 gate recompiled passes.50 rapid close retains native text/undo temporarily; public runloop drain returns counters to baseline. Object counts only, not RSS/GPU/M1 or actual15.8 OS evidence.",
+  "status": "Awaiting author minimal fixed checkpoint; original baseline immutable."
+}

@@ -1,0 +1,360 @@
+{
+  "createdAt": "2026-11-15T02:33:39.798Z",
+  "kind": "read-only next-slice production integration plan; no implementation",
+  "decision": {
+    "frontendOnlyFeasible": true,
+    "defaultReplacementReady": false,
+    "keepProductionTextAreaDefault": true,
+    "firstTarget": "Opt-in main text surface only, inside the existing native composer card. No permanent WK, new connection, new ledger, or backend change.",
+    "supersedes": "qa/native-editor-production-contract.json has historical unresolved fields that semantic f8 and actual Proof3 have since closed; preserve that report as history."
+  },
+  "scope": {
+    "businessModified": false,
+    "ProofOrBundleModified": false,
+    "GUIStarted": false,
+    "HostOperations": false,
+    "minimumMacOS": "15.8+",
+    "M1Qualified": false
+  },
+  "evidence": {
+    "componentSemantic": "qa/native-semantic-cross-final-review.json; fixed f8e450e8fb1e1e70aa6156321572d1d06b4d0f096df7324fccda3599539b5192, independent4Go+5AppKit checks, author48AppKit; object-only/programmatic scope.",
+    "proof3": {
+      "manifest": "qa/native-editor-themed-next3/build/manifest.json",
+      "sha256": "854c02cf325367e1b1aa0906e89f08ea1aca58f4dde7bb2b36cddad430de819b",
+      "componentSourceHashesMatch": 15,
+      "actualGui": "qa/native-editor-theme3-gui-review.json",
+      "passed": "Root actual single-click coherent Go/native/chrome themes, chip retained, candidate physical click, native popup focus preservation.",
+      "limits": "Local fixture on M4/macOS27.2.1; not production adapter, actual Host submission, physical IME, PNG/drop, dynamic height, two-window lifecycle or M1/macOS15.8 device acceptance."
+    }
+  },
+  "architecture": {
+    "lifetime": "One Editor/NSScrollView/NSTextView per window, created outside view(c). A window-owned semantic adapter+DocumentStore survives composerState reloads. Existing composerState is still session/account/Host-generation scoped and may be replaced by navigation; same-scope reloadComposer currently reuses it.",
+    "documentID": "composer_native.DocumentID{AccountScope,HostID,SessionID,Slot:\"main\"}; stable across transport reconnect. Separate callback epoch captures window ID, Editor.ID, active DocumentID, navigation generation and transport generation.",
+    "editingAuthority": "Native semantic document/undo is active edit authority; Store is the validated semantic mirror and receipt target. a.draft/a.drafts remain compatibility canonical mirrors, never independent mutation authorities or send eligibility.",
+    "surface": "Only replace TextAreaBase. Retain image rail/preview/intake, model and permission labels, toolbar/plan, queue dock and queue MyGo editor, approval/question views, WK ownership and Remote operations.",
+    "queueScope": "First cut keeps queue editing in its existing MyGo TextArea. Do not reattach the single main native surface to a simultaneously visible queue editor. A later rich queue surface requires an explicit per-slot owner, not reuse behind the main input."
+  },
+  "minimalSeams": [
+    {
+      "proposed": "new composer_surface.go / composer_surface_native.go",
+      "responsibility": "Window-owned adapter: BindDocument, SyncSnapshotAndCapture, AcceptNativeEvent, ReplaceSpanCAS, Focus, SetStyle, SetPresentationOcclusion, SettleAccepted, RetireAccount/Window. Feature flag defaults false. No transport method."
+    },
+    {
+      "existing": "app.go + main.go",
+      "changes": "Own adapter/store and one Editor per window; initialize absolute bundled dylib path, callback epoch and public Theme.OnUpdated→Window.Update; close exactly once after exporting semantics and retiring window owners. No native creation inside composerView."
+    },
+    {
+      "existing": "composer.go + composer_toolbar.go + composer_state.go",
+      "changes": "A surface-neutral input action seam replaces direct ui.Element TextSelection/ReplaceText/OnTextKey assumptions. Completion discovery/catalogs/capabilities stay existing. Native branch uses detect-text UTF16/plain runs; old branch keeps current rune APIs. Toolbar buttons and keyboard enter the same composerSubmit mode policy."
+    },
+    {
+      "existing": "connection.go + operations.go",
+      "changes": "Attach optional immutable semantic SubmissionCapture to the existing sendIntent before request dispatch; keep existing stable wire-payload unknown ledger. Accepted semantic settlement branch replaces only legacy string-clear logic for native intents. Old widget path unchanged."
+    },
+    {
+      "existing": "composer_queue.go + composer_state.go",
+      "changes": "Expose existing accepted command request ID to the semantic completion callback; typed slash/permission can consume captured semantic prefix/span, while toolbar permission never consumes draft. Preserve dangerous-mode confirmation and client-effect boundary checks."
+    },
+    {
+      "existing": "navigation/restore: connection.go connect/chooseSession, session_actions.go clearMain, restoration.go adoptAccountScope",
+      "changes": "Synchronize/export old semantic document before changing target; retain its ordinary navigation undo; bind new stable doc with fresh callback epoch. Keep existing image and list-scroll scope behavior."
+    },
+    {
+      "existing": "compat_navigation.go CreateDraftPrompt",
+      "changes": "Route this currently direct a.draft write through explicit semantic insertion/initialization CAS. CallerPage/owner/scope guards remain. No stale string mirror assignment into a live native doc."
+    },
+    {
+      "existing": "composer_native component + scripts/build-app.sh",
+      "changes": "Only after separate source approval: add missing bounded bind/hot-restore, paste/drop handoff, height and focus commands/events; build/sign/package dylib. Current f8/Proof3 component and GUI11 artifacts stay frozen during this plan."
+    }
+  ],
+  "admission": {
+    "event": "Immediate FFI event is only a candidate. Before UI mutation match Editor ID, window liveness, active document/account/Host, callback epoch, navigation/generation; Store.Accept each valid returned snapshot. On error call Store.Fence with monotonic maximum revision; do not swallow it or keep sending old canonical mirror.",
+    "send": "On Go UI thread, synchronously Editor.Apply(snapshot) -> validate current owner/epoch, DecodeSnapshot/Store.Accept -> Store.Capture with exact captured image IDs; also require Editor.Valid and !Marked/Invalid. Only then construct existing send intent/payload. This closes the valid-Store/queued-native-invalid race; Editor.Valid alone and Store.Capture alone are each insufficient.",
+    "recovery": "Only a newer current-scope valid frame may release invalid fence. Old valid or identifiable old-scope malformed events are inert. Headerless malformed may conservatively fence current carrier but never lower a barrier.",
+    "coordinates": "NSTextView detect selection/spans are UTF16; a reference is1 U+FFFC. Existing Go TextArea uses rune indices, and Snapshot.NativeToCanonical returns canonical runes, not canonical UTF16. Use tagged ranges and explicit conversion; never inspect @ text expanded inside a chip as editable token.",
+    "reference": "Only Kind=reference + Source=reference, exact Ref==ClipboardText, unique occurrence IDs and actual Host canonical mention. Unknown source/plugin codec, malformed refs and literal structural U+FFFC reject without mutating the document. ReplaceSpan CAS uses content semantic revision+digest plus captured token span; style/selection changes do not change content revision."
+  },
+  "receiptTransaction": {
+    "identity": "Capture DocumentID/account/Host/session/StoreKey/epoch, semantic runs/revision/digest and AttachmentIDs at send-intent creation, before any request can complete. Never calculate old target from current UI on callback.",
+    "dedup": "Preserve existing wire payload text/content-hash unknown ledger. Do not use a new chip occurrence/digest to bypass an unknown identical wire payload. Semantic digest is additionally for exact local prefix/occurrence settlement, not a replacement remote idempotency key.",
+    "activeAccepted": [
+      "Require existing accepted receipt + exact original request ID; do not import Proof3 fixture submit/unknown maps.",
+      "On main thread take a fresh validated native snapshot and preflight captured runs/digest/identity. If invalid/marked, defer settlement under existing accepted intent; no settled marker until application succeeds.",
+      "Before any native mutation check AlreadySettled/conflict using a proposed read-only Store.PrepareAccepted ticket over its EXISTING settled map. A cold-accepted request replayed after rebind/retyping must be inert even if native appliedCommits reset. Do not create a second request ledger.",
+      "If the ticket is actionable, apply native commitAccepted using current semantic CAS and original captured runs/digest/request ID first; an Apply failure must not advance Store to a different document.",
+      "After native success, run Store.CommitAccepted on the same captured doc/request then reconcile returned native snapshot through Store.Accept; compare expected remaining digest. Treat any disagreement as fenced synchronization error, never clear native text by assigning a.draft.",
+      "Mirror resulting canonical text only to the still-current binding; release only original accepted AttachmentIDs through existing acceptComposerAttachments. New suffix/refs/images remain."
+    ],
+    "coldAccepted": "For an inactive captured DocumentID settle only its Store entry; never switch/focus the live native view. On returning, seed the cold updated semantics and cut committed undo. Store settled-request marker makes duplicate receipts inert even after user retypes identical canonical text. If cold entry is fenced/marked, queue deferred settlement until a fresh valid bind; do not clear it blindly.",
+    "commandAccepted": "Typed slash and permission token need their existing mutation request ID and captured semantic prefix/span. Toolbar permission has no draft settlement. Keep matched/client-effect checks and confirmation. Command+image remains unsupported and retained.",
+    "imageOnly": "Empty captured runs cannot clear newly typed text; accepted original image IDs can retire independently of new IDs. Mixed text+image uses only existing content carrier, never simultaneous text+content."
+  },
+  "retention": {
+    "ordinaryNavigation": "Swift scope already saves NSAttributedString+selection+UndoManager per doc; it restores only if full semantic digest matches. Keep this for A→B→A. Do not call native retireDocument on every session switch, nor use transport generation as document identity. Store entry may become cold while native undo remains resident.",
+    "originalBoundary": "Pinned input/hub.ts ties shells to retained Session bindings and disposes all listeners/document attachments when that binding scope releases; runtime.ts cuts undo on committed clear/restoration. Match a real app-owned logical scope release, not a guessed LRU based on visited-row count.",
+    "twoTiers": "Go Store retains unsent semantic runs/selection, separately from Swift hot attributed/undo objects. Explicit retireDocument/retireAccount requires successful semantic export/digest proof; it clears native undo/docs only, not unsent semantic drafts. Account change retires old native hot state and focus; delayed receipts still target captured old Store ID.",
+    "window": "Close clears every current/saved native UndoManager/document and callback registry; stable outer foreign NSView may intentionally remain host-retained until window teardown. Dylib API is process-cached rather than dlclosed under live custom Objective-C objects. Test multiwindow/early close after public host teardown.",
+    "memoryGate": "Saved native undo/documents have no automatic budget yet;1 surface/window is not a memory bound. No LRU may discard an unsent draft. Before default replacement define retained-session disposal or export/cold-history strategy; measure object counts, native peak/RSS and image textures separately."
+  },
+  "capabilityGaps": [
+    {
+      "id": "active-receipt-preflight",
+      "status": "small public Store seam missing",
+      "source": "Current Store.CommitAccepted checks its private settled map and mutates semantic runs in the same call. Native commitAccepted is a separate CAS command; production has no proven two-model transaction yet.",
+      "minimal": "Add read-only PrepareAccepted over the existing settled map (AlreadySettled/conflict/deferred, expected current digest/revision and projected prefix decision). On one UI transaction, prepare -> native CAS -> existing Store.CommitAccepted -> validate returned snapshot. No new transport ledger. Cold settlement uses Store alone; replay after cold restore must skip native before it can delete retyped text.",
+      "gate": "Cold accepted -> rebind -> retype identical prefix/new occurrence -> duplicate accepted is inert; active marked/invalid defers; native CAS rejection leaves Store unadvanced; unexpected post-native mismatch fences rather than reseeds."
+    },
+    {
+      "id": "invalid-hot-reactivation",
+      "status": "required protocol design before lossless production",
+      "source": "Swift scope compares seededDigest with saved.semanticDigest and overwrites saved content/undo on mismatch; Go only retains last validated semantic snapshot when native frame exceeds1MiB or is malformed.",
+      "risk": "A→B→A using stale Go seed could replace the newer invalid/oversize native A draft. Current scope response also cannot bind an oversized snapshot through the1MiB decoder.",
+      "minimal": "Add explicit non-destructive activation of an existing hot document, with bounded owner/doc/account/epoch/revision/digest acknowledgement even while body is invalid/tooLarge; Editor may update the binding from that typed ack while Store remains fenced. No seed overwrite. Alternatively fully export exact native semantics through a bounded channel before any retire. Do not trap navigation or silently use the old mirror.",
+      "gate": "Oversize/malformed current document→switchB→returnA keeps exact native contents and remains send-disabled until edited back to a fresh valid state; old callbacks/receipts cannot clear it."
+    },
+    {
+      "id": "png-paste",
+      "status": "missing production event capture",
+      "source": "Swift paste emits pasteAttachments with text only, while normal TextArea synchronously reads transfer.PNG/FileList. Current Swift eager pb.data(forType:.png) checks/copies then discards it.",
+      "minimal": "Use offered-type negotiation and immediate callback-time public mygo.Clipboard.Read(transfer.PNG or FileList), which copies representations and rejects clipboard-owner changes. Capture compressed Data, full document scope and UTF16 replacement CAS before Window.Update/worker; no PNG base64 in snapshot JSON. If rejected, show explicit retained-draft error. Reuse composerPasteImages/intake/ImageIO and all6 Host limits +1MiB stdio budget.",
+      "gate": "Clipboard changes before queued UI work cannot import different bytes; mixed text+PNG insertion, undo boundary, offline/missinglimit, image-only/combined carrier, unknown receipt, new-image preservation."
+    },
+    {
+      "id": "native-drop",
+      "status": "missing",
+      "source": "External NSTextView receives drops directly; existing card.DroppedFiles cannot be assumed to receive an event owned by that NSView.",
+      "minimal": "Explicit app-owned drag destination hands supported file URLs and scoped replacement location to Go composerAddImageFiles; system plain-path/file/image insertion is not an implicit fallback. Generic staged file receipt still unavailable.",
+      "gate": "Actual drop onto text area and outer card; multiple images/invalid file/late navigation; no raw bitmap or invalid path text inserted."
+    },
+    {
+      "id": "dynamic-height",
+      "status": "missing",
+      "source": "Component scroll/text starts fixed600x96 and has no content-height event; normal TextArea uses Lines(1,14), FontSize+10 and responsive card.",
+      "minimal": "Expose bounded width-dependent measured line height from AppKit layout after content/selection/width/font changes; UI uses finite1..14line clamp, preserves internal scroll/caret, event-driven invalidation with geometry signature. No polling/layout-feedback loop.",
+      "gate": "Narrow420/wide layouts, font10/14/22, multiline paste/chips/emoji/IME, height caps and scroll; all bounds finite."
+    },
+    {
+      "id": "focus-overlays",
+      "status": "integration pending",
+      "source": "Public NativeView supplies clipped hole/covers and hide-when-unbuilt. Proof3 generic popup is not the actual model WK overlapping the composer or permission/settings modal.",
+      "minimal": "Preserve native selection independently of focus. Explicit blur/restore-intent commands when opening model WK/permissions/settings/image lightbox/queue editor; do not continually focus on rerender. Restore only after overlay owner closes and only if same document and user has not focused another control. Keep existing WK owner/CallerPage/generation lifetime.",
+      "gate": "Actual model WK anchor overlaps native text without pointer theft/paint bleed; type/filter/Escape restores expected responder; approval/modals/queue/sidebar focus and blur preserve chips/undo; late owner close does not focus another session."
+    },
+    {
+      "id": "reference-activation-and-generic-codecs",
+      "status": "not provided by component",
+      "minimal": "First cut only display/edit/copy built-in file/session refs. No activateReference event exists; original click-to-open file and arbitrary plugin/quote serialization need separate owner/codec wiring. Keep these explicitly partial, never route an unknown chip to CanonicalText send."
+    },
+    {
+      "id": "real-ime",
+      "status": "source/programmatic gate exists; actual system IME pending",
+      "minimal": "hasMarkedText keys continue through AppKit super interpretation; never submit from composition commit. Strict plain/Cmd/Ctrl/Shift rules and repeat/shortcut consumption reuse normal Go policy.",
+      "gate": "Actual system Pinyin Return confirms candidate and CmdEnter while marked never sends/steers/cancels. Run only injected local transport, not live Host."
+    },
+    {
+      "id": "dylib-distribution",
+      "status": "normal packager does not build/copy component",
+      "minimal": "Build composer_native/*.swift only with target arm64-apple-macos15.8 into a fresh candidate Contents/Frameworks/libNativeComposer.dylib. Do not include QA Probe.swift. CGO_ENABLED=0 Go loads absolute executable-relative Frameworks path; missing/failing dylib uses old widget and retains Store. Sign nested dylib/runtime before outer app; manifest all dylib/source/Swift/toolchain/runtime inputs.",
+      "gate": "Inspect vtool/otool architecture/minOS/dependencies/install-name, no developer absolute paths, strict nested codesign, launch outside repo, one/two window teardown, missing dylib fallback. Local ad-hoc is enough for development; do not require notarization to keep this local slice moving. Actual15.8+M1 runtime remains separate."
+    }
+  ],
+  "deliveryOrder": [
+    {
+      "stage": "0 - freeze and adapter contract",
+      "deliverable": "Keep GUI11 and all proofs immutable; new source opt-in flag off, pure-Go document adapter interface and local fixture harness, complete binding/invalid-hot-restore plan."
+    },
+    {
+      "stage": "1 - native main text vertical slice",
+      "deliverable": "Existing card/rail/toolbars remain. Bind actual main native editor with semantic/range/candidate adapter, per-session undo, coherent theme, plain input/ref chips; all nonimage editing and focus fixture gates. No default switch."
+    },
+    {
+      "stage": "2 - reuse normal receipts and commands",
+      "deliverable": "Actual normal Go composerSubmit/sendPayload/command machinery with injected real RemoteAdapter fixture, immutable semantic intent captured before dispatch; active/cold/deferred/duplicate/unknown/rejected receipt matrix, queue modes and permission confirmation preserved. No fixture Submit copy and no live prompt."
+    },
+    {
+      "stage": "3 - close feature parity regressions",
+      "deliverable": "PNG capture, native drop, dynamic height, actual overlapping WK/modal focus, invalid/oversize navigation recovery and hot-object retention; preserve existing images/rail/suffix in all branches."
+    },
+    {
+      "stage": "4 - integrated acceptance before defaults",
+      "deliverable": "Root CUA on a distinct normal-composer local-fixture candidate, actual Pinyin/paste/drop/pointer/height/dark-light and multiwindow gates; source/bundle/floor/sign hashes; then user M1Air end-to-end performance comparison. Only later explicitly reviewed default promotion."
+    }
+  ],
+  "mandatoryFixtures": [
+    "Current Editor invalid12 queued ahead of prior valid11 must fence Store; synchronous toolbar send cannot capture an older valid mirror; fresh current13 can recover.",
+    "Same canonical text but new occurrence/ref ID does not let old accepted receipt erase new draft; same wire payload unknown cannot obtain a new request ID.",
+    "CJK+emoji before chip / middle replacement / two-end selection / trailing space / undo-redo / copy canonical exact bytes.",
+    "A/B fast crossworkspace, same session ID across Host/account, account logout/return, queued prior epoch; all affect only captured semantic ID and image StoreKey.",
+    "Accepted prefix plus newly typed suffix/new images; image-only accepted while text typed; rejected/unknown preserve document/attachments and stable intent.",
+    "Permission toolbar consumes nothing; typed slash consumes captured token only; confirm cancel preserves draft; unavailable browser effects remain blocked.",
+    "Queue-mode Enter/CmdEnter/ShiftEnter and empty accelerated steer use existing logic; Swift never sends directly.",
+    "50scope reuse plus50window create/close with public runloop drain distinguish fixed platform retention from growth; semantic drafts retained and native undo/docs released only at documented boundaries."
+  ],
+  "actualGuiBeforeDefault": [
+    "Use same production composer + local injected transport; every write gate is fixture-only. Do not send a prompt to the connected MacMini to test editing.",
+    "Physical Pinyin candidate Enter/CmdEnter; native filter @ and real coordinate pointer selection; copy/cut/delete/undo across chip/command edges.",
+    "Image picker/rail/preview/remove plus actual PNG paste and actual file drop onto NativeView, mixed text and images, out-of-order receipt after navigation.",
+    "Model WK anchored popover and permission/settings/approval/image modals overlapping text, Escape and focus restoration without ghost input.",
+    "1..14line responsive height, scroll caret, font10/14/22, forced light/dark on opposite host appearance with single click.",
+    "Two windows, early close, session/Host/account switching, invalid/oversize return preserving exact draft, window teardown; then independent M1 memory/CPU/render measurements."
+  ],
+  "prohibitedShortcuts": [
+    "Do not import qa/* Next/proof submit, pending/unknown maps or mock catalogs into production.",
+    "Do not replace native input with an always-resident WK editor.",
+    "Do not setAttributedString/scope on every render or mirror callback; no polling, CapturePage driver or framework/private retain patch.",
+    "Do not use empty/error callback to restore an old a.draft or clear a current invalid fence.",
+    "Do not retire unsent semantic drafts under an LRU or claim one NSView proves bounded memory.",
+    "Do not label local accepted fixture receipt as real remote send/IME/M1/full-UI acceptance."
+  ],
+  "sourceHashes": [
+    {
+      "path": "app.go",
+      "sha256": "ec9da7b2514b17b1b937f8a38be660d7341b7f0aa7cc868fe07751e02df2d278"
+    },
+    {
+      "path": "main.go",
+      "sha256": "edbde4bbf5d97099cd72757da75f033dfaf0058b2e8fae7a86bedc9e44686a76"
+    },
+    {
+      "path": "composer.go",
+      "sha256": "f41df9aab147c0d74c5187969415d3580226345e0f13a0418fe30e1f88c8c3ae"
+    },
+    {
+      "path": "composer_state.go",
+      "sha256": "3bfee4f79fff19ff780ac786688721bfba79be0f6c3626f0f00507511b268d21"
+    },
+    {
+      "path": "composer_toolbar.go",
+      "sha256": "77c8d88820718207199d0c0f77350a043a7f3ebc992fd6d451f60d4b73dd9926"
+    },
+    {
+      "path": "composer_queue.go",
+      "sha256": "ebb2c67e239d1e21636482a98cd6fe4f2ad3f7856fdc02182357da65b86527dc"
+    },
+    {
+      "path": "composer_attachments.go",
+      "sha256": "c679b7e599ae2c6171b4bdca552a062e4f4a1a3b994949075de76ed5cc97e438"
+    },
+    {
+      "path": "composer_attachment_view.go",
+      "sha256": "6ca136f1a99372facb978d6cc2e43f22cc1e9aacc9c3986996f2fb6e0b463ac8"
+    },
+    {
+      "path": "composer_thumbnail_cache.go",
+      "sha256": "349ed96faf7d442231aa4ee3de290b0b3a19d91b196fab2496230308d344ca2f"
+    },
+    {
+      "path": "composer_lifecycle.go",
+      "sha256": "28451cf7e6958a2074038f9b754c972df8d0df026b0f5be7616975626d92a01b"
+    },
+    {
+      "path": "composer_imageio.go",
+      "sha256": "acfc8f0ca96482fd0ad31270b141a148000bd970e00cdf5200a46750e4b537f6"
+    },
+    {
+      "path": "connection.go",
+      "sha256": "558faeccb474e53147e706762ae1ffeeae0af3468b5b34362c2451568a19378e"
+    },
+    {
+      "path": "operations.go",
+      "sha256": "90f83c5ee32e94ec81413de166019053ed25a6ccc691a8f541c5383d1b8e2f17"
+    },
+    {
+      "path": "restoration.go",
+      "sha256": "3a2ba23926d84105b13e0e1ac7eced3312a73eaa1d1609329e146f87e30a85b3"
+    },
+    {
+      "path": "session_actions.go",
+      "sha256": "6a4cc85fd87a1c5602b62f23195bd78bb01a20326073bdcc8b5771ce8ffd1260"
+    },
+    {
+      "path": "compat.go",
+      "sha256": "12bcd2aab8473388c46acd0d5f200f2d781abcb42d6a8bd2b74678750f08ce16"
+    },
+    {
+      "path": "compat_navigation.go",
+      "sha256": "933c2e1c0c5d314f93f6552b6b53458842ba6a502308e46421a388d5aacd0a3d"
+    },
+    {
+      "path": "scripts/build-app.sh",
+      "sha256": "6e812461da5b901fb85f6d1bd65cba62c961664e8eb5bbc7e37f7e28f66b7b75"
+    },
+    {
+      "path": "composer_native/.gitignore",
+      "sha256": "c8c8f6a3398afb1b5060f94675305af0e29e35ef0cb14a99f733c35e608cd747"
+    },
+    {
+      "path": "composer_native/ComposerEditor.swift",
+      "sha256": "c5cba826a9dc281f0819d9521a74a659156428d6d21ac5a52cd8c47ddbf2c36b"
+    },
+    {
+      "path": "composer_native/ReferenceGlyphs.swift",
+      "sha256": "027819f71ad9cc2fba67c335f4c5261ff2d010e549695ff7327b6c9322824388"
+    },
+    {
+      "path": "composer_native/SemanticDocument.swift",
+      "sha256": "ec63ee5b4991b7bc175d355235dfaf9e57983f6c9de02edf5222a9dca13cb05f"
+    },
+    {
+      "path": "composer_native/backing.go",
+      "sha256": "6e7f196736637733b1800c537facb5fbe7742647c7e32f81499c2887bfd02ef1"
+    },
+    {
+      "path": "composer_native/backing_test.go",
+      "sha256": "789148b2094d290ec5f556fb296a4a49a59d0aa61c239d6c681914b509c2d47b"
+    },
+    {
+      "path": "composer_native/document_store.go",
+      "sha256": "527f8363b1e2ec0326d6bfffca9d0cb9f02484968fd9469d8bd25505cc383971"
+    },
+    {
+      "path": "composer_native/document_store_test.go",
+      "sha256": "406afcb0dc7a3124f4bae0dfcb9e87c19596fed18fcc98866f0ead138569e2d4"
+    },
+    {
+      "path": "composer_native/editor.go",
+      "sha256": "690ab33549a75dfac85529310b790d40aaf0a7fbd2fabd61f83f795878829a9c"
+    },
+    {
+      "path": "composer_native/editor_darwin.go",
+      "sha256": "4d3b711e193daa5a8f2372bd19066e3528346e156cc17ff87f4cd236313cb3f3"
+    },
+    {
+      "path": "composer_native/editor_other.go",
+      "sha256": "64cc28da3dc1a149f927325ca877170e712651a0dbb69b01f0da5adb779989fd"
+    },
+    {
+      "path": "composer_native/editor_test.go",
+      "sha256": "65562efa93d0ed823e82ac7fa2b2f0afee074b3963f89fc0d85046246db1a668"
+    },
+    {
+      "path": "composer_native/queue_fence_test.go",
+      "sha256": "e6bbd50a5d43065ac165ea6f7d9c25046517042df9e1cff8d6fe41d4ca03572c"
+    },
+    {
+      "path": "composer_native/receiver_darwin_test.go",
+      "sha256": "a7af93c8355e00e4e008e625e19b1c988e2253cde8f147c9ae88289b76e8a26e"
+    },
+    {
+      "path": "composer_native/semantic.go",
+      "sha256": "5655d9d7a2cbbe0b08d8886eb576f17ca5b1b59c25e688b84795a87ae36bb974"
+    },
+    {
+      "path": "../mygo/clipboard.go",
+      "sha256": "cb9bfb51b0157f0112c23a83591b41576e60e02c6f424a8382ead5dba155ef3c"
+    },
+    {
+      "path": "../mygo/ui/webview.go",
+      "sha256": "4d7861d4631df4b9488fc8aa950dff80633009bd8eb647f5dc6c572b446eed55"
+    },
+    {
+      "path": "../deepseek-harness/packages/client/ui-conversation/src/client/input/hub.ts",
+      "sha256": "126547511612b45d796bd72f84d3ad923612f9dd6e24738d337a31fd49c16417"
+    },
+    {
+      "path": "../deepseek-harness/packages/client/ui-conversation/src/client/input/editor/runtime.ts",
+      "sha256": "d1090790d7001424a20f8bb371301595d68c48a2093b42c20f6c5de2d9a8ab1c"
+    }
+  ]
+}

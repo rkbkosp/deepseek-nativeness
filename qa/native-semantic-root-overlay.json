@@ -1,0 +1,5 @@
+{
+  "Replace": {
+    "/Volumes/SuperDisk/native-dsh/desktop/composer_native/zz_root_semantic_test.go": "/Volumes/SuperDisk/native-dsh/desktop/qa/native-semantic-root.gotest"
+  }
+}

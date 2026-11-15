@@ -1,0 +1,390 @@
+{
+  "createdAt": "2026-11-14T17:10:11.332Z",
+  "decision": "Do not replace the production TextArea yet. Narrow adapter is feasible after these gates; Next submit code is fixture-only and must not be copied.",
+  "accepted": false,
+  "scope": {
+    "qaOnly": true,
+    "applicationGoModified": false,
+    "nextAppRebuilt": false,
+    "backendModified": false,
+    "hostWrites": false,
+    "minimumMacOS": "15.8+",
+    "M1Qualified": false
+  },
+  "guiEvidence": {
+    "oldNextManifest": "3c5db4535c372732dfdf7697f2ac0b433bcb6cd9346e9ea4162190840c7f3792",
+    "oldCandidateVisibility": "failed-live and remains open",
+    "newNextManifest": "dd9dcef8924dad1ea5846d4e71832b588a8c25b4cd876e60640a961884468e9e",
+    "newNextGUI": "not observed: root cgWindowNotFound; author tests and hash checks are not GUI acceptance",
+    "genericPopup": "Old generic popup visible; root observed chip disappearing, traced to old delayed launch selftest. New default selftest disabled, actual GUI preservation remains pending."
+  },
+  "coordinateContract": {
+    "native": "NSTextView ranges are UTF-16 offsets in detectText; each chip is one U+FFFC.",
+    "existingGo": "TextArea replacements, composerActiveToken, completionStart/End and caret use Unicode rune indices in a.draft.",
+    "canonical": "Snapshot.CanonicalText expands occurrences to clipboard text. NativeToCanonical returns canonical RUNE index, not canonical UTF-16; original DSH DraftSnapshot reference offsets are canonical UTF-16.",
+    "required": "Tag each range with coordinate space and document semantic revision. Reuse UTF16AtRune/RuneAtUTF16 only at explicit boundaries. Never pass native selectionStart directly to old Go rune-based replacement. Never parse a chip clipboard expansion as editable @ token.",
+    "cases": [
+      "CJK+emoji before and after reference",
+      "same canonical string with different occurrence ID/ref",
+      "mid-document selection preserving suffix",
+      "Chinese quoted path containing spaces",
+      "leading command chip arguments",
+      "selection at either edge of a surrogate pair/chip"
+    ]
+  },
+  "architecture": {
+    "windowSurface": "Create one native Editor per window outside view(c); show via public NativeView. Never allocate per session or use private MyGo lifecycle APIs.",
+    "documentStore": "Window-owned adapter retains semantic documents independently of NSView: key = accountScope + HostID + SessionID + draftSlot(main or queue:itemId). This key is stable across reconnect. callback epoch separately captures window generation, account, Host, transport generation, navigation and active slot.",
+    "authoritativeEditing": "Native surface owns active editing and undo; Go DocumentStore owns captured semantic snapshots, semantic revision and pending receipts. a.draft is a compatibility canonical mirror only. Do not call scope or setAttributedString on each frame/native change.",
+    "submission": "A production send gesture reads one current validated native snapshot, captures semantic document identity/revision/runs plus exact existing AttachmentIDs, then routes through existing composerSubmit/sendComposerPayload/sendPayload and durable intent machinery. Swift never sends RPC.",
+    "retainedUI": "Retain native composer card, existing image rail/lightbox/intake, queue dock, approval forms, model WK anchor and permission confirmation. Replace only text surface and old Element editing operations via a small document adapter.",
+    "receiptAdapter": "Extend captured intent/document settlement rather than implement a second ledger. Current acceptSend only changes a.draft/drafts and image IDs; adapter must apply settlement to captured semantic DocumentStore and the native surface only if still active and semantically CAS-valid.",
+    "fallback": "Keep existing default widget until root actual-GUI gates pass. Feature flag must preserve the same Go content/image/receipt path; not switch entire composer to permanent WK."
+  },
+  "matrix": [
+    {
+      "id": "draft-navigation",
+      "current": "chooseSession synchronously stores a.draft by a.viewKey; draft/scroll restore before async open. viewKey includes account and Host.",
+      "component": "scope switches per docKey and epoch, saves attributed document/selection/UndoManager.",
+      "gap": "No production semantic DocumentStore or navigation integration; scope(empty) would overwrite a legitimate draft.",
+      "minimalProductionContract": "Capture current semantic snapshot before chooseSession/account transition; save exact runs/selection. Switch stable document ID once per navigation; set fresh callback epoch. Restore full semantics, not parse canonical labels or use generation as permanent docKey. Never scope during normal render or receipt cleanup.",
+      "mustPass": [
+        "A→B→A retains reference occurrence/selection/Undo",
+        "fast cross-workspace A/B and same session ID across Host/account",
+        "queued old callback after navigation rejected"
+      ],
+      "status": "contract-only; not production-wired"
+    },
+    {
+      "id": "snapshot-mirror-invalid",
+      "current": "a.draft is current TextArea text and send source. Existing input permits editing while transport pending.",
+      "component": "change/selection/focus/blur/submit snapshots with runs, canonical/detect text, revision, marked; malformed/oversize produces invalid and Editor.Valid false.",
+      "gap": "Native revision also advances on selection/style/commands; it is not a content-only draft revision. Validity alone does not authorize a stale queued event.",
+      "minimalProductionContract": "Add content-only semantic revision/digest in adapter. Before processing event require Editor ID, active window epoch, full scope/docKey and monotonic content snapshot. Invalid fences send and retains native text until fresh valid frame. Selection/style changes must not reset content or invalidate a still-valid completion by themselves.",
+      "mustPass": [
+        "oversize/malformed→send blocked→valid recovery",
+        "old valid frame cannot clear fresh invalid fence",
+        "same-text callback must not reset marked text or Undo"
+      ],
+      "status": "contract-only; not production-wired"
+    },
+    {
+      "id": "keyboard-ime",
+      "current": "composerKey accepts plain/Cmd/Ctrl Enter, Shift-only newline, consumes other Enter modifiers, prevents repeat/global-shortcut duplicate. Empty accelerated running draft steers queue.",
+      "component": "Marked keyDown delegates to super and emits no submit; snapshot has accelerated/repeat, completion keys.",
+      "gap": "Current Swift unmarked key filter emits submit for Option/CmdOption/CmdCtrl Enter and delegates CmdShiftEnter as newline. Modifier mask not in DTO.",
+      "minimalProductionContract": "Before integration enforce exact existing modifier whitelist and expose full modifiers/source. Preserve native interpretation of all marked keys; never send from commit callback. Route allowed submit to composerSubmit(accelerated), not Next sendMessage. Escape/arrows consumed only while correct candidate surface is open.",
+      "mustPass": [
+        "real Pinyin candidate Return confirms composition with zero Host calls",
+        "CmdEnter while marked zero send and no global action",
+        "ShiftEnter newline; unsupported modifier combinations zero submit/newline as existing policy",
+        "held Enter and completion Enter one action only"
+      ],
+      "status": "contract-only; not production-wired"
+    },
+    {
+      "id": "reference-candidates",
+      "current": "updateComposerCompletions uses capability gate, Host exact mention, queryGeneration + token fences, quoted path grammar, permission/file-action and unavailable client-effect reasons.",
+      "component": "Next demo queries fixture lists and draws reference chips; explicit PopoverBase now authored but actual GUI not observed.",
+      "gap": "Next candidate parsing is a simplified demo; production old token helpers use canonical rune text, which must not inspect chip expansions. Run lacks source. No reference activation event.",
+      "minimalProductionContract": "Retain production discovery/services, generation and unavailable gates. Detect candidate token only in editable plain-text runs at native UTF-16 caret; convert resulting text range explicitly. Use source=reference only for this cut and exact Host mention bytes. Native replace CAS must include semantic revision/digest plus expected token and preserve original trailing-space rule. Add activateReference event for original file-open semantics; session/folder must not invent actions.",
+      "mustPass": [
+        "root actual @ filtering stays native focused",
+        "root actual coordinate mouse click, Up/Down/Enter/Tab/ShiftTab/Escape",
+        "out-of-order file/session results and resize",
+        "quoted Chinese path, Enter directory settle vs Tab drill",
+        "candidate replacement undo/redo preserves original occurrence IDs"
+      ],
+      "status": "contract-only; not production-wired"
+    },
+    {
+      "id": "reference-payload-codec",
+      "current": "Current native sends canonical @ strings; original ui-reference source codec serialize(ref) returns ref unchanged. Original general serializeDraftPrompt routes each source owner codec and quotes Markdown.",
+      "component": "Run contains kind/ref/clipboardText/appearance but not source or quote. Next submits CanonicalText directly.",
+      "gap": "Canonical clipboard is not a general model-payload contract. Unknown plugin source/quote cannot be faithfully represented or serialized by current component.",
+      "minimalProductionContract": "Only admit validated built-in source=reference where identity codec is source-proven; retain owner routing metadata. Reject/retain unknown source or invalid reference until its codec exists. Keep text and image assembly in existing Go pipeline. Do not claim arbitrary plugin chips/quotes parity.",
+      "mustPass": [
+        "built-in file/session canonical payload exact bytes",
+        "unknown source/invalid occurrence refused with draft retained",
+        "no text+content conflict; image-only and text+image actual helper fixture"
+      ],
+      "status": "contract-only; not production-wired"
+    },
+    {
+      "id": "command-permission",
+      "current": "composerCommandBoundary blocks unimplemented client effects; permission picker uses chooseComposerPermissionWithCommit, dangerous-mode confirmation, command durable receipt, consumes only accepted token while preserving surrounding draft.",
+      "component": "Command chip owns one atomic attachment and two-step delete; Next permission demo directly executeCommand after rewriting its draft.",
+      "gap": "Next command branch omits production confirmation/client-effect/receipt contracts. Command Run lacks restored claim token separator/source metadata.",
+      "minimalProductionContract": "Retain existing production command/picker/confirmation code. Add semantic pending replacement and completion API for leading command claim and parameter spans; no direct fixture execution. Accepted permission callback consumes only captured token range with semantic CAS; toolbar permission must not clear ordinary draft.",
+      "mustPass": [
+        "permission confirm/cancel via actual Go command fixture only",
+        "unknown/rejected retain chip/ordinary suffix/images",
+        "offscreen old-account receipt settles captured doc only",
+        "first-delete/second-delete, arrow/blur tint, displaced command literal and undo",
+        "client-only /model /file /export effects cannot be fake accepted"
+      ],
+      "status": "contract-only; not production-wired"
+    },
+    {
+      "id": "png-paste",
+      "current": "input.OnPaste reads transfer.PNG/FileList synchronously; composerPasteImages captures limits, original compressed data and target state; text inserted at original selection.",
+      "component": "Swift paste emits pasteAttachments with plain text if general pasteboard has PNG/fileURL; no image bytes/file paths/changeCount/insertion-range token. Snapshot frame capped1MiB.",
+      "gap": "Queued Go callback can read a changed clipboard. Native paste currently suppresses content even when offline/limits unavailable because there is no native availability contract. Cannot stuff large PNG base64 into the draft JSON callback.",
+      "minimalProductionContract": "Add captured paste request metadata (owner/doc/semanticRev/UTF16 selection, pasteboard changeCount, offered types) and synchronous bounded transfer capture before queuing state work, or one-shot compressed-byte transfer token released on consume/owner close. Verify clipboard generation; reject explicitly on change. Reuse transfer/intake/ImageIO/Host6 limits; no Swift RGBA decode. Text-only fallback and mixed text insertion must be selection-CAS guarded, one independent undo boundary.",
+      "mustPass": [
+        "system PNG paste and mixed text+PNG actual new surface",
+        "clipboard changes before UI queue dispatch cannot import unrelated payload",
+        "offline/missinglimits/largeframe error retains text and existing images",
+        "paste undo does not remove prior typing; new scope rejects late image intake"
+      ],
+      "status": "contract-only; not production-wired"
+    },
+    {
+      "id": "drop-and-picker",
+      "current": "Native outer card DroppedFiles→composerAddImageFiles; system image picker captured composerState; ordinary staged-file attachments remain unavailable.",
+      "component": "No Swift drag destination forwarding; system NSTextView may consume file drop inside native area. importsGraphics=false is not a Go intake bridge.",
+      "gap": "Existing outer MyGo card drop cannot be assumed to receive pointer/drop owned by external NSView.",
+      "minimalProductionContract": "Implement explicit native drag/drop event for captured file paths, insertion target and owner scope; suppress NSTextView automatic file/image insertion only after supported intake claim. Forward all valid image paths to existing Go composerAddImageFiles. Retain picker/file-action and generic file unsupported reason; never create/upload files on live Host during tests.",
+      "mustPass": [
+        "actual drop onto native text area and surrounding rail both same intake",
+        "nonimage file rejection and mixed batch retain existing draft/rail",
+        "drop after scope change/owner close inert",
+        "system picker cancel/no clear; selected images retained after editing"
+      ],
+      "status": "contract-only; not production-wired"
+    },
+    {
+      "id": "image-rail-memory",
+      "current": "composerDrafts map key=StoreKey, ID-based image settlement, lazy ImageIO160 thumbnails, bounded RGBA LRU, one480 preview, worker/epoch retirement.",
+      "component": "New component has no image ownership/preview API and must not grow one.",
+      "gap": "No wiring from new surface paste/drop into current rail; current text source in composerImagePayload is a.draft mirror.",
+      "minimalProductionContract": "Keep original rail and memory/cache code untouched initially. Capture verified native canonical text and attachment IDs together on main, then existing composerImagePayload/sendComposerPayload. Old accepted receipt removes only original IDs; fresh IDs/text remain. Do not reduce Host pixel limits or decode full pixels in Swift.",
+      "mustPass": [
+        "port TestComposerClipboardAndFileDropUseRealFrameworkPaths to new surface",
+        "port image-only/text+image actual RemoteAdapter carrier gates",
+        "late old receipt leaves newly added ID and fresh semantic draft",
+        "12MP native downsample and exit-cache budget remains distinct from RSS/native peak"
+      ],
+      "status": "contract-only; not production-wired"
+    },
+    {
+      "id": "pending-receipts-undo",
+      "current": "sendIntent captures account/Host/session/StoreKey/content/AttachmentIDs; acceptSend clears matching string only, unknown blocks same payload replay, rejected preserves draft.",
+      "component": "Next copies simplified pending/unknown maps; clears via scope(empty) on canonical equality.",
+      "gap": "Cannot copy Next ledger or clear semantics to production. Same canonical with different occurrence is distinct. Original committed clear retains newer suffix and clears committed Undo history.",
+      "minimalProductionContract": "Introduce commitAccepted(intent documentRev/digest/occurrenceIDs) in semantic adapter: settle captured offscreen document first; active native edit only with exact semantic CAS or proven original prefix+unchanged occurrence prefix, preserving fresh suffix. Clear/reset only committed history boundary, never permit Undo to resurrect sent content. Capture image IDs through existing intent. Unknown never clears; known rejected releases request intent only. Add explicit commit operation rather than scope(empty).",
+      "mustPass": [
+        "accepted unchanged clears once and Undo cannot resurrect sent content",
+        "accepted after new suffix retains exactly suffix and identities",
+        "same canonical/new occurrence cannot be cleared",
+        "A send→B navigation→old receipt settles A only; new A edits preserved",
+        "unknown duplicate one actual dispatch; known local rejection zero dispatch retains text/images"
+      ],
+      "status": "contract-only; not production-wired"
+    },
+    {
+      "id": "queue-and-approval",
+      "current": "Queue projections authoritative next-turn; separate editingText/editingID TextArea; updateQueue actions durable; empty accelerated running main draft steers sequentially. Approvals separate pendingView.",
+      "component": "Next has no queue editing and always uses fixture mode=queue.",
+      "gap": "Must not make queue row reuse main docKey or bypass queue acknowledgement/capability policy.",
+      "minimalProductionContract": "Leave queue and approvals native existing controls for first cut. If later chip editing is added use separate draftSlot queue:itemId, independent undo and semantic import/export; never move main draft/rail into row. Keep composerSubmitMode and composerSteerQueue unchanged.",
+      "mustPass": [
+        "main draft unchanged after queue edit/cancel/remove",
+        "queue unknown stops sequential steering",
+        "running/idle Enter/CmdEnter exact mode matrix",
+        "pending approvals route source session unchanged"
+      ],
+      "status": "contract-only; not production-wired"
+    },
+    {
+      "id": "theme-height-focus",
+      "current": "Production text uses current captured font/theme and1–14 lines, card width shared content axis. Model WK/permission/picker steal focus intentionally.",
+      "component": "Instance NSAppearance/font/lineheight implemented, Next uses fixed180px. Snapshot no measured content height/caret rect.",
+      "gap": "Fixed Next height and whole-surface anchor are prototype geometry. View focus plus MyGo focus need coordinated return without stealing other controls.",
+      "minimalProductionContract": "Add bounded usedTextHeight/caretRect callback derived from native layout at actual width (no per-frame attributed resets); clamp original1–14 line rules and card padding. Use view-local theme. Candidate overlay no AutoFocus; explicit focus after user pick/Escape only; generic popup/WK focus must remain until user returns.",
+      "mustPass": [
+        "actual 1/14/long lines at fonts10/14/22",
+        "window/sidepane resize and narrow shared-width axis",
+        "forced light on system dark and reverse",
+        "blur to model WK/permission/system picker does not clear/retarget draft",
+        "no focus-steal from passive snapshot/style/late results"
+      ],
+      "status": "contract-only; not production-wired"
+    }
+  ],
+  "retention": {
+    "originalEvidence": {
+      "hub": "input/hub.ts WeakMap<SessionBinding, SessionInputShell>; retained binding owns shell; scope teardown shell.dispose(), delete binding and release attachment IDs. shell.setDraft(readConversationDraft(sessionId)) seeds semantic persistence independently.",
+      "runtime": "runtime.ts registerHistory per runtime; clearCommittedDraft + facade.commitDraft clearHistory after accepted commit. Semantic restoration path supports references/quotes; explicit history cut exists for committed clear/restoration.",
+      "draftStore": "stores.ts per-session Conversation store persists semantic DraftInput separately from shell lifetime. Persisted document excludes runtime occurrence identity; a retained runtime Undo retains its occurrence IDs."
+    },
+    "newComponentFacts": {
+      "savedDocuments": "Every scope stores NSAttributedString + NSRange + UndoManager in strong dictionary, with no forget/account retirement/eviction command.",
+      "surfaceCount": "50 scopes on one NSView demonstrates constant surface allocation only, not bounded documents/undo/heap/native/GPU memory.",
+      "close": "close() sets text.owner=nil before text.undoManager.removeAllActions(); override then resolves to ownUndo, not current documentUndo. No explicit loop removes all saved manager actions/documents. This is a concrete cleanup gap, not proof of a retain cycle."
+    },
+    "twoLevelPolicy": {
+      "semanticDraft": "Go store retains unsent semantic content/selection/attachment IDs safely by account/Host/session/slot, independently of whether any NSUndoManager is hot. Persist through existing/new self-owned prefs boundary if restart preservation is required. Never evict unsent content by LRU.",
+      "hotUndo": "Keep UndoManager only while its document/session is intentionally retained, matching retained original session scopes. Define explicit retain/release bindings and document retirement; do not silently cap arbitrary accessed docs and claim parity. Pressure trimming may export semantic draft then retire cold native undo only when policy is explicit and tested.",
+      "account": "Current adoptAccountScope preserves old account canonical draft in namespaced Go map while clearing active identity/Host/selection. Before retiring native old account, export full semantic draft/selection and in-flight receipts; drop old native attributed/Undo/transfer handles, fence callbacks. Do not silently delete old-account unsent draft.",
+      "window": "On close synchronously invalidate callback owner/epoch, stop native edits/marked state, close all transfer handles; explicitly removeAllActions on current and every saved manager, clear savedDocuments and delegate/owner, then release bridge owner. MyGo foreign embed/window teardown retains raw view according to public host lifetime; measure its release separately.",
+      "session": "On real session-scope retirement persist semantic draft before explicit forget(docKey); simple A/B navigation is not automatically retirement and must preserve retained Undo."
+    },
+    "requiredTelemetry": [
+      "live native owner/surface/textview counts, not cumulative created count alone",
+      "retained document count, UndoManager count/actions and approximate attributed/semantic bytes",
+      "one-shot transfer token count and compressed byte budget",
+      "50 retained switches show explicit growth;50 release cycles return hot docs/undos/handles to baseline without losing persisted semantic drafts",
+      "2 actual public NativeView windows: close one leaves other editable; early startup close no late callback/write",
+      "same account reconnect keeps semantic doc identity, changed callback epoch; cross-account never restores old native attributed object accidentally"
+    ],
+    "status": "not implemented/not measured; do not assert retain-cycle leak or memory qualification"
+  },
+  "proposedInterfaces": {
+    "events": [
+      "SnapshotChanged{windowOwner,epoch,docKey,semanticRevision,semanticDigest,runs,detectText,canonicalText,UTF16Selection,marked,valid}",
+      "KeyIntent{same scope+revision,fullModifiers,keyCode,isRepeat,source:enter|click}",
+      "TransferRequested{same scope+revision,UTF16Selection,pasteboardChangeCount,offeredTypes,oneShotCompressedTransferToken|capturedPaths}",
+      "ReferenceActivated{same scope+revision,occurrenceID,source,ref,appearance}",
+      "LayoutMeasured{same scope,width,usedTextHeight,caretRect,styleRevision}"
+    ],
+    "commands": [
+      "AttachDocument(stable docKey,new callback epoch,semantic seed,selection) once per navigation",
+      "ReplaceSpan(expectedSemanticRevision/digest,UTF16 span,new runs,undoBoundary:typing|paste|completion)",
+      "CommitAccepted(captured document/intention,semantic prefix decision,clear committed undo) distinct from scope",
+      "RetireDocument/RetireAccount after exporting semantic state; release all hot undo/transfer resources",
+      "UpdateStyle(captured theme/font/size) without content revision or Undo reset",
+      "Focus/Selection/CompletionOpen existing primitives retained"
+    ],
+    "notProvidedYet": "These are contracts, not claims that current frozen component API implements them."
+  },
+  "minimumImplementationOrder": [
+    "First root actual Next candidate visibility/coordinate click/filter focus/Escape/generic-popup preservation; keep old failure open until observed.",
+    "Build document adapter and scope/CAS/UTF16 tests without default switch; reuse existing production send/queue/catalog paths.",
+    "Add strict key modifier, explicit commit history and retirement APIs; test actual AppKit owner/window lifecycle.",
+    "Bridge compressed paste/drop transfer into existing Go image intake and preserve rail/picker/preview; port existing actual-carrier fixtures to new active surface.",
+    "Add dynamic height/theme/anchor and file activation; run default-enabled local fixture host with full existing composer UI.",
+    "Only after root actual-GUI gates plus freeze/hash/protocol checks consider switching normal default; M1 performance is a later actual device gate."
+  ],
+  "actualGuiGatesBeforeDefault": [
+    "Candidate panel actually visible above external NativeView and matches actual pointer coordinates; AX-only is insufficient.",
+    "Typing @ then more Chinese/Latin filter retains native focus; Up/Down/Tab/Enter/Escape correct with no accidental submit.",
+    "Click candidate paints chip; copy/cut yields canonical, delete atomic, Undo/Redo stable identity; Chinese path/emoji caret correct.",
+    "Native popup and model WK/permission/picker blur/return preserve draft and selection without background cleanup.",
+    "Physical Pinyin composition Return and CmdEnter confirm/no send; explicit next Enter only fixture dispatch once.",
+    "PNG paste, text+PNG paste, image-file drop directly on native region and system picker share current Go rail/preview/remove; ordinary unsupported files report honestly.",
+    "Send via local fixture while editing/add image then old receipt preserves fresh semantic text/IDs; rejected/unknown preserve and block replay.",
+    "A/B/crossHost/account/queue scopes and 2 actual windows early close; restored Undo follows current style and retired objects release.",
+    "1–14 line height, narrow pane, theme/font10/14/22 real pixels; do not use headless bounds as external NativeView visual acceptance."
+  ],
+  "sourceFingerprints": [
+    {
+      "path": "composer.go",
+      "sha256": "f41df9aab147c0d74c5187969415d3580226345e0f13a0418fe30e1f88c8c3ae"
+    },
+    {
+      "path": "composer_state.go",
+      "sha256": "3bfee4f79fff19ff780ac786688721bfba79be0f6c3626f0f00507511b268d21"
+    },
+    {
+      "path": "composer_queue.go",
+      "sha256": "ebb2c67e239d1e21636482a98cd6fe4f2ad3f7856fdc02182357da65b86527dc"
+    },
+    {
+      "path": "composer_toolbar.go",
+      "sha256": "77c8d88820718207199d0c0f77350a043a7f3ebc992fd6d451f60d4b73dd9926"
+    },
+    {
+      "path": "composer_attachments.go",
+      "sha256": "c679b7e599ae2c6171b4bdca552a062e4f4a1a3b994949075de76ed5cc97e438"
+    },
+    {
+      "path": "composer_attachment_view.go",
+      "sha256": "6ca136f1a99372facb978d6cc2e43f22cc1e9aacc9c3986996f2fb6e0b463ac8"
+    },
+    {
+      "path": "composer_thumbnail_cache.go",
+      "sha256": "349ed96faf7d442231aa4ee3de290b0b3a19d91b196fab2496230308d344ca2f"
+    },
+    {
+      "path": "composer_imageio.go",
+      "sha256": "acfc8f0ca96482fd0ad31270b141a148000bd970e00cdf5200a46750e4b537f6"
+    },
+    {
+      "path": "operations.go",
+      "sha256": "90f83c5ee32e94ec81413de166019053ed25a6ccc691a8f541c5383d1b8e2f17"
+    },
+    {
+      "path": "connection.go",
+      "sha256": "20a5165147678b8837d325fe1b137b28fad503b329823632bf243003e7e7bde8"
+    },
+    {
+      "path": "restoration.go",
+      "sha256": "3a2ba23926d84105b13e0e1ac7eced3312a73eaa1d1609329e146f87e30a85b3"
+    },
+    {
+      "path": "composer_native/ComposerEditor.swift",
+      "sha256": "ba1b0bb8d6016d5e502a8c1ed9a84e2654874d4c78573744a59f898c10cf6b31"
+    },
+    {
+      "path": "composer_native/editor.go",
+      "sha256": "8feb9b3466285ee41c50f96e9ec99b6a9995d222a203e238cd4d1ace6823f750"
+    },
+    {
+      "path": "composer_native/editor_darwin.go",
+      "sha256": "7cb5e55cf835faf849ccf5ccc206daf389323ed7e22dcbb602b27111576fd5d9"
+    },
+    {
+      "path": "qa/native-editor-next/main.go",
+      "sha256": "1204ec5652208bea19d79247a78e078b03d18da237b612a19d4c041f0bff96d2"
+    },
+    {
+      "path": "qa/native-editor-next/candidates.go",
+      "sha256": "d0484e643cc108fce41b91b8b0762173f2d4dc7ae6973125b61e140832383fff"
+    },
+    {
+      "path": "composer_test.go",
+      "sha256": "7a64dbed7088f72fe11c39661df2da18ccc255410b733d96f1575af70fb1bb1d"
+    },
+    {
+      "path": "composer_input_slice_test.go",
+      "sha256": "fa74102323f1be6276208cb0fed372b2547687fbba7aadf9cadaf515dd412607"
+    },
+    {
+      "path": "../deepseek-harness/packages/client/ui-conversation/src/client/input/hub.ts",
+      "sha256": "126547511612b45d796bd72f84d3ad923612f9dd6e24738d337a31fd49c16417"
+    },
+    {
+      "path": "../deepseek-harness/packages/client/ui-conversation/src/client/input/facade.ts",
+      "sha256": "35d04426a4ac222b890ff0926acd3742df88e7862e90ba3a7ebb55c4a4791266"
+    },
+    {
+      "path": "../deepseek-harness/packages/client/ui-conversation/src/client/input/editor/runtime.ts",
+      "sha256": "d1090790d7001424a20f8bb371301595d68c48a2093b42c20f6c5de2d9a8ab1c"
+    },
+    {
+      "path": "../deepseek-harness/packages/client/ui-conversation/src/client/contract/draft-editor.ts",
+      "sha256": "287c0296b1ee24731db7cd21724c80cf89fc24d8dfa8ff378a9a60cd720a1384"
+    },
+    {
+      "path": "../deepseek-harness/packages/client/ui-conversation/src/client/stores.ts",
+      "sha256": "054db5dbf668a3525bb808b2b868d24182a8e57489733ce977ff2e1c896dd164"
+    },
+    {
+      "path": "../deepseek-harness/packages/client/ui-conversation/src/client/input/prompt.ts",
+      "sha256": "fa7db06b455dfd9d8f944380e948cdb52c411940772768b13eec860275f8cafb"
+    },
+    {
+      "path": "../deepseek-harness/packages/client/ui-reference/src/client/index.ts",
+      "sha256": "c450a2f2a3f9b6e8054c85fbb4ed3b1f575590750c570c2f7e1698aa149c9b34"
+    },
+    {
+      "path": "../mygo/ui/webview.go",
+      "sha256": "4d7861d4631df4b9488fc8aa950dff80633009bd8eb647f5dc6c572b446eed55"
+    },
+    {
+      "path": "../mygo/ui/scope.go",
+      "sha256": "466c0504cd83cfdaee3f6e72b13d4142b7b84e4bc6107385ab393157ba848b2a"
+    }
+  ]
+}

@@ -1,0 +1,127 @@
+package composer_native
+
+import (
+	"encoding/json"
+	"testing"
+)
+
+func crossStoreFrame(t *testing.T, s *DocumentStore, id DocumentID, epoch string, revision uint64, runs []Run) Snapshot {
+	t.Helper()
+	stored, _ := s.Read(id)
+	x := stored.Snapshot
+	x.ID = 700
+	x.Epoch = epoch
+	x.Revision = revision
+	x.Runs = append([]Run(nil), runs...)
+	x.DetectText, x.CanonicalText, _ = ProjectRuns(runs)
+	x.SemanticDigest, _ = SemanticDigest(runs)
+	x.SelectionStart = UTF16Len(x.DetectText)
+	x.SelectionEnd = x.SelectionStart
+	return x
+}
+func TestCrossActualEditorInvalidProducerFencesQueuedPriorValidStoreFrame(t *testing.T) {
+	s := NewDocumentStore()
+	id := DocumentID{AccountScope: "cross-a", HostID: "h", SessionID: "s", Slot: "main"}
+	runs := []Run{{Kind: "text", Text: "未发送😀"}}
+	if err := s.Seed(id, runs, 0, 0); err != nil {
+		t.Fatal(err)
+	}
+	s.Bind(id, "current")
+	base := crossStoreFrame(t, s, id, "current", 10, runs)
+	if err := s.Accept(id, "current", base); err != nil {
+		t.Fatal(err)
+	}
+	var queue []Snapshot
+	e := &Editor{id: 700, epoch: "current", docKey: id.Key(), revision: 10, semanticRevision: base.SemanticRevision, semanticDigest: base.SemanticDigest, onEvent: func(x Snapshot) { queue = append(queue, x) }}
+	prior := base
+	prior.Revision = 11
+	e.deliver(prior, nil)
+	invalid := base
+	invalid.Revision = 12
+	invalid.DetectText = "malformed projection"
+	raw, _ := json.Marshal(invalid)
+	parsed, decodeErr := DecodeSnapshot(raw)
+	if decodeErr == nil {
+		t.Fatal("fixture malformed native frame was not rejected")
+	}
+	e.deliver(parsed, decodeErr)
+	if len(queue) != 2 || e.Valid() {
+		t.Fatal("fixture did not produce valid then newer invalid")
+	}
+	if err := s.Accept(id, "current", queue[1]); err == nil {
+		t.Fatal("invalid event unexpectedly accepted")
+	}
+	if _, err := s.Capture(id, "current", nil); err == nil {
+		t.Fatal("initial invalid failed to fence")
+	}
+	_ = s.Accept(id, "current", queue[0])
+	if _, err := s.Capture(id, "current", nil); err == nil {
+		t.Fatalf("queued prior valid frame recovered newer invalid: producer invalid revision=%d, prior=%d", queue[1].Revision, queue[0].Revision)
+	}
+}
+func TestCrossStoreColdEpochKeepsSemanticsAndRejectsPriorFrames(t *testing.T) {
+	s := NewDocumentStore()
+	id := DocumentID{AccountScope: "cold-a", HostID: "h", SessionID: "s", Slot: "queue:item"}
+	runs := []Run{{Kind: "text", Text: "前😀 "}, {Kind: "reference", ID: "occ", Source: "reference", Ref: "@[文档](exact)", ClipboardText: "@[文档](exact)", Appearance: "file", Label: "文档"}}
+	if err := s.Seed(id, runs, 1, 3); err != nil {
+		t.Fatal(err)
+	}
+	s.Bind(id, "first")
+	old := crossStoreFrame(t, s, id, "first", 100, runs)
+	old.SelectionStart, old.SelectionEnd = 1, 3
+	if err := s.Accept(id, "first", old); err != nil {
+		t.Fatal(err)
+	}
+	s.Fence(id, "first", 101, "invalid")
+	s.Bind(id, "first")
+	if _, err := s.Capture(id, "first", nil); err == nil {
+		t.Fatal("idempotent bind reset fence")
+	}
+	s.RetireDocument(id)
+	fresh, err := s.Bind(id, "second")
+	if err != nil || fresh.Snapshot.Revision != 0 || fresh.Snapshot.SelectionStart != 1 || fresh.Snapshot.SelectionEnd != 3 {
+		t.Fatal("cold identity/selection not preserved", fresh, err)
+	}
+	if err := s.Accept(id, "first", old); err == nil {
+		t.Fatal("old epoch recovered")
+	}
+	valid := fresh.Snapshot
+	valid.ID = 700
+	valid.Revision = 1
+	valid.Invalid = false
+	valid.Error = ""
+	if err := s.Accept(id, "second", valid); err != nil {
+		t.Fatal("fresh low surface revision cannot cold recover", err)
+	}
+	if _, err := s.Capture(id, "second", nil); err != nil {
+		t.Fatal(err)
+	}
+}
+func TestCrossAcceptedPrefixCountsUTF16AndDuplicateReceiptIsInert(t *testing.T) {
+	s := NewDocumentStore()
+	id := DocumentID{AccountScope: "a", HostID: "h", SessionID: "s", Slot: "main"}
+	ref := Run{Kind: "reference", ID: "old", Source: "reference", Ref: "@原文", ClipboardText: "@原文"}
+	runs := []Run{{Kind: "text", Text: "前😀 "}, ref}
+	if err := s.Seed(id, runs, 5, 5); err != nil {
+		t.Fatal(err)
+	}
+	s.Bind(id, "e")
+	capture, err := s.Capture(id, "e", []string{"old-image"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	next := append(append([]Run(nil), runs...), Run{Kind: "text", Text: "后😀"})
+	frame := crossStoreFrame(t, s, id, "e", 10, next)
+	frame.SemanticRevision++
+	if err := s.Accept(id, "e", frame); err != nil {
+		t.Fatal(err)
+	}
+	accepted, err := s.CommitAccepted(AcceptedSettlement{RequestID: "request", Capture: capture})
+	if err != nil || !accepted.Changed || accepted.RemovedUTF16 != 5 || accepted.Document.Snapshot.DetectText != "后😀" || accepted.Document.Snapshot.SelectionEnd != 3 {
+		t.Fatal("UTF16 prefix corrupt", accepted, err)
+	}
+	duplicate, err := s.CommitAccepted(AcceptedSettlement{RequestID: "request", Capture: capture})
+	if err != nil || !duplicate.AlreadySettled || duplicate.Document.Snapshot.DetectText != "后😀" {
+		t.Fatal("duplicate erased fresh suffix", duplicate, err)
+	}
+}

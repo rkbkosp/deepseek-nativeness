@@ -1,0 +1,32 @@
+{
+  "checkedAt": "2026-11-14T18:00:59.064Z",
+  "reviewer": "root",
+  "manifest": "qa/checkpoints/native-editor-semantic-stage3-queue-fix/manifest.json",
+  "manifestSha256": "f8e450e8fb1e1e70aa6156321572d1d06b4d0f096df7324fccda3599539b5192",
+  "sourceFilesMatched": 20,
+  "independentPureGo": {
+    "log": "qa/native-semantic-root-final.jsonl",
+    "passed": 2,
+    "scope": "Normalization/occurrence identity and nonmutating committed-prefix suffix rules; not complete Editor->Store queued invalid fencing"
+  },
+  "crossReview": "qa/native-semantic-cross-final-review.json",
+  "status": "component-source-cross-reviewed-not-production-integrated",
+  "productionDefault": false,
+  "gui9ContainsComponent": false,
+  "fixedNextApp": "dd9dcef8924dad1ea5846d4e71832b588a8c25b4cd876e60640a961884468e9e remains unchanged; actual candidate popup still awaiting screen",
+  "limits": [
+    "Paste/drop/dynamic native height and production receipt adapter remain pending",
+    "No M1 or15.8 actual acceptance",
+    "ARC object counts after public runloop settling are not RSS/footprint"
+  ],
+  "updatedAt": "2026-11-14T18:05:02.867Z",
+  "crossReviewResults": {
+    "sourceFilesMatched": 20,
+    "independentGo": 4,
+    "independentSwift": 5,
+    "recompiledAuthorAppKit": 48,
+    "authorPlusIndependentPlusRootGoTopLevel": 21,
+    "scope": "Component source only. Fixed dd9d app unchanged and actual candidate popup not re-observed."
+  },
+  "retirement": "Independent run transient tracked TextView/Undo peaked +36 (other runs +31); after public runloop100/300/1000ms sequence returned baseline1/1/1/6. Object counters, not RSS peak/M1 or simultaneous public NativeView windows."
+}

@@ -1,0 +1,18 @@
+{
+  "checks" : {
+    "cold-scope-restores-emoji-range-and-reference-identity" : true,
+    "literal-object-placeholder-seed-rejected-without-erasing-current-draft" : false,
+    "post-retire-cold-resume-retains-semantic-draft-and-zero-selection-endpoints" : true,
+    "retirement-releases-hot-undo-without-modifying-exported-runs" : true,
+    "stale-retirement-proof-preserves-new-unsent-content" : true
+  },
+  "evidence" : {
+    "literalPlaceholderResult" : {
+      "canonicalText" : "newtail",
+      "docKey" : "bad-object-placeholder",
+      "error" : ""
+    }
+  },
+  "passed" : false,
+  "scope" : "actual local AppKit objects only; no windows\/GUI actions, Host\/network, clipboard, RSS or M1 qualification"
+}

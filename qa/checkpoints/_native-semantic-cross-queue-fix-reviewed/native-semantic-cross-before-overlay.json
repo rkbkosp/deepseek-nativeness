@@ -1,0 +1,5 @@
+{
+  "Replace": {
+    "/Volumes/SuperDisk/native-dsh/desktop/qa/checkpoints/native-editor-semantic-stage3-final/source/composer_native/zz_cross_semantic_test.go": "/Volumes/SuperDisk/native-dsh/desktop/qa/native-semantic-cross.gotest"
+  }
+}

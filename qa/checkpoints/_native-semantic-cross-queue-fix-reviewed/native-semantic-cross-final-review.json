@@ -1,0 +1,113 @@
+{
+  "createdAt": "2026-11-14T18:04:09.691Z",
+  "reviewScope": "Independent fixed-source QA; no business edits, GUI/window operations, normal composer integration, Host/network/clipboard or app rebuild",
+  "fixedManifest": "qa/checkpoints/native-editor-semantic-stage3-queue-fix/manifest.json",
+  "fixedManifestSHA256": "f8e450e8fb1e1e70aa6156321572d1d06b4d0f096df7324fccda3599539b5192",
+  "sourceFilesVerified": 20,
+  "diffs": [],
+  "preservedBefore": "qa/checkpoints/_native-semantic-cross-stage3-before-fix/manifest.json",
+  "independent": {
+    "goTopGroups": 4,
+    "goTopGroupsPassed": [
+      "TestCrossActualEditorInvalidProducerFencesQueuedPriorValidStoreFrame",
+      "TestCrossStoreColdEpochKeepsSemanticsAndRejectsPriorFrames",
+      "TestCrossAcceptedPrefixCountsUTF16AndDuplicateReceiptIsInert",
+      "TestCrossDeferredReceiptRetiresAndSettlesOnlyCapturedDocument"
+    ],
+    "swiftChecks": 5,
+    "swiftPassed": true,
+    "allGoTopGroupsIncludingAuthorAndRoot": 21,
+    "goVet": "passed"
+  },
+  "recompiledAuthor": {
+    "appkitChecks": 48,
+    "passed": true,
+    "actualGoSwiftDigestCompared": true
+  },
+  "resolvedBlockers": [
+    {
+      "id": "invalid-producer-loses-frame-fence",
+      "before": "Actual json.Marshal→DecodeSnapshot malformed12→Editor emitted invalidRevision0. Queue invalid first/prior valid11 second could re-enable Store Capture.",
+      "after": "Scoped maximum barrier survives callback; prior11 rejected; source rejects identifiable old epoch/account/doc before decoding. Original independent counterexample passes."
+    },
+    {
+      "id": "swift-literal-object-placeholder-silently-erases",
+      "before": "Structural text new<U+FFFC>tail overwrote draft/scope as newtail without error.",
+      "after": "INVALID_RUN_OR_SOURCE before scope mutation; exact existing CJK/emoji/reference draft retained. Independent actual AppKit harness passes."
+    }
+  ],
+  "additionalPositive": "Accepted receipt deferred during invalid→account retirement→new epoch valid recovery settles only captured old doc; same-session new account untouched; duplicate after retyping stays inert. UTF16 prefix exactly5 units and suffix preserved.",
+  "lifecycle": {
+    "scope": "Tracked AppKit objects only, not native RSS/GPU or M1 performance",
+    "baseline": [
+      1,
+      1,
+      1,
+      6
+    ],
+    "rapid50Peak": [
+      1,
+      1,
+      37,
+      42
+    ],
+    "transientExtra": [
+      0,
+      0,
+      36,
+      36
+    ],
+    "immediateZeroReleaseObserved": false,
+    "drain": [
+      {
+        "drainMilliseconds": 100,
+        "liveObjects": [
+          1,
+          1,
+          29,
+          34
+        ]
+      },
+      {
+        "drainMilliseconds": 300,
+        "liveObjects": [
+          1,
+          1,
+          8,
+          13
+        ]
+      },
+      {
+        "drainMilliseconds": 1000,
+        "liveObjects": [
+          1,
+          1,
+          1,
+          6
+        ]
+      }
+    ],
+    "quiescent": [
+      1,
+      1,
+      1,
+      6
+    ],
+    "semanticDraftsRetained": 50,
+    "qualifier": "100/300/1000ms public runloop drains, roughly1.4s total. Deferred text-system release cause not isolated; do not call an immediate leak or claim peak-memory qualification."
+  },
+  "fixedApp": {
+    "manifestSHA256": "dd9dcef8924dad1ea5846d4e71832b588a8c25b4cd876e60640a961884468e9e",
+    "artifactsVerified": 6,
+    "rebuilt": false
+  },
+  "pendingBeforeProduction": [
+    "Production adapter is still absent; existing normal TextArea and frozen dd9d App remain distinct.",
+    "Preserve invalid Apply error Snapshot fence metadata through UI queues; final send must use current Editor and Store validity/captured scope.",
+    "Native commit only after Go Store settlement decision; Deferred/AlreadySettled must not forward another native commit. Receipt binding to existing durable intent/image IDs remains adapter work.",
+    "Retirement must export semantic document, UTF16 selection and pending receipts before hot native release; cold semantic content must not be evicted with undo.",
+    "Public NativeView actual GUI candidate visibility, Pinyin/IME, paste/drop compressed images, dynamic height/theme, two-window close/early-close and full send pipeline are still required.",
+    "Actual macOS15.8 WK and M1 full-app CPU/memory measurements remain unqualified."
+  ],
+  "decision": "No remaining blockers found in this fixed component slice; not accepted for normal-composer/default integration."
+}

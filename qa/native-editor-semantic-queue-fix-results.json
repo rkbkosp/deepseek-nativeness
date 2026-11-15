@@ -1,0 +1,50 @@
+{
+  "createdAt": "2026-11-14T17:59:45.948Z",
+  "accepted": false,
+  "checkpoint": "qa/checkpoints/native-editor-semantic-stage3-queue-fix",
+  "manifestSha256": "f8e450e8fb1e1e70aa6156321572d1d06b4d0f096df7324fccda3599539b5192",
+  "sourceHashesVerified": 20,
+  "preservedPreviousCheckpoint": "qa/checkpoints/native-editor-semantic-stage3-final",
+  "previousManifestSha256": "45d2c937536ace8fa62c42fc405d68dbc05582a6a55585523c2ed726e3052605",
+  "independentBlockers": [
+    {
+      "issue": "Invalid producer dropped frame revision before reordered Store queue",
+      "before": "Editor emitted valid11 then malformed12, but rebuilt invalid with Revision0. Consuming invalid before valid11 only fenced Store at prior10 and could reopen Capture while Editor still invalid.",
+      "fix": "Invalid fence notifications now carry max known frame barrier, complete bound owner/doc/epoch/account scope and last-valid semantic metadata. They claim no replacement Runs. The shared helper is also returned on invalid Apply failures. Store rejects identifiable retired scope/revision before decoding malformed payloads; unknown malformed current carriers remain conservatively fenced.",
+      "authorRegression": "known/headerless/known-then-headerless actual producer notifications consumed before prior valid stay fenced, a strictly newer current valid recovers, old account/epoch malformed frames inert."
+    },
+    {
+      "issue": "Swift structural semantic seed silently stripped literal U+FFFC while Go rejected",
+      "before": "A structural text run new<U+FFFC>tail could replace old semantic draft with newtail.",
+      "fix": "validRuns now rejects literal U+FFFC structural text before scope/range mutation. User external insert/paste sanitization remains separate.",
+      "authorRegression": "Original CJK/emoji/reference draft and docKey remain intact after rejected seed; remote authored independent Swift harness5/5 passes."
+    }
+  ],
+  "authorVerification": {
+    "actualAppKitChecks": 48,
+    "goTopLevelPasses": 15,
+    "vet": "passed",
+    "remoteAuthoredTestsExecutedByAuthor": {
+      "goTopLevelPasses": 3,
+      "swiftChecks": 5
+    },
+    "independentReviewerRerun": "requested; pending remote/root acceptance",
+    "commands": [
+      "NATIVE_EDITOR_SWIFT_RESULTS=\"$PWD/qa/native-editor-semantic-next/build/results.json\" CGO_ENABLED=0 go test ./composer_native -v",
+      "CGO_ENABLED=0 go test -overlay=qa/native-semantic-cross-current-overlay.json -run ^TestCross -v ./composer_native",
+      "swiftc -swift-version 5 -target arm64-apple-macos15.8 composer_native/*.swift qa/_native-semantic-cross/main.swift -o <own QA build path>",
+      "CGO_ENABLED=0 go vet ./composer_native"
+    ]
+  },
+  "fixedApp": {
+    "hashesVerified": 6,
+    "rebuilt": false,
+    "manifestSha256": "dd9dcef8924dad1ea5846d4e71832b588a8c25b4cd876e60640a961884468e9e"
+  },
+  "productionApplicationGoModified": false,
+  "normalDefaultChanged": false,
+  "hostWrites": false,
+  "GUIAccepted": false,
+  "M1Qualified": false,
+  "otherPending": "All production adapter/paste/drop/dynamic height/actual IME/public NativeView GUI gates from qa/native-editor-semantic-source-results.json remain pending."
+}

@@ -1,0 +1,119 @@
+{
+  "createdAt": "2026-11-14T16:59:33.692Z",
+  "app": "/Volumes/SuperDisk/native-dsh/desktop/qa/native-editor-next/build/Native Composer Next.app",
+  "defaultLifetimeSeconds": 600,
+  "destructiveSelftestsDefault": false,
+  "minimumMacOS": "15.8",
+  "architecture": "arm64",
+  "cgo": 0,
+  "source": [
+    {
+      "path": "composer_native/.gitignore",
+      "sha256": "c8c8f6a3398afb1b5060f94675305af0e29e35ef0cb14a99f733c35e608cd747"
+    },
+    {
+      "path": "composer_native/ComposerEditor.swift",
+      "sha256": "ba1b0bb8d6016d5e502a8c1ed9a84e2654874d4c78573744a59f898c10cf6b31"
+    },
+    {
+      "path": "composer_native/ReferenceGlyphs.swift",
+      "sha256": "027819f71ad9cc2fba67c335f4c5261ff2d010e549695ff7327b6c9322824388"
+    },
+    {
+      "path": "composer_native/editor.go",
+      "sha256": "8feb9b3466285ee41c50f96e9ec99b6a9995d222a203e238cd4d1ace6823f750"
+    },
+    {
+      "path": "composer_native/editor_darwin.go",
+      "sha256": "7cb5e55cf835faf849ccf5ccc206daf389323ed7e22dcbb602b27111576fd5d9"
+    },
+    {
+      "path": "composer_native/editor_other.go",
+      "sha256": "64cc28da3dc1a149f927325ca877170e712651a0dbb69b01f0da5adb779989fd"
+    },
+    {
+      "path": "composer_native/editor_test.go",
+      "sha256": "699757670b2cd1a9dd7b7e1ad37daceff49ce71b9d07b2c705e86b221a47b266"
+    },
+    {
+      "path": "composer_native/receiver_darwin_test.go",
+      "sha256": "a13c0e70b106ebdb42ae880c96af7a85aff7ce7ec0d7d010e944980cc1fa805b"
+    },
+    {
+      "path": "qa/composer-wire-fixture.mjs",
+      "sha256": "a32bf0db9596a35aa6c34ae97657bd9e8f3ae4ffcec2843c26a74b3c74360770"
+    },
+    {
+      "path": "qa/native-editor-next/.gitignore",
+      "sha256": "020c2606e8ed484089c2083e0be438b9d0736bee1558a6b76af0d58bd23f69cf"
+    },
+    {
+      "path": "qa/native-editor-next/build-and-run.sh",
+      "sha256": "0e60c3d744435be3416b5a4f292866082b762e45879a72dbb5dc781c2f80f20d"
+    },
+    {
+      "path": "qa/native-editor-next/bundle-fixture.mjs",
+      "sha256": "ec970b537ab3b6ea711bc2d2c22e2c69f2a357255a74cc967bbf3ccc2b6c7fe9"
+    },
+    {
+      "path": "qa/native-editor-next/candidates.go",
+      "sha256": "d0484e643cc108fce41b91b8b0762173f2d4dc7ae6973125b61e140832383fff"
+    },
+    {
+      "path": "qa/native-editor-next/candidates_test.go",
+      "sha256": "02c455925b569670ea725e1432ffdb3af3032a204700ee531b7ae5f2aea67610"
+    },
+    {
+      "path": "qa/native-editor-next/main.go",
+      "sha256": "1204ec5652208bea19d79247a78e078b03d18da237b612a19d4c041f0bff96d2"
+    },
+    {
+      "path": "qa/native-editor-next/node.go",
+      "sha256": "28726a1e110232cb6fe0c8d13dd8d3ba56e5ee759e08d492e2b9ced1673eef90"
+    },
+    {
+      "path": "qa/native-editor-next/write-report.mjs",
+      "sha256": "4ca9f31c97549ef71d7a869282ae0dedb16c27ad83c8a2e0b770a7eb4325f384"
+    },
+    {
+      "path": "qa/nstext-proof/EditorChecks.swift",
+      "sha256": "0df51e860fd77e8fd022e9c73aa285fbe35e8d3b85af8db8dd76a84ca03e9ffe"
+    },
+    {
+      "path": "qa/nstext-proof/reference-glyph-source.json",
+      "sha256": "99a93e548931ca46d6cfea6ddb0a16fa2c5dfa6f988f3e65ab2fe15eba4e4fba"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "Contents/Frameworks/libNativeComposer.dylib",
+      "sha256": "ee8a33f3abf737b4d5e74cdf81b843a865b43b0f4171b88b6eb3e730b40434b3",
+      "bytes": 364816
+    },
+    {
+      "path": "Contents/Info.plist",
+      "sha256": "9cb169a6e64fde7131905244f17955c2bde1c0bc1ba2786b2d3179c43c551575",
+      "bytes": 547
+    },
+    {
+      "path": "Contents/MacOS/native-composer-next",
+      "sha256": "6e469f0b1cfe3e43ebcdd00c5ef8e73285e973f2fb7b16fb8460a95b2032e598",
+      "bytes": 15422816
+    },
+    {
+      "path": "Contents/Resources/composer-wire-fixture.mjs",
+      "sha256": "d67b9d84be55df723ba018e8fd903d2d8c5922ea96a69ea7dc9349737527ddb9",
+      "bytes": 1431510
+    },
+    {
+      "path": "Contents/Resources/runtime/node",
+      "sha256": "1781eb7d1b56241a6ac5176120a8fc75df51fadc0d0714f02cfeef56ce96f508",
+      "bytes": 120582384
+    },
+    {
+      "path": "Contents/_CodeSignature/CodeResources",
+      "sha256": "254c186828a9a759033a9e4e11d8738958e4665fdc6906890d972d02294e1ce7",
+      "bytes": 2940
+    }
+  ]
+}

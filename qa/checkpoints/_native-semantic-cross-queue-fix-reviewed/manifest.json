@@ -1,0 +1,42 @@
+{
+  "createdAt": "2026-11-14T18:04:09.694Z",
+  "fixedManifestSHA256": "f8e450e8fb1e1e70aa6156321572d1d06b4d0f096df7324fccda3599539b5192",
+  "files": {
+    "qa/native-semantic-cross.gotest": {
+      "bytes": 6899,
+      "sha256": "914a2cf3adff7865012ca2c6d33240c8b7388c599282fcaef060bc91b9d05062"
+    },
+    "qa/native-semantic-cross-fixed-overlay.json": {
+      "bytes": 464,
+      "sha256": "82c02142a37e366d68eb49cb0f5742c13ae13ccad7e7caa1c49d0b064fa7d39b"
+    },
+    "qa/native-semantic-cross-before-overlay.json": {
+      "bytes": 240,
+      "sha256": "b6ee54a37d903b65d102d134502efadccf16231f37e9749b3208cc101adc6a40"
+    },
+    "qa/_native-semantic-cross/main.swift": {
+      "bytes": 3589,
+      "sha256": "b3cccd5e7d9d48e8c8ccd5a961db94e82376838d085af6ab711832ccdb1b177e"
+    },
+    "qa/_native-semantic-cross/build/stage3-before-four-tests.log": {
+      "bytes": 851,
+      "sha256": "46d609ea21d2595a23434f94493003311ba8fed83adc7f675b8be652c653cbc6"
+    },
+    "qa/_native-semantic-cross/build/stage3-fixed-go-cross-results.log": {
+      "bytes": 4210,
+      "sha256": "ecd72bd36c44c29068e5f704083b8db2dd985c859fd7e8360a10aa07f775bafc"
+    },
+    "qa/_native-semantic-cross/build/independent-swift-fixed-results.json": {
+      "bytes": 744,
+      "sha256": "705725530e83638fa8c3114e19d05cb87ef2509dfcb6a3a64176919c6e26ff88"
+    },
+    "qa/_native-semantic-cross/build/stage3-author-fixed-recompiled-results.json": {
+      "bytes": 9830,
+      "sha256": "8c1d731f1504e3baf427834f524188c608b42996775feb214f7c9a9d23f2a34a"
+    },
+    "qa/native-semantic-cross-final-review.json": {
+      "bytes": 4467,
+      "sha256": "61fddf0956cce12e2801a5ab002d9875d47b583ae77a9f5e35046fb1024db673"
+    }
+  }
+}

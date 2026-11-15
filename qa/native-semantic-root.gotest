@@ -1,0 +1,29 @@
+package composer_native
+
+import (
+ "reflect"
+ "strings"
+ "testing"
+)
+
+func rootReference(id, ref string) Run { return Run{Kind:"reference",ID:id,Source:"reference",Ref:ref,ClipboardText:ref,Label:"中文😀",Appearance:"file"} }
+func TestRootSemanticPartitionAndOccurrenceIdentity(t *testing.T){
+ for _,text:=range []string{"","中文😀suffix","e\u0301\nquote \"x\"","<>&@目录/with space"}{
+  original:=[]Run{{Kind:"text",Text:text}};want,err:=SemanticDigest(original);if err!=nil{t.Fatal(err)}
+  chars:=[]rune(text);for split:=0;split<=len(chars);split++{parts:=[]Run{{Kind:"text",Text:string(chars[:split])},{Kind:"text",Text:""},{Kind:"text",Text:string(chars[split:])}};got,e:=SemanticDigest(parts);if e!=nil||got!=want{t.Fatalf("attribute-only partition affected semantic content split=%d: %s %v",split,got,e)}}
+ }
+ a:=rootReference("occurrence-a","@same");b:=a;b.ID="occurrence-b";ha,_:=SemanticDigest([]Run{a});hb,_:=SemanticDigest([]Run{b});if ha==hb{t.Fatal("same clipboard with new occurrence treated as unchanged")}
+ for _,source:=range []string{"","unknown-plugin"}{bad:=a;bad.Source=source;if _,e:=NormalizeRuns([]Run{bad});e==nil{t.Fatalf("source %q admitted",source)}}
+ if _,e:=NormalizeRuns([]Run{a,a});e==nil{t.Fatal("duplicate atomic occurrence admitted")}
+}
+func TestRootCommittedPrefixAtomicSuffixAndNoMutation(t *testing.T){
+ ref:=rootReference("sent-ref","@[文档](exact:host-mention)")
+ sent:=[]Run{{Kind:"text",Text:"中文😀 "},ref,{Kind:"text",Text:" trailing"}}
+ current:=append([]Run(nil),sent...);current[2].Text+=" NEW😀";extra:=rootReference("new-ref","@new");current=append(current,extra)
+ immutable:=append([]Run(nil),current...);left,ok:=RemoveCommittedPrefix(current,sent);if !ok{t.Fatal("captured atomic prefix rejected")};d,c,e:=ProjectRuns(left);if e!=nil||d!=" NEW😀\ufffc"||c!=" NEW😀@new"{t.Fatalf("new suffix corrupted detect=%q canonical=%q err=%v",d,c,e)}
+ if !reflect.DeepEqual(immutable,current){t.Fatal("prefix settlement mutated stored current snapshot")}
+ same:=append([]Run(nil),sent...);same[1].ID="replacement-occurrence";if _,ok=RemoveCommittedPrefix(same,sent);ok{t.Fatal("new occurrence cleared because clipboard matched")}
+ changed:=append([]Run(nil),sent...);changed[0].Text="different";if _,ok=RemoveCommittedPrefix(changed,sent);ok{t.Fatal("different preceding text consumed")}
+ left,ok=RemoveCommittedPrefix(current,nil);if !ok{t.Fatal("image-only send lost text")};_,got,_:=ProjectRuns(left);_,want,_:=ProjectRuns(current);if got!=want{t.Fatal("empty sent prefix consumed fresh text")}
+ invalid:=[]Run{{Kind:"text",Text:strings.Repeat("x",32)+"\ufffc"}};if _,e=SemanticDigest(invalid);e==nil{t.Fatal("literal object placeholder admitted")}
+}

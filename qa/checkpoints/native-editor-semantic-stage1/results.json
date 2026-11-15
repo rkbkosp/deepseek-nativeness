@@ -1,0 +1,63 @@
+{
+  "createdAt": "2026-11-14T17:16:56.193Z",
+  "checks": {
+    "checks": {
+      "builtin-source-admitted": true,
+      "marked-cmd-enter-forwarded-without-submit": true,
+      "missing-source-rejected": true,
+      "modifier-0-complete-flags-carried": true,
+      "modifier-0-exact-submit-policy": true,
+      "modifier-1-exact-submit-policy": true,
+      "modifier-2-complete-flags-carried": true,
+      "modifier-2-exact-submit-policy": true,
+      "modifier-3-exact-submit-policy": true,
+      "modifier-4-exact-submit-policy": true,
+      "modifier-5-exact-submit-policy": true,
+      "modifier-6-exact-submit-policy": true,
+      "modifier-7-exact-submit-policy": true,
+      "modifier-8-complete-flags-carried": true,
+      "modifier-8-exact-submit-policy": true,
+      "modifier-9-exact-submit-policy": true,
+      "modifier-10-exact-submit-policy": true,
+      "modifier-11-exact-submit-policy": true,
+      "modifier-12-exact-submit-policy": true,
+      "modifier-13-exact-submit-policy": true,
+      "modifier-14-exact-submit-policy": true,
+      "modifier-15-exact-submit-policy": true,
+      "shift-only-native-newline": true,
+      "unknown-source-rejected-before-scope-mutation": true
+    },
+    "normalAndFrozenNextUnchanged": true,
+    "passed": true,
+    "scope": "actual NSTextView local methods; no public NativeView GUI/no Host/network",
+    "stage": "1-modifiers-and-source"
+  },
+  "source": [
+    {
+      "path": "composer_native/ComposerEditor.swift",
+      "sha256": "7ba22b349fc9a534e3241845f8bff03c5ef31955b6ffb448eb8dd7529c270f72"
+    },
+    {
+      "path": "composer_native/editor.go",
+      "sha256": "b3b0f10c10da5b3526539bc3bf87f4fc1b1780aed31aa01ef40e50d400d2308d"
+    },
+    {
+      "path": "composer_native/semantic.go",
+      "sha256": "446a7143415a8facf585a7a3be9f6a6d72086406f364ed7ac8ac385d611bf884"
+    },
+    {
+      "path": "composer_native/editor_test.go",
+      "sha256": "65562efa93d0ed823e82ac7fa2b2f0afee074b3963f89fc0d85046246db1a668"
+    },
+    {
+      "path": "qa/native-editor-semantic-next/main.swift",
+      "sha256": "0094ad295b38d001eab77f08ed13b5df9a3989eacfef1a04ed681f11dabb596f"
+    },
+    {
+      "path": "qa/native-editor-semantic-next/run.sh",
+      "sha256": "aa4023d94dde659be9390a19ec9b7dd173c2ee3f158a7b268333cc29c49bcaff"
+    }
+  ],
+  "go": "CGO_ENABLED=0 go test ./composer_native passed",
+  "fixedAppUnchanged": true
+}

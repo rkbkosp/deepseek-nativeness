@@ -1,0 +1,12 @@
+{"Time":"2026-11-15T02:00:30.730894+08:00","Action":"start","Package":"native-dsh/desktop/composer_native"}
+{"Time":"2026-11-15T02:00:31.011063+08:00","Action":"run","Package":"native-dsh/desktop/composer_native","Test":"TestRootSemanticPartitionAndOccurrenceIdentity"}
+{"Time":"2026-11-15T02:00:31.011286+08:00","Action":"output","Package":"native-dsh/desktop/composer_native","Test":"TestRootSemanticPartitionAndOccurrenceIdentity","Output":"=== RUN   TestRootSemanticPartitionAndOccurrenceIdentity\n","OutputType":"frame"}
+{"Time":"2026-11-15T02:00:31.011338+08:00","Action":"output","Package":"native-dsh/desktop/composer_native","Test":"TestRootSemanticPartitionAndOccurrenceIdentity","Output":"--- PASS: TestRootSemanticPartitionAndOccurrenceIdentity (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-11-15T02:00:31.011353+08:00","Action":"pass","Package":"native-dsh/desktop/composer_native","Test":"TestRootSemanticPartitionAndOccurrenceIdentity","Elapsed":0}
+{"Time":"2026-11-15T02:00:31.011361+08:00","Action":"run","Package":"native-dsh/desktop/composer_native","Test":"TestRootCommittedPrefixAtomicSuffixAndNoMutation"}
+{"Time":"2026-11-15T02:00:31.011366+08:00","Action":"output","Package":"native-dsh/desktop/composer_native","Test":"TestRootCommittedPrefixAtomicSuffixAndNoMutation","Output":"=== RUN   TestRootCommittedPrefixAtomicSuffixAndNoMutation\n","OutputType":"frame"}
+{"Time":"2026-11-15T02:00:31.011374+08:00","Action":"output","Package":"native-dsh/desktop/composer_native","Test":"TestRootCommittedPrefixAtomicSuffixAndNoMutation","Output":"--- PASS: TestRootCommittedPrefixAtomicSuffixAndNoMutation (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-11-15T02:00:31.011379+08:00","Action":"pass","Package":"native-dsh/desktop/composer_native","Test":"TestRootCommittedPrefixAtomicSuffixAndNoMutation","Elapsed":0}
+{"Time":"2026-11-15T02:00:31.011386+08:00","Action":"output","Package":"native-dsh/desktop/composer_native","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-11-15T02:00:31.011654+08:00","Action":"output","Package":"native-dsh/desktop/composer_native","Output":"ok  \tnative-dsh/desktop/composer_native\t0.280s\n"}
+{"Time":"2026-11-15T02:00:31.011672+08:00","Action":"pass","Package":"native-dsh/desktop/composer_native","Elapsed":0.281}

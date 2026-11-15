@@ -1,0 +1,13 @@
+{
+  "Replace": {
+    "/Volumes/SuperDisk/native-dsh/desktop/composer_native/document_store.go": "/Volumes/SuperDisk/native-dsh/desktop/qa/checkpoints/native-editor-semantic-stage3-final/source/composer_native/document_store.go",
+    "/Volumes/SuperDisk/native-dsh/desktop/composer_native/document_store_test.go": "/Volumes/SuperDisk/native-dsh/desktop/qa/checkpoints/native-editor-semantic-stage3-final/source/composer_native/document_store_test.go",
+    "/Volumes/SuperDisk/native-dsh/desktop/composer_native/editor.go": "/Volumes/SuperDisk/native-dsh/desktop/qa/checkpoints/native-editor-semantic-stage3-final/source/composer_native/editor.go",
+    "/Volumes/SuperDisk/native-dsh/desktop/composer_native/editor_darwin.go": "/Volumes/SuperDisk/native-dsh/desktop/qa/checkpoints/native-editor-semantic-stage3-final/source/composer_native/editor_darwin.go",
+    "/Volumes/SuperDisk/native-dsh/desktop/composer_native/editor_other.go": "/Volumes/SuperDisk/native-dsh/desktop/qa/checkpoints/native-editor-semantic-stage3-final/source/composer_native/editor_other.go",
+    "/Volumes/SuperDisk/native-dsh/desktop/composer_native/editor_test.go": "/Volumes/SuperDisk/native-dsh/desktop/qa/checkpoints/native-editor-semantic-stage3-final/source/composer_native/editor_test.go",
+    "/Volumes/SuperDisk/native-dsh/desktop/composer_native/receiver_darwin_test.go": "/Volumes/SuperDisk/native-dsh/desktop/qa/checkpoints/native-editor-semantic-stage3-final/source/composer_native/receiver_darwin_test.go",
+    "/Volumes/SuperDisk/native-dsh/desktop/composer_native/semantic.go": "/Volumes/SuperDisk/native-dsh/desktop/qa/checkpoints/native-editor-semantic-stage3-final/source/composer_native/semantic.go",
+    "/Volumes/SuperDisk/native-dsh/desktop/composer_native/zz_cross_semantic_test.go": "/Volumes/SuperDisk/native-dsh/desktop/qa/native-semantic-cross.gotest"
+  }
+}

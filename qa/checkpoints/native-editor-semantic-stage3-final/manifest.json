@@ -1,0 +1,83 @@
+{
+  "stage": "semantic-stage3-final",
+  "createdAt": "2026-11-14T17:48:46.452Z",
+  "source": [
+    {
+      "path": "composer_native/.gitignore",
+      "sha256": "c8c8f6a3398afb1b5060f94675305af0e29e35ef0cb14a99f733c35e608cd747"
+    },
+    {
+      "path": "composer_native/ComposerEditor.swift",
+      "sha256": "1539cf7fd8228c75878522f7e73e2b483ebbea3dbf117e649759e1ce3f91efa5"
+    },
+    {
+      "path": "composer_native/ReferenceGlyphs.swift",
+      "sha256": "027819f71ad9cc2fba67c335f4c5261ff2d010e549695ff7327b6c9322824388"
+    },
+    {
+      "path": "composer_native/SemanticDocument.swift",
+      "sha256": "ec63ee5b4991b7bc175d355235dfaf9e57983f6c9de02edf5222a9dca13cb05f"
+    },
+    {
+      "path": "composer_native/document_store.go",
+      "sha256": "e0706f2ef580bd0928fe3f04eb11d08d93376a1367414eecad7bb2f11bdcb4e4"
+    },
+    {
+      "path": "composer_native/document_store_test.go",
+      "sha256": "406afcb0dc7a3124f4bae0dfcb9e87c19596fed18fcc98866f0ead138569e2d4"
+    },
+    {
+      "path": "composer_native/editor.go",
+      "sha256": "690ab33549a75dfac85529310b790d40aaf0a7fbd2fabd61f83f795878829a9c"
+    },
+    {
+      "path": "composer_native/editor_darwin.go",
+      "sha256": "eaa97a6da4f30c5cce0133880b1b2df6c243970066b3b512644592c0f3aea6ff"
+    },
+    {
+      "path": "composer_native/editor_other.go",
+      "sha256": "64cc28da3dc1a149f927325ca877170e712651a0dbb69b01f0da5adb779989fd"
+    },
+    {
+      "path": "composer_native/editor_test.go",
+      "sha256": "65562efa93d0ed823e82ac7fa2b2f0afee074b3963f89fc0d85046246db1a668"
+    },
+    {
+      "path": "composer_native/receiver_darwin_test.go",
+      "sha256": "a7af93c8355e00e4e008e625e19b1c988e2253cde8f147c9ae88289b76e8a26e"
+    },
+    {
+      "path": "composer_native/semantic.go",
+      "sha256": "5655d9d7a2cbbe0b08d8886eb576f17ca5b1b59c25e688b84795a87ae36bb974"
+    },
+    {
+      "path": "qa/native-editor-semantic-next/.gitignore",
+      "sha256": "020c2606e8ed484089c2083e0be438b9d0736bee1558a6b76af0d58bd23f69cf"
+    },
+    {
+      "path": "qa/native-editor-semantic-next/checkpoint.mjs",
+      "sha256": "3fe5017f17f6b31002fe140e5d7a56e15618cc21d6d40dad4e7364c63e5d3877"
+    },
+    {
+      "path": "qa/native-editor-semantic-next/lifecycle-before-quiescence-observation.json",
+      "sha256": "b60ef329e19169d3f80278e230d89d35083187880e077bdfc9824139eb4a7944"
+    },
+    {
+      "path": "qa/native-editor-semantic-next/lifecycle-before-runloop-observation.json",
+      "sha256": "869a89852ae3c9ef4a5d04f8c73f48c53d00e2c21643632a0fd1db5fa01b6f5b"
+    },
+    {
+      "path": "qa/native-editor-semantic-next/main.swift",
+      "sha256": "886cc2767958ca43a90a756b19144338b325d9b8b6b937e7bdad3b79ffb36dd1"
+    },
+    {
+      "path": "qa/native-editor-semantic-next/run.sh",
+      "sha256": "4b194fd9bf1628ead1f4b7af9014166c7d3aa2ee2f30929e9c98ad70e24dcd89"
+    }
+  ],
+  "authorAppKitGates": 47,
+  "fixedAppNotRebuilt": true,
+  "normalApplicationNotIntegrated": true,
+  "imagesPasteDropDynamicHeightPending": true,
+  "swiftTestExecutableSha256": "9f4e7b3a40be76c17bbd7f9e09a53a779cf9a62e4e47bf753d3753c9e8dafc86"
+}

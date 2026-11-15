@@ -1,0 +1,11 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+const stage=process.argv[2];if(!/^[a-z0-9-]+$/.test(stage??''))throw Error('explicit stage required');
+const hash=data=>crypto.createHash('sha256').update(data).digest('hex');
+const walk=p=>fs.readdirSync(p,{withFileTypes:true}).flatMap(e=>e.name==='build'?[]:e.isDirectory()?walk(path.join(p,e.name)):[path.join(p,e.name)]);
+const files=[...walk('composer_native'),...walk('qa/native-editor-semantic-next')].sort();
+const target='qa/checkpoints/native-editor-'+stage;if(fs.existsSync(target))throw Error('checkpoint exists');fs.mkdirSync(target,{recursive:true});
+const sources=files.map(p=>{const data=fs.readFileSync(p),out=path.join(target,'source',p);fs.mkdirSync(path.dirname(out),{recursive:true});fs.writeFileSync(out,data);return{path:p,sha256:hash(data)}});
+const result=JSON.parse(fs.readFileSync('qa/native-editor-semantic-next/build/results.json'));if(!result.passed)throw Error('AppKit gates failed');fs.writeFileSync(path.join(target,'results.json'),JSON.stringify(result,null,2)+'\n');
+const manifest={stage,createdAt:new Date().toISOString(),source:sources,authorAppKitGates:Object.keys(result.checks).length,fixedAppNotRebuilt:true,normalApplicationNotIntegrated:true,imagesPasteDropDynamicHeightPending:true,swiftTestExecutableSha256:hash(fs.readFileSync('qa/native-editor-semantic-next/build/native-editor-semantic-checks'))};fs.writeFileSync(path.join(target,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');console.log(JSON.stringify({checkpoint:target,sourceCount:sources.length,appKitGates:manifest.authorAppKitGates,manifestSha256:hash(fs.readFileSync(path.join(target,'manifest.json')))}));

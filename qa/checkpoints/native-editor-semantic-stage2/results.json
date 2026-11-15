@@ -1,0 +1,88 @@
+{
+  "checks": {
+    "accepted-commit-cuts-undo-resurrection": true,
+    "accepted-commit-preserves-new-suffix-and-occurrence": true,
+    "accepted-old-identical-clipboard-preserves-new-occurrence": true,
+    "builtin-source-admitted": true,
+    "CAS-replace-increments-content-revision-once": true,
+    "completion-redo-keeps-reference-identity": true,
+    "completion-undo-restores-only-token": true,
+    "duplicate-accepted-commit-does-not-clear-suffix": true,
+    "duplicate-after-user-undo-remains-inert": true,
+    "marked-cmd-enter-forwarded-without-submit": true,
+    "missing-source-rejected": true,
+    "modifier-0-complete-flags-carried": true,
+    "modifier-0-exact-submit-policy": true,
+    "modifier-1-exact-submit-policy": true,
+    "modifier-2-complete-flags-carried": true,
+    "modifier-2-exact-submit-policy": true,
+    "modifier-3-exact-submit-policy": true,
+    "modifier-4-exact-submit-policy": true,
+    "modifier-5-exact-submit-policy": true,
+    "modifier-6-exact-submit-policy": true,
+    "modifier-7-exact-submit-policy": true,
+    "modifier-8-complete-flags-carried": true,
+    "modifier-8-exact-submit-policy": true,
+    "modifier-9-exact-submit-policy": true,
+    "modifier-10-exact-submit-policy": true,
+    "modifier-11-exact-submit-policy": true,
+    "modifier-12-exact-submit-policy": true,
+    "modifier-13-exact-submit-policy": true,
+    "modifier-14-exact-submit-policy": true,
+    "modifier-15-exact-submit-policy": true,
+    "replaceSpan-requires-semantic-CAS": true,
+    "same-clipboard-new-occurrence-changes-digest": true,
+    "same-clipboard-old-CAS-rejected": true,
+    "selection-style-popup-do-not-change-semantic-revision": true,
+    "shift-only-native-newline": true,
+    "surrogate-half-range-is-rejected": true,
+    "unknown-source-rejected-before-scope-mutation": true
+  },
+  "digestSamples": [
+    {
+      "digest": "88cdaf38e7c0d5188ba41d7cdab44989068ef9a564823a3bc3605ba26c658ef0",
+      "runs": [
+        {
+          "kind": "text",
+          "text": "前🙂 @"
+        }
+      ]
+    },
+    {
+      "digest": "9dfcd3c96333d0447dae6ed020febd303f117ed7cdd982678e1891b6a42b79de",
+      "runs": [
+        {
+          "kind": "text",
+          "text": "前🙂 "
+        },
+        {
+          "appearance": "file",
+          "clipboardText": "@file",
+          "id": "ref-1",
+          "kind": "reference",
+          "label": "file",
+          "ref": "@file",
+          "source": "reference"
+        }
+      ]
+    },
+    {
+      "digest": "52ba92877c1461bb001b366dc979b7ce2ca9fdbac11791af46aa4e9439ae4aca",
+      "runs": [
+        {
+          "appearance": "file",
+          "clipboardText": "@file",
+          "id": "ref-1",
+          "kind": "reference",
+          "label": "file",
+          "ref": "@file",
+          "source": "reference"
+        }
+      ]
+    }
+  ],
+  "normalAndFrozenNextUnchanged": true,
+  "passed": true,
+  "scope": "actual NSTextView local methods; no public NativeView GUI/no Host/network",
+  "stage": "2-semantic-CAS-and-accepted-history"
+}
