@@ -6,13 +6,15 @@ const root = dirname(fileURLToPath(import.meta.url));
 if (!process.argv[2])
   throw Error("Usage: node remote/package-runtime.mjs <destination>");
 const destination = resolve(process.argv[2]);
-const buildDirectory = process.argv.includes("--source-export-next")
-  ? "dist-export-next"
-  : process.argv.includes("--source-perf-next")
-    ? "dist-perf-next"
-    : process.argv.includes("--source-next")
-      ? "dist-next"
-      : "dist";
+const buildDirectory = process.argv.includes("--source-chat-process-next")
+  ? "dist-chat-process-next"
+  : process.argv.includes("--source-export-next")
+    ? "dist-export-next"
+    : process.argv.includes("--source-perf-next")
+      ? "dist-perf-next"
+      : process.argv.includes("--source-next")
+        ? "dist-next"
+        : "dist";
 if (destination === root || root.startsWith(destination + "/"))
   throw Error("Choose a separate staging destination.");
 await mkdir(destination, { recursive: true });
