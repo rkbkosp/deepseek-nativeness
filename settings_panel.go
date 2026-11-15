@@ -269,9 +269,9 @@ func (a *app) settingsChoice(c *ui.Context, title, description string, value *st
 
 func (a *app) generalSettings(c *ui.Context, host *settingsHostState) {
 	a.hostPermissionSetting(c, host)
-	a.settingRow(c, "语言", "", func() {
-		ui.Button(c, "中文").Disabled(true).Tooltip("当前原生界面提供中文")
-	})
+	// The interface ships in Chinese only. A disabled selector would advertise a
+	// choice that does not exist, so the row is absent until another locale is
+	// actually packaged.
 	ui.Column(c).Padding(20, 0, 16).Gap(12).BorderWidth(0, 0, 1, 0).BorderColor(a.theme.Border).Children(func() {
 		ui.Text(c, "外观").FontSize(14)
 		ui.Row(c).Gap(8).Children(func() {
