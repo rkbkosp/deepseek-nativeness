@@ -1,4 +1,4 @@
-# Native DSH Remote
+# DeepSeek Nativeness
 
 A macOS client prototype using MyGo native UI and an on-demand WKWebView. The existing MacMini Harness backend and `ds-harness-remote@0.6.4` remain unchanged. There is no local Agent runtime in this application.
 
@@ -15,7 +15,7 @@ Normal startup loads the independently stored server preference, configures a cl
 
 ```sh
 sh scripts/build-app.sh
-open 'build/Native DSH Remote.app'
+open 'build/DeepSeek Nativeness.app'
 ```
 
 The local `.app` has its own bundle identifier and includes Node, the client-only helper, and its dependencies. It resolves resources from its bundle and does not depend on the launch working directory. This is a local development artifact; it is not notarized or a published release.

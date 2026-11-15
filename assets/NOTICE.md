@@ -7,3 +7,5 @@ Icons are generated from `packages/client/ui-primitives/src/icons/artwork.ts`, w
 The running whale still path is derived from ui-chat's RunningWhaleTail REST_PATH in the frozen local DeepSeek Harness source, under the same MIT license.
 
 The hero fish silhouette is FISH_LOGO_PATH from ui-primitives FishLogo in the frozen local DeepSeek Harness source, under the same MIT license.
+
+The application icon (`app-icon.png`, `app-icon.icns`) is copied byte-for-byte from the installed DeepSeek Harness desktop app (`/Applications/DeepSeek Harness.app/Contents/Resources/icon.png` and `icon.icns`) so this client reuses the original product icon, as requested. It is not redrawn here; the DeepSeek name and mark remain DeepSeek's.
