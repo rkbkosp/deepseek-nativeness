@@ -1788,8 +1788,20 @@ export class RemoteAdapter {
       if (frame.type === "emit" && frame.event === "api-session/status") {
         const [id, running] = frame.args ?? [];
         this.runningBySession.set(id, !!running);
-        for (const row of this.sessionRows)
-          if (row.id === id) row.running = !!running;
+        for (const row of this.sessionRows) {
+          if (row.id !== id) continue;
+          // A Session whose first Turn started is no longer blank, exactly as
+          // the Host's own client records it on turn/start. Only a selected
+          // blank Session is listed, so leaving this row blank would drop it
+          // from the sidebar the moment the reader switched away. The list read
+          // that produced this row predates the Turn, so refresh its activity
+          // stamp here rather than waiting for another full list read.
+          if (running && !row.running) {
+            row.blank = false;
+            row.updatedAt = Math.max(row.updatedAt ?? 0, Date.now());
+          }
+          row.running = !!running;
+        }
         if (this.projection?.sessionId === id) {
           this.projection.running = !!running;
           this.scheduleSnapshot();

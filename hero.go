@@ -13,6 +13,7 @@ func (a *app) heroView(c *ui.Context) {
 				ui.Text(c, "预览版").Font("SF Mono, Menlo").FontSize(12).FixedLineHeight(18).TextColor(a.colors.Secondary).
 					Padding(1, 7).Radius(999).Border(.5, a.theme.Border).Background(a.colors.Subtle)
 			})
+			a.heroWorkspaceRow(c)
 			a.composerView(c)
 		})
 	})

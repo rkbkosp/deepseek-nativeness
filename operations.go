@@ -31,6 +31,9 @@ func (a *app) acceptSend(raw json.RawMessage, intent *sendIntent) error {
 		return fmt.Errorf("发送结果未确认，请核对会话，勿重复发送。请求：%s。%s", intent.ID, receipt.Detail)
 	}
 	intent.Unknown = false
+	// The accepted message starts the Turn: flip the row's blank flag now, so a
+	// switch cannot hide the Session before the Host's own list update lands.
+	a.markSessionTurnStarted(intent.SessionID)
 	original := intent.Draft
 	if original == "" {
 		original = intent.Text
