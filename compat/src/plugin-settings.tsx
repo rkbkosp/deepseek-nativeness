@@ -9,6 +9,7 @@ import settingsCss from "../../../deepseek-harness/packages/client/ui-settings-g
 import { hook, translate, resolveText } from "./presentation";
 import { store } from "./bridge";
 import { createPageRpc } from "./rpc-adapter";
+import { CompatBoundary } from "./error-boundary";
 
 export function createPluginSettings(ctx: any, call?: any) {
   const rpc = createPageRpc(ctx, call);
@@ -34,11 +35,13 @@ export default function PluginSettingsPage({ ctx }: { ctx: any }) {
   useEffect(() => () => face.dispose(), [face]);
   return (
     <main className={settingsCss.options} style={{ flex: 1 }}>
+      <CompatBoundary scope="card" label="plugins-settings">
       <PluginsSettingsSection
         t={translate(sectionZh) as any}
         useTabs={hook(face.tabs)}
         renderSlot={(_name: any, _props: any, options: any) =>
           options?.only === "all" ? (
+            <CompatBoundary scope="card" label="plugin-inventory">
             <PluginInventorySettingsTab
               list={face.list}
               useClientSync={hook(face.clientSync)}
@@ -49,11 +52,13 @@ export default function PluginSettingsPage({ ctx }: { ctx: any }) {
               }
               t={translate(inventoryZh) as any}
             />
+            </CompatBoundary>
           ) : (
             (options?.fallback ?? null)
           )
         }
       />
+      </CompatBoundary>
     </main>
   );
 }

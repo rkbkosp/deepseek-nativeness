@@ -7,15 +7,133 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 )
 
 type settingsOption struct{ value, label string }
 
 var settingsLayoutDebug = os.Getenv("NATIVE_DSH_DEBUG_LAYOUT") == "1"
+
+// appVersionInfo is what scripts/build-app.sh wrote beside the executable. A
+// launch that is not an .app bundle (go run, tests, a bare binary) has none,
+// and then the settings row says so instead of inventing a version.
+type appVersionInfo struct {
+	AppVersion, BuildNumber, RuntimeVersion, BuiltAt string
+	Bundled                                          bool
+}
+
+// settingsVersionSource is replaceable so tests need no bundle on disk. The
+// real source reads once: the row is drawn every frame, and a bundle's manifest
+// cannot change while the application runs.
+var (
+	appVersionOnce        sync.Once
+	appVersionMemo        appVersionInfo
+	settingsVersionSource = func() appVersionInfo {
+		appVersionOnce.Do(func() { appVersionMemo = readAppVersionInfo() })
+		return appVersionMemo
+	}
+)
+
+func readAppVersionInfo() appVersionInfo {
+	path := appVersionManifestPath()
+	if path == "" {
+		return appVersionInfo{}
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return appVersionInfo{}
+	}
+	var manifest struct {
+		AppVersion     string `json:"appVersion"`
+		BuildNumber    string `json:"buildNumber"`
+		RuntimeVersion string `json:"runtimeVersion"`
+		BuiltAt        string `json:"builtAt"`
+	}
+	if json.Unmarshal(data, &manifest) != nil {
+		return appVersionInfo{}
+	}
+	return appVersionInfo{
+		AppVersion:     strings.TrimSpace(manifest.AppVersion),
+		BuildNumber:    strings.TrimSpace(manifest.BuildNumber),
+		RuntimeVersion: strings.TrimSpace(manifest.RuntimeVersion),
+		BuiltAt:        strings.TrimSpace(manifest.BuiltAt),
+		Bundled:        true,
+	}
+}
+
+// summary is the version line: the shipped release, its build number, and the
+// runtime the bundle embeds. Every part is optional; the fallback names the
+// situation instead of showing a blank version.
+func (v appVersionInfo) summary() string {
+	if !v.Bundled {
+		return "开发构建（未从打包应用运行）"
+	}
+	version := v.AppVersion
+	if version == "" {
+		version = "未知"
+	}
+	if v.BuildNumber != "" {
+		version += "（构建 " + v.BuildNumber + "）"
+	}
+	line := "当前版本 " + version
+	if v.RuntimeVersion != "" {
+		line += " · 运行时 " + v.RuntimeVersion
+	}
+	return line
+}
+
+// settingsVersionDescription is the version row's line: this bundle's numbers
+// and the updater's state, so both are readable without opening a menu.
+func (a *app) settingsVersionDescription() string {
+	snapshot := updates.snapshot()
+	parts := []string{settingsVersionSource().summary()}
+	if summary := snapshot.Summary(); summary != "" {
+		parts = append(parts, summary)
+	}
+	if !snapshot.CheckedAt.IsZero() {
+		parts = append(parts, "上次检查 "+snapshot.CheckedAt.Local().Format("2006-01-02 15:04"))
+	}
+	return strings.Join(parts, " · ")
+}
+
+// Shell hooks are replaceable so a test observes the path without opening
+// Finder.
+var (
+	settingsConfigExists = func(path string) bool {
+		_, err := os.Stat(path)
+		return err == nil
+	}
+	settingsRevealConfigItem = mygo.Shell.ShowItemInFolder
+	settingsOpenConfigFolder = mygo.Shell.OpenPath
+)
+
+// revealSettingsConfig shows the client preference file, or its directory
+// while the file does not exist yet. It reports what happened, so the caller
+// can say it and hide the control when this launch has no preference path.
+func revealSettingsConfig() (bool, string) {
+	path := preferencePath()
+	if path == "" {
+		return false, "无法定位本地配置目录"
+	}
+	if settingsConfigExists(path) {
+		settingsRevealConfigItem(path)
+		return true, "已在 Finder 中显示配置文件"
+	}
+	directory := filepath.Dir(path)
+	if settingsConfigExists(directory) {
+		if err := settingsOpenConfigFolder(directory); err != nil {
+			return false, "无法打开配置目录：" + err.Error()
+		}
+		return true, "已打开配置目录（配置文件尚未创建）"
+	}
+	return false, "配置目录尚未创建"
+}
 
 func settingsCompatRoute(section string) string {
 	switch section {
@@ -71,10 +189,14 @@ type settingsHostState struct {
 	Started, Loading, Ready, Writable, Saving, Unknown bool
 	Error, Notice, DefaultPreset                       string
 	Namespaces                                         map[string]settingsHostNamespace
-	DefaultOptions                                     []settingsPermissionOption
-	ConfirmFull, Acknowledged                          bool
-	WKRect                                             ui.Rect
-	WKRectSeen                                         bool
+	// Served names every Host settings namespace this session read, in Host
+	// order. The reference sections report what the Host actually serves
+	// instead of assuming a namespace exists.
+	Served                    []string
+	DefaultOptions            []settingsPermissionOption
+	ConfirmFull, Acknowledged bool
+	WKRect                    ui.Rect
+	WKRectSeen                bool
 }
 
 func (a *app) settingsControlFill() ui.Color {
@@ -143,7 +265,15 @@ func (a *app) settingsView(c *ui.Context) {
 			ui.Column(c).Width(contentWidth).Shrink(0).Height(panelHeight).MinHeight(0).MinWidth(0).Justify(ui.Start).Children(func() {
 				ui.Row(c).Height(54).Shrink(0).Padding(16, 14, 8, 10).Gap(8).AlignItems(ui.Center).Children(func() {
 					ui.Spacer(c)
-					ui.Button(c, "打开配置文件").Disabled(true).Tooltip("当前 Remote 通道不支持打开主机配置文件")
+					// A preference path this launch cannot locate is hidden, not
+					// disabled: the control would be a promise it cannot keep.
+					if path := preferencePath(); path != "" {
+						if ui.Button(c, "打开配置文件").Tooltip("在 Finder 中显示本地配置文件：" + path).Clicked() {
+							if _, notice := revealSettingsConfig(); notice != "" {
+								a.copyNotice = notice
+							}
+						}
+					}
 					if ui.ButtonBase(c).Size(28, 28).Radius(6).Label("关闭设置").Children(func() { icon(c, "close-outline", 14) }).Clicked() {
 						a.closeSettings()
 					}
@@ -320,7 +450,7 @@ func (a *app) generalSettings(c *ui.Context, host *settingsHostState) {
 	})
 	// Version and the last check live here as well as in the application menu,
 	// so the state is readable without opening a menu.
-	a.settingRow(c, "版本与更新", a.updateSettingsDescription(), func() {
+	a.settingRow(c, "版本与更新", a.settingsVersionDescription(), func() {
 		if !updateCheckConfigured() {
 			ui.Text(c, "未配置更新源").FontSize(12).TextColor(a.theme.TextMuted)
 			return
@@ -340,6 +470,10 @@ func (a *app) generalSettings(c *ui.Context, host *settingsHostState) {
 			a.writeHostGeneralSetting(host, "session-log-deepseek", "enabled", enabled)
 		}
 	})
+	a.securityPrivacySection(c, host)
+	a.fileSearchSection(c)
+	a.notificationsSection(c, host)
+	a.shortcutsReferenceSection(c)
 	if host.Error != "" || host.Notice != "" {
 		text := host.Notice
 		if host.Error != "" {
@@ -453,10 +587,16 @@ func (a *app) loadHostGeneralSettings(s *settingsHostState) {
 			}
 			if err != nil {
 				s.Error = "无法读取主机设置：" + err.Error()
+				s.Served = nil
 				return
 			}
 			s.Namespaces = map[string]settingsHostNamespace{}
+			s.Served = nil
 			for _, ns := range describe.Namespaces {
+				if ns.NS == "" {
+					continue
+				}
+				s.Served = append(s.Served, ns.NS)
 				if ns.NS == "permission" || ns.NS == "session-log-deepseek" {
 					s.Namespaces[ns.NS] = ns
 				}
@@ -637,13 +777,196 @@ func (a *app) settingsFontFamily(c *ui.Context, title, description string, value
 	})
 }
 
+// settingsShortcutRows is the one read-only shortcut list both the reference
+// section and the shortcuts page show. Every row names a handler this build
+// installs: the ⌘B/⌘K/⌘, checks in app.go, the composer's Enter handling, the
+// approval card's Esc, and the application menu's accelerators. A shortcut
+// with no handler is absent rather than inert.
+var settingsShortcutRows = [][2]string{
+	{"⌘B", "展开或收起侧边栏"},
+	{"⌘K", "搜索会话"},
+	{"⌘,", "打开设置"},
+	{"Esc", "关闭弹层；取消当前等待的审批或提问"},
+	{"Enter", "发送消息；繁忙时按「繁忙时的发送行为」处理"},
+	{"⌘Enter / Ctrl+Enter", "以另一种发送行为发送"},
+	{"⌘⇧L", "打开本地工作区"},
+	{"⌘⇧N", "返回原生界面"},
+	{"⌘C / ⌘V / ⌘A", "复制、粘贴、全选（系统编辑菜单）"},
+}
+
+// settingsReadOnlyBlock is the shape the reference sections share: a heading
+// with an explanatory line, then values this launch read from the Host or from
+// its own state. Nothing here writes anything.
+func (a *app) settingsReadOnlyBlock(c *ui.Context, key, title, description string, rows [][2]string) {
+	ui.Column(c.Key("settings-reference-"+key)).Padding(20, 0, 16).Gap(10).BorderWidth(0, 0, 1, 0).BorderColor(a.theme.Border).Children(func() {
+		ui.Text(c, title).FontSize(14)
+		if description != "" {
+			ui.Text(c, description).FontSize(12).TextColor(a.theme.TextMuted).Wrap()
+		}
+		for _, row := range rows {
+			ui.Row(c).Gap(12).AlignItems(ui.Start).Children(func() {
+				ui.Text(c, row[0]).FontSize(12).TextColor(a.theme.TextMuted).Width(132).Shrink(0).Wrap()
+				ui.Text(c, row[1]).FontSize(12).Grow(1).MinWidth(0).Wrap().Selectable()
+			})
+		}
+	})
+}
+
+// settingsOperationState reads one operation's availability from the Host's
+// own access snapshot. It deliberately does not use can(), whose busy flag
+// would make a static reference line flicker during a running turn.
+func (a *app) settingsOperationState(name string) string {
+	if a.demo {
+		return "不可用：演示数据没有主机连接"
+	}
+	capability, known := a.operationCaps[name]
+	if known && capability.Supported {
+		return "可用"
+	}
+	if known && capability.Reason != "" {
+		return "不可用：" + capability.Reason
+	}
+	if known {
+		return "不可用：主机未授权"
+	}
+	return "不可用：当前连接未开放此操作"
+}
+
+func (a *app) settingsSectionHostState(host *settingsHostState) string {
+	switch {
+	case a.demo:
+		return "演示数据"
+	case host == nil || !host.Started:
+		return "尚未读取主机设置"
+	case host.Loading:
+		return "正在读取主机设置…"
+	case host.Unknown:
+		return "上次写入未确认，请刷新核对"
+	case !host.Ready:
+		return "读取失败"
+	case !host.Writable:
+		return "只读（主机未授予设置写入）"
+	default:
+		return "可写"
+	}
+}
+
+func hostNamespaceBool(host *settingsHostState, namespace, key string) (bool, bool) {
+	if host == nil {
+		return false, false
+	}
+	ns, served := host.Namespaces[namespace]
+	if !served {
+		return false, false
+	}
+	var value bool
+	if len(ns.Value[key]) == 0 || json.Unmarshal(ns.Value[key], &value) != nil {
+		return false, false
+	}
+	return value, true
+}
+
+// securityPrivacySection reports the effective permission and privacy facts the
+// Host serves, so the user can read them without changing anything.
+func (a *app) securityPrivacySection(c *ui.Context, host *settingsHostState) {
+	permission := "不可用"
+	options := "不可用"
+	if host != nil && host.Ready {
+		current := host.DefaultPreset
+		if ns, served := host.Namespaces["permission"]; served {
+			_ = json.Unmarshal(ns.Value["defaultPreset"], &current)
+		}
+		for _, option := range host.DefaultOptions {
+			if option.Value == current {
+				permission = permissionSettingLabel(option.Value, option.Name)
+				break
+			}
+		}
+		var labels []string
+		for _, option := range host.DefaultOptions {
+			labels = append(labels, permissionSettingLabel(option.Value, option.Name))
+		}
+		if len(labels) > 0 {
+			options = strings.Join(labels, "、")
+		}
+	}
+	upload := "主机未提供"
+	if enabled, served := hostNamespaceBool(host, "session-log-deepseek", "enabled"); served {
+		upload = map[bool]string{true: "开启", false: "关闭"}[enabled]
+	}
+	configPath := preferencePath()
+	if configPath == "" {
+		configPath = "当前启动无法定位"
+	}
+	a.settingsReadOnlyBlock(c, "security", "安全与隐私",
+		"以下状态读取自主机设置与本次连接，只作展示；修改请使用上方的权限与开关。", [][2]string{
+			{"主机设置状态", a.settingsSectionHostState(host)},
+			{"默认权限", permission},
+			{"权限可选值", options},
+			{"会话日志上传", upload},
+			{"本地配置文件", configPath},
+		})
+}
+
+// fileSearchSection reports the Host's file and search capability state with
+// the Host's own refusal reason where a capability is unavailable.
+func (a *app) fileSearchSection(c *ui.Context) {
+	a.settingsReadOnlyBlock(c, "files", "文件与搜索",
+		"这些能力由主机授予本次连接；不可用的项在右栏同样不会出现可点的入口。", [][2]string{
+			{"工作区目录浏览", a.settingsOperationState("listFiles")},
+			{"工作区文件读取", a.settingsOperationState("readFile")},
+			{"主机文件搜索", a.settingsOperationState("searchWorkspaceFiles")},
+			{"网页搜索提供方", a.settingsOperationState("listWebProviders")},
+			{"上传到工作区", a.settingsOperationState("uploadWorkspaceFile")},
+		})
+}
+
+// notificationsSection reports the notification facts this build can state
+// truthfully: the Host's notification namespaces, which are read from the
+// Host, and the absence of a system-notification sender in this client.
+func (a *app) notificationsSection(c *ui.Context, host *settingsHostState) {
+	var served []string
+	if host != nil {
+		for _, name := range host.Served {
+			lower := strings.ToLower(name)
+			if strings.Contains(lower, "notif") || strings.Contains(lower, "notify") {
+				served = append(served, name)
+			}
+		}
+	}
+	hostNotifications := "主机未提供通知设置"
+	if len(served) > 0 {
+		hostNotifications = strings.Join(served, "、")
+	} else if host != nil && !host.Ready && host.Started {
+		hostNotifications = "尚未读取主机设置"
+	}
+	a.settingsReadOnlyBlock(c, "notifications", "通知",
+		"通知内容由会话与主机产生；本构建不发送系统通知，状态在应用内显示。", [][2]string{
+			{"主机通知设置", hostNotifications},
+			{"系统通知", "未启用：本构建未接入系统通知"},
+			{"应用内提示", "右下角提示条与会话头状态；关闭后不再重复"},
+		})
+}
+
+// shortcutsReferenceSection is the read-only shortcut list inside General; the
+// shortcuts page renders the same table with room for its own header.
+func (a *app) shortcutsReferenceSection(c *ui.Context) {
+	a.settingsReadOnlyBlock(c, "shortcuts", "快捷键",
+		"只列当前构建真正生效的按键；完整列表见「快捷键」。", settingsShortcutRows)
+}
+
 func (a *app) settingsShortcuts(c *ui.Context) {
-	ui.Column(c).Padding(20, 0).Gap(12).Children(func() {
+	ui.Column(c).Padding(20, 0).Gap(10).Children(func() {
 		if ui.Button(c, "返回通用设置").Clicked() {
 			a.settingsSection = "general"
 		}
 		ui.Text(c, "快捷键").FontSize(16).FontWeight(500)
-		ui.Text(c, "快捷键由当前原生界面的操作提供。").TextColor(a.theme.TextMuted).Wrap()
-		ui.Text(c, "⌘B  收起或展开侧边栏\n⌘K  搜索会话\n⌘,  打开设置\nEsc  关闭弹层\n⌘C  复制选中的文字").FontSize(14).Wrap().Selectable()
+		ui.Text(c, "只列出当前原生界面已经接线的按键；未接入的快捷键不会出现在这里。").TextColor(a.theme.TextMuted).Wrap()
+		for _, row := range settingsShortcutRows {
+			ui.Row(c).Gap(12).AlignItems(ui.Start).Children(func() {
+				ui.Text(c, row[0]).FontSize(13).Width(168).Shrink(0).Selectable()
+				ui.Text(c, row[1]).FontSize(13).Grow(1).MinWidth(0).Wrap().TextColor(a.theme.TextMuted)
+			})
+		}
 	})
 }
