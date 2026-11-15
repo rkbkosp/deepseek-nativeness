@@ -1,0 +1,16 @@
+/native-dsh-acceptance
+/captures/
+/runtime-results/
+
+# Compiled cross-check harnesses. The neighboring build-and-run scripts recreate
+# them; the result and review JSONs next to them are the evidence we keep.
+/native-hot-activation-cross/build/native-hot-cross
+/native-hot-activation-cross/build/wip-diagnostic
+/native-hot-activation-cross/build/without-lazy-fix/check
+/native-editor-hot-next/build/legacy-semantic-checks
+/native-editor-hot-next/build/native-editor-hot-checks
+/native-editor-hot-next/build/libNativeComposerHot.dylib
+/_native-semantic-cross/build/independent-swift
+/_native-semantic-cross/build/independent-swift-fixed
+/_native-semantic-cross/build/stage3-author-recompiled
+/_native-semantic-cross/build/stage3-author-fixed-recompiled

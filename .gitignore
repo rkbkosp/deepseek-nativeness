@@ -30,3 +30,9 @@
 
 # The reused official app icon must be committed despite the QA capture rule.
 !assets/app-icon.png
+
+# `go build -o desktop` in the repository root. Packaging writes build/ instead.
+/desktop
+
+# QA harness TAP dumps are machine output; the review JSONs carry the evidence.
+*.tap
