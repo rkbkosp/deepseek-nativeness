@@ -1,0 +1,67 @@
+{
+  "scope": "Native full Markdown copy source/fixture gate. Test-only stdio metadata proxy forwards to actual frozen helper --fixture; every clipboard write uses injected in-memory sink, never OS pasteboard or private transcript.",
+  "baseCommit": "d296a5a",
+  "checkpoint": "qa/checkpoints/_markdown-native-final-20261114T160843Z",
+  "sourceHashes": {
+    "export_actions.go": {
+      "bytes": 5472,
+      "sha256": "a4a4b766d3a40ada101baacbd5425d09043492b911cb0e724ff7817972a3953a"
+    },
+    "export_actions_test.go": {
+      "bytes": 8974,
+      "sha256": "86c9f8c7a4789a8c7d9574373eef9ca9c27bbd1ee876e201a0ddd34d4e9a39d1"
+    },
+    "internal/fixtures/markdown-copy-proxy.mjs": {
+      "bytes": 1670,
+      "sha256": "8afc9bb197da9abe8204c2590a8af7805f3e5c9797ea3e152361c7337c6cdfd3"
+    },
+    "app.go": {
+      "bytes": 11063,
+      "sha256": "5f39a5102667ad71d16f930a5017ca37d4d7a0452316da6f1c37d616e0d2c818"
+    },
+    "conversation.go": {
+      "bytes": 12274,
+      "sha256": "593d197bd7b101be42cbc25153edd183fc794792b7738cf6a88c94a5bb21b510"
+    }
+  },
+  "helper": {
+    "bytes": 1445079,
+    "sha256": "33b66739e16f742975bf698240be3ff4f0264d8f4e461f7be1bc8a1363fbdb13"
+  },
+  "helperCheckpoint": "remote/checkpoints/session-actions-20261114T152720Z",
+  "commands": [
+    "NATIVE_DSH_REMOTE_CANDIDATE=$PWD/remote/dist-export-next/bridge.bundle.mjs go test -run '^TestFullMarkdown' -count=1 -json .",
+    "go test -race -run '^TestFullMarkdown' -count=1 .",
+    "go test ./...",
+    "go vet ./...",
+    "go test -overlay=qa/remote-layout-cross-overlay.json -run '^TestRemoteWireCross' -count=1 ."
+  ],
+  "pass": true,
+  "scenarioChecks": 12,
+  "testRecordsPassed": 13,
+  "checks": [
+    "actual header Menu→actual helper→original formatter→isolated clipboard once; repeated click joins intent",
+    "no ui.Context/Element retained across frames",
+    "late registration ack after prior closeOwner gets second release; actual owner count0, export request count0",
+    "held actual export response then canceled Call never reaches clipboard",
+    "complete helper result queued to UI then account/Host/generation/session/client/window change never reaches clipboard or success notice",
+    "registered owner removed after success, failure and cancellation",
+    "clipboard failure reports original failure text, never success",
+    "unavailable capability keeps original menu action disabled and emits no helper read",
+    "completed read releases Node owner before queued UI clipboard callback, without canceling a still-current intent"
+  ],
+  "race": "pass",
+  "fullGo": "pass",
+  "vet": "pass",
+  "independentGeometryAndKeyboard": "56 scenarios pass after author Focusable fix",
+  "liveAcceptance": "Parent independently read a real completed session through helper (no clipboard); this Go OS clipboard path was not exercised with private content.",
+  "frozenResourcesUntouched": [
+    "remote/dist-perf-next",
+    "compat/dist-perf-next",
+    "remote/dist-export-next",
+    "current installed App/backend"
+  ],
+  "supersedes": "qa/checkpoints/_markdown-native-20261114T160357Z/manifest.json",
+  "checkpointDirectoryPolicy": "underscore-prefix keeps raw .go snapshot files out of go test ./... package discovery",
+  "ownerFollowup": "Read goroutine defer releases helper owner after response/error/timeout even while clipboard UI completion is still queued; registration failures release immediately. A real helper queued-UI fixture proves owner0 before clipboard and then exactly one write if scope remains current."
+}
