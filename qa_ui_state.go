@@ -34,6 +34,7 @@ var qaUIStates = map[string]string{
 	"terminal":          "right pane terminal",
 	"workspace-create":  "new-workspace sheet",
 	"connection":        "host connection page (Remote or local facts)",
+	"plugins-race":      "plugins page opened in the same frame as a session switch (regression probe)",
 }
 
 // qaUIStateNeedsSession reports whether a surface is only reachable with an
@@ -61,6 +62,10 @@ func (a *app) applyQAUIStateWhenReady(state string) {
 		return
 	}
 	if qaUIStateNeedsSession[state] {
+		// `connected` becomes true before the catalog it triggers has been read
+		// back, so wait for the rows themselves; opening a Session-scoped surface
+		// against an empty catalog has nothing to scope it.
+		a.qaWaitFor(30*time.Second, func() bool { return len(a.sessions) > 0 })
 		opened := a.qaRunOnMain(func() bool {
 			if a.sessionID != "" {
 				return true
@@ -129,6 +134,13 @@ func (a *app) applyQAUIState(state string) {
 		if !a.localMode() {
 			a.fetchDevices()
 		}
+	case "plugins-race":
+		// The race the deferral exists for: switch Session and open a
+		// Session-scoped page before its first snapshot can arrive.
+		if len(a.sessions) > 1 {
+			a.chooseSession(a.sessions[1])
+		}
+		a.openCompat("plugins")
 	default:
 		log.Printf("qa: unknown ui state %q (known: %v)", state, knownQAUIStates())
 	}

@@ -263,11 +263,31 @@ func releaseRemoteOwner(client *bridge.Client, owner string) {
 func (a *app) openCompat(page string) {
 	a.openCompatAt(page, "main")
 }
+
+// compatOpenRetry is how long a Session-scoped compatibility page waits for the
+// Session it must bind to. Opening one while the Session is still loading
+// registers its owner against a scope that is about to change, and the page is
+// then refused with STALE_CONTEXT for good.
+const compatOpenRetry = 10 * time.Second
+
+// compatOpenedForTest observes a compatibility page open without starting a web
+// view. Tests set it; production leaves it nil.
+var compatOpenedForTest func(page string)
+
 func (a *app) openCompatAt(page, placement string) {
+	if compatOpenedForTest != nil {
+		// Tests observe the deferred open without starting a web view.
+		compatOpenedForTest(page)
+		return
+	}
 	a.closeWeb()
 	if !a.connected {
 		a.connectionOpen = true
 		a.error = "请先连接远程主机。"
+		return
+	}
+	if a.compatSessionLoading(page) {
+		a.deferCompatOpen(page, placement)
 		return
 	}
 	switch page {
@@ -350,6 +370,54 @@ func (a *app) openCompatAt(page, placement string) {
 		a.releaseCompatOwner(owner)
 	})
 }
+
+// compatSessionLoading reports whether this page is bound to a Session whose
+// first snapshot has not arrived. Only session-scoped pages defer: the settings
+// and model pages keep working while a Session loads.
+func (a *app) compatSessionLoading(page string) bool {
+	if !compatPageNeedsSession[page] {
+		return false
+	}
+	return a.sessionID != "" && (a.sessionOpening != "" || a.current.SessionID != a.sessionID)
+}
+
+// compatPageNeedsSession lists the pages whose data comes from one Session.
+var compatPageNeedsSession = map[string]bool{
+	"trajectory": true,
+	"terminal":   true,
+	"plugins":    true,
+	"automation": true,
+}
+
+// deferCompatOpen waits for the Session to settle, then opens the page. A later
+// click on another page wins: the deferred intent is abandoned when the user
+// has moved on, so a stale intent cannot replace what they are looking at.
+func (a *app) deferCompatOpen(page, placement string) {
+	generation := a.navigationGeneration
+	go func() {
+		deadline := time.Now().Add(compatOpenRetry)
+		for time.Now().Before(deadline) {
+			settled := make(chan bool, 1)
+			// a.update is the shell's own dispatcher: it runs inline when the
+			// app is headless (tests) and on the UI thread in the window.
+			a.update(func() { settled <- !a.compatSessionLoading(page) })
+			if <-settled {
+				a.update(func() {
+					if a.navigationGeneration != generation || !a.connected {
+						return
+					}
+					if !a.compatSessionLoading(page) {
+						a.openCompatAt(page, placement)
+					}
+				})
+				return
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+		log.Printf("compat: %s waited for its session and gave up", page)
+	}()
+}
+
 func (a *app) compatView(c *ui.Context) {
 	if a.compatPlacement == "main" {
 		ui.Box(c).Height(48).Shrink(0).DragWindow()
