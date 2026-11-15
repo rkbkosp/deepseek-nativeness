@@ -51,6 +51,8 @@ The outputs are `build/Native DSH Remote GUI11.app` and `build/Native DSH Remote
 
 Only these GUI11 targets also apply a local ad-hoc resource seal and verify it. The nested Node/wrtc signatures remain unchanged. Their pre-seal Go binaries are saved under `build/gui-checkpoints/gui11-*-preseal-native`; the final native signatures may differ because each seal binds its bundle identity and browser resources. This is not Developer ID signing or notarization.
 
+The separately authorized Developer ID stage is `node scripts/sign-gui11.mjs`. It copies the reviewed normal GUI11 app to a fresh `build/signed-gui11/Native DSH Remote.app`, signs wrtc → Node → outer app individually, and runs only a local helper fixture. Its Node entitlement list preserves the actual vendor grants while removing `get-task-allow`; Go/wrtc receive no exception entitlements. It records all code/data-section and non-signature resource comparisons under `build/signed-gui11-audit`. The Go code is still the `1feddef` build; the report separately records the signing-script commit. The script neither submits to Apple nor starts a GUI or publishes anything. Notarization requires the separate reviewed-app stage.
+
 Visual parity is in progress. Original DSH SVG artwork and the sidebar/header/composer proportions are reused; exact typography, all transitions, and M1 CPU/memory comparisons remain acceptance work. Do not infer M1 performance from local synthetic tests.
 
 The source references `../deepseek-harness` and `../mygo` are read-only. No backend code, configuration, database schema, application installation, or installed plugin has been changed.
