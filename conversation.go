@@ -36,13 +36,13 @@ func (a *app) header(c *ui.Context) {
 		ui.Row(c).Height(40).Padding(0, 28, 0, left).AlignItems(ui.End).DragWindow().Children(func() {
 			inner := ui.Row(c).Grow(1).Height(30).MinWidth(0).Gap(10).AlignItems(ui.Center)
 			inner.Children(func() {
-				title := "Native DSH Remote"
+				title := productName
 				for _, s := range a.sessions {
 					if s.ID == a.sessionID {
 						title = s.Title
 					}
 				}
-				if title == "Native DSH Remote" && a.subagentTitles != nil {
+				if title == productName && a.subagentTitles != nil {
 					if subagentTitle := a.subagentTitles[a.sessionID]; subagentTitle != "" {
 						title = subagentTitle
 					}
