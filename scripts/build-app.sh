@@ -111,7 +111,17 @@ swiftc -target "$indicator_arch-apple-macos15.8" -O -emit-library -module-name N
   indicator_native/Indicator.swift -o "$app/Contents/Frameworks/libNativeDSHIndicators.dylib" \
   -framework AppKit -framework QuartzCore
 codesign --force --sign - --timestamp=none "$app/Contents/Frameworks/libNativeDSHIndicators.dylib"
-CGO_ENABLED=0 go build -buildvcs=false -trimpath -tags mygo_noinspector -ldflags '-s -w -X github.com/egoist/mygo.production=1' -o "$app/Contents/MacOS/native-dsh" .
+# The update feed and its trust anchor are baked in at link time, so a build
+# without them simply has no "check for updates" entry rather than one that
+# cannot work.
+feed_ldflags=""
+if [ -n "${UPDATE_FEED_URL:-}" ]; then
+  feed_ldflags="$feed_ldflags -X main.updateFeedURL=$UPDATE_FEED_URL"
+fi
+if [ -n "${UPDATE_FEED_PUBLIC_KEY:-}" ]; then
+  feed_ldflags="$feed_ldflags -X main.updateFeedPublicKey=$UPDATE_FEED_PUBLIC_KEY"
+fi
+CGO_ENABLED=0 go build -buildvcs=false -trimpath -tags mygo_noinspector -ldflags "-s -w -X github.com/egoist/mygo.production=1$feed_ldflags" -o "$app/Contents/MacOS/native-dsh" .
 if [ "$remote_assets" = "dist-chat-process-next" ]; then
   cp "build/runtime-chat-process-next/node" "$app/Contents/MacOS/node"
 else
@@ -145,6 +155,12 @@ mkdir -p "$app/Contents/Resources/compat"
 cp -R "compat/$assets/." "$app/Contents/Resources/compat/"
 # The original DeepSeek Harness app icon, reused verbatim (see assets/NOTICE.md).
 cp assets/app-icon.icns "$app/Contents/Resources/icon.icns"
+# The update feed and its trust anchor are linked into the binary, never read
+# from a file an attacker could swap. Both default to empty, which removes the
+# "check for updates" entry entirely instead of leaving a button that cannot
+# work. Configure them in the release environment:
+#   UPDATE_FEED_URL=https://updates.example.com/native-dsh/feed.json
+#   UPDATE_FEED_PUBLIC_KEY=<base64 of the 32-byte Ed25519 public key>
 cat > "$app/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
