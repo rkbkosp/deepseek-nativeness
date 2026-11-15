@@ -1,0 +1,20 @@
+{
+  "createdAt": "2026-11-15T03:40:12.461Z",
+  "commit": "d310a064fc9140006c81d8823dc62d856e875e22",
+  "files": 36,
+  "stat": "d310a06 Add native composer semantic and hot activation primitives\n composer_native/.gitignore                         |   2 +\n composer_native/ComposerEditor.swift               | 331 ++++++++++++++++\n composer_native/HotActivation.swift                |  86 +++++\n composer_native/ReferenceGlyphs.swift              |  93 +++++\n composer_native/SemanticDocument.swift             |  67 ++++\n composer_native/backing.go                         |  20 +\n composer_native/backing_test.go                    |  33 ++\n composer_native/document_store.go                  | 421 +++++++++++++++++++++\n composer_native/document_store_prepare_test.go     | 345 +++++++++++++++++\n composer_native/document_store_test.go             | 311 +++++++++++++++\n composer_native/editor.go                          | 214 +++++++++++\n composer_native/editor_darwin.go                   | 252 ++++++++++++\n composer_native/editor_other.go                    |  19 +\n composer_native/editor_test.go                     |  59 +++\n composer_native/hot_activation.go                  | 113 ++++++\n composer_native/hot_activation_darwin.go           | 104 +++++\n composer_native/hot_activation_darwin_test.go      | 126 ++++++\n composer_native/hot_activation_other.go            |   9 +\n composer_native/hot_activation_test.go             |  68 ++++\n composer_native/queue_fence_test.go                |  73 ++++\n composer_native/receiver_darwin_test.go            |  82 ++++\n composer_native/semantic.go                        | 151 ++++++++\n qa/checkpoints/go.mod                              |   6 +\n .../manifest.json                                  |  68 ++++\n qa/composer-native-closure-final.json              | 206 ++++++++++\n qa/native-editor-hot-activation-review.json        | 144 +++++++\n qa/native-editor-hot-next/main.swift               | 129 +++++++\n qa/native-editor-hot-next/run.sh                   |   8 +\n qa/native-editor-semantic-next/main.swift          | 125 ++++++\n qa/native-editor-semantic-next/run.sh              |   8 +\n qa/native-editor-stage0-root-review.json           |  57 +++\n qa/native-hot-activation-cross/main.swift          | 103 +++++\n qa/native-hot-activation-cross/receiver.gotest     | 225 +++++++++++\n qa/native-hot-activation-cross/review.json         | 172 +++++++++\n qa/native-hot-activation-cross/run.mjs             |  48 +++\n qa/native-store-preflight-source-review.json       |  93 +++++\n 36 files changed, 4371 insertions(+)\n",
+  "approvedWhitelistSha256": "5d6fdaa92891cd4d98c03ab8feb1cb0cdf26fa0a1822c6600f3682785aa40b4a",
+  "preStage36HashesMatch": true,
+  "index36BlobHashesMatch": true,
+  "postCommit36HashesMatch": true,
+  "componentSourceCount": 22,
+  "componentSourceSetSha256": "c1f27eb6ba5c54186ca53fb5179a2af77ce01fa1021a7ee6268cbfd6da639b0e",
+  "stagedAreaEmpty": true,
+  "untouchedRootTrackedChanges": [
+    "qa/latest-results.json",
+    "qa/root-review-queue.json"
+  ],
+  "defaultProductionIntegrated": false,
+  "AppProofArtifactModified": false,
+  "sourceOnly": true
+}

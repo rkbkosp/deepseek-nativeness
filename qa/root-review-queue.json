@@ -1,20 +1,22 @@
 {
-  "updatedAt": "2026-11-15T02:58:21.091Z",
+  "updatedAt": "2026-11-15T03:41:11.572Z",
   "owner": "root",
   "scope": "Front-end implementation and frozen protocol wiring; no backend/config changes or live writes",
-  "currentAcceptedMilestone": "GUI11 actual completed Remote process/controller and signed hardened-runtime original WK settings/menu subchecks passed. Full UI parity remains unaccepted.",
+  "currentAcceptedMilestone": "GUI11 actual signed Remote/WK checks and notarized extracted archive accepted. Separate native composer stage0 Store preflight + same-owner hot activation primitives accepted; full parity unaccepted.",
   "nextCandidate": {
     "priority": 1,
-    "status": "Exact signed GUI11 Developer ID bundle submitted for private Apple notarization; no public publishing",
+    "status": "Next isolated opt-in production adapter slice remains to implement; default GUI11 unchanged",
     "reviews": [
-      "qa/parity-gui-round11.json",
-      "qa/gui11-signed-postgui-integrity.json",
-      "build/signed-gui11-audit/signing-review.json"
+      "qa/native-editor-stage0-root-review.json",
+      "qa/native-store-preflight-root-review.json",
+      "qa/native-editor-production-integration-plan.json"
     ],
     "items": [
-      "Accepted submission UUID/log, staple/validate, strict codesign and Gatekeeper",
-      "Freeze final app/zip full inventory and hashes, independently verify",
-      "Separate composer stage0 source contracts; production integration still off"
+      "One window-owned native editor and Store with explicit binding and scoped event admission, flag off by default",
+      "Reconcile cold accepted Store receipts with the exact saved native baseline and cut committed undo without resurrecting sent text or deleting retyped occurrences",
+      "Define exact invalid/oversize export and close behavior before dropping native owners",
+      "Reuse normal send/command/unknown receipt and image intake; PNG/drop/height/WK focus and physical IME integration gates",
+      "Actual macOS15.8/M1/working-stream performance and full visual/operation acceptance"
     ]
   },
   "backlog": [
@@ -167,5 +169,13 @@
     "productionDefault": false,
     "guiStatus": "Actual dd9d popup visibility/Down/pointer/blur preservation passed; system-light forced-dark pane remains white with light text, failed style; production integration still disabled"
   },
-  "supportedFrontendPriority": "qa/remote-frontend-priority-review.json"
+  "supportedFrontendPriority": "qa/remote-frontend-priority-review.json",
+  "notarizedDelivery": {
+    "report": "qa/gui11-notarization-root-review.json",
+    "zip": "build/notary-gui11/Native DSH Remote-macOS-arm64-notarized.zip",
+    "sha256": "68c587285692678764559be22c6359fe92f7435690f555d1e35886ebddc08a6e",
+    "publicRelease": false
+  },
+  "nativeComposerStage0SourceCommit": "d310a064fc9140006c81d8823dc62d856e875e22",
+  "nativeComposerProductionIntegrated": false
 }
