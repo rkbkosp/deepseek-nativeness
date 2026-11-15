@@ -1,0 +1,42 @@
+{
+  "scope": "Synthetic actual SessionProjection frames plus PresentationPublisher. CPU/heap on this Mac, not M1 end-to-end. Heap peak is sampled live growth, not total allocation. Map entry initialization and history lookup counts are exact instrumentation in a separate pass.",
+  "sources": {
+    "projection.mjs": "4882d763cfcc137ad29e70d32c34af174facaca5e35ba290481c0c7135ba10f0",
+    "updates.mjs": "9f76cf59dfdd543506b53182d67216b3d79d605dccc05cde4410ebcc4db76135"
+  },
+  "rows": [
+    {
+      "historyCount": 1000,
+      "chunkFlushes": 100,
+      "path": "dirty",
+      "elapsedMs": 1.3431660000000036,
+      "cpuMs": 2.687,
+      "baselineHeapUsedBytes": 9834192,
+      "heapPeakGrowthBytes": 1055744,
+      "heapRetainedGrowthBytes": 893248,
+      "historyMessageReads": 0,
+      "historyTrajectoryReads": 0,
+      "mapCreates": 200,
+      "mapEntriesInitialized": 200,
+      "wireBytes": 21405,
+      "notifications": 100
+    },
+    {
+      "historyCount": 10000,
+      "chunkFlushes": 100,
+      "path": "dirty",
+      "elapsedMs": 0.495041999999998,
+      "cpuMs": 1.97,
+      "baselineHeapUsedBytes": 22019560,
+      "heapPeakGrowthBytes": 784224,
+      "heapRetainedGrowthBytes": 784824,
+      "historyMessageReads": 0,
+      "historyTrajectoryReads": 0,
+      "mapCreates": 200,
+      "mapEntriesInitialized": 200,
+      "wireBytes": 21406,
+      "notifications": 100
+    }
+  ],
+  "byteMetric": "wireBytes counts serialized publisher method/params only; scoped stdio envelope adds fixed per-notification scope fields and is not included. Not a complete pipe byte total."
+}

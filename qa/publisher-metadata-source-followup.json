@@ -1,0 +1,11 @@
+{
+  "checkedAt": "2026-11-14T13:39:16.404Z",
+  "reviewer": "root",
+  "status": "source-only-independent-regression-passed-not-packaged",
+  "baseline": "qa/publisher-metadata-baseline.json",
+  "sourceSha256": "9f76cf59dfdd543506b53182d67216b3d79d605dccc05cde4410ebcc4db76135",
+  "notificationCount": 1,
+  "method": "messageUpsert",
+  "completeAttachmentPreserved": true,
+  "scope": "Pure synthetic publisher fixture, no actual image/credential/network/Host write; GUI6.1 old helper unchanged"
+}

@@ -1,0 +1,39 @@
+{
+  "scope": "Synthetic actual SessionProjection frames plus PresentationPublisher. CPU/heap on this Mac, not M1 end-to-end. Heap peak is sampled live growth, not total allocation. Map entry initialization and history lookup counts are exact instrumentation in a separate pass.",
+  "sources": {
+    "projection.mjs": "8d5819778d660869c7c6e0a96ec62c34e61fb7f3bd8c3f619ac5f46098ff831e",
+    "updates.mjs": "41c797d9b65f2b612b46b84ec46c47dd306d9456735582f82fe0ed2f49c4f00e"
+  },
+  "rows": [
+    {
+      "historyCount": 1000,
+      "chunkFlushes": 100,
+      "path": "full-snapshot",
+      "elapsedMs": 16.893083000000004,
+      "cpuMs": 27.206,
+      "heapPeakGrowthBytes": 8562968,
+      "heapRetainedGrowthBytes": 5327808,
+      "historyMessageReads": 100000,
+      "historyTrajectoryReads": 100000,
+      "mapCreates": 200,
+      "mapEntriesInitialized": 200100,
+      "wireBytes": 19524,
+      "notifications": 100
+    },
+    {
+      "historyCount": 10000,
+      "chunkFlushes": 100,
+      "path": "full-snapshot",
+      "elapsedMs": 181.3627080000001,
+      "cpuMs": 207.383,
+      "heapPeakGrowthBytes": 57506136,
+      "heapRetainedGrowthBytes": 19850472,
+      "historyMessageReads": 1000000,
+      "historyTrajectoryReads": 1000000,
+      "mapCreates": 200,
+      "mapEntriesInitialized": 2000100,
+      "wireBytes": 19525,
+      "notifications": 100
+    }
+  ]
+}

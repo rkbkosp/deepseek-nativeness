@@ -1,0 +1,38 @@
+{
+  "checkedAt": "2026-11-14T13:51:32.111Z",
+  "reviewer": "root",
+  "status": "source-only-independent-cross-layer-checks-passed-not-packaged",
+  "checks": [
+    {
+      "command": "node --test remote/test/dirty-publisher.test.mjs",
+      "passed": 4,
+      "scope": "Metadata-only image update, delta replay equivalence,1000/10000 history no-scan counter,actual adapter scheduled path with full snapshot forbidden"
+    },
+    {
+      "command": "CGO_ENABLED=0 go test . -run ^TestRealPublisherStructuredMetadataSurvivesGoNodeGo$ -count=1 -v",
+      "passed": 1,
+      "scope": "Reviewed then reran real Go-to-Node fixture stdio; final expected raw JSON compared recursively to Go state, avoiding common lossy expected-schema decoding"
+    }
+  ],
+  "sources": {
+    "remote/projection.mjs": "4882d763cfcc137ad29e70d32c34af174facaca5e35ba290481c0c7135ba10f0",
+    "remote/updates.mjs": "9f76cf59dfdd543506b53182d67216b3d79d605dccc05cde4410ebcc4db76135",
+    "remote/client.mjs": "72791e3e1c7b2501e18530ad9ba0ef02afa75db2fc4575c158c3b172a0b12c5d",
+    "model.go": "6aee10f38610c563353d6f3049c7b4d2c1e6149a41ef0434c33605c7502cea0f",
+    "incremental.go": "ea15f537c914f5ee0d1d533ffa5910c27d0899a7e5559e7e790ae3f8e8f1e2c3",
+    "structured_publisher_test.go": "f8fd78db74d364ab1840644cd7900a0c3f0dd04f8d54e0dc8c305e0bb7da4536"
+  },
+  "performanceReport": "qa/publisher-dirty-root-followup.json",
+  "findings": [
+    "10000 historical rows ×100chunk publications read0 historical message/trajectory map entries",
+    "100chunks initialize200 map entries instead of baseline2million",
+    "Full original image/other/tool metadata survives transport and Go schema",
+    "Go text/reasoning block indices update alongside rendered text and existing-ID authoritative move order is preserved"
+  ],
+  "limits": [
+    "Independent CPU/heap benchmark is a single synthetic local M4 sample; do not infer full-app/M1 savings",
+    "DTO preservation is not proof rich images render",
+    "GUI6.1 contains previous helper and does not include these changes",
+    "No remote Host or paid calls in these tests"
+  ]
+}
