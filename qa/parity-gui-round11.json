@@ -1,0 +1,89 @@
+{
+  "checkedAt": "2026-11-15T02:58:21.091Z",
+  "reviewer": "root",
+  "status": "observed-readonly-subchecks-passed-full-parity-unaccepted",
+  "platform": {
+    "chip": "Apple M4",
+    "macOS": "27.2.1",
+    "actualM1AndMacOS15_8": false
+  },
+  "target": "arm64 / macOS15.8+",
+  "stages": [
+    {
+      "kind": "local-adhoc",
+      "app": "build/Native DSH Remote GUI11.app",
+      "nativeBuildCommit": "1feddef",
+      "passed": [
+        "Own saved Remote identity and completed Figma session restored",
+        "Exactly one completed controller per turn: 已完成，用时7秒",
+        "Expanding controller exposed reasoning/figma_setup/reasoning/bash in source order; collapsing removed process rows while final reply remained",
+        "Original built-in plugin WK settings loaded; closing removed HTML and restored connected empty composer"
+      ],
+      "evidence": [
+        "/tmp/native-dsh-parity/156-gui11-live-controller-visible.png",
+        "/tmp/native-dsh-parity/157-gui11-live-process-expanded.png",
+        "/tmp/native-dsh-parity/158-gui11-live-wk-settings.png"
+      ],
+      "cuaCompletion": "通过新投影真实只读验收"
+    },
+    {
+      "kind": "Developer-ID-hardened-runtime",
+      "app": "build/signed-gui11/Native DSH Remote.app",
+      "manifest": "build/signed-gui11-audit/signed-manifest.json",
+      "manifestSha256": "74a26278aaa0caf9fceaa78ad1a92878dfd39abcbb9bf4efa8b221423c2c71b3",
+      "nativeSha256": "0e58da7d91bb90cc28ca0094f922de203d06fac9f7404d6579d2807701c9f26f",
+      "passed": [
+        "Saved identity/Host/completed native history restored without re-login",
+        "Original built-in plugins page rendered in WK",
+        "Physical preset dropdown opened at its trigger; current standard and four source options visible, no selection made",
+        "Final Escape state had no HTML/settings and remained Remote connected with empty composer",
+        "CmdQ/inventory confirmed signed application not running",
+        "Post-GUI full 3600 files and whole inventory matched frozen manifest; codesign strict/deep passed"
+      ],
+      "evidence": [
+        "/tmp/native-dsh-parity/159-signed-gui11-live-history.png",
+        "/tmp/native-dsh-parity/160-signed-gui11-wk-settings.png",
+        "/tmp/native-dsh-parity/161-signed-gui11-preset-menu.png"
+      ],
+      "integrity": "qa/gui11-signed-postgui-integrity.json",
+      "cuaCompletion": "通过签名客户端真实连接验收"
+    }
+  ],
+  "passedSubchecks": [
+    {
+      "id": "actual-turn-process-controller",
+      "detail": "GUI11 normal real completed-session native controller expansion/collapse and ordered reasoning/tool parts passed. No working stream induced.",
+      "evidence": [
+        "/tmp/native-dsh-parity/156-gui11-live-controller-visible.png",
+        "/tmp/native-dsh-parity/157-gui11-live-process-expanded.png"
+      ]
+    },
+    {
+      "id": "signed-remote-wk-readonly",
+      "detail": "Exact Developer ID/hardened-runtime normal app restored own auth/Host/history; original built-in WK page and preset dropdown rendered; final close restored native connected empty composer.",
+      "evidence": [
+        "/tmp/native-dsh-parity/159-signed-gui11-live-history.png",
+        "/tmp/native-dsh-parity/160-signed-gui11-wk-settings.png",
+        "/tmp/native-dsh-parity/161-signed-gui11-preset-menu.png"
+      ]
+    }
+  ],
+  "failedSubchecks": [],
+  "remoteMutations": [],
+  "privateCaptures": true,
+  "qualification": [
+    "One intermediate Escape text predicate did not establish modal retention; only final closed state is accepted.",
+    "Forced GUI11 QA bundle was not launched this round; historical GUI9 fallback acceptance remains historical.",
+    "Native Editor Proof3 is not integrated into normal GUI11.",
+    "Notarization/stapling is a separate append-only delivery stage; this report freezes pre-notary GUI evidence.",
+    "Full visual/operation parity, actual live stream, physical IME/image drop, M1 CPU/footprint and actual macOS15.8 runtime remain unaccepted."
+  ],
+  "candidateNativeSha256": "0e58da7d91bb90cc28ca0094f922de203d06fac9f7404d6579d2807701c9f26f",
+  "remaining": [
+    "One intermediate Escape text predicate did not establish modal retention; only final closed state is accepted.",
+    "Forced GUI11 QA bundle was not launched this round; historical GUI9 fallback acceptance remains historical.",
+    "Native Editor Proof3 is not integrated into normal GUI11.",
+    "Notarization/stapling is a separate append-only delivery stage; this report freezes pre-notary GUI evidence.",
+    "Full visual/operation parity, actual live stream, physical IME/image drop, M1 CPU/footprint and actual macOS15.8 runtime remain unaccepted."
+  ]
+}

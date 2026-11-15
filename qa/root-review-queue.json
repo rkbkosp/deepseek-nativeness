@@ -1,0 +1,171 @@
+{
+  "updatedAt": "2026-11-15T02:58:21.091Z",
+  "owner": "root",
+  "scope": "Front-end implementation and frozen protocol wiring; no backend/config changes or live writes",
+  "currentAcceptedMilestone": "GUI11 actual completed Remote process/controller and signed hardened-runtime original WK settings/menu subchecks passed. Full UI parity remains unaccepted.",
+  "nextCandidate": {
+    "priority": 1,
+    "status": "Exact signed GUI11 Developer ID bundle submitted for private Apple notarization; no public publishing",
+    "reviews": [
+      "qa/parity-gui-round11.json",
+      "qa/gui11-signed-postgui-integrity.json",
+      "build/signed-gui11-audit/signing-review.json"
+    ],
+    "items": [
+      "Accepted submission UUID/log, staple/validate, strict codesign and Gatekeeper",
+      "Freeze final app/zip full inventory and hashes, independently verify",
+      "Separate composer stage0 source contracts; production integration still off"
+    ]
+  },
+  "backlog": [
+    {
+      "id": "webkit-anchor-target-gap",
+      "owner": "native_client",
+      "priority": 1,
+      "evidence": "qa/webkit-compatibility-review.json",
+      "finding": "Pinned original portal/submenus rely on CSS anchor functions introduced in Safari26, while own build targetsSafari17.4. OS15.8 declaration and newer M4 screenshot do not ensure those features.",
+      "acceptance": "Feature detection plus bounded local fallback, actual placement/edge/nested/focus/lifecycle tests under forced unsupported branch. No system/private WebKit flags or backend edits.",
+      "status": "e7c90e4 local React layout reflow fix: actual author recompile then independent19 gates pass; root audited local coalescing and independently ran7 cross gates. New WK composed-screen/15.8 pending; old packages unchanged."
+    },
+    {
+      "id": "status-account-transition-order",
+      "owner": "native_client+remote_wire+acceptance_audit",
+      "priority": 1,
+      "finding": "Login disconnect emits old account status at generationN; successful authorization emits new account at the same generation. Event and RPC completion queues can reorder UI application; status Host/gen-only gate may restore prior account. QR completion also changes identity without a generation boundary.",
+      "acceptance": "Actual RemoteAdapter producer fixture plus independently delayed Go UI/RPC callback test; old status cannot regress identity and legitimate login/QR transitions remain accepted",
+      "status": "Repaired source and independent producer/Go-order checks; GUI7/GUI8 saved identity restored in actual windows. No live account switching attempted."
+    },
+    {
+      "id": "chat-row-cost",
+      "owner": "native_client",
+      "priority": 2,
+      "evidence": "qa/chat-rows-budget-baseline.json",
+      "finding": "10k next-input worst case 20.4ms/5MB per business update on M4; remove suffix scans and history reallocations",
+      "acceptance": "Same independent benchmark plus semantic fold regressions; no MyGo edits",
+      "status": "Source optimization independently checked; qa/chat-rows-budget-source-followup.json; not packaged"
+    },
+    {
+      "id": "publisher-cost-and-metadata",
+      "owner": "remote_wire",
+      "priority": 2,
+      "finding": "Full-map rebuilds per flush plus dropped metadata-only assistantBlocks changes in prefix delta branch",
+      "acceptance": "1000/10000 history×100 actual deltas cost/allocations and metadata-only update regression; preserve byte budget",
+      "status": "Metadata counterexample independently repaired in source; dirty actual-adapter tests ready for independent review; native cross-layer fixture pending"
+    },
+    {
+      "id": "sidebar-membership-order",
+      "owner": "native_client",
+      "priority": 2,
+      "finding": "Synthetic ungrouped ID empty admits SessionIDs-only owned records; original manual ordering is client persisted order, not membership sequence",
+      "acceptance": "Mixed ownership/unassigned/duplicate-ID scope fixtures; original source ordering semantics",
+      "status": "Author source repair/tests passed; root review pending; drag order still missing"
+    },
+    {
+      "id": "markdown-narrow-table",
+      "owner": "native_client",
+      "priority": 2,
+      "finding": "All-table680 minimum and two-column190 fixed differs from original under-four-column width100/cellmin100 rules",
+      "acceptance": "Finite real layout at narrow width plus original screenshot alignment",
+      "status": "GUI8 actual two-column narrow wrapping observed; 56-case source/layout review retained. Other table/code GUI behavior partial."
+    },
+    {
+      "id": "supported-actions-disabled",
+      "owner": "native_client",
+      "priority": 2,
+      "finding": "Message-level closing-message feedback and completed-turn footer fork have supported wrappers but disabled UI. Header sessionFeedback/record is absent allowlist and must not be substituted with text-only /feedback.",
+      "acceptance": "Original UX exact API/target/unknown-result fixture, no live mutations",
+      "evidence": "qa/remote-frontend-priority-review.json"
+    },
+    {
+      "id": "structured-content",
+      "owner": "remote_wire implementation; native_client/root review",
+      "priority": 2,
+      "finding": "Text and bounded history images already render. Confirmed remaining: unknown/file blocks silently omitted, adjacent image group geometry, empty interrupted rows; reasoning block ordering remains separate.",
+      "acceptance": "Preserve supported structured content; disabled reason only for proven resource restrictions",
+      "status": "GUI9 actual explicit local replay gallery/unknown/stopped observed; no Host reads. Full reasoning/final-answer grouping/original image preview/large carrier remain separate.",
+      "evidence": "qa/remote-frontend-priority-review.json"
+    },
+    {
+      "id": "composer-actions",
+      "owner": "acceptance_audit",
+      "priority": 2,
+      "finding": "Remaining attachment/session-reference/argument-picker/queue and editing shortcuts",
+      "acceptance": "Original source mapping and meaningful fixture/scope/IME checks; no live sends/uploads",
+      "status": "Source WIP session reference/image/queue; next complete slice pending author freeze"
+    },
+    {
+      "id": "header-preset-label",
+      "owner": "native_client",
+      "priority": 2,
+      "finding": "Current static label is far right. Original actual session header registers read-only AgentPresetLabel at order-10, title-adjacent14px icon/description tooltip and <=540 column hiding; AgentPresetSeat is distinct blank-hero selector.",
+      "acceptance": "Pinned ui-agent-preset/src/client/index.ts226-244 and AgentPresetLabel.tsx/.module.css; no preset selection on an existing session header.",
+      "status": "GUI8 actual title-adjacent readonly label and narrow hide observed; exact typography/full style not globally accepted."
+    },
+    {
+      "id": "adaptive-width-axis",
+      "owner": "native_client+acceptance_audit",
+      "priority": 2,
+      "finding": "Fixed680 chat/fixed712 composer differ after sidebar collapse/wide window; original shared axis clamp(680,columnWidth*.64,920), composer chat+32 and user width drag preference",
+      "acceptance": "Default responsive geometry, narrow fit, sidebar collapse and persisted width interaction source matching"
+    },
+    {
+      "id": "complete-session-markdown",
+      "priority": 2,
+      "owner": "remote_wire",
+      "status": "Actual LAN read plus candidate fixture and root Go copy lifecycle tests passed; GUI8 action enabled observed; private clipboard deliberately not used.",
+      "evidence": "qa/session-actions-root-review.json"
+    },
+    {
+      "id": "native-rich-input",
+      "priority": 2,
+      "owner": "acceptance_audit",
+      "status": "dd9d actual candidate visible, Down highlight, real coordinate selection and blur preservation passed. Forced-dark actual backing failed, assigned source fix; latest f8 semantic source separately cross-reviewed, not inside dd9d or GUI9.",
+      "acceptance": "Original triple projection/occurrence/IME/undo/owner semantics, bounded50scope surface reuse, theme/size, no stale sends; actual CUA required"
+    },
+    {
+      "id": "authoritative-answer-grouping",
+      "owner": "remote_wire/native_client",
+      "priority": 2,
+      "finding": "Native FoldedReplies final still relies on last textual assistant heuristic; original ChatNodeSeat uses processSpec.answerStep/answerAnchorSeq. Image/unknown closing replies and reasoning order may diverge under folding.",
+      "acceptance": "Preserve original turn/process authoritative answer selection from already available event/projection data. Add actual full a.view all/final and text/image/unknown closing turn cases; no Host writes.",
+      "status": "Separate frontend projection gap; not repaired by three-block renderer slice",
+      "evidence": "qa/remote-frontend-priority-review.json"
+    },
+    {
+      "id": "native-theme-appearance",
+      "priority": 1,
+      "owner": "native_client + acceptance_audit",
+      "finding": "GUI9 explicit dark replay on system light leaves native sidebar light; dd9d native input has white backing/light text. App draw palette and native appearance/backing differ.",
+      "status": "Root actual screen failure; public source entry and instance backing repair assigned, old bundles preserved",
+      "evidence": [
+        "qa/parity-gui-round9.json",
+        "qa/native-editor-next-gui-review.json"
+      ]
+    }
+  ],
+  "provenFrozenLimits": [
+    "Installed schedule create legacy interceptor mismatches current typed Host API",
+    "Installed plugin update updatable gate mismatches current Host update discriminant",
+    "No allowed loopback ports for arbitrary plugin/static resources or raw Session ZIP/log downloads",
+    "Header complete sessionFeedback/record form absent from installed Remote allowlist"
+  ],
+  "policy": "Source or synthetic pass is not GUI parity; exact packaged GUI evidence required. M1 full-client performance remains unverified.",
+  "reviews": [
+    "qa/parity-gui-round6.json",
+    "qa/parity-gui-round6.1.json",
+    "qa/parity-gui-round7.json",
+    "qa/parity-gui-round8.json"
+  ],
+  "largeImageLimit": {
+    "kind": "client-design-gap",
+    "detail": "Own stdio1MiB ceiling; not a proven frozen Host limit. Private local staging-ticket design must be audited against actual gateway limits; no live image dispatch."
+  },
+  "nativeEditorCandidate": {
+    "fixedVisualProof": "dd9dcef8924dad1ea5846d4e71832b588a8c25b4cd876e60640a961884468e9e",
+    "sourceSlice": "f8e450e8fb1e1e70aa6156321572d1d06b4d0f096df7324fccda3599539b5192",
+    "sourceReview": "qa/native-semantic-final-root-review.json",
+    "productionDefault": false,
+    "guiStatus": "Actual dd9d popup visibility/Down/pointer/blur preservation passed; system-light forced-dark pane remains white with light text, failed style; production integration still disabled"
+  },
+  "supportedFrontendPriority": "qa/remote-frontend-priority-review.json"
+}

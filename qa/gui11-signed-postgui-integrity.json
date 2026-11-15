@@ -1,0 +1,10 @@
+{
+  "checkedAt": "2026-11-15T02:56:36.857Z",
+  "manifest": "build/signed-gui11-audit/signed-manifest.json",
+  "manifestSha256": "74a26278aaa0caf9fceaa78ad1a92878dfd39abcbb9bf4efa8b221423c2c71b3",
+  "app": "/Volumes/SuperDisk/native-dsh/desktop/build/signed-gui11/Native DSH Remote.app",
+  "files": 3600,
+  "errors": [],
+  "pass": true,
+  "afterSignedGui": true
+}

@@ -33,7 +33,7 @@ const guiRound1URL=new URL('./parity-gui-round1.json',import.meta.url);
 const guiRound1=fs.existsSync(guiRound1URL)?JSON.parse(fs.readFileSync(guiRound1URL,'utf8')):null;
 const guiRound2URL=new URL('./parity-gui-round2.json',import.meta.url);
 const guiRound2=fs.existsSync(guiRound2URL)?JSON.parse(fs.readFileSync(guiRound2URL,'utf8')):null;
-const laterReviews=[3,4,5,'5.1',6,'6.1',7,8,9,10].map(n=>{const url=new URL(`./parity-gui-round${n}.json`,import.meta.url);return fs.existsSync(url)?{n,value:JSON.parse(fs.readFileSync(url,'utf8'))}:null}).filter(Boolean);
+const laterReviews=[3,4,5,'5.1',6,'6.1',7,8,9,10,11].map(n=>{const url=new URL(`./parity-gui-round${n}.json`,import.meta.url);return fs.existsSync(url)?{n,value:JSON.parse(fs.readFileSync(url,'utf8'))}:null}).filter(Boolean);
 const round4Rows={
  'real-history-render':['sidebar-1','header-1','chat-11','composer-3'],
  'real-file-read':['right-pane-1','right-pane-3'],
@@ -222,9 +222,11 @@ const reviewMap={
  'structured-replay-unknown-stop':['chat-8','chat-11'],
  'forced-dark-native-sidebar':['shell-1','settings-4'],
  'light-native-wk-settings-seam':['settings-1','plugins-3','shell-1'],
- 'native-theme-transition-control':['shell-1','settings-4']
+ 'native-theme-transition-control':['shell-1','settings-4'],
+ 'actual-turn-process-controller':['chat-2','chat-4','chat-6'],
+ 'signed-remote-wk-readonly':['composer-1','composer-2','settings-1','plugins-3','extra-6']
 };
-for(const n of [6,'6.1',7,8,9,10]){
+for(const n of [6,'6.1',7,8,9,10,11]){
  const review=laterReviews.find(x=>x.n===n)?.value;if(!review)continue;
  for(const [field,status]of [['passedSubchecks','observed-passed-subcheck'],['failedSubchecks','observed-failed-subcheck']]){
   for(const check of review[field]??[]){for(const id of reviewMap[check.id]??[]){

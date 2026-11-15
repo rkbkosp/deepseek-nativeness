@@ -1,0 +1,199 @@
+{
+  "checkedAt": "2026-11-14T10:18:24.389Z",
+  "stage": "GUI11 real completed Remote controller and signed WK/read-only subchecks passed; Apple notarization in progress; full parity/M1/15.8 unaccepted",
+  "commands": [
+    {
+      "command": "npm test --prefix remote",
+      "exitCode": 0,
+      "testsPassed": 13
+    },
+    {
+      "command": "node --test qa/projection-acceptance.test.mjs qa/remote-contract.test.mjs",
+      "exitCode": 0,
+      "testsPassed": 17
+    },
+    {
+      "command": "CGO_ENABLED=0 go test ./... -count=1 -timeout=45s",
+      "exitCode": 0,
+      "packagesPassed": [
+        "native-dsh/desktop",
+        "native-dsh/desktop/internal/bridge",
+        "native-dsh/desktop/qa"
+      ]
+    },
+    {
+      "command": "node qa/verify-freeze.mjs",
+      "exitCode": 0,
+      "checksPassed": 6
+    },
+    {
+      "command": "CGO_ENABLED=0 go test . -run ^TestPublisherWireToNativeIncrementalState$ -count=1 -timeout=20s -v",
+      "exitCode": 0,
+      "testsPassed": 1,
+      "evidence": "Actual Go bridge consumes messages from real Node SessionProjection and PresentationPublisher; original history, corrected reply, settlement removal and child question provenance preserved. Fixture only, no network."
+    },
+    {
+      "command": "node remote/probe.mjs https://dsh.rkbkosp.cn <authorized-Mac-mini-id>",
+      "exitCode": 0,
+      "evidence": "LAN readOnly=true, 3 workspaces and 12 root sessions; no $events answerer."
+    },
+    {
+      "command": "node qa/live-readonly-probe.mjs https://dsh.rkbkosp.cn qa/runtime-results/live-readonly.json",
+      "exitCode": 0,
+      "evidence": "188 unique records at cursor 3786, 384 unique after older page, hasMore true; runningCount zero so live updates not exercised."
+    }
+  ],
+  "actualNativeAnimationSmokes": {
+    "machine": "Development Mac mini, Apple M4",
+    "secondsPerCase": 3,
+    "source": "qa/runtime-results/spinners-*.json",
+    "cases": [
+      {
+        "sidebarRunningRows": 0,
+        "sidebarVisible": true,
+        "viewBuilds": 3,
+        "indicatorPaints": 0,
+        "animationFrames": 0
+      },
+      {
+        "sidebarRunningRows": 1,
+        "sidebarVisible": true,
+        "viewBuilds": 2,
+        "indicatorPaints": 354,
+        "animationFrames": 176
+      },
+      {
+        "sidebarRunningRows": 20,
+        "sidebarVisible": true,
+        "viewBuilds": 2,
+        "indicatorPaints": 2464,
+        "animationFrames": 175
+      },
+      {
+        "sidebarRunningRows": 20,
+        "sidebarVisible": false,
+        "viewBuilds": 2,
+        "indicatorPaints": 177,
+        "animationFrames": 176
+      }
+    ],
+    "interpretation": "The active conversation header has its own indicator. Virtualized off-screen sidebar rows do not all paint. Animation frames do not rebuild business views; zero active indicators schedules no animation frames. These are functional counters, not CPU savings or M1 performance measurements."
+  },
+  "incrementalWireFixture": {
+    "completedMessages": 1000,
+    "chunkFlushes": 100,
+    "notifications": 100,
+    "serializedBytes": 13826,
+    "initialUpserts": 1,
+    "subsequentDeltas": 99,
+    "interpretation": "Synthetic projection/publisher fixture only. Demonstrates completed history is not repeatedly serialized; does not measure real network or application latency."
+  },
+  "pending": [
+    "Full visual and operation matrix: narrow tables, correct read-only header preset Label, rich draft reference/command chips, other recorded frontend gaps",
+    "Full Markdown event reconstruction and supported feedback/fork wiring, no live mutations",
+    "Current frozen schedule/plugin/resource compatibility constraints",
+    "Actual macOS15.8 and M1 full-process CPU/footprint/frame acceptance; procedure qa/m1-acceptance-plan.md",
+    "Naturally running stream/reconnect observations; no manufactured Host workload"
+  ],
+  "realReadOnly": {
+    "startedAt": "2026-11-14T10:16:26.917Z",
+    "readOnly": true,
+    "interactionAnswerer": false,
+    "mutations": 0,
+    "stages": [
+      {
+        "stage": "devices",
+        "count": 2,
+        "onlineCount": 1,
+        "selectedHostHint": "68c5b71761f6"
+      },
+      {
+        "stage": "connected",
+        "transport": "LAN",
+        "workspaceCount": 3,
+        "sessionCount": 12,
+        "runningCount": 0
+      },
+      {
+        "stage": "completed-passive-follow",
+        "sessionHint": "dacc57a64a60",
+        "messages": 188,
+        "uniqueMessageIds": 188,
+        "cursor": 3786,
+        "hasMore": true,
+        "running": false,
+        "pendingCount": 0,
+        "streamingMessages": 0
+      },
+      {
+        "stage": "older-history-page",
+        "sessionHint": "dacc57a64a60",
+        "messages": 384,
+        "uniqueMessageIds": 384,
+        "cursor": 3786,
+        "hasMore": true,
+        "running": false,
+        "pendingCount": 0,
+        "streamingMessages": 0
+      },
+      {
+        "stage": "running-passive-observation",
+        "status": "unverified-no-existing-running-session"
+      }
+    ],
+    "notificationCounts": {
+      "connection:status": 9,
+      "connection:sessions": 4,
+      "connection:snapshot": 3,
+      "completed-history:snapshot": 1,
+      "completed-history:status": 1
+    },
+    "readEndpointCounts": {
+      "workspace/follow": 1,
+      "session/list": 1,
+      "session/follow": 1,
+      "session/page": 1
+    },
+    "pass": true,
+    "finishedAt": "2026-11-14T10:16:37.299Z",
+    "clientExecution": "Development Mac mini running the new client against its selected Mac mini Host. This is not an M1 MacBook cross-machine acceptance test."
+  },
+  "lastFreezeCheck": {
+    "checkedAt": "2026-11-15T00:36:13.710Z",
+    "pass": true,
+    "checks": 8
+  },
+  "frontendInputSlice": {
+    "checkedAt": "2026-11-14T14:24:10.262Z",
+    "status": "source-author-fixture-qualified; root packaged GUI pending",
+    "report": "qa/composer-component-results.json",
+    "groups": 24,
+    "overlay": 15,
+    "independentProtocolTests": 25,
+    "freezeChecks": 8,
+    "scope": "macOS >=15.8; M1 target; no live writes or performance acceptance"
+  },
+  "historicalRecordedAt": "2026-11-14T10:18:24.389Z",
+  "updatedAt": "2026-11-15T02:58:21.091Z",
+  "historicalCommandsQualification": "Existing commands and early spinner counters below are retained historical results; their counts/hash/sample are not the current candidate full-suite results.",
+  "latestGui": {
+    "report": "qa/parity-gui-round11.json",
+    "integrity": "qa/gui11-signed-postgui-integrity.json",
+    "nativeSha256": "0e58da7d91bb90cc28ca0094f922de203d06fac9f7404d6579d2807701c9f26f",
+    "manifestSha256": "74a26278aaa0caf9fceaa78ad1a92878dfd39abcbb9bf4efa8b221423c2c71b3",
+    "platform": "M4 / macOS27.2.1 / arm64",
+    "target": "macOS15.8+ / M1 performance target",
+    "remoteMutations": 0
+  },
+  "latestIndependentSourceChecks": [
+    "qa/native-cross-retest.json",
+    "qa/notification-scope-root-review.json",
+    "qa/composer-input-root-review.json",
+    "qa/publisher-dirty-root-followup.json",
+    "qa/structured-publisher-source-followup.json",
+    "qa/message-display-root-review.json",
+    "qa/native-semantic-final-root-review.json",
+    "qa/root-chat-process-first-review.json"
+  ],
+  "nativeEditorGui": "qa/native-editor-theme3-gui-review.json"
+}
