@@ -35,6 +35,9 @@ func (a *app) loadPreferencesFrom(path string) {
 		ServerURL  string                    `json:"serverUrl"`
 		UI         viewPreferences           `json:"ui"`
 		Selections map[string]savedSelection `json:"selections,omitempty"`
+		// Update is the updater's own section: the feed override and the last
+		// check. Absent in files written before M7a.
+		Update *updatePreferenceState `json:"update,omitempty"`
 	}
 	p.UI = defaultViewPreferences()
 	if json.Unmarshal(data, &p) != nil {
@@ -42,6 +45,12 @@ func (a *app) loadPreferencesFrom(path string) {
 	}
 	a.uiPrefs = p.UI
 	a.savedSelections = p.Selections
+	if p.Update != nil {
+		updatePrefs = *p.Update
+		updatePrefs.normalize()
+	} else {
+		updatePrefs = updatePreferenceState{}
+	}
 	if a.uiPrefs.FontSize < 10 || a.uiPrefs.FontSize > 22 {
 		a.uiPrefs.FontSize = 14
 	}
@@ -63,11 +72,17 @@ func (a *app) savePreferencesTo(path string) {
 	if path == "" || a.demo {
 		return
 	}
+	update := updatePrefs
+	var updateField *updatePreferenceState
+	if !update.empty() {
+		updateField = &update
+	}
 	data, err := json.MarshalIndent(struct {
 		ServerURL  string                    `json:"serverUrl"`
 		UI         viewPreferences           `json:"ui"`
 		Selections map[string]savedSelection `json:"selections,omitempty"`
-	}{a.server, a.uiPrefs, a.savedSelections}, "", "  ")
+		Update     *updatePreferenceState    `json:"update,omitempty"`
+	}{a.server, a.uiPrefs, a.savedSelections, updateField}, "", "  ")
 	if err != nil {
 		return
 	}

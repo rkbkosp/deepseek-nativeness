@@ -318,6 +318,17 @@ func (a *app) generalSettings(c *ui.Context, host *settingsHostState) {
 			a.settingsSection = "shortcuts"
 		}
 	})
+	// Version and the last check live here as well as in the application menu,
+	// so the state is readable without opening a menu.
+	a.settingRow(c, "版本与更新", a.updateSettingsDescription(), func() {
+		if !updateCheckConfigured() {
+			ui.Text(c, "未配置更新源").FontSize(12).TextColor(a.theme.TextMuted)
+			return
+		}
+		if ui.Button(c, "检查更新…").Disabled(updates.snapshot().State == updateStateChecking).Clicked() {
+			a.checkForUpdates()
+		}
+	})
 	a.settingsChoice(c, "网页链接默认打开方式", "对话中网页链接的打开位置", &a.uiPrefs.LinkOpen, []settingsOption{{"sidebar", "应用内侧边栏"}, {"new-tab", "默认浏览器"}})
 	a.settingsChoice(c, "繁忙时的发送行为", "智能体运行时 Enter 键和发送按钮的行为；Cmd+Enter 使用另一行为", &a.uiPrefs.SendMode, []settingsOption{{"queue", "排队发送"}, {"steer", "立即发送"}})
 	a.settingsChoice(c, "性能与用量", "选择性能与用量信息展示的详细程度", &a.uiPrefs.UsageDetail, []settingsOption{{"compact", "简洁"}, {"detailed", "详细"}})

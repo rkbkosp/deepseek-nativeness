@@ -140,7 +140,10 @@ func (a *app) confirmQuit() bool {
 // own close and the Session archive, the edit roles, an explicit entry for the
 // local workspace, and the window list.
 func (a *app) installApplicationMenu() {
-	mygo.App.SetMenu(a.applicationMenu())
+	menu := a.applicationMenu()
+	// Keep the update entry for the check that disables it while one runs.
+	setUpdateMenuItem(menu.ItemByID(updateMenuID))
+	mygo.App.SetMenu(menu)
 }
 
 // applicationMenu is the template itself, without installing it, so that a test
@@ -149,29 +152,35 @@ func (a *app) applicationMenu() *mygo.Menu {
 	// The application menu is MyGo's own expansion with this client's About
 	// panel in place of the native one: the panel reports the runtime version,
 	// which is what support questions need.
-	appMenu := &mygo.MenuItem{
-		Role: mygo.RoleAppMenu,
-		Submenu: []*mygo.MenuItem{
-			{
-				ID:    "about",
-				Label: "关于 " + productName,
-				Click: func(*mygo.MenuItem, *mygo.Window) { a.showAbout() },
-			},
-			mygo.Separator(),
-			// An empty submenu (rather than no submenu) is what makes AppKit
-			// own the Services menu and fill it as it opens.
-			{ID: "app.services", Role: mygo.RoleServices, Submenu: []*mygo.MenuItem{}},
-			mygo.Separator(),
-			{ID: "app.hide", Role: mygo.RoleHide},
-			{ID: "app.hideOthers", Role: mygo.RoleHideOthers},
-			{ID: "app.unhide", Role: mygo.RoleUnhide},
-			mygo.Separator(),
-			// The role, not a Click of its own: MyGo's quit role asks the
-			// application to quit, which runs OnBeforeQuit and therefore the
-			// existing confirmation and Host shutdown.
-			{ID: "app.quit", Role: mygo.RoleQuit},
+	appSubmenu := []*mygo.MenuItem{
+		{
+			ID:    "about",
+			Label: "关于 " + productName,
+			Click: func(*mygo.MenuItem, *mygo.Window) { a.showAbout() },
 		},
 	}
+	// Checking for updates belongs under About, and only exists when this
+	// launch could actually check: a build without a feed shows no entry
+	// rather than a button that cannot work.
+	if check := a.checkForUpdatesMenuItem(); check != nil {
+		appSubmenu = append(appSubmenu, check)
+	}
+	appSubmenu = append(appSubmenu,
+		mygo.Separator(),
+		// An empty submenu (rather than no submenu) is what makes AppKit
+		// own the Services menu and fill it as it opens.
+		&mygo.MenuItem{ID: "app.services", Role: mygo.RoleServices, Submenu: []*mygo.MenuItem{}},
+		mygo.Separator(),
+		&mygo.MenuItem{ID: "app.hide", Role: mygo.RoleHide},
+		&mygo.MenuItem{ID: "app.hideOthers", Role: mygo.RoleHideOthers},
+		&mygo.MenuItem{ID: "app.unhide", Role: mygo.RoleUnhide},
+		mygo.Separator(),
+		// The role, not a Click of its own: MyGo's quit role asks the
+		// application to quit, which runs OnBeforeQuit and therefore the
+		// existing confirmation and Host shutdown.
+		&mygo.MenuItem{ID: "app.quit", Role: mygo.RoleQuit},
+	)
+	appMenu := &mygo.MenuItem{Role: mygo.RoleAppMenu, Submenu: appSubmenu}
 	// Closing the window hides it while this process owns a Host (the close
 	// policy below), and ends the process otherwise; the role only asks the
 	// window to close, so both modes keep that one path.
