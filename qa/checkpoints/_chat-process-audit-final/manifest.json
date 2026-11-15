@@ -1,0 +1,77 @@
+{
+  "createdAt": "2026-11-15T00:38:48.634Z",
+  "files": {
+    "qa/chat-process-final-audit.json": {
+      "bytes": 18528,
+      "sha256": "7be2465df9e4f397bf53ff56b242abbae56221c84e2bde1d74bce5fcf555df2c"
+    },
+    "qa/chat-process-source-plan.json": {
+      "bytes": 9614,
+      "sha256": "1d8f6203c20165a638ddce5989ce5a9bb296f3a174fe8ec570faa451fe7b8101"
+    },
+    "qa/chat-process-dto-contract.json": {
+      "bytes": 6587,
+      "sha256": "c7f73dcbab200b92014d842585f8fc05b2e74b504a2f4a9c055fc67145d553b5"
+    },
+    "qa/chat-process-producer-cross.gotest": {
+      "bytes": 3003,
+      "sha256": "e859cabcb21cf32965f3a45eb6e9a40b4309d09b2b6b2c8a8b25534f5b49a1a6"
+    },
+    "qa/chat-process-producer-cross-overlay.json": {
+      "bytes": 185,
+      "sha256": "022757671893d0d7eef4159de7bf855ffae23c29ea8a95257a889f1a5821ce5c"
+    },
+    "qa/_chat-process-audit/original.ts": {
+      "bytes": 4143,
+      "sha256": "8d3ecee54c72aebc1ceec8f62ab5e7235855b202573bb9ada21bf610ad0866e8"
+    },
+    "qa/_chat-process-audit/build.mjs": {
+      "bytes": 2169,
+      "sha256": "273ce09f44837fc352412538382be45ffcce9cff0970df65670d41b1cc71266b"
+    },
+    "qa/_chat-process-audit/producer.mjs": {
+      "bytes": 4505,
+      "sha256": "5d9eafc011ca6eec28484a6475465e9ac5fa0f567330f8ab174e9639a3768ebb"
+    },
+    "qa/_chat-process-audit/bench.mjs": {
+      "bytes": 4508,
+      "sha256": "25ab4e6fcd85c17587254019cf92d1d9e79fd26780def1e93008cef5b04dc97b"
+    },
+    "qa/_chat-process-audit/compact-check.mjs": {
+      "bytes": 3059,
+      "sha256": "691a2485690f07984e9dd4054d496dbcc9ae4f1a9bd6a81890bbb069200ee0dd"
+    },
+    "qa/_chat-process-audit/build/inputs.json": {
+      "bytes": 7250,
+      "sha256": "15367ffecd4a8ac462ad13359a0f4f5b53307e324629c1c38b901ecaea51bf4a"
+    },
+    "qa/_chat-process-audit/build/producer-results.json": {
+      "bytes": 26287,
+      "sha256": "a2fd5e6bc6f647d5ed1b56963432b26f7f565e67ca85de848bec983df63ac044"
+    },
+    "qa/_chat-process-audit/build/native-producer-cross-results.log": {
+      "bytes": 967,
+      "sha256": "640a9ad0070d72081cce7869b9c4f4fb1015a51288af533ed11dde0ff9505fdb"
+    },
+    "qa/_chat-process-audit/build/installed-compact-results.json": {
+      "bytes": 1348,
+      "sha256": "67f17f9372c75ee527faa9f26b1b5cfa5e52ea0bc46d5f3038084472d33f8978"
+    },
+    "qa/_chat-process-audit/build/benchmark-production.json": {
+      "bytes": 6670,
+      "sha256": "02ad360653f70fa3ecd937144deb7779b505d67f5258b9504839d76d91fdfb6f"
+    },
+    "remote/projection.mjs": {
+      "bytes": 21028,
+      "sha256": "dbd6b723d1f7be91bd48f70117c8e3e6f6e1e61cf7a22d1f3f1c9a1028bcf545"
+    },
+    "remote/updates.mjs": {
+      "bytes": 7525,
+      "sha256": "f6258edd04d963278fad3175d4dcfdcbde4fa93414f1bdce797efe69e5f03119"
+    },
+    "remote/client.mjs": {
+      "bytes": 62574,
+      "sha256": "6aa9592cc7e71e4142a5bde66a902e11e3f52e30c914865746b5d4f477052a0f"
+    }
+  }
+}

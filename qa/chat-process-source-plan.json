@@ -1,0 +1,157 @@
+{
+  "createdAt": "2026-11-15T00:08:25.567Z",
+  "scope": "Read-only source audit. No GUI9, app, helper artifact, theme/input source or Host change.",
+  "sourceHashes": {
+    "../deepseek-harness/packages/client/ui-chat/src/client/chat/ChatNodeSeat.tsx": {
+      "bytes": 8513,
+      "sha256": "e3184a591fb0e2d71f6cf64031a36a4a6599edc90c15dd9ed55357d16e7ea754"
+    },
+    "../deepseek-harness/packages/client/ui-chat/src/client/chat/AssistantNodeView.tsx": {
+      "bytes": 3475,
+      "sha256": "0bedaacc01cdb134bdccced4690904d4a43ea3134739221f3f589b091ab9d922"
+    },
+    "../deepseek-harness/packages/client/ui-chat/src/client/chat/AssistantMarkdown.tsx": {
+      "bytes": 7497,
+      "sha256": "07f1fde40b63cfa4723bd049692d2e8ed705a3223ff67cfe6584e65f11a46e51"
+    },
+    "../deepseek-harness/packages/client/ui-chat/src/client/contract/assistant-content.ts": {
+      "bytes": 610,
+      "sha256": "a736c22b643545b1acd072e850add94bdf628c25c13e5fb1dd1046fffaa18c85"
+    },
+    "../deepseek-harness/packages/client/ui-chat/src/client/contract/group-tree.ts": {
+      "bytes": 1872,
+      "sha256": "adac187552b1459eaeb5bf9ae02fcae1b4e2a7e7e4f023a59fc1ebcd22865f33"
+    },
+    "../deepseek-harness/packages/client/ui-chat/src/client/conversation-nodes/assistant.ts": {
+      "bytes": 13967,
+      "sha256": "7dbf13220a118ccd74955b14e69460ce03972468c27fe4b15b5eef1b7f4c6929"
+    },
+    "../deepseek-harness/packages/client/ui-chat/src/client/conversation-nodes/turn-process.ts": {
+      "bytes": 14408,
+      "sha256": "c332215c684270d660cb365032c5cbcb5ca03984422c0c133eba5283dc35736e"
+    },
+    "../deepseek-harness/packages/client/ui-chat/src/client/conversation-nodes/turn-process-presentation.ts": {
+      "bytes": 5540,
+      "sha256": "9f635b0741ba1ac72f860c1b9b303fd313638ffb9f19d108224f17070a379bae"
+    },
+    "../deepseek-harness/packages/client/ui-chat/src/client/conversation-nodes/process-groups.ts": {
+      "bytes": 13405,
+      "sha256": "53e9f137db840f90b2d1a419ff39687234e35ae7d8a68a5a17795db93e82cd95"
+    },
+    "../deepseek-harness/packages/client/ui-chat/tests/conversation-node-definitions.client.spec.ts": {
+      "bytes": 141225,
+      "sha256": "3b37e91772a23c37e72beab3104520fe266b4eaaab88537956750071cde86f15"
+    },
+    "../deepseek-harness/packages/api/session-controller/src/client/sessions/assistant-stream.ts": {
+      "bytes": 8899,
+      "sha256": "4433f1b5256c886ee2a80469a2fff77c6b45826e2ef43af79835c93d8a1c4a63"
+    },
+    "../deepseek-harness/packages/api/session-controller/src/types.ts": {
+      "bytes": 27048,
+      "sha256": "6e516dea0351e74823d5f17289dd4842a949a3e405c5e4a25e3e50cf96bc7dbe"
+    },
+    "../deepseek-harness/packages/core/session/src/types.ts": {
+      "bytes": 25367,
+      "sha256": "1274e57822035991afd549ed9659a5dd4d66645d77171921d9b2601371911d2c"
+    },
+    "remote/projection.mjs": {
+      "bytes": 21028,
+      "sha256": "dbd6b723d1f7be91bd48f70117c8e3e6f6e1e61cf7a22d1f3f1c9a1028bcf545"
+    },
+    "remote/client.mjs": {
+      "bytes": 62574,
+      "sha256": "6aa9592cc7e71e4142a5bde66a902e11e3f52e30c914865746b5d4f477052a0f"
+    },
+    "conversation_rows.go": {
+      "bytes": 4170,
+      "sha256": "0a245f337016be5d511b69b58299750d6ef3e33bcc288eb7a23db8f815ddb492"
+    },
+    "conversation.go": {
+      "bytes": 13336,
+      "sha256": "6be96812f2eb0ac4604b4d3413a309d43188681fc80eaee8c8337d42fb581069"
+    },
+    "model.go": {
+      "bytes": 7184,
+      "sha256": "6aee10f38610c563353d6f3049c7b4d2c1e6149a41ef0434c33605c7502cea0f"
+    },
+    "incremental.go": {
+      "bytes": 6434,
+      "sha256": "ea15f537c914f5ee0d1d533ffa5910c27d0899a7e5559e7e790ae3f8e8f1e2c3"
+    },
+    "../deepseek-harness/packages/client/ui-chat/src/client/contract/turn-process.ts": {
+      "bytes": 2461,
+      "sha256": "dce44841b376607f143df8c990b4f9e54579655a2d6adc8fead2fe7112efe7ef"
+    }
+  },
+  "conclusion": "Frozen Remote protocol is sufficient for original turn/step final-answer and reasoning/response projection; this is frontend-derived state, not a missing backend endpoint.",
+  "originalRules": {
+    "answer": "latestAnswer reads only chronological turn.steps.at(-1), requires assistant-step.finalNode and hasAssistantReplyContent, and rejects any tool-call in its blocks. No backward fallback to earlier text.",
+    "replyContent": "Nonblank text, image and opaque other count; reasoning/tool-call do not.",
+    "process": "ChatNodeSeat uses processSpec answerStep/answerAnchorSeq, processStartSeq, turn closed/live and groupPart. Earlier response may fold only in final-only; reasoning stays process in both all/final.",
+    "split": "process-groups emits two references to one assistant-step: reasoning joins process; response stands outside step run. Original block order and one interruption marker are retained.",
+    "settlement": "ClientAssistantStream stages exact durable settlement until end; successful message retains transient rows until owning step/end; interrupted/failed/abandoned retire immediately. Stable assistant-step key survives transitions.",
+    "alwaysOpen": "Original turnProcessAlwaysOpen keeps open turns and aborted/interrupted/error turns open; interleaved input also keeps process open. Final-only membership applies only when folding is eligible."
+  },
+  "availableFromFrozenWire": [
+    "Raw seq/time/type/data including turn/step and step/start/end,turn/start/end reason",
+    "assistant/message content/id/interrupted/usage and full surfaceOp",
+    "assistant-stream start/chunk/end, exact outcome eventType/seq, baseline activeAttempt/nextIndex",
+    "Passive follow snapshot window/hasMore and older raw session/events pages"
+  ],
+  "lossPoints": [
+    {
+      "layer": "helper",
+      "file": "remote/projection.mjs",
+      "detail": "Events map retains full raw records, but published turns only have turn start/end; no step timeline or answer/control spec. Messages are one row per durable event/attempt, not one stable assistant-step. assistant/attempt is rendered as chat text when it should not become a surface final."
+    },
+    {
+      "layer": "helper stream",
+      "file": "remote/projection.mjs",
+      "detail": "A same-turn/step durable message immediately drops current attempt before stream end; does not implement staged/publish/retained-until-step-end source state."
+    },
+    {
+      "layer": "Go DTO",
+      "file": "model.go",
+      "detail": "trajectoryEvent retains data but discards outer surfaceOp/sourceEventSeqs. message.Seq/trajectory.Seq are int64, while original synthetic layout anchors can be fractional. Full raw Node events remain available before this loss."
+    },
+    {
+      "layer": "Go grouping",
+      "file": "conversation_rows.go",
+      "detail": "lastAssistant chooses text||interrupted rather than finalNode/latest step. Does not use snapshot.Turns or step/end. Same-turn boundary trajectoryUpsert does not necessarily invalidate row cache."
+    },
+    {
+      "layer": "Go display",
+      "file": "conversation.go",
+      "detail": "Aggregates all reasoning before the response, skips block-level reasoning; one message cannot yet appear as independent reasoning/response references."
+    }
+  ],
+  "corrections": [
+    "Pure image closing reply is currently assigned helper Text=[图片], so last-text may accidentally retain it; it is not evidence of a current hidden-image bug by itself. Unknown/file produces empty Text and exposes the defect.",
+    "Empty interrupted DTO is a defensive test. Core source says an aborted turn with no visible content records no assistant/message; original hasInterruptionEvidence([])=false. Do not invent that as a real Host final answer."
+  ],
+  "minimalPlan": [
+    {
+      "step": 1,
+      "change": "Extend existing SessionProjection with small per-turn/per-step metadata indexes referencing its retained raw events/blocks. Derive original latest-step finalNode + hasAssistantReplyContent + no-tool-call authority; import pinned pure classifier and preserve exact source semantics. Full ConversationNodeAssembler/ChatSnapshotBuilder is QA oracle only, never a permanent parallel runtime."
+    },
+    {
+      "step": 2,
+      "change": "Track qualification dirty flags independently of text: step/turn boundaries, assistant settlement, block kind/status metadata, replacement and older-page merge. Add proposed client-only chatPresentation baseline and small dirty metadata patch; do not serialize completed historical bodies on chunks."
+    },
+    {
+      "step": 3,
+      "change": "Go consumes helper authority via stable node/part references and invalidates row structure on metadata patch. Keep response/reasoning split and always-open reason/interleaved semantics. Keep existing body arena, suffix delta and bounded image cache/owner."
+    },
+    {
+      "step": 4,
+      "change": "Keep fractional layout anchors separate from durable integer seq and committed message identity; partial history lacking evidence stays readable/unfoldable. Scope/revision admission and source captures remain current stdio rules."
+    }
+  ],
+  "plannedSourceFixtures": [
+    "Unknown/file closing reply vs pure image negative control",
+    "Later tool-only (or text+tool-call) step invalidates earlier final candidate, answerStep=null",
+    "Durable-before-end successful settlement preserves source staging and stable step identity through retained chunks",
+    "Interrupted empty no-event source boundary; interrupted nonempty/reasoning-only actual stream gets explicit state without fabricating a normal final"
+  ],
+  "status": "Frozen final source audit/design only; helper/Go implementation waits for explicit root assignment."
+}

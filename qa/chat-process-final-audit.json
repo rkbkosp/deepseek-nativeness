@@ -1,0 +1,384 @@
+{
+  "createdAt": "2026-11-15T00:38:48.613Z",
+  "baselineCommit": "e518f36ab1dd056233cbcecb843f2a23c7caff4e",
+  "scope": "Frozen source-only audit, no business modification, app/helper rebuild, Host/network/GUI operation. Subsequent implementation separately authorized.",
+  "conclusion": "Frozen protocol sufficient. Implement small per-turn/step helper authority, not permanent full ChatSnapshotBuilder. Go must consume metadata instead of last textual row.",
+  "sourceHashes": {
+    "../deepseek-harness/packages/client/ui-chat/src/client/chat/ChatNodeSeat.tsx": {
+      "bytes": 8513,
+      "sha256": "e3184a591fb0e2d71f6cf64031a36a4a6599edc90c15dd9ed55357d16e7ea754"
+    },
+    "../deepseek-harness/packages/client/ui-chat/src/client/chat/AssistantNodeView.tsx": {
+      "bytes": 3475,
+      "sha256": "0bedaacc01cdb134bdccced4690904d4a43ea3134739221f3f589b091ab9d922"
+    },
+    "../deepseek-harness/packages/client/ui-chat/src/client/chat/AssistantMarkdown.tsx": {
+      "bytes": 7497,
+      "sha256": "07f1fde40b63cfa4723bd049692d2e8ed705a3223ff67cfe6584e65f11a46e51"
+    },
+    "../deepseek-harness/packages/client/ui-chat/src/client/contract/assistant-content.ts": {
+      "bytes": 610,
+      "sha256": "a736c22b643545b1acd072e850add94bdf628c25c13e5fb1dd1046fffaa18c85"
+    },
+    "../deepseek-harness/packages/client/ui-chat/src/client/contract/group-tree.ts": {
+      "bytes": 1872,
+      "sha256": "adac187552b1459eaeb5bf9ae02fcae1b4e2a7e7e4f023a59fc1ebcd22865f33"
+    },
+    "../deepseek-harness/packages/client/ui-chat/src/client/conversation-nodes/assistant.ts": {
+      "bytes": 13967,
+      "sha256": "7dbf13220a118ccd74955b14e69460ce03972468c27fe4b15b5eef1b7f4c6929"
+    },
+    "../deepseek-harness/packages/client/ui-chat/src/client/conversation-nodes/turn-process.ts": {
+      "bytes": 14408,
+      "sha256": "c332215c684270d660cb365032c5cbcb5ca03984422c0c133eba5283dc35736e"
+    },
+    "../deepseek-harness/packages/client/ui-chat/src/client/conversation-nodes/turn-process-presentation.ts": {
+      "bytes": 5540,
+      "sha256": "9f635b0741ba1ac72f860c1b9b303fd313638ffb9f19d108224f17070a379bae"
+    },
+    "../deepseek-harness/packages/client/ui-chat/src/client/conversation-nodes/process-groups.ts": {
+      "bytes": 13405,
+      "sha256": "53e9f137db840f90b2d1a419ff39687234e35ae7d8a68a5a17795db93e82cd95"
+    },
+    "../deepseek-harness/packages/client/ui-chat/tests/conversation-node-definitions.client.spec.ts": {
+      "bytes": 141225,
+      "sha256": "3b37e91772a23c37e72beab3104520fe266b4eaaab88537956750071cde86f15"
+    },
+    "../deepseek-harness/packages/api/session-controller/src/client/sessions/assistant-stream.ts": {
+      "bytes": 8899,
+      "sha256": "4433f1b5256c886ee2a80469a2fff77c6b45826e2ef43af79835c93d8a1c4a63"
+    },
+    "../deepseek-harness/packages/api/session-controller/src/types.ts": {
+      "bytes": 27048,
+      "sha256": "6e516dea0351e74823d5f17289dd4842a949a3e405c5e4a25e3e50cf96bc7dbe"
+    },
+    "../deepseek-harness/packages/core/session/src/types.ts": {
+      "bytes": 25367,
+      "sha256": "1274e57822035991afd549ed9659a5dd4d66645d77171921d9b2601371911d2c"
+    },
+    "remote/projection.mjs": {
+      "bytes": 21028,
+      "sha256": "dbd6b723d1f7be91bd48f70117c8e3e6f6e1e61cf7a22d1f3f1c9a1028bcf545"
+    },
+    "remote/client.mjs": {
+      "bytes": 62574,
+      "sha256": "6aa9592cc7e71e4142a5bde66a902e11e3f52e30c914865746b5d4f477052a0f"
+    },
+    "conversation_rows.go": {
+      "bytes": 4170,
+      "sha256": "0a245f337016be5d511b69b58299750d6ef3e33bcc288eb7a23db8f815ddb492"
+    },
+    "conversation.go": {
+      "bytes": 13336,
+      "sha256": "6be96812f2eb0ac4604b4d3413a309d43188681fc80eaee8c8337d42fb581069"
+    },
+    "model.go": {
+      "bytes": 7184,
+      "sha256": "6aee10f38610c563353d6f3049c7b4d2c1e6149a41ef0434c33605c7502cea0f"
+    },
+    "incremental.go": {
+      "bytes": 6434,
+      "sha256": "ea15f537c914f5ee0d1d533ffa5910c27d0899a7e5559e7e790ae3f8e8f1e2c3"
+    },
+    "../deepseek-harness/packages/client/ui-chat/src/client/contract/turn-process.ts": {
+      "bytes": 2461,
+      "sha256": "dce44841b376607f143df8c990b4f9e54579655a2d6adc8fead2fe7112efe7ef"
+    }
+  },
+  "sourceChain": {
+    "answer": "latestAnswer reads only chronological turn.steps.at(-1), requires assistant-step.finalNode and hasAssistantReplyContent, and rejects any tool-call in its blocks. No backward fallback to earlier text.",
+    "replyContent": "Nonblank text, image and opaque other count; reasoning/tool-call do not.",
+    "process": "ChatNodeSeat uses processSpec answerStep/answerAnchorSeq, processStartSeq, turn closed/live and groupPart. Earlier response may fold only in final-only; reasoning stays process in both all/final.",
+    "split": "process-groups emits two references to one assistant-step: reasoning joins process; response stands outside step run. Original block order and one interruption marker are retained.",
+    "settlement": "ClientAssistantStream stages exact durable settlement until end; successful message retains transient rows until owning step/end; interrupted/failed/abandoned retire immediately. Stable assistant-step key survives transitions.",
+    "alwaysOpen": "Original turnProcessAlwaysOpen keeps open turns and aborted/interrupted/error turns open; interleaved input also keeps process open. Final-only membership applies only when folding is eligible."
+  },
+  "counterexamples": {
+    "producer": "qa/_chat-process-audit/producer.mjs",
+    "pipeline": "Exact pinned original pure definitions vs actual SessionProjection -> NodeJSON -> actual Go a.replaceSnapshot/a.view",
+    "command": "CGO_ENABLED=0 go test -overlay=qa/chat-process-producer-cross-overlay.json -run '^TestSourceProjection' -count=1 -v .",
+    "expectedBefore": "2 fail (unknown closing hidden; later tool-only incorrectly promotes earlier text),2 pass controls (pure image; empty no-output attempt)",
+    "provenance": "Source-derived schema-admissible SessionEvent fixtures; not captured Host/model execution. Current shipped model adapters declare text-only output, so structured assistant file/image fixtures are forward-compatible carrier tests, not proof they occur on this Host.",
+    "alwaysOpen": "The qualification counterexamples intentionally use completed closed turns; source keeps aborted/interrupted/error/live turns open regardless of final-only preference."
+  },
+  "retainedStream": "Actual ClientAssistantStream stages durable-before-end; successful end publishes durable but retains chunks until step/end, original step key unchanged. Current projection publishes durable and retires live attempt before end. Existing raw protocol provides enough evidence; staged barrier must be retained in first slice.",
+  "referenceClosure": {
+    "runtimeInputs": 39,
+    "unminifiedBytes": 237968,
+    "minifiedProductionBytes": 115900,
+    "npmInputFiles": [
+      "compat/node_modules/zustand/esm/vanilla.mjs",
+      "compat/node_modules/zustand/esm/middleware.mjs",
+      "compat/node_modules/zustand/esm/shallow.mjs",
+      "compat/node_modules/immer/dist/immer.mjs"
+    ],
+    "noReactDOMWK": true,
+    "noNewPeerOrHostConnection": true,
+    "usage": "QA oracle only, includes instrumentation and both reference+metadata prototype; not claimed production bundle delta."
+  },
+  "installedCompact": {
+    "installedVersion": "0.6.4",
+    "installedBundleSHA256": "805d33ca4dec0c0503fc7458db3f7b5b4e5bd69ad9a27cf0df816b018032af32",
+    "extractedCompactSHA256": "804c9df329eb17cb51d604a736c0ad080e2b75770f4949a5279301e5df98324e",
+    "checks": [
+      {
+        "case": "unknown",
+        "recordCountUnchanged": true,
+        "outerEvidencePreserved": true,
+        "baselineAssistantStreamPreserved": true,
+        "processUnchanged": true,
+        "pageEvidenceSameAsBaseline": true
+      },
+      {
+        "case": "image",
+        "recordCountUnchanged": true,
+        "outerEvidencePreserved": true,
+        "baselineAssistantStreamPreserved": true,
+        "processUnchanged": true,
+        "pageEvidenceSameAsBaseline": true
+      },
+      {
+        "case": "toolOnly",
+        "recordCountUnchanged": true,
+        "outerEvidencePreserved": true,
+        "baselineAssistantStreamPreserved": true,
+        "processUnchanged": true,
+        "pageEvidenceSameAsBaseline": true
+      },
+      {
+        "case": "emptyAttempt",
+        "recordCountUnchanged": true,
+        "outerEvidencePreserved": true,
+        "baselineAssistantStreamPreserved": true,
+        "processUnchanged": true,
+        "pageEvidenceSameAsBaseline": true
+      }
+    ],
+    "passed": true,
+    "scope": "Read installed code only; executed isolated pure compactHistory function over source-derived fixtures. No runtime/identity/Host/network."
+  },
+  "benchmark": {
+    "file": "qa/_chat-process-audit/build/benchmark-production.json",
+    "method": "One production NODE_ENV=production run per case, Node--expose-gc, local M4; not M1/not fullApp/RSS. Both prototype+current helper retained for QA only; method/params bytes exclude scope envelope. Earlier NODE_ENV-unset exploratory result preserved separately.",
+    "history": "1000/10000 completed assistant messages,5events each,1024char text;100 immediate synchronous operations per case",
+    "rows": [
+      {
+        "historyMessages": 1000,
+        "durableHistoryEvents": 5002,
+        "mode": "full-reference",
+        "workload": "100-text-deltas",
+        "iterations": 100,
+        "elapsedMs": 11.41912499999998,
+        "referenceMs": 9.683418999999901,
+        "helperPublisherMs": 1.4294209999999623,
+        "cpuMs": 19.919,
+        "baselineHeapBytes": 27468728,
+        "peakHeapIncreaseBytes": 11630728,
+        "retainedHeapIncreaseBytes": 611648,
+        "helperNotificationCount": 100,
+        "helperMethodParamsBytes": 20216,
+        "proposedMetadataNotificationCount": 1,
+        "proposedMetadataMethodParamsBytes": 337,
+        "historyMessageReads": 0,
+        "replaceCalls": 0,
+        "legacyFinalizedEntriesRead": 0,
+        "applyCalls": 100,
+        "nodeUpserts": 200,
+        "affectedTurnUpdates": 100
+      },
+      {
+        "historyMessages": 1000,
+        "durableHistoryEvents": 5002,
+        "mode": "full-reference",
+        "workload": "100-commit-end-next-step",
+        "iterations": 100,
+        "elapsedMs": 298.16604100000006,
+        "referenceMs": 294.4282930000003,
+        "helperPublisherMs": 2.912753999999893,
+        "cpuMs": 432.238,
+        "baselineHeapBytes": 28071016,
+        "peakHeapIncreaseBytes": 145204224,
+        "retainedHeapIncreaseBytes": 2033680,
+        "helperNotificationCount": 500,
+        "helperMethodParamsBytes": 143808,
+        "proposedMetadataNotificationCount": 100,
+        "proposedMetadataMethodParamsBytes": 33486,
+        "historyMessageReads": 1,
+        "replaceCalls": 0,
+        "legacyFinalizedEntriesRead": 105050,
+        "applyCalls": 100,
+        "nodeUpserts": 5150,
+        "affectedTurnUpdates": 100
+      },
+      {
+        "historyMessages": 1000,
+        "durableHistoryEvents": 5002,
+        "mode": "metadata-only-prototype",
+        "workload": "100-text-deltas",
+        "iterations": 100,
+        "elapsedMs": 1.064416000000051,
+        "referenceMs": 0.4762530000004972,
+        "helperPublisherMs": 0.39503599999977723,
+        "cpuMs": 1.387,
+        "baselineHeapBytes": 24940912,
+        "peakHeapIncreaseBytes": 1685440,
+        "retainedHeapIncreaseBytes": -254544,
+        "helperNotificationCount": 100,
+        "helperMethodParamsBytes": 20216,
+        "proposedMetadataNotificationCount": 1,
+        "proposedMetadataMethodParamsBytes": 337,
+        "historyMessageReads": 0,
+        "replaceCalls": 0,
+        "nodeUpserts": 200,
+        "affectedTurnUpdates": 100,
+        "applyCalls": 100
+      },
+      {
+        "historyMessages": 1000,
+        "durableHistoryEvents": 5002,
+        "mode": "metadata-only-prototype",
+        "workload": "100-commit-end-next-step",
+        "iterations": 100,
+        "elapsedMs": 35.660124999999994,
+        "referenceMs": 34.32962699999905,
+        "helperPublisherMs": 1.0270030000001498,
+        "cpuMs": 59.709,
+        "baselineHeapBytes": 24627008,
+        "peakHeapIncreaseBytes": 70093888,
+        "retainedHeapIncreaseBytes": 865512,
+        "helperNotificationCount": 500,
+        "helperMethodParamsBytes": 143808,
+        "proposedMetadataNotificationCount": 100,
+        "proposedMetadataMethodParamsBytes": 33486,
+        "historyMessageReads": 1,
+        "replaceCalls": 0,
+        "nodeUpserts": 5150,
+        "affectedTurnUpdates": 100,
+        "applyCalls": 100
+      },
+      {
+        "historyMessages": 10000,
+        "durableHistoryEvents": 50002,
+        "mode": "full-reference",
+        "workload": "100-text-deltas",
+        "iterations": 100,
+        "elapsedMs": 52.71666700000003,
+        "referenceMs": 52.002792000000795,
+        "helperPublisherMs": 0.46712400000001253,
+        "cpuMs": 91.039,
+        "baselineHeapBytes": 186141872,
+        "peakHeapIncreaseBytes": 79907040,
+        "retainedHeapIncreaseBytes": 2369944,
+        "helperNotificationCount": 100,
+        "helperMethodParamsBytes": 20218,
+        "proposedMetadataNotificationCount": 1,
+        "proposedMetadataMethodParamsBytes": 341,
+        "historyMessageReads": 0,
+        "replaceCalls": 0,
+        "legacyFinalizedEntriesRead": 0,
+        "applyCalls": 100,
+        "nodeUpserts": 200,
+        "affectedTurnUpdates": 100
+      },
+      {
+        "historyMessages": 10000,
+        "durableHistoryEvents": 50002,
+        "mode": "full-reference",
+        "workload": "100-commit-end-next-step",
+        "iterations": 100,
+        "elapsedMs": 2904.753291,
+        "referenceMs": 2899.1590819999988,
+        "helperPublisherMs": 3.7886709999995674,
+        "cpuMs": 3799.842,
+        "baselineHeapBytes": 186304648,
+        "peakHeapIncreaseBytes": 727397776,
+        "retainedHeapIncreaseBytes": 3188456,
+        "helperNotificationCount": 500,
+        "helperMethodParamsBytes": 145708,
+        "proposedMetadataNotificationCount": 100,
+        "proposedMetadataMethodParamsBytes": 33886,
+        "historyMessageReads": 1,
+        "replaceCalls": 0,
+        "legacyFinalizedEntriesRead": 1005050,
+        "applyCalls": 100,
+        "nodeUpserts": 5150,
+        "affectedTurnUpdates": 100
+      },
+      {
+        "historyMessages": 10000,
+        "durableHistoryEvents": 50002,
+        "mode": "metadata-only-prototype",
+        "workload": "100-text-deltas",
+        "iterations": 100,
+        "elapsedMs": 1.2244170000003578,
+        "referenceMs": 0.5297489999966274,
+        "helperPublisherMs": 0.46970499999861204,
+        "cpuMs": 2.154,
+        "baselineHeapBytes": 146143016,
+        "peakHeapIncreaseBytes": 1567480,
+        "retainedHeapIncreaseBytes": -70280,
+        "helperNotificationCount": 100,
+        "helperMethodParamsBytes": 20218,
+        "proposedMetadataNotificationCount": 1,
+        "proposedMetadataMethodParamsBytes": 341,
+        "historyMessageReads": 0,
+        "replaceCalls": 0,
+        "nodeUpserts": 200,
+        "affectedTurnUpdates": 100,
+        "applyCalls": 100
+      },
+      {
+        "historyMessages": 10000,
+        "durableHistoryEvents": 50002,
+        "mode": "metadata-only-prototype",
+        "workload": "100-commit-end-next-step",
+        "iterations": 100,
+        "elapsedMs": 104.16279200000008,
+        "referenceMs": 102.5015809999968,
+        "helperPublisherMs": 1.3208310000027268,
+        "cpuMs": 128.206,
+        "baselineHeapBytes": 145985912,
+        "peakHeapIncreaseBytes": 97705856,
+        "retainedHeapIncreaseBytes": 668960,
+        "helperNotificationCount": 500,
+        "helperMethodParamsBytes": 145708,
+        "proposedMetadataNotificationCount": 100,
+        "proposedMetadataMethodParamsBytes": 33886,
+        "historyMessageReads": 1,
+        "replaceCalls": 0,
+        "nodeUpserts": 5150,
+        "affectedTurnUpdates": 100,
+        "applyCalls": 100
+      }
+    ],
+    "interpretation": [
+      "Streaming metadata-only prototype:200 node upserts/100 affected-turn updates,zero history message reads,zero replacements,~20KB existing method/params wire plus337/341B metadata once.",
+      "Full legacy builder at10k×100 boundaries reads1,005,050 finalized contributions; do not ship. Metadata-only prototype avoids those scans but still emits5150 growing-active-turn nodes and retains expensive assembler indexes. Prefer small indexes referencing existing journal.",
+      "Heap peak is sampled JS heap increase over baseline,not cumulative allocation/native RSS; prototype and existing helper coexist only in QA. M4,not M1/not fullApp. Earlier unset-NODE_ENV exploratory sample retained separately."
+    ]
+  },
+  "contract": "qa/chat-process-dto-contract.json",
+  "minimalCodeSurface": {
+    "remote": [
+      "new chat-presentation.mjs light index plus staging state",
+      "projection.mjs snapshot/event/frame/mergeHistory hooks,always use raw journal and original append origin",
+      "updates.mjs atomic structural payload+metadata patch preserving suffix delta path",
+      "build.mjs expose pinned hasAssistantReplyContent and exact ClientAssistantStream fold as needed",
+      "fixture.mjs + tests for actual GoNode contract,scope/oracle/cost; client.mjs only if necessary for routing,never transport/auth/mutations"
+    ],
+    "native": [
+      "model.go presentation DTO and atomic staged patch validation",
+      "incremental.go one atomic commit/cache invalidation",
+      "conversation_rows.go metadata-based stable part references",
+      "conversation.go reasoning/response filtering retaining existing image/JSON/stopped renderer"
+    ]
+  },
+  "firstSliceGates": [
+    "Unknown/file final visible; later tool-only produces no fallback; all/final reasoning separation; always-open reasons.",
+    "Durable-before-end stages exact settlement; step-end retirement/stable node identity; assistant/attempt is not a committed surface answer.",
+    "Partial history stays readable when evidence insufficient; older page merges raw source metadata without resetting live revision/attempt.",
+    "Metadata-only qualification dirtiness invalidates old response placement even with unchanged text; atomic payload upsert/removal and refs.",
+    "Keep existing suffix budget and no per-chunk historical body scans/serialization. Root/native independently cross-review after helper authorship starts."
+  ],
+  "status": "Audit/design frozen. Root subsequently authorized helper-only implementation; frozen GUI9/helper artifacts remain untouched."
+}

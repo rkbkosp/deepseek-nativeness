@@ -1,0 +1,97 @@
+{
+  "schema": "proposed client-only, not implemented",
+  "frozenBackendChange": false,
+  "scope": "existing top-level stdio scope {hostId,generation,accountScope} captured from source producer; sessionId on all payloads",
+  "baseline": {
+    "chatPresentation": {
+      "schemaVersion": 1,
+      "presentationRevision": "monotonic client-only integer, separate from assistant-stream revision/cursor",
+      "turns": [
+        {
+          "turn": "integer",
+          "status": "open|closed|partial",
+          "startLoaded": "boolean",
+          "latestStep": "integer|null, chronological last step, never latest text",
+          "spec": "null | {controlAnchorSeq:number,processStartSeq:number,answerAnchorSeq:number|null,answerStep:integer|null,inlineReasoning:boolean,messageCount:integer,toolCallCount:integer,subagentCount:integer}",
+          "hasInterleavedInput": "boolean if sufficient source evidence; unknown stays unfoldable",
+          "endReasonKind": "completed|aborted|interrupted|error|other|null, source-derived",
+          "alwaysOpen": "original turnProcessAlwaysOpen: open turn OR aborted/interrupted/error; partial/insufficient evidence also preserves readable fallback"
+        }
+      ],
+      "steps": [
+        {
+          "nodeKey": "stable original assistant-step key",
+          "turn": "integer",
+          "step": "integer",
+          "payloadId": "existing UI message arena id; distinct from original committed messageId",
+          "status": "running|settled|interrupted",
+          "anchorSeq": "number, may be fractional; layout only",
+          "finalEventSeq": "durable integer assistant/message seq|null",
+          "committedMessageId": "original message.id|absent; never synthetic anchor",
+          "hasReply": "original hasAssistantReplyContent(blocks)",
+          "hasReasoning": "nonblank reasoning block",
+          "hasToolCall": "any tool-call block"
+        }
+      ]
+    }
+  },
+  "incremental": {
+    "method": "chatPresentationPatch",
+    "params": {
+      "sessionId": "captured session",
+      "schemaVersion": 1,
+      "presentationRevision": "strict next revision or rebaseline",
+      "turnUpserts": "changed small records only",
+      "turnRemoves": "explicit ids when replacement window retires turns",
+      "stepUpserts": "changed metadata/placement only; no repeated block text",
+      "stepRemoves": "explicit original node keys",
+      "payloadChanges": "optional existing dirty message upserts/removes on structural transition; transaction must be applied atomically with dependent refs, or sender defer removals until rebinding"
+    }
+  },
+  "rendererRules": [
+    "Final reply uses spec.answerStep and original node final qualification; no fallback when spec.answerStep is null.",
+    "Keep all versus final changes only response membership; reasoning references always join process. Reuse same arena body through {nodeKey,part:reasoning|response}.",
+    "spec missing/partial evidence does not authorize hiding: preserve readable rows until enough history.",
+    "Durable API ids/seqs must remain separate from fractional layout anchor; fork uses completed turn/end integer cut and feedback uses committed messageId.",
+    "Always-open stopped/failed/live/interleaved turns override stored collapsed state; answerStep null is not by itself permission to hide them."
+  ],
+  "invalidation": [
+    {
+      "trigger": "step/start/end,turn/end or exact stream settlement",
+      "helper": "mark affected turn and step; recompute latest qualification even with no body change",
+      "publish": "turn/step metadata diff only; unchanged body not reserialized",
+      "go": "invalidate affected turn row structure, including old answer becoming process; not merely when Turn number increases"
+    },
+    {
+      "trigger": "metadata-only block/status change",
+      "helper": "re-evaluate hasReply/hasToolCall/hasReasoning/interrupted without text comparison shortcut",
+      "publish": "existing complete messageUpsert if blocks metadata changed plus minimal presentation delta",
+      "go": "content arena change and dependent row-part structure in one UI update; cached grouping cannot retain former final qualification"
+    },
+    {
+      "trigger": "older page prepend",
+      "helper": "merge raw event identity by seq and replay affected boundary turn metadata; retain live attempt/revision, existing cursor cut and hasMore",
+      "publish": "existing low-frequency snapshot rebaseline is allowed, or dirty affected turns; never every token",
+      "go": "replace/reindex refs against new baseline then invalidate relevant layout/fold state"
+    },
+    {
+      "trigger": "Remote read compaction",
+      "helper": "installed0.6.4 preserves boundary/assistant identity and qualification fields; tool previews may be lossy but do not infer final from summaries",
+      "publish": "no new calls/config needed for classification; do not synthesize final from preview strings",
+      "go": "reasoning/image/other classification uses structured fields, not rendered Text placeholder"
+    },
+    {
+      "trigger": "model surfaceOp replacement/session compaction",
+      "helper": "different from Remote read compactHistory: original assistant definition only consumes append-origin assistant messages; derive from retained raw event journal, not helper surface-deleted message list",
+      "publish": "reconcile retained original nodes/refs and metadata, never promote a replacement summary as a normal final",
+      "go": "clear stale refs only via explicit rebaseline/removal, preserving committed source identities"
+    }
+  ],
+  "performanceContract": [
+    "Do not ship full ChatSnapshotBuilder legacy compatibility projection in a permanent parallel helper pipeline.",
+    "Minimal implementation should keep per-turn/per-step metadata indexes referencing already-retained events/blocks and original hasReply/noToolCall/finalNode semantics. Reuse original ClientAssistantStream settlement fold where feasible; actual original assembler remains QA oracle.",
+    "A metadata-only original-assembler view is a valid tested fallback prototype, not yet a production recommendation: it avoids legacy finalized scans but still materializes5150 nodes across100 growing-step transitions and has substantial baseline index memory.",
+    "No per-chunk value()/full message history serialization; maintain dirty publication and suffix deltas. Metadata patches only when qualification/placement flags change."
+  ],
+  "implementationStatus": "Root to choose minimal frontend slice; no helper/Go/frontend business edits in this audit."
+}

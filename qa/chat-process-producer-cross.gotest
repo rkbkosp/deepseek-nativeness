@@ -1,0 +1,88 @@
+package main
+
+import (
+	"encoding/json"
+	"github.com/egoist/mygo/ui"
+	"os/exec"
+	"testing"
+)
+
+type processSourceFixture struct {
+	Snapshot snapshot `json:"snapshot"`
+	Original struct {
+		Process struct {
+			AnswerStep      *int     `json:"answerStep"`
+			AnswerAnchorSeq *float64 `json:"answerAnchorSeq"`
+		} `json:"process"`
+	} `json:"original"`
+	Provenance string `json:"provenance"`
+}
+
+func sourceProcessView(t *testing.T, name string) (processSourceFixture, *app, *ui.Tester) {
+	t.Helper()
+	raw, err := exec.Command("node", "qa/_chat-process-audit/producer.mjs", name).Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var f processSourceFixture
+	if err = json.Unmarshal(raw, &f); err != nil {
+		t.Fatal(err)
+	}
+	a := newApp(true)
+	t.Cleanup(a.cancel)
+	a.uiPrefs.FoldedReplies = "final"
+	a.replaceSnapshot(f.Snapshot)
+	tt := ui.NewTester(a.view, 1280, 820)
+	tt.Frame()
+	return f, a, tt
+}
+func TestSourceProjectionUnknownClosingReplySurvivesFinalOnly(t *testing.T) {
+	f, a, tt := sourceProcessView(t, "unknown")
+	if f.Original.Process.AnswerStep == nil || *f.Original.Process.AnswerStep != 2 {
+		t.Fatal("pinned original did not classify fixture closing unknown as final")
+	}
+	var m *message
+	for i := range a.current.Messages {
+		if a.current.Messages[i].ID == "event:6" {
+			m = &a.current.Messages[i]
+		}
+	}
+	if m == nil || m.Text != "" || len(m.AssistantBlocks) != 2 {
+		t.Fatal("actual SessionProjection structured producer shape changed")
+	}
+	if !tt.HasText("未知内容块") {
+		t.Fatalf("SOURCE_DERIVED_GAP: original answerStep2/anchor6 closing unknown is hidden by native final-only; source=%s", f.Provenance)
+	}
+}
+func TestSourceProjectionLaterToolOnlyStepDoesNotPromoteEarlierReply(t *testing.T) {
+	f, _, tt := sourceProcessView(t, "toolOnly")
+	if f.Original.Process.AnswerStep != nil || f.Original.Process.AnswerAnchorSeq != nil {
+		t.Fatal("pinned original unexpectedly falls back to an earlier answer")
+	}
+	if tt.HasText("Earlier explanatory reply") {
+		t.Fatal("SOURCE_DERIVED_GAP: latest step is tool-only so original answer is null; native promoted earlier textual step")
+	}
+}
+func TestSourceProjectionPureImageIsNegativeControl(t *testing.T) {
+	f, _, tt := sourceProcessView(t, "image")
+	if f.Original.Process.AnswerStep == nil || *f.Original.Process.AnswerStep != 2 {
+		t.Fatal("original image final missing")
+	}
+	if _, ok := tt.Find("打开图片 fixture.png"); !ok {
+		t.Fatal("source image is unexpectedly hidden; helper text placeholder is not a generic hidden-image counterexample")
+	}
+}
+func TestSourceProjectionEmptyInterruptedAttemptDoesNotInventFinal(t *testing.T) {
+	f, a, tt := sourceProcessView(t, "emptyAttempt")
+	if f.Original.Process.AnswerStep != nil {
+		t.Fatal("original invented an empty final")
+	}
+	for _, m := range a.current.Messages {
+		if m.Role == "assistant" {
+			t.Fatal("actual producer invented an empty interrupted reply")
+		}
+	}
+	if tt.HasText("已停止") {
+		t.Fatal("source no-visible-output attempt should not invent stopped assistant message")
+	}
+}

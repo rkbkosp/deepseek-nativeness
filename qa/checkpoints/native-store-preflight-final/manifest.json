@@ -1,0 +1,31 @@
+{
+  "createdAt": "2026-11-15T03:10:39.963Z",
+  "scope": "Store-only preflight source. No App/Proof/bundle rebuild or production wiring.",
+  "files": [
+    {
+      "path": "composer_native/document_store.go",
+      "sha256": "2bc99b72fe614fe410d628620bee7b72deed44f911f55c84159a8f7da82e1045",
+      "bytes": 15441
+    },
+    {
+      "path": "composer_native/document_store_prepare_test.go",
+      "sha256": "9001f2f14bed8d9a14347ef4910dbe4f35667009d86f3aac7fa1ef708616880b",
+      "bytes": 13259
+    }
+  ],
+  "unchangedDependencies": [
+    {
+      "path": "composer_native/editor.go",
+      "sha256": "690ab33549a75dfac85529310b790d40aaf0a7fbd2fabd61f83f795878829a9c"
+    },
+    {
+      "path": "composer_native/semantic.go",
+      "sha256": "5655d9d7a2cbbe0b08d8886eb576f17ca5b1b59c25e688b84795a87ae36bb974"
+    },
+    {
+      "path": "composer_native/document_store_test.go",
+      "sha256": "406afcb0dc7a3124f4bae0dfcb9e87c19596fed18fcc98866f0ead138569e2d4"
+    }
+  ],
+  "before": "qa/checkpoints/native-store-preflight-before/manifest.json"
+}

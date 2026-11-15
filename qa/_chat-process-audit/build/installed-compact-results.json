@@ -1,0 +1,41 @@
+{
+  "installedVersion": "0.6.4",
+  "installedBundleSHA256": "805d33ca4dec0c0503fc7458db3f7b5b4e5bd69ad9a27cf0df816b018032af32",
+  "extractedCompactSHA256": "804c9df329eb17cb51d604a736c0ad080e2b75770f4949a5279301e5df98324e",
+  "checks": [
+    {
+      "case": "unknown",
+      "recordCountUnchanged": true,
+      "outerEvidencePreserved": true,
+      "baselineAssistantStreamPreserved": true,
+      "processUnchanged": true,
+      "pageEvidenceSameAsBaseline": true
+    },
+    {
+      "case": "image",
+      "recordCountUnchanged": true,
+      "outerEvidencePreserved": true,
+      "baselineAssistantStreamPreserved": true,
+      "processUnchanged": true,
+      "pageEvidenceSameAsBaseline": true
+    },
+    {
+      "case": "toolOnly",
+      "recordCountUnchanged": true,
+      "outerEvidencePreserved": true,
+      "baselineAssistantStreamPreserved": true,
+      "processUnchanged": true,
+      "pageEvidenceSameAsBaseline": true
+    },
+    {
+      "case": "emptyAttempt",
+      "recordCountUnchanged": true,
+      "outerEvidencePreserved": true,
+      "baselineAssistantStreamPreserved": true,
+      "processUnchanged": true,
+      "pageEvidenceSameAsBaseline": true
+    }
+  ],
+  "passed": true,
+  "scope": "Read installed code only; executed isolated pure compactHistory function over source-derived fixtures. No runtime/identity/Host/network."
+}
