@@ -33,7 +33,7 @@ const guiRound1URL=new URL('./parity-gui-round1.json',import.meta.url);
 const guiRound1=fs.existsSync(guiRound1URL)?JSON.parse(fs.readFileSync(guiRound1URL,'utf8')):null;
 const guiRound2URL=new URL('./parity-gui-round2.json',import.meta.url);
 const guiRound2=fs.existsSync(guiRound2URL)?JSON.parse(fs.readFileSync(guiRound2URL,'utf8')):null;
-const laterReviews=[3,4,5,'5.1',6,'6.1',7,8,9].map(n=>{const url=new URL(`./parity-gui-round${n}.json`,import.meta.url);return fs.existsSync(url)?{n,value:JSON.parse(fs.readFileSync(url,'utf8'))}:null}).filter(Boolean);
+const laterReviews=[3,4,5,'5.1',6,'6.1',7,8,9,10].map(n=>{const url=new URL(`./parity-gui-round${n}.json`,import.meta.url);return fs.existsSync(url)?{n,value:JSON.parse(fs.readFileSync(url,'utf8'))}:null}).filter(Boolean);
 const round4Rows={
  'real-history-render':['sidebar-1','header-1','chat-11','composer-3'],
  'real-file-read':['right-pane-1','right-pane-3'],
@@ -171,7 +171,7 @@ const reviewedSourceStatus={
 };
 for(const row of rows){if(reviewedSourceStatus[row.id]&&(row.currentNative.startsWith('pending implementation')||row.currentNative.startsWith('FAIL at baseline'))){if(row.currentNative.startsWith('FAIL'))row.baselineNative=row.currentNative;row.currentNative=reviewedSourceStatus[row.id];}if(row.currentNative.startsWith('pending implementation')&&(row.remoteSupport.startsWith('blocked:')||row.remoteSupport.startsWith('forbidden')))row.currentNative='Unavailable through the current frozen direct Remote surface; see exact constraint and conditional resource-carrier qualification.';}
 const data={generatedAt:new Date().toISOString(),status:'NOT PARITY ACCEPTED',scope:'Source-grounded operation families. source-inventory.json records discovered packages, files, call sites and contributions for deeper coverage; dynamic third-party plugins cannot be exhaustively specified statically.',originalEvidenceDirectory:'/tmp/native-dsh-parity',guiReviews:guiRound1?['qa/parity-gui-round1.json']:[],viewport:{logical:[1280,820],physical:[2560,1640],theme:'dark'},testPolicy:{live:'Only passive reads and read-only UI navigation authorized in this audit',mutations:'Use fixture to verify exact wire and target identity. No live prompt/cancel/approve/rename/settings/new sessions.',performance:'M4 smoke and synthetic budget are developer evidence; M1 cross-machine CPU/memory still required'},priority:['Correct chat semantic projection and grouping','Dark theme and original shell/header/sidebar','Per-session draft/scroll, offline gating and operation target identity','Model/permission/queue/commands and real menus','Settings/plugins/files/terminal and hard capability boundaries'],hardFrozenBoundaries:rows.filter(r=>r.remoteSupport.startsWith('blocked:')||r.remoteSupport.startsWith('forbidden')).map(r=>r.id),rows};
-data.guiReviews=[1,2,3,4,5,'5.1',6,'6.1',7,8,9].filter(n=>fs.existsSync(new URL(`./parity-gui-round${n}.json`,import.meta.url))).map(n=>`qa/parity-gui-round${n}.json`);
+data.guiReviews=[1,2,3,4,5,'5.1',6,'6.1',7,8,9,10].filter(n=>fs.existsSync(new URL(`./parity-gui-round${n}.json`,import.meta.url))).map(n=>`qa/parity-gui-round${n}.json`);
 const round4=laterReviews.find(x=>x.n===4)?.value;
 const composerReportURL=new URL('./composer-component-results.json',import.meta.url);
 if(fs.existsSync(composerReportURL)){
@@ -220,9 +220,10 @@ const reviewMap={
  'forced-menu-placement-escape':['settings-1','plugins-3','shell-6'],
  'structured-replay-gallery':['chat-11'],
  'structured-replay-unknown-stop':['chat-8','chat-11'],
- 'forced-dark-native-sidebar':['shell-1','settings-4']
+ 'forced-dark-native-sidebar':['shell-1','settings-4'],
+ 'light-native-wk-settings-seam':['settings-1','plugins-3','shell-1']
 };
-for(const n of [6,'6.1',7,8,9]){
+for(const n of [6,'6.1',7,8,9,10]){
  const review=laterReviews.find(x=>x.n===n)?.value;if(!review)continue;
  for(const [field,status]of [['passedSubchecks','observed-passed-subcheck'],['failedSubchecks','observed-failed-subcheck']]){
   for(const check of review[field]??[]){for(const id of reviewMap[check.id]??[]){

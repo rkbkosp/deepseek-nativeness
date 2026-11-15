@@ -1,0 +1,39 @@
+{
+  "checkedAt": "2026-11-15T00:34:42.526Z",
+  "reviewer": "root",
+  "manifestSha256": "574651f13a2ac44449c92d763571c42d56dc0d61978564f9a42ea7824cf4d09e",
+  "accepted": false,
+  "status": "actual-composition-theme-transition-failed",
+  "source": "qa/native-editor-themed-next/build/manifest.json",
+  "passedSubchecks": [
+    "Startup dark native scroll/text area readable without former white rectangle.",
+    "@Fi typing retains native focus; Down highlights second candidate; Escape cancels without losing query.",
+    "Backspace reopens candidates; physical screenshot-coordinate click [400,780] inserts file reference chip and canonical @\"docs/中文 file.md\" .",
+    "Native popup actual field focus accepts local popup text; Escape closes and reference remains.",
+    "Theme toggles preserve reference canonical content."
+  ],
+  "failedSubchecks": [
+    {
+      "id": "native-backing-stale-on-toggle",
+      "detail": "After dark to light, AX reports #f4f4f5 host light and shell is light, but actual native area stays dark with low-contrast dark-blue chip/black caret. Reobserved after host reversal; native backing remains stale.",
+      "evidence": [
+        "/tmp/native-dsh-parity/133-theme-proof-light-chip.png",
+        "/tmp/native-dsh-parity/134-theme-proof-light-reverse-host.png"
+      ]
+    }
+  ],
+  "evidence": [
+    "/tmp/native-dsh-parity/131-theme-proof-dark.png",
+    "/tmp/native-dsh-parity/132-theme-proof-candidates.png",
+    "/tmp/native-dsh-parity/135-theme-proof-blur-chip.png"
+  ],
+  "scope": "Independent local fixture only, no Host/auth/network/send; 29 subtree pixel tests did not exercise external NativeView live reconciliation. Candidate fixture returns fixed list, not real filtering acceptance. Physical IME untested. Not integrated in normal bundle.",
+  "exit": "Cleared local fixture draft and Cmd+Q; subsequent inventory confirms proof no longer running.",
+  "cuaCompletion": "完成主题与输入实屏复验",
+  "verification": {
+    "manifest": "qa/native-editor-themed-next/build/manifest.json",
+    "manifestSha256": "574651f13a2ac44449c92d763571c42d56dc0d61978564f9a42ea7824cf4d09e",
+    "files": 6,
+    "allHashMatch": true
+  }
+}

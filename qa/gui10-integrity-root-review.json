@@ -1,0 +1,46 @@
+{
+  "checkedAt": "2026-11-15T00:16:25.836Z",
+  "reviewer": "root",
+  "status": "GUI10-exact-bundles-and-inputs-verified-not-gui-accepted",
+  "candidates": [
+    {
+      "name": "normal",
+      "app": "/Volumes/SuperDisk/native-dsh/desktop/build/Native DSH Remote GUI10.app",
+      "sourceCommit": "64b4f3b37dfb82a2ef3a83cff0529ef9716e603a",
+      "manifestSha256": "ea4d18cd28486e9e627377b178e678b4772c26d489d71ec9b548a959c23f1536",
+      "files": 3599,
+      "bytes": 209542373,
+      "nativeInputs": 199,
+      "allHashMatch": true
+    },
+    {
+      "name": "forced",
+      "app": "/Volumes/SuperDisk/native-dsh/desktop/build/Native DSH Remote Anchor QA GUI10.app",
+      "sourceCommit": "64b4f3b37dfb82a2ef3a83cff0529ef9716e603a",
+      "manifestSha256": "6d78d7aaccd36d7bde59f4d01fc1ba4356899d2c5de13a3765ac7c554e448bcc",
+      "files": 3599,
+      "bytes": 209548084,
+      "nativeInputs": 199,
+      "allHashMatch": true
+    }
+  ],
+  "scope": "Disk bytes are not memory measurements. Separate native input Theme Proof is not in either bundle.",
+  "postGui": {
+    "checkedAt": "2026-11-15T00:34:42.526Z",
+    "verification": [
+      {
+        "manifest": "build/gui-checkpoints/gui10-normal-manifest.json",
+        "manifestSha256": "ea4d18cd28486e9e627377b178e678b4772c26d489d71ec9b548a959c23f1536",
+        "files": 3599,
+        "allHashMatch": true
+      },
+      {
+        "manifest": "build/gui-checkpoints/gui10-forced-manifest.json",
+        "manifestSha256": "6d78d7aaccd36d7bde59f4d01fc1ba4356899d2c5de13a3765ac7c554e448bcc",
+        "files": 3599,
+        "allHashMatch": true
+      }
+    ],
+    "guiReview": "qa/parity-gui-round10.json"
+  }
+}

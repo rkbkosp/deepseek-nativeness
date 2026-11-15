@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-11-15T00:21:33.366Z",
+  "reviewer": "root",
+  "manifestSha256": "574651f13a2ac44449c92d763571c42d56dc0d61978564f9a42ea7824cf4d09e",
+  "sourceFiles": 31,
+  "artifacts": 6,
+  "allHashMatch": true,
+  "status": "actual-composition-theme-transition-failed",
+  "scope": "Independent local fixture only, no Host/auth/network/send; 29 subtree pixel tests did not exercise external NativeView live reconciliation. Candidate fixture returns fixed list, not real filtering acceptance. Physical IME untested. Not integrated in normal bundle.",
+  "guiReview": "qa/native-editor-theme-gui-review.json",
+  "postGuiArtifactIntegrity": {
+    "manifest": "qa/native-editor-themed-next/build/manifest.json",
+    "manifestSha256": "574651f13a2ac44449c92d763571c42d56dc0d61978564f9a42ea7824cf4d09e",
+    "files": 6,
+    "allHashMatch": true
+  }
+}

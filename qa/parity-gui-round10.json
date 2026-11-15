@@ -1,0 +1,61 @@
+{
+  "checkedAt": "2026-11-15T00:34:42.526Z",
+  "reviewer": "root",
+  "status": "observed-theme-subchecks-passed-full-parity-unaccepted",
+  "sourceCommit": "64b4f3b37dfb82a2ef3a83cff0529ef9716e603a",
+  "integrity": "qa/gui10-integrity-root-review.json",
+  "platform": {
+    "chip": "Apple M4",
+    "macOS": "27.2.1",
+    "actualM1AndMacOS15_8": false
+  },
+  "passedSubchecks": [
+    {
+      "id": "forced-dark-native-sidebar",
+      "detail": "Normal GUI10 same frozen binary launched via standard open -n with synthetic structured dark demo. Actual sidebar and main are dark and foreground legible while system light. No Host access.",
+      "evidence": "/tmp/native-dsh-parity/129-core10-dark-native-sidebar.png"
+    },
+    {
+      "id": "light-native-wk-settings-seam",
+      "detail": "Normal GUI10 restored own saved login/Host/completed session; native settings modal and built-in-plugin original WK page share white background with no former gray/white rectangular seam. Escape closes settings, HTML removed and native empty composer restored.",
+      "evidence": "/tmp/native-dsh-parity/130-core10-light-settings-seam.png"
+    }
+  ],
+  "failedSubchecks": [],
+  "qualification": [
+    "GUI10 forced fallback bundle disk verified but not launched in this round. GUI9 forced-menu actual results remain historical.",
+    "Startup getApp failures precede standard open success; original remained readable. No proven lock or app startup defect.",
+    "No full production input integration or visual/operation parity acceptance."
+  ],
+  "remoteMutations": [],
+  "exit": "Own normal/demo apps quit; CUA inventory confirms not running. Original left unchanged.",
+  "cuaCompletion": "完成主题与输入实屏复验",
+  "privateCaptures": true,
+  "verification": [
+    {
+      "manifest": "build/gui-checkpoints/gui10-normal-manifest.json",
+      "manifestSha256": "ea4d18cd28486e9e627377b178e678b4772c26d489d71ec9b548a959c23f1536",
+      "files": 3599,
+      "allHashMatch": true
+    },
+    {
+      "manifest": "build/gui-checkpoints/gui10-forced-manifest.json",
+      "manifestSha256": "6d78d7aaccd36d7bde59f4d01fc1ba4356899d2c5de13a3765ac7c554e448bcc",
+      "files": 3599,
+      "allHashMatch": true
+    },
+    {
+      "manifest": "qa/native-editor-themed-next/build/manifest.json",
+      "manifestSha256": "574651f13a2ac44449c92d763571c42d56dc0d61978564f9a42ea7824cf4d09e",
+      "files": 6,
+      "allHashMatch": true
+    }
+  ],
+  "candidateNativeSha256": "264d4c43a7fe3a31465fbdd5ca166ac20acd317d78228935861c302aba6943c2",
+  "remaining": [
+    "Full visual and operation parity remains unaccepted.",
+    "Independent input actual live theme transition failed; new proof fix assigned, no normal-bundle integration.",
+    "Original final/process grouping and reasoning order require source-based incremental frontend repair.",
+    "Actual macOS15.8/M1 and whole-process CPU/footprint still untested."
+  ]
+}
