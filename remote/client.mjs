@@ -45,6 +45,8 @@ export class RemoteAdapter {
     this.pending = new Map();
     this.streams = new Map();
     this.streamContexts = new Map();
+    this.sessionCache = new Map();
+    this.sessionCacheLimit = 3;
     this.owners = new Map();
     this.terminalInputs = new Map();
     this.ledger = new Map();
@@ -119,6 +121,7 @@ export class RemoteAdapter {
     this.authenticated = false;
     this.identityScope = undefined;
     this.projection = undefined;
+    this.clearSessionCache();
     this.sessionRows = [];
     this.workspaceRows = [];
     this.workspaceId = undefined;
@@ -216,6 +219,7 @@ export class RemoteAdapter {
       clearTimeout(this.snapshotTimer);
       this.snapshotTimer = undefined;
       this.projection = undefined;
+      this.clearSessionCache();
       this.sessionRows = [];
       this.catalogRows = [];
       this.workspaceRows = [];
@@ -320,6 +324,7 @@ export class RemoteAdapter {
         this.identityScope = undefined;
         this.authenticated = false;
         this.projection = undefined;
+        this.clearSessionCache();
         this.sessionRows = [];
         this.workspaceRows = [];
         this.workspaceId = undefined;
@@ -463,6 +468,7 @@ export class RemoteAdapter {
       this.eventsStop?.abort();
       this.controlStop?.abort();
       this.followStop?.abort();
+      this.clearSessionCache();
       this.abandonPending();
       this.notifyStatus("连接已断开，正在恢复");
       if (!this.closed) void this.reconnect(hostId);
@@ -654,6 +660,7 @@ export class RemoteAdapter {
     ++this.selectionGeneration;
     this.followStop?.abort();
     this.followStop = undefined;
+    this.clearSessionCache();
     this.projection = undefined;
     await this.releasePending();
     if (!this.projection) {
@@ -663,17 +670,90 @@ export class RemoteAdapter {
     }
     return { cleared: true };
   }
+  // Recently followed Sessions keep their follow stream and projection. The
+  // Host has no resume cursor for session/follow, so dropping a projection made
+  // every return visit replay a fresh history window; keeping a bounded set of
+  // passive follows turns a return visit into a local re-publish.
+  cacheSession(projection, stop) {
+    if (!projection || !stop || stop.signal.aborted) return;
+    this.sessionCache.delete(projection.sessionId);
+    this.sessionCache.set(projection.sessionId, { projection, stop });
+    this.pruneSessionCache();
+  }
+  pruneSessionCache() {
+    for (const [sessionId, entry] of [...this.sessionCache]) {
+      if (this.sessionCache.size <= this.sessionCacheLimit) return;
+      if (entry.projection === this.projection) continue;
+      this.sessionCache.delete(sessionId);
+      entry.stop.abort();
+    }
+  }
+  // Most recently used entry, or undefined when it was evicted or its stream
+  // already closed.
+  cachedSession(sessionId) {
+    const entry = this.sessionCache.get(sessionId);
+    if (!entry) return undefined;
+    if (entry.stop.signal.aborted) {
+      this.sessionCache.delete(sessionId);
+      return undefined;
+    }
+    this.sessionCache.delete(sessionId);
+    this.sessionCache.set(sessionId, entry);
+    return entry;
+  }
+  forgetSession(sessionId, stop) {
+    const entry = this.sessionCache.get(sessionId);
+    if (!entry || (stop && entry.stop !== stop)) return;
+    this.sessionCache.delete(sessionId);
+  }
+  clearSessionCache() {
+    for (const entry of this.sessionCache.values()) entry.stop.abort();
+    this.sessionCache.clear();
+  }
   async openSession(sessionId) {
     const selection = ++this.selectionGeneration;
     if (!this.sessionRows.some((s) => s.id === sessionId))
       fail("SESSION_NOT_FOUND", "会话不在当前已加载的远程目录中。");
-    this.followStop?.abort();
+    const scope = this.notificationScope();
+    const followed = this.projection,
+      followedStop = this.followStop;
+    const followedLive =
+      !!followed && !!followedStop && !followedStop.signal.aborted;
+    if (followedLive && followed.sessionId === sessionId) {
+      // Re-selecting the followed Session is not a switch: restarting its
+      // stream would replay the baseline and drop held interactions.
+      this.controlSelection = {
+        sessionId,
+        baseline: undefined,
+        changes: new Map(),
+      };
+      const value = this.snapshot();
+      this.publish(scope, () => this.publisher.replace(value));
+      this.emit("snapshot", value, scope);
+      return value;
+    }
+    if (followedLive) this.cacheSession(followed, followedStop);
+    this.followStop = undefined;
     this.controlSelection = {
       sessionId,
       baseline: undefined,
       changes: new Map(),
     };
     this.projection = undefined;
+    const cached = this.cachedSession(sessionId);
+    if (cached) {
+      this.projection = cached.projection;
+      this.followStop = cached.stop;
+      this.projection.running =
+        this.runningBySession.get(sessionId) ?? this.projection.running;
+      await this.releasePending();
+      if (selection !== this.selectionGeneration)
+        fail("CANCELLED", "会话选择已被替换。");
+      const value = this.snapshot();
+      this.publish(scope, () => this.publisher.replace(value));
+      this.emit("snapshot", value, scope);
+      return value;
+    }
     await this.releasePending();
     if (selection !== this.selectionGeneration)
       fail("CANCELLED", "会话选择已被替换。");
@@ -691,7 +771,8 @@ export class RemoteAdapter {
     stop.signal.addEventListener("abort", onAbort, { once: true });
     void this.consumeSession(projection, stop, ready).catch((error) => {
       ready.reject(error);
-      if (!stop.signal.aborted)
+      this.forgetSession(sessionId, stop);
+      if (!stop.signal.aborted && this.projection === projection)
         this.emit("error", {
           code: error.code ?? "SESSION_STREAM_FAILED",
           message: "会话流已中断，请重新打开。",
@@ -763,12 +844,10 @@ export class RemoteAdapter {
           signal,
         );
         for await (const frame of stream) {
-          if (
-            signal.aborted ||
-            !this.isNotificationScope(scope) ||
-            this.projection !== projection
-          )
-            return;
+          if (signal.aborted || !this.isNotificationScope(scope)) return;
+          // A cached follow keeps applying in the background so a return visit
+          // is current; only the followed Session may publish.
+          const active = this.projection === projection;
           if (frame.type === "snapshot") {
             projection.snapshot(frame);
             if (this.controlSelection.sessionId === projection.sessionId) {
@@ -787,14 +866,18 @@ export class RemoteAdapter {
               this.runningBySession.get(projection.sessionId) ??
               projection.running;
             opened = true;
-            const value = this.snapshot();
-            this.publish(scope, () => this.publisher.replace(value));
-            // Announce every new baseline on the notification conveyor before
-            // its deltas or the duplicate RPC completion can reach the UI.
-            this.emit("snapshot", value, scope);
+            let value;
+            if (active) {
+              value = this.snapshot();
+              this.publish(scope, () => this.publisher.replace(value));
+              // Announce every new baseline on the notification conveyor before
+              // its deltas or the duplicate RPC completion can reach the UI.
+              this.emit("snapshot", value, scope);
+            }
             if (!baselinePublished) {
               baselinePublished = true;
-              ready.resolve(value);
+              this.cacheSession(projection, stop);
+              ready.resolve(active ? value : projection.value());
             }
           } else if (!opened)
             fail("INVALID_SNAPSHOT", "会话增量出现在快照之前。");
@@ -802,7 +885,7 @@ export class RemoteAdapter {
             projection.frame(frame.frame);
           else if (frame.type === "event" || frame.type === "chunks")
             projection.event(frame.event);
-          this.scheduleSnapshot();
+          if (active) this.scheduleSnapshot();
         }
         if (!signal.aborted) fail("STREAM_CLOSED", "会话流已关闭。");
         return;
@@ -1773,6 +1856,7 @@ export class RemoteAdapter {
     await this.releasePending();
     this.eventsStop?.abort();
     this.followStop?.abort();
+    this.clearSessionCache();
     const remote = this.connected;
     this.connected = undefined;
     this.gateway = undefined;
