@@ -1,60 +1,120 @@
 # DeepSeek Nativeness
 
-A macOS client prototype using MyGo native UI and an on-demand WKWebView. The existing MacMini Harness backend and `ds-harness-remote@0.6.4` remain unchanged. There is no local Agent runtime in this application.
+**DeepSeek Nativeness** 是面向 macOS 的 DeepSeek Harness（`dsh`）原生桌面客户端与外壳应用，基于 Go + [MyGo](https://github.com/egoist/mygo) 原生 UI 与按需加载的 `WKWebView` 构建，在不修改后端协议与上游服务的前提下提供轻量、原生的桌面体验。
 
-## Run
+## 下载与安装
 
-Requirements: macOS 15.8 or newer, Go 1.27.3+, Node 24.9+, the Xcode command line tools (Swift for the packaged indicator), and the adjacent frozen `../mygo` checkout. The supported OS range follows the user's requirement; no 13.x or 14.x adaptation is planned. Compatibility JavaScript targets Safari 17.4. Actual GUI evidence is from this M4 Mac only; macOS 15.8 and the M1 MacBook Air remain untested. The Remote helper's locked dependencies and upstream browser-independent client code are described in [remote/README.md](remote/README.md).
+预编译的 macOS 发布包可直接从 GitHub Releases 下载：
+
+- **下载地址**：[GitHub Releases](https://github.com/rkbkosp/deepseek-nativeness/releases)
+- **系统要求**：macOS 15.8 及以上（Apple Silicon / Intel）
+
+下载解压后将 **DeepSeek Nativeness.app** 拖入「应用程序」（`/Applications`）即可使用。发布包已内置原生可执行文件、Core Animation 运行态指示器动态库、独立 Node 运行时、Remote 通信桥接模块以及按需加载的兼容组件资源，无需额外配置开发环境。
+
+## 核心特性
+
+### 1. 原生远程客户端（Remote 模式）
+
+- **端到端加密连接**：兼容 `ds-harness-remote`（`v0.6.4`）协议，使用固定的 `Noise_IK_25519_ChaChaPoly_SHA256` 套件进行端到端加密，按 `LAN -> P2P -> TURN -> Relay` 顺序自动协商传输路径，Host 无需开放公网端口。
+- **原生对话与工作区界面**：
+  - 使用 MyGo 原生绘制侧边栏、工作区列表、多会话管理与搜索。
+  - 原生支持流式 Markdown 渲染、思考过程（Reasoning）与上下文（Context）折叠行、工具调用（Bash / Read / Edit / Search / Diff）详情行、过程分组（Process Groups）、子代理状态、Todo 面板与上下文统计。
+  - 输入区支持多模态图片附件、队列（Queue）与插话（Steer）模式、斜杠命令、权限审批（Approval）及交互式提问（Questions）响应。
+- **跨会话缓存与低延迟切换**：在客户端维护最近跟随会话的投影缓存与 Host 级能力/模型目录缓存，切换回已打开会话时无需重复拉取历史窗口。
+
+### 2. 按需加载的兼容页（Ephemeral WKWebView）
+
+对于低频或重度依赖原版复杂状态机的页面，客户端通过受控的本地 `WKWebView` 按需加载并复用上游组件：
+
+- **支持路由**：插件管理（`plugins`）、模型选择器（`models` / `model-menu`）、执行轨迹时间线（`trajectory`）、远程终端（`terminal`）以及独立认证的 Remote Web 页面。
+- **即用即毁**：仅在打开对应面板时创建 `WKWebView` 进程，并通过作用域票据（`clientScope` 与 `ownerId`）隔离流订阅；关闭面板或切换会话时立即销毁视图并释放全部后台流与内存。
+
+### 3. 本地工作区模式（Local Runtime）
+
+除了作为纯远程客户端连接远端 Host，应用还支持直接启动并托管本地 `dsh` 运行时：
+
+- 可通过菜单栏 **「工作区 → 打开本地工作区」**（快捷键 `Cmd+Shift+L`）或启动参数 `--local` 进入本地工作区，使用 **`Cmd+Shift+N`** 随时返回原生界面。
+- 自动校验并拉起内置的官方 `dsh` Host 运行时，在窗口内承载完整的本地工作区界面。
+- 提供完整的桌面外壳体验：单实例锁、应用菜单、关闭窗口自动隐藏保活后台任务、点击 Dock 图标重新唤醒、退出前运行任务中断确认，以及 `dsh://` 登录回调深度链接支持。
+
+### 4. 原生外观与合成层动效
+
+- **Core Animation 运行态指示器**：保留原版 1.5 秒旋转周期与三次贝塞尔呼吸弧线，打包后通过 `libNativeDSHIndicators.dylib` 挂载至 AppKit/Core Animation 合成层并由窗口级对象池复用；静止等待期间不触发业务视图树重建或额外 Metal 帧渲染，同时遵循系统「减弱动态效果」（Reduce Motion）设置。
+- **原生主题适配**：支持浅色、深色与跟随系统外观，集成 macOS 侧边栏毛玻璃（Vibrancy）与无边框内嵌标题栏。
+
+## 数据隔离与安全边界
+
+- **独立身份与偏好存储**：
+  - Remote 设备身份与凭据存储在 `~/Library/Application Support/Native DSH/remote/<server-hash>/`。
+  - 客户端界面偏好与连接配置存储在 `~/Library/Application Support/Native DSH Remote/preferences.json`。
+- **零侵入设计**：Remote 模式绝不读取、迁移、刷新或覆盖本机 `~/.dsh` 目录下的已有凭据与配置。账号密码仅在登录时通过私有 stdio 管道传递给本地通信 helper，不会写入日志或落盘。
+- **本地 Profile 锁保护**：在启动本地工作区（`--local`）前，客户端会主动检查 `~/.dsh` 的 desktop profile 占用状态；若原版桌面应用正在运行，将拒绝并发接管以保护本地数据安全。
+
+## 本地开发与从源码构建
+
+### 环境要求
+
+- macOS 15.8 或更高版本
+- Go 1.27.3+（使用 `CGO_ENABLED=0` 构建）
+- Node.js 24.9+ 与 npm
+- Xcode Command Line Tools（用于编译 Swift 原生指示器动态库）
+- 与仓库同级放置的 [`mygo`](https://github.com/egoist/mygo) 源码目录（对应 `go.mod` 中的 `replace github.com/egoist/mygo => ../mygo`）
+
+### 直接运行
+
+在项目根目录下执行：
 
 ```sh
-cd /Volumes/SuperDisk/native-dsh/desktop
+# 构建前端桥接与兼容层资源
+npm ci --prefix remote && npm run --prefix remote build
+npm ci --prefix compat && npm run --prefix compat build
+
+# 启动原生客户端
 CGO_ENABLED=0 go run .
 ```
 
-Normal startup loads the independently stored server preference, configures a client identity outside `~/.dsh`, and shows the real authentication state. It does not fabricate sessions. Enter credentials only in the native password field. Credentials cross the helper's private stdin; no credentials are written into this repository. The existing installed application's identity and expired credentials are not refreshed or overwritten.
+### 打包 macOS `.app` 应用
 
 ```sh
 sh scripts/build-app.sh
-open 'build/DeepSeek Nativeness.app'
+open "build/DeepSeek Nativeness.app"
 ```
 
-The local `.app` has its own bundle identifier and includes Node, the client-only helper, and its dependencies. It resolves resources from its bundle and does not depend on the launch working directory. This is a local development artifact; it is not notarized or a published release.
-
-## Explicit UI replay
+如需将本机已安装官方客户端中的 `dsh` 运行时一并打包进 `.app`（以支持免外部依赖的 `--local` 本地工作区模式）：
 
 ```sh
-go run . --demo
-go run . --demo --demo-running 20 --metrics /tmp/native-dsh-metrics.json --exit-after 5s
-go run . --demo --demo-running 1 --animation-time 375ms --capture /tmp/native-dsh-phase.png --exit-after 3s
+node scripts/vendor-runtime.mjs
+sh scripts/build-app.sh --with-runtime
 ```
 
-`--demo` is visibly labeled and never starts the Remote helper. `--demo-running 0` exercises the settled path; `--hide-sidebar` collapses the sidebar. `--animation-time` freezes the indicator for deterministic visual inspection only. The packaged indicator retains the 1.5-second spin and cubic-bezier breathing arc but runs in Core Animation through the existing `ui.NativeView` seam, so idle animation does not request Metal frames or rebuild the business view. A window-owned pool reuses native views; removing a row stops its animation, and closing the window releases the pool. Plain `go run`, a missing native library, fixed-time captures, and non-macOS builds use the original paint-only renderer. `NATIVE_DSH_INDICATORS=paint` explicitly selects that fallback for comparative measurements. No change to the frozen MyGo checkout or its declared `replace` is needed. The user's system Reduce Motion preference remains honored; it is not forced on.
+### 界面回放与测试
 
-## Verification boundaries
-
-`CGO_ENABLED=0 go test ./...` covers the original question payload and answer labels, uncertain send receipts, animation geometry and paint-only scheduling, removal of animated elements, Go-to-Node JSON-lines with an explicit simulated Remote peer, notification backpressure, and a canceled blocked pipe write. The simulated peer is not live Host validation.
-
-Actual read-only acceptance on this Mac has covered independent login restoration, LAN connection to the MacMini, three workspaces and twelve root sessions, completed history and older pagination, native Markdown, reading a workspace file, shared-connection plugin/model reads, and the original trajectory timeline with filtering and folding. The GUI 5.1 candidate also restored the saved Host and completed session automatically. Real streaming, recovery under load, sends, cancellation, approvals, questions, and Host mutations remain unverified; their current evidence is synthetic protocol/component tests. Existing tasks are never messaged, interrupted, or approved during development checks.
-
-“Remote Web” is an independently authenticated, untrusted webpage connection. The separate locally packaged compatibility pages reuse original React components over the existing native client's connection and scoped, allowlisted RPC. Closing a page destroys its WKWebView and releases all of its subscriptions. Native question and approval answers use their owning Remote connection. Arbitrary third-party plugin web routes/resources and original raw Session log downloads remain confirmed frozen-protocol limits.
-
-Each GUI candidate is checkpointed locally with a source commit and a manifest of packaged native/helper/browser hashes. `scripts/build-app.sh --use-next-assets` packages explicitly reviewed `dist-next` directories without rebuilding them. The split browser entry-size report is a build-size measurement, not a runtime memory or M1 performance result. Terminal visual composition, narrow composer controls, and newly added settings pages require GUI acceptance of their exact candidate; source, AX nodes, and separate WK screenshots alone do not establish that they are visible on screen.
-
-GUI11 has two isolated local build targets. They require the reviewed `remote/dist-chat-process-next`, `build/runtime-chat-process-next/node`, and frozen `compat/dist-anchor-reflow-next` / `dist-anchor-reflow-forced-test` trees:
+`--demo` 模式仅用于本地 UI 与渲染回放，带有明显标识且不会启动 Remote helper 或建立任何网络连接：
 
 ```sh
-sh scripts/build-app.sh --use-gui11-assets
-sh scripts/build-app.sh --use-gui11-forced-assets
+# 启动本地界面回放模式
+CGO_ENABLED=0 go run . --demo
+
+# 运行 Go 单元测试与协议集成测试
+CGO_ENABLED=0 go test ./...
+
+# 运行 Remote helper 与兼容层测试
+npm test --prefix remote
+node --test compat/test/*.test.mjs
+
+# 校验 Core Animation 原生指示器动态库 ABI 与生命周期
+sh scripts/check-native-indicators.sh
 ```
 
-The outputs are `build/Native DSH Remote GUI11.app` and `build/Native DSH Remote Anchor QA GUI11.app`. Both use the same native application and chat-presentation helper; only the compatibility-page compile-time fallback gate and QA bundle identity differ. Earlier candidates and standalone native-editor proofs are preserved; the proofs are not imported into the normal application. These commands package existing reviewed resources and do not launch the app or establish GUI acceptance of the new chat rendering.
+## 目录结构与相关文档
 
-Only these GUI11 targets also apply a local ad-hoc resource seal and verify it. The nested Node/wrtc signatures remain unchanged. Their pre-seal Go binaries are saved under `build/gui-checkpoints/gui11-*-preseal-native`; the final native signatures may differ because each seal binds its bundle identity and browser resources. This is not Developer ID signing or notarization.
+- [remote/README.md](remote/README.md)：Node 侧 Remote 通信 helper、stdio 协议契约、会话缓存与安全边界说明
+- [remote/CHAT_PRESENTATION.md](remote/CHAT_PRESENTATION.md)：原生对话页 Turn/Step 结构化投影契约
+- [compat/README.md](compat/README.md)：按需加载的 `WKWebView` 兼容路由与组件复用说明
+- `indicator_native/`：macOS Core Animation 运行态指示器原生实现（Swift）
+- `runtime/` 与 `scripts/`：本地 `dsh` Host 启动器、应用打包、运行时提取与签名脚本
+- [assets/NOTICE.md](assets/NOTICE.md)：应用图标与品牌矢量素材来源及开源许可说明
 
-The indicator library is compiled into `Contents/Frameworks/libNativeDSHIndicators.dylib` and locally signed before the app is sealed. `sh scripts/check-native-indicators.sh` checks its native ABI, animation period, resize, stop, and resume without launching a window or contacting Remote.
+## 声明与许可
 
-The separately authorized Developer ID stage is `node scripts/sign-gui11.mjs`. It copies the reviewed normal GUI11 app to a fresh `build/signed-gui11/Native DSH Remote.app`, signs wrtc and the optional indicator library → Node → outer app individually, and runs only a local helper fixture. Its Node entitlement list preserves the actual vendor grants while removing `get-task-allow`; Go/wrtc receive no exception entitlements. It records all code/data-section and non-signature resource comparisons under `build/signed-gui11-audit`. The Go code is still the `1feddef` build; the report separately records the signing-script commit. The script neither submits to Apple nor starts a GUI or publishes anything. Notarization requires the separate reviewed-app stage.
-
-Visual parity is in progress. Original DSH SVG artwork and the sidebar/header/composer proportions are reused; exact typography, all transitions, and M1 CPU/memory comparisons remain acceptance work. Do not infer M1 performance from local synthetic tests.
-
-The source references `../deepseek-harness` and `../mygo` are read-only. No backend code, configuration, database schema, application installation, or installed plugin has been changed.
+本项目复用上游开源组件的客户端协议与界面素材，相关许可详见 [assets/NOTICE.md](assets/NOTICE.md)、[assets/DSH-LICENSE](assets/DSH-LICENSE) 与 [remote/UPSTREAM-LICENSE](remote/UPSTREAM-LICENSE)。DeepSeek 及相关名称、图标与商标归其各自权利人所有。
