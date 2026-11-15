@@ -1,0 +1,225 @@
+//go:build darwin
+
+package composer_native
+
+import (
+	"encoding/json"
+	"errors"
+	"os"
+	"path/filepath"
+	"reflect"
+	"strings"
+	"testing"
+)
+
+const crossNamespace = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+
+func crossAck(t *testing.T, request HotActivationRequest, id, next, revision, semantic uint64) []byte {
+	t.Helper()
+	raw, err := json.Marshal(HotActivationAck{Kind: "hotActivated", ID: id, Epoch: activationEpoch(crossNamespace, next), DocKey: request.TargetDocKey, AccountScope: request.TargetAccountScope, Revision: revision, SemanticRevision: semantic, SemanticDigest: strings.Repeat("b", 64), ActivationGeneration: next, RequiresSnapshot: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return raw
+}
+func TestCrossHotAckRejectsEveryBindingDriftAndBody(t *testing.T) {
+	r := HotActivationRequest{Epoch: "source", DocKey: "A", AccountScope: "account", TargetDocKey: "B", TargetAccountScope: "account"}
+	raw := crossAck(t, r, 77, 2, 11, 1)
+	if _, err := decodeHotActivationAck(raw, 77, r, crossNamespace, 2, 10); err != nil {
+		t.Fatal(err)
+	}
+	for _, field := range []string{"kind", "id", "epoch", "docKey", "accountScope", "revision", "semanticRevision", "semanticDigest", "activationGeneration", "requiresSnapshot", "runs", "canonicalText"} {
+		t.Run(field, func(t *testing.T) {
+			var m map[string]any
+			_ = json.Unmarshal(raw, &m)
+			switch field {
+			case "id", "revision", "semanticRevision", "activationGeneration":
+				m[field] = 0
+			case "requiresSnapshot":
+				m[field] = false
+			case "runs":
+				m[field] = []any{}
+			default:
+				m[field] = "retired-or-unexpected"
+			}
+			mutated, _ := json.Marshal(m)
+			if _, err := decodeHotActivationAck(mutated, 77, r, crossNamespace, 2, 10); err == nil {
+				t.Fatal("malformed or old binding accepted")
+			}
+		})
+	}
+	if _, err := decodeHotActivationAck(append(raw, []byte(` {}`)...), 77, r, crossNamespace, 2, 10); err == nil {
+		t.Fatal("trailing value accepted")
+	}
+	if _, err := decodeHotActivationAck([]byte(strings.Repeat(" ", MaxActivationAckBytes+1)), 77, r, crossNamespace, 2, 10); err == nil {
+		t.Fatal("unbounded ack accepted")
+	}
+}
+
+func TestCrossUnknownNativeErrorCannotProveBeforeMutationRejection(t *testing.T) {
+	r := HotActivationRequest{Epoch: "source", DocKey: "A", AccountScope: "account", TargetDocKey: "B", TargetAccountScope: "account"}
+	for _, code := range []string{"FUTURE_POST_MUTATION_ERROR", "VERSION_MISMATCH", "native-metadata-new-version"} {
+		raw, _ := json.Marshal(map[string]any{"error": code})
+		_, err := decodeHotActivationAck(raw, 77, r, crossNamespace, 1, 10)
+		var rejected *ActivationRejected
+		if err == nil || errors.As(err, &rejected) || errors.Is(err, ErrHotDocumentMissing) {
+			t.Fatalf("unknown native outcome classified as proven before-mutation rejection: %s %T %v", code, err, err)
+		}
+	}
+	_, err := decodeHotActivationAck([]byte(`{"error":"HOT_DOCUMENT_MISSING"}`), 77, r, crossNamespace, 1, 10)
+	if !errors.Is(err, ErrHotDocumentMissing) {
+		t.Fatal("known missing-document rejection lost precise cold-path sentinel", err)
+	}
+	_, err = decodeHotActivationAck([]byte(`{"error":"HOT_DOCUMENT_MISSING","epoch":"changed","revision":99}`), 77, r, crossNamespace, 1, 10)
+	var mixed *ActivationRejected
+	if err == nil || errors.As(err, &mixed) {
+		t.Fatal("mixed error/commit metadata claimed before-mutation proof", err)
+	}
+}
+func TestCrossHotAckOnlyBindsAndFencesUntilNewSnapshot(t *testing.T) {
+	store := NewDocumentStore()
+	id := DocumentID{AccountScope: "account", HostID: "host", SessionID: "B", Slot: "main"}
+	if err := store.Seed(id, []Run{{Kind: "text", Text: "old-Go-seed"}}, 0, 0); err != nil {
+		t.Fatal(err)
+	}
+	e := &Editor{id: 77, epoch: "source", docKey: "A", accountScope: "account", revision: 10, semanticRevision: 1, semanticDigest: strings.Repeat("b", 64), activationNamespace: crossNamespace}
+	r := HotActivationRequest{Epoch: e.epoch, DocKey: e.docKey, AccountScope: e.accountScope, TargetDocKey: id.Key(), TargetAccountScope: id.AccountScope}
+	digest, _ := SemanticDigest([]Run{{Kind: "text", Text: "native-newest"}})
+	ackRaw := crossAck(t, r, 77, 1, 11, 2)
+	var ackObject map[string]any
+	_ = json.Unmarshal(ackRaw, &ackObject)
+	ackObject["semanticDigest"] = digest
+	ackRaw, _ = json.Marshal(ackObject)
+	ack, err := e.adoptHotActivationLocked(r, ackRaw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if e.Valid() || e.invalidAfterRevision != 11 {
+		t.Fatal("metadata ack released native submission fence")
+	}
+	if _, err := store.Bind(id, ack.Epoch); err != nil {
+		t.Fatal(err)
+	}
+	store.Fence(id, ack.Epoch, ack.Revision, "metadata-only activation")
+	if _, err := store.Capture(id, ack.Epoch, nil); err == nil {
+		t.Fatal("metadata ack made stale Go seed submittable")
+	}
+	var queued []Snapshot
+	e.onEvent = func(s Snapshot) { queued = append(queued, s) }
+	actual := Snapshot{ID: 77, Kind: "snapshot", Epoch: ack.Epoch, DocKey: id.Key(), AccountScope: id.AccountScope, Revision: 12, SemanticRevision: 2, SemanticDigest: digest, Runs: []Run{{Kind: "text", Text: "native-newest"}}, DetectText: "native-newest", CanonicalText: "native-newest"}
+	old := actual
+	old.Epoch = "source"
+	old.Revision = 100
+	e.deliver(old, nil)
+	same := actual
+	same.Revision = 11
+	e.deliver(same, nil)
+	if e.Valid() || len(queued) != 0 {
+		t.Fatal("retired/same revision snapshot released hot fence")
+	}
+	e.deliver(actual, nil)
+	if !e.Valid() || len(queued) != 1 {
+		t.Fatal("new valid native snapshot failed recovery")
+	}
+	if err := store.Accept(id, ack.Epoch, queued[0]); err != nil {
+		t.Fatal(err)
+	}
+	capture, err := store.Capture(id, ack.Epoch, nil)
+	if err != nil || capture.CanonicalText != "native-newest" {
+		t.Fatal("native newest body not authoritative", capture, err)
+	}
+}
+func TestCrossHotAckABACannotAdoptRetiredAckOrCallback(t *testing.T) {
+	e := &Editor{id: 77, epoch: "cold", docKey: "A", accountScope: "account", revision: 10, semanticRevision: 1, semanticDigest: strings.Repeat("b", 64), activationNamespace: crossNamespace}
+	var oldAck []byte
+	for i := uint64(1); i <= 500; i++ {
+		target := "B"
+		if i%2 == 0 {
+			target = "A"
+		}
+		r := HotActivationRequest{Epoch: e.epoch, DocKey: e.docKey, AccountScope: e.accountScope, TargetDocKey: target, TargetAccountScope: e.accountScope}
+		raw := crossAck(t, r, 77, i, 10+i, 1)
+		if i == 1 {
+			oldAck = raw
+		}
+		if _, err := e.adoptHotActivationLocked(r, raw); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if e.activationGeneration != 500 || e.docKey != "A" || e.activationNamespace != crossNamespace {
+		t.Fatal("monotonic generation broken")
+	}
+	before := []any{e.epoch, e.docKey, e.accountScope, e.revision, e.activationGeneration, e.invalidAfterRevision}
+	r := HotActivationRequest{Epoch: e.epoch, DocKey: e.docKey, AccountScope: e.accountScope, TargetDocKey: "B", TargetAccountScope: e.accountScope}
+	if _, err := e.adoptHotActivationLocked(r, oldAck); err == nil {
+		t.Fatal("ABA accepted old ack")
+	}
+	e.deliver(Snapshot{ID: e.id, Epoch: activationEpoch(crossNamespace, 2), DocKey: "A", AccountScope: "account", Revision: 10000}, errors.New("retired invalid"))
+	if !reflect.DeepEqual(before, []any{e.epoch, e.docKey, e.accountScope, e.revision, e.activationGeneration, e.invalidAfterRevision}) {
+		t.Fatal("retired ack/callback mutated current owner")
+	}
+}
+
+func TestCrossQueuedOldAFrameCannotReleaseNewABinding(t *testing.T) {
+	store := NewDocumentStore()
+	id := DocumentID{AccountScope: "account", HostID: "host", SessionID: "A", Slot: "main"}
+	if err := store.Seed(id, []Run{{Kind: "text", Text: "unsent-current-A"}}, 0, 0); err != nil {
+		t.Fatal(err)
+	}
+	bound, _ := store.Bind(id, "retired-A")
+	queued := bound.Snapshot
+	queued.ID, queued.Revision = 77, 10
+	// Simulate A->B->A after this valid callback was enqueued by the producer.
+	if _, err := store.Bind(id, "native-hot:new-A"); err != nil {
+		t.Fatal(err)
+	}
+	store.Fence(id, "native-hot:new-A", 20, "activation metadata is not body authority")
+	if err := store.Accept(id, "retired-A", queued); err == nil {
+		t.Fatal("queued retired A frame accepted under new binding")
+	}
+	if _, err := store.Capture(id, "native-hot:new-A", nil); err == nil {
+		t.Fatal("queued old frame released new A invalid fence")
+	}
+	recovered := queued
+	recovered.Epoch, recovered.Revision = "native-hot:new-A", 21
+	if err := store.Accept(id, "native-hot:new-A", recovered); err != nil {
+		t.Fatal(err)
+	}
+	if capture, err := store.Capture(id, "native-hot:new-A", nil); err != nil || capture.CanonicalText != "unsent-current-A" {
+		t.Fatal("current valid snapshot could not recover", capture, err)
+	}
+}
+func TestCrossActualNativeHighFenceRejectedBeforeSwitch(t *testing.T) {
+	raw, err := os.ReadFile(filepath.Join(os.Getenv("NATIVE_HOT_CROSS_DIR"), "native-results.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var result struct {
+		BarrierCase struct {
+			Request struct {
+				Epoch, DocKey, AccountScope, TargetDocKey, TargetAccountScope string
+				AfterRevision                                                 uint64
+			}
+			Before, After map[string]string
+			Ack           json.RawMessage
+		}
+	}
+	if err := json.Unmarshal(raw, &result); err != nil {
+		t.Fatal(err)
+	}
+	c := result.BarrierCase
+	e := &Editor{id: 7301, epoch: c.Request.Epoch, docKey: c.Request.DocKey, accountScope: c.Request.AccountScope, revision: c.Request.AfterRevision - 100, activationNamespace: crossNamespace, activationGeneration: 1}
+	e.deliver(Snapshot{ID: e.id, Epoch: e.epoch, DocKey: e.docKey, AccountScope: e.accountScope, Revision: c.Request.AfterRevision}, errors.New("known-current malformed frame"))
+	r := HotActivationRequest{Epoch: e.epoch, DocKey: e.docKey, AccountScope: e.accountScope, TargetDocKey: c.Request.TargetDocKey, TargetAccountScope: c.Request.TargetAccountScope}
+	_, err = e.adoptHotActivationLocked(r, c.Ack)
+	var rejected *ActivationRejected
+	if !errors.As(err, &rejected) {
+		t.Fatalf("actual native did not reject before switching: error=%v ack=%s", err, c.Ack)
+	}
+	if !reflect.DeepEqual(c.Before, c.After) {
+		t.Fatal("Go fence rejected ack after native had already mutated", c.Before, c.After)
+	}
+	if e.Valid() || e.docKey != r.DocKey {
+		t.Fatal("Go source binding/fence changed after native rejection")
+	}
+}

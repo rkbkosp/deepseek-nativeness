@@ -1,0 +1,172 @@
+{
+  "createdAt": "2026-11-15T03:32:18.979Z",
+  "authorManifest": {
+    "path": "qa/checkpoints/native-editor-hot-activation-final/manifest.json",
+    "sha256": "99a7b8ad2825ac4eff2722b4a0e99077738780dd552abd23f062116ea9f83f03",
+    "allFrozenSourcesMatch": true,
+    "count": 9
+  },
+  "sources": {
+    "composer_native/ComposerEditor.swift": "394762b5d799381adda6ce419d3edc24e5f04e77b6b657a8d5ca888574988fa2",
+    "composer_native/HotActivation.swift": "1346673e68d4f174e6f0b7d4b2d2e263f6079931ff575f405376919642b848f0",
+    "composer_native/ReferenceGlyphs.swift": "027819f71ad9cc2fba67c335f4c5261ff2d010e549695ff7327b6c9322824388",
+    "composer_native/SemanticDocument.swift": "ec63ee5b4991b7bc175d355235dfaf9e57983f6c9de02edf5222a9dca13cb05f",
+    "composer_native/backing.go": "6e7f196736637733b1800c537facb5fbe7742647c7e32f81499c2887bfd02ef1",
+    "composer_native/backing_test.go": "789148b2094d290ec5f556fb296a4a49a59d0aa61c239d6c681914b509c2d47b",
+    "composer_native/document_store.go": "2bc99b72fe614fe410d628620bee7b72deed44f911f55c84159a8f7da82e1045",
+    "composer_native/document_store_prepare_test.go": "9001f2f14bed8d9a14347ef4910dbe4f35667009d86f3aac7fa1ef708616880b",
+    "composer_native/document_store_test.go": "406afcb0dc7a3124f4bae0dfcb9e87c19596fed18fcc98866f0ead138569e2d4",
+    "composer_native/editor.go": "2747ffcb5e44f5e914f8973dbe4b9a421ca869da713b67e7918c5ffcef4d3f29",
+    "composer_native/editor_darwin.go": "7fcbfea7f82ccc58efc726282447613364393a1cd304c59cd750d313db6ce1da",
+    "composer_native/editor_other.go": "64cc28da3dc1a149f927325ca877170e712651a0dbb69b01f0da5adb779989fd",
+    "composer_native/editor_test.go": "65562efa93d0ed823e82ac7fa2b2f0afee074b3963f89fc0d85046246db1a668",
+    "composer_native/hot_activation.go": "fcf8f13d61a94edd11edb6d8ab260990500b5147ec0f86e85ad4121a26b47f2b",
+    "composer_native/hot_activation_darwin.go": "caf254cf5a8668e402635449b9dace622f684a164957eec19051ee1412358c2d",
+    "composer_native/hot_activation_darwin_test.go": "0699ea1eae02cc0c64a68aea0ad46aab7accca02a5eda94c001a09365dbe03e6",
+    "composer_native/hot_activation_other.go": "6c9750d9da805a495f80dd694d3c79a602c64c5ce5a21c29069234af27ee7c6d",
+    "composer_native/hot_activation_test.go": "67671b2b612b66cf180ae4deb6998597bc38778d70bc58cf085a56051a390bfa",
+    "composer_native/queue_fence_test.go": "e6bbd50a5d43065ac165ea6f7d9c25046517042df9e1cff8d6fe41d4ca03572c",
+    "composer_native/receiver_darwin_test.go": "a7af93c8355e00e4e008e625e19b1c988e2253cde8f147c9ae88289b76e8a26e",
+    "composer_native/semantic.go": "5655d9d7a2cbbe0b08d8886eb576f17ca5b1b59c25e688b84795a87ae36bb974"
+  },
+  "independentTestInputs": {
+    "main.swift": "754e885bab778fa7fc2f791d159db94bae9b751f2306ced1f23f08a02b41ba2c",
+    "receiver.gotest": "56cc3cda0edde6e0dc3a9f12aa82e6ae8b43a4214b9626e6d1ca90be287987aa",
+    "run.mjs": "399d496fb5132d2cd74e0c28426151e36696df1b70aba0c034705335a0b8f782"
+  },
+  "sourceStable": true,
+  "commands": [
+    {
+      "command": [
+        "sw_vers",
+        "-productVersion"
+      ],
+      "status": 0,
+      "signal": null,
+      "stdout": "27.2.1\n",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": [
+        "uname",
+        "-m"
+      ],
+      "status": 0,
+      "signal": null,
+      "stdout": "arm64\n",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": [
+        "swiftc",
+        "--version"
+      ],
+      "status": 0,
+      "signal": null,
+      "stdout": "Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)\nTarget: arm64-apple-macosx27.2.0\n",
+      "stderr": "swift-driver version: 1.168.6 ",
+      "error": null
+    },
+    {
+      "command": [
+        "swiftc",
+        "-swift-version",
+        "5",
+        "-target",
+        "arm64-apple-macos15.8",
+        "composer_native/ComposerEditor.swift",
+        "composer_native/HotActivation.swift",
+        "composer_native/ReferenceGlyphs.swift",
+        "composer_native/SemanticDocument.swift",
+        "/Volumes/SuperDisk/native-dsh/desktop/qa/native-hot-activation-cross/main.swift",
+        "-o",
+        "/Volumes/SuperDisk/native-dsh/desktop/qa/native-hot-activation-cross/build/native-hot-cross"
+      ],
+      "status": 0,
+      "signal": null,
+      "stdout": "",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": [
+        "/Volumes/SuperDisk/native-dsh/desktop/qa/native-hot-activation-cross/build/native-hot-cross",
+        "/Volumes/SuperDisk/native-dsh/desktop/qa/native-hot-activation-cross/build/native-results.json"
+      ],
+      "status": 0,
+      "signal": null,
+      "stdout": "Independent native hot activation: 19/19, failed=[]\n",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": [
+        "go",
+        "test",
+        "-overlay=/Volumes/SuperDisk/native-dsh/desktop/qa/native-hot-activation-cross/build/overlay.json",
+        "./composer_native",
+        "-run",
+        "^TestCross",
+        "-count=1",
+        "-v"
+      ],
+      "status": 0,
+      "signal": null,
+      "stdout": "=== RUN   TestCrossHotAckRejectsEveryBindingDriftAndBody\n=== RUN   TestCrossHotAckRejectsEveryBindingDriftAndBody/kind\n=== RUN   TestCrossHotAckRejectsEveryBindingDriftAndBody/id\n=== RUN   TestCrossHotAckRejectsEveryBindingDriftAndBody/epoch\n=== RUN   TestCrossHotAckRejectsEveryBindingDriftAndBody/docKey\n=== RUN   TestCrossHotAckRejectsEveryBindingDriftAndBody/accountScope\n=== RUN   TestCrossHotAckRejectsEveryBindingDriftAndBody/revision\n=== RUN   TestCrossHotAckRejectsEveryBindingDriftAndBody/semanticRevision\n=== RUN   TestCrossHotAckRejectsEveryBindingDriftAndBody/semanticDigest\n=== RUN   TestCrossHotAckRejectsEveryBindingDriftAndBody/activationGeneration\n=== RUN   TestCrossHotAckRejectsEveryBindingDriftAndBody/requiresSnapshot\n=== RUN   TestCrossHotAckRejectsEveryBindingDriftAndBody/runs\n=== RUN   TestCrossHotAckRejectsEveryBindingDriftAndBody/canonicalText\n--- PASS: TestCrossHotAckRejectsEveryBindingDriftAndBody (0.00s)\n    --- PASS: TestCrossHotAckRejectsEveryBindingDriftAndBody/kind (0.00s)\n    --- PASS: TestCrossHotAckRejectsEveryBindingDriftAndBody/id (0.00s)\n    --- PASS: TestCrossHotAckRejectsEveryBindingDriftAndBody/epoch (0.00s)\n    --- PASS: TestCrossHotAckRejectsEveryBindingDriftAndBody/docKey (0.00s)\n    --- PASS: TestCrossHotAckRejectsEveryBindingDriftAndBody/accountScope (0.00s)\n    --- PASS: TestCrossHotAckRejectsEveryBindingDriftAndBody/revision (0.00s)\n    --- PASS: TestCrossHotAckRejectsEveryBindingDriftAndBody/semanticRevision (0.00s)\n    --- PASS: TestCrossHotAckRejectsEveryBindingDriftAndBody/semanticDigest (0.00s)\n    --- PASS: TestCrossHotAckRejectsEveryBindingDriftAndBody/activationGeneration (0.00s)\n    --- PASS: TestCrossHotAckRejectsEveryBindingDriftAndBody/requiresSnapshot (0.00s)\n    --- PASS: TestCrossHotAckRejectsEveryBindingDriftAndBody/runs (0.00s)\n    --- PASS: TestCrossHotAckRejectsEveryBindingDriftAndBody/canonicalText (0.00s)\n=== RUN   TestCrossUnknownNativeErrorCannotProveBeforeMutationRejection\n--- PASS: TestCrossUnknownNativeErrorCannotProveBeforeMutationRejection (0.00s)\n=== RUN   TestCrossHotAckOnlyBindsAndFencesUntilNewSnapshot\n--- PASS: TestCrossHotAckOnlyBindsAndFencesUntilNewSnapshot (0.00s)\n=== RUN   TestCrossHotAckABACannotAdoptRetiredAckOrCallback\n--- PASS: TestCrossHotAckABACannotAdoptRetiredAckOrCallback (0.00s)\n=== RUN   TestCrossQueuedOldAFrameCannotReleaseNewABinding\n--- PASS: TestCrossQueuedOldAFrameCannotReleaseNewABinding (0.00s)\n=== RUN   TestCrossActualNativeHighFenceRejectedBeforeSwitch\n--- PASS: TestCrossActualNativeHighFenceRejectedBeforeSwitch (0.00s)\nPASS\nok  \tnative-dsh/desktop/composer_native\t0.145s\n",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": [
+        "go",
+        "vet",
+        "-overlay=/Volumes/SuperDisk/native-dsh/desktop/qa/native-hot-activation-cross/build/overlay.json",
+        "./composer_native"
+      ],
+      "status": 0,
+      "signal": null,
+      "stdout": "",
+      "stderr": "",
+      "error": null
+    }
+  ],
+  "pass": true,
+  "guiLaunched": false,
+  "hostAccess": false,
+  "regressionProof": {
+    "path": "qa/native-hot-activation-cross/build/without-lazy-fix/results.json",
+    "expectedFailure": "first-large-restored-read-not-overlapping-or-duplicated",
+    "firstReadDiagnostics": {
+      "ackDigest": "b0ee9a918f7e9dda4761856ffaf4d91175c0bcfc9daed9b86d50b980fe51e109",
+      "expectedDigest": "b0ee9a918f7e9dda4761856ffaf4d91175c0bcfc9daed9b86d50b980fe51e109",
+      "firstDigest": "776eecfc4ac2be44924b52b546cea4fb5c4f0be0ffe3f036048cc08ff54f9797",
+      "firstPartitions": [
+        65536,
+        131072,
+        196608,
+        262144,
+        327680,
+        393216,
+        458752,
+        524288,
+        589824,
+        600000
+      ],
+      "rawUTF16": 600000,
+      "secondDigest": "b0ee9a918f7e9dda4761856ffaf4d91175c0bcfc9daed9b86d50b980fe51e109",
+      "secondPartitions": [
+        600000
+      ]
+    },
+    "note": "Private QA-only regression variant removed pre-enumeration ensureAttributesAreFixed; no business source was modified. This counterexample is distinct from final frozen-source test results."
+  },
+  "scope": "Actual ComposerOwner headless AppKit command plus actual Go receiver/Store overlay; no visible NSWindow or native editor proof launch.",
+  "limits": [
+    "This component is not imported into the production app.",
+    "Invalid/oversize body preservation here is same-native-owner hot navigation only. Closing that owner still clears its documents; durable export/persistence and recovery in a new owner are not guaranteed by this primitive.",
+    "No actual macOS 15.8 or M1 GUI/typing acceptance is claimed.",
+    "Swift commands and Go receiver are connected by captured actual native response corpus; public Go ActivateHot FFI dispatch is source-reviewed here, with author integration gates separate."
+  ]
+}

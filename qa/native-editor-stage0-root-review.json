@@ -1,0 +1,57 @@
+{
+  "checkedAt": "2026-11-15T03:34:33.278Z",
+  "reviewer": "root",
+  "kind": "frontend component primitives source acceptance; no default integration",
+  "manifest": "qa/checkpoints/native-editor-hot-activation-final/manifest.json",
+  "manifestSha256": "99a7b8ad2825ac4eff2722b4a0e99077738780dd552abd23f062116ea9f83f03",
+  "matchedBusinessSources": 9,
+  "matchedQASources": 2,
+  "sourceMismatch": [],
+  "rootComponentRegression": {
+    "log": "/tmp/native-dsh-acceptance/native-stage0-root-final.jsonl",
+    "topLevelPassed": 33,
+    "skipped": 0,
+    "failed": 0,
+    "actualSwiftHotAndLegacyCorpusSupplied": true,
+    "vet": "passed"
+  },
+  "independent": {
+    "report": "qa/native-hot-activation-cross/review.json",
+    "sha256": "14cb09e35bfd9623800af43136c895944f9bd4a6cdb401966ceb308a56220871",
+    "actualAppKitPassed": 19,
+    "receiverStoreGroups": 6,
+    "subcases": 12
+  },
+  "qualified": [
+    "Same-owner hot document activation without stale Go seed overwrite",
+    "All rejection and bounded acknowledgement validation precede native document mutation",
+    "Acknowledgement is metadata only and remains fenced until a newer valid complete snapshot; DecodeSnapshot rejects hotActivated",
+    "High receiver revision barrier preflight, strict numeric identity and known pure rejection whitelist",
+    "Constant namespace+generation metadata across repeated A/B switching",
+    "First semantic enumeration fixed with public ensureAttributesAreFixed; independent removal variant reproduces original failure"
+  ],
+  "limits": [
+    "No production composer adapter, real send/receipt, visible GUI or physical IME acceptance",
+    "Cold Store settlement must reconcile exact saved native baseline without resurrecting sent text or deleting retyped occurrences",
+    "Close still releases hot documents; invalid/oversize body export and cross-owner/window persistence are not solved",
+    "No macOS15.8 hardware/M1/RSS or latency claims",
+    "Independent cross-language gates use actual native response corpus; public ActivateHot FFI dispatch is source reviewed rather than a live production-window integration test."
+  ],
+  "archiveBoundary": {
+    "resolved": true,
+    "file": "qa/checkpoints/go.mod",
+    "additive": true,
+    "existingFrozenCheckpointContentModified": false,
+    "wholeGoCommand": "CGO_ENABLED=0 go test ./... -count=1 -timeout=45s",
+    "exitCode": 0,
+    "packageCount": 10,
+    "noTestPackages": 2,
+    "log": "/tmp/native-dsh-acceptance/native-stage0-whole-go-final.log",
+    "originalFailureLog": "/tmp/native-dsh-acceptance/native-stage0-whole-go-before-archive-boundary.log"
+  },
+  "freeze": {
+    "pass": true,
+    "checks": 8,
+    "log": "/tmp/native-dsh-acceptance/native-stage0-freeze-final.json"
+  }
+}

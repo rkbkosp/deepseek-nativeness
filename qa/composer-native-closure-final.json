@@ -1,0 +1,206 @@
+{
+  "checkedAt": "2026-11-15T03:38:15.036Z",
+  "kind": "jointly reviewed complete standalone component source closure; production default unchanged",
+  "sources": [
+    {
+      "path": "composer_native/.gitignore",
+      "sha256": "c8c8f6a3398afb1b5060f94675305af0e29e35ef0cb14a99f733c35e608cd747",
+      "bytes": 16,
+      "origin": "accepted Proof3/semantic baseline"
+    },
+    {
+      "path": "composer_native/ComposerEditor.swift",
+      "sha256": "394762b5d799381adda6ce419d3edc24e5f04e77b6b657a8d5ca888574988fa2",
+      "bytes": 28024,
+      "origin": "accepted hot activation stage0"
+    },
+    {
+      "path": "composer_native/HotActivation.swift",
+      "sha256": "1346673e68d4f174e6f0b7d4b2d2e263f6079931ff575f405376919642b848f0",
+      "bytes": 6829,
+      "origin": "accepted hot activation stage0"
+    },
+    {
+      "path": "composer_native/ReferenceGlyphs.swift",
+      "sha256": "027819f71ad9cc2fba67c335f4c5261ff2d010e549695ff7327b6c9322824388",
+      "bytes": 5076,
+      "origin": "accepted Proof3/semantic baseline"
+    },
+    {
+      "path": "composer_native/SemanticDocument.swift",
+      "sha256": "ec63ee5b4991b7bc175d355235dfaf9e57983f6c9de02edf5222a9dca13cb05f",
+      "bytes": 3733,
+      "origin": "accepted Proof3/semantic baseline"
+    },
+    {
+      "path": "composer_native/backing.go",
+      "sha256": "6e7f196736637733b1800c537facb5fbe7742647c7e32f81499c2887bfd02ef1",
+      "bytes": 721,
+      "origin": "accepted Proof3/semantic baseline"
+    },
+    {
+      "path": "composer_native/backing_test.go",
+      "sha256": "789148b2094d290ec5f556fb296a4a49a59d0aa61c239d6c681914b509c2d47b",
+      "bytes": 975,
+      "origin": "accepted Proof3/semantic baseline"
+    },
+    {
+      "path": "composer_native/document_store.go",
+      "sha256": "2bc99b72fe614fe410d628620bee7b72deed44f911f55c84159a8f7da82e1045",
+      "bytes": 15441,
+      "origin": "accepted Store preflight stage0"
+    },
+    {
+      "path": "composer_native/document_store_prepare_test.go",
+      "sha256": "9001f2f14bed8d9a14347ef4910dbe4f35667009d86f3aac7fa1ef708616880b",
+      "bytes": 13259,
+      "origin": "accepted Store preflight stage0"
+    },
+    {
+      "path": "composer_native/document_store_test.go",
+      "sha256": "406afcb0dc7a3124f4bae0dfcb9e87c19596fed18fcc98866f0ead138569e2d4",
+      "bytes": 10690,
+      "origin": "accepted Proof3/semantic baseline"
+    },
+    {
+      "path": "composer_native/editor.go",
+      "sha256": "2747ffcb5e44f5e914f8973dbe4b9a421ca869da713b67e7918c5ffcef4d3f29",
+      "bytes": 6862,
+      "origin": "accepted hot activation stage0"
+    },
+    {
+      "path": "composer_native/editor_darwin.go",
+      "sha256": "7fcbfea7f82ccc58efc726282447613364393a1cd304c59cd750d313db6ce1da",
+      "bytes": 7614,
+      "origin": "accepted hot activation stage0"
+    },
+    {
+      "path": "composer_native/editor_other.go",
+      "sha256": "64cc28da3dc1a149f927325ca877170e712651a0dbb69b01f0da5adb779989fd",
+      "bytes": 515,
+      "origin": "accepted Proof3/semantic baseline"
+    },
+    {
+      "path": "composer_native/editor_test.go",
+      "sha256": "65562efa93d0ed823e82ac7fa2b2f0afee074b3963f89fc0d85046246db1a668",
+      "bytes": 2099,
+      "origin": "accepted Proof3/semantic baseline"
+    },
+    {
+      "path": "composer_native/hot_activation.go",
+      "sha256": "fcf8f13d61a94edd11edb6d8ab260990500b5147ec0f86e85ad4121a26b47f2b",
+      "bytes": 4638,
+      "origin": "accepted hot activation stage0"
+    },
+    {
+      "path": "composer_native/hot_activation_darwin.go",
+      "sha256": "caf254cf5a8668e402635449b9dace622f684a164957eec19051ee1412358c2d",
+      "bytes": 3532,
+      "origin": "accepted hot activation stage0"
+    },
+    {
+      "path": "composer_native/hot_activation_darwin_test.go",
+      "sha256": "0699ea1eae02cc0c64a68aea0ad46aab7accca02a5eda94c001a09365dbe03e6",
+      "bytes": 5592,
+      "origin": "accepted hot activation stage0"
+    },
+    {
+      "path": "composer_native/hot_activation_other.go",
+      "sha256": "6c9750d9da805a495f80dd694d3c79a602c64c5ce5a21c29069234af27ee7c6d",
+      "bytes": 225,
+      "origin": "accepted hot activation stage0"
+    },
+    {
+      "path": "composer_native/hot_activation_test.go",
+      "sha256": "67671b2b612b66cf180ae4deb6998597bc38778d70bc58cf085a56051a390bfa",
+      "bytes": 3460,
+      "origin": "accepted hot activation stage0"
+    },
+    {
+      "path": "composer_native/queue_fence_test.go",
+      "sha256": "e6bbd50a5d43065ac165ea6f7d9c25046517042df9e1cff8d6fe41d4ca03572c",
+      "bytes": 2788,
+      "origin": "accepted Proof3/semantic baseline"
+    },
+    {
+      "path": "composer_native/receiver_darwin_test.go",
+      "sha256": "a7af93c8355e00e4e008e625e19b1c988e2253cde8f147c9ae88289b76e8a26e",
+      "bytes": 3687,
+      "origin": "accepted Proof3/semantic baseline"
+    },
+    {
+      "path": "composer_native/semantic.go",
+      "sha256": "5655d9d7a2cbbe0b08d8886eb576f17ca5b1b59c25e688b84795a87ae36bb974",
+      "bytes": 3631,
+      "origin": "accepted Proof3/semantic baseline"
+    }
+  ],
+  "sourceCount": 22,
+  "sourceSetSha256": "c1f27eb6ba5c54186ca53fb5179a2af77ce01fa1021a7ee6268cbfd6da639b0e",
+  "hashRule": "sha256(UTF8 JSON.stringify(sorted [{path,sha256}]))",
+  "gitBoundary": "Entire composer_native package persisted together; no partial Store/editor commit.",
+  "acceptance": {
+    "hotManifest": {
+      "path": "qa/checkpoints/native-editor-hot-activation-final/manifest.json",
+      "sha256": "99a7b8ad2825ac4eff2722b4a0e99077738780dd552abd23f062116ea9f83f03"
+    },
+    "root": "qa/native-editor-stage0-root-review.json",
+    "independentHot": {
+      "path": "qa/native-hot-activation-cross/review.json",
+      "sha256": "14cb09e35bfd9623800af43136c895944f9bd4a6cdb401966ceb308a56220871"
+    },
+    "store": "qa/native-store-preflight-root-review.json",
+    "rootActualSwiftAndGo": {
+      "topPassed": 33,
+      "skipped": 0,
+      "failed": 0,
+      "corpus": "actual Hot19 and legacy semantic48, root independently supplied; this closure report does not reclassify them as visible GUI tests."
+    }
+  },
+  "archiveBoundary": {
+    "path": "qa/checkpoints/go.mod",
+    "sha256": "cbff829d233d23f45d208559155e21d4272f1c04496e35b60e62fa8cf0ab040d",
+    "additive": true,
+    "frozenManifestOrContentModified": false,
+    "effect": "Root go test ./... excludes immutable partial checkpoint modules. Explicit overlays and Node/Swift build scripts continue reading exact paths without recursive package discovery.",
+    "rootWholeGo": {
+      "command": "CGO_ENABLED=0 go test ./... -count=1 -timeout=45s",
+      "passed": true,
+      "packages": 10,
+      "noTestPackages": 2,
+      "log": "/tmp/native-dsh-acceptance/native-stage0-whole-go-final.log",
+      "beforeFailure": "/tmp/native-dsh-acceptance/native-stage0-whole-go-before-archive-boundary.log"
+    },
+    "authorValidation": {
+      "command": "CGO_ENABLED=0 go test -count=1 ./...; CGO_ENABLED=0 go vet ./...",
+      "passed": true,
+      "log": "qa/_native-store-preflight/root-package-gate.log",
+      "note": "Author reran full graph after additive boundary; exact-scope root report separately records all Swift env gates0skip."
+    }
+  },
+  "reproduce": [
+    "CGO_ENABLED=0 go test -count=1 -mod=readonly ./composer_native",
+    "CGO_ENABLED=0 go vet -mod=readonly ./composer_native",
+    "qa/native-editor-semantic-next/run.sh",
+    "qa/native-editor-hot-next/run.sh",
+    "NATIVE_EDITOR_SWIFT_RESULTS=<absolute freshly-produced legacy results.json> NATIVE_EDITOR_HOT_RESULTS=<absolute freshly-produced hot results.json> CGO_ENABLED=0 go test -count=1 ./composer_native",
+    "node qa/native-hot-activation-cross/run.mjs qa/checkpoints/native-editor-hot-activation-final/manifest.json"
+  ],
+  "cleanCheckoutRequirements": [
+    "Tracked desktop go.mod/go.sum and pinned read-only sibling ../mygo (module replace) are explicit dependencies.",
+    "Clean commit export must include these22 component files and source-only harnesses, not rely on untracked Swift or Go files.",
+    "Swift harnesses compile source into new local QA build directories; native-hot cross generates its portable-path overlay at runtime. Generated overlay/binaries are not source payload."
+  ],
+  "excluded": [
+    "All .app/Proof bundles, source-changing packager integration, dylibs/libraries/executables, build/, screenshots/auth/private data.",
+    "Checkpoint copied source/results trees and hot-next/before copied baseline; only the small accepted hot manifest is included for reproducible cross-harness invocation.",
+    "No production adapter import or enabling flag/default change."
+  ],
+  "remaining": [
+    "Cold Store settled vs saved native prefix/undo reconciliation before ordinary snapshot adoption.",
+    "Invalid/oversize body export beyond same native owner, main production integration, PNG/drop/dynamic height/physical IME/overlapping WK focus.",
+    "Public-window/multiwindow lifecycle and M1Air/macOS15.8 actual CPU/RSS/GPU qualification."
+  ],
+  "M1Qualified": false,
+  "productionIntegrated": false
+}

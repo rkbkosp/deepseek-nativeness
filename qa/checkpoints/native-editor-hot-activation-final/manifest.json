@@ -1,0 +1,68 @@
+{
+  "kind": "stage0-hot-protocol-source-only",
+  "sources": [
+    {
+      "path": "composer_native/ComposerEditor.swift",
+      "bytes": 28024,
+      "sha256": "394762b5d799381adda6ce419d3edc24e5f04e77b6b657a8d5ca888574988fa2"
+    },
+    {
+      "path": "composer_native/HotActivation.swift",
+      "bytes": 6829,
+      "sha256": "1346673e68d4f174e6f0b7d4b2d2e263f6079931ff575f405376919642b848f0"
+    },
+    {
+      "path": "composer_native/editor.go",
+      "bytes": 6862,
+      "sha256": "2747ffcb5e44f5e914f8973dbe4b9a421ca869da713b67e7918c5ffcef4d3f29"
+    },
+    {
+      "path": "composer_native/editor_darwin.go",
+      "bytes": 7614,
+      "sha256": "7fcbfea7f82ccc58efc726282447613364393a1cd304c59cd750d313db6ce1da"
+    },
+    {
+      "path": "composer_native/hot_activation.go",
+      "bytes": 4638,
+      "sha256": "fcf8f13d61a94edd11edb6d8ab260990500b5147ec0f86e85ad4121a26b47f2b"
+    },
+    {
+      "path": "composer_native/hot_activation_darwin.go",
+      "bytes": 3532,
+      "sha256": "caf254cf5a8668e402635449b9dace622f684a164957eec19051ee1412358c2d"
+    },
+    {
+      "path": "composer_native/hot_activation_other.go",
+      "bytes": 225,
+      "sha256": "6c9750d9da805a495f80dd694d3c79a602c64c5ce5a21c29069234af27ee7c6d"
+    },
+    {
+      "path": "composer_native/hot_activation_test.go",
+      "bytes": 3460,
+      "sha256": "67671b2b612b66cf180ae4deb6998597bc38778d70bc58cf085a56051a390bfa"
+    },
+    {
+      "path": "composer_native/hot_activation_darwin_test.go",
+      "bytes": 5592,
+      "sha256": "0699ea1eae02cc0c64a68aea0ad46aab7accca02a5eda94c001a09365dbe03e6"
+    }
+  ],
+  "qaSources": [
+    {
+      "path": "qa/native-editor-hot-next/main.swift",
+      "sha256": "03d7f69c3beb66499860221f35ef2fc1fb2dd9573fae8c92c64c18f1e2f7160f"
+    },
+    {
+      "path": "qa/native-editor-hot-next/run.sh",
+      "sha256": "b5bfed242034f6367d952850ad3a26712aa0d76dac45ba60ebafba031ef86b18"
+    }
+  ],
+  "report": {
+    "path": "qa/native-editor-hot-activation-review.json",
+    "sha256": "e4fa9ffe0067ed13ee2b33022fe51964d4da8837cdbc050d42e651c43a9690aa"
+  },
+  "preservedProofManifest": {
+    "path": "qa/native-editor-themed-next3/build/manifest.json",
+    "sha256": "854c02cf325367e1b1aa0906e89f08ea1aca58f4dde7bb2b36cddad430de819b"
+  }
+}
