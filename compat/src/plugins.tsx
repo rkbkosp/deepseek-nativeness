@@ -42,6 +42,7 @@ import {
 } from "../../../deepseek-harness/packages/client/ui-settings-shell/src/client/shell-card-controller.ts";
 import { zh as shellZh } from "../../../deepseek-harness/packages/client/ui-settings-shell/src/client/locales.ts";
 import { request, store, operationId } from "./bridge";
+import { CompatBoundary } from "./error-boundary";
 import { translate, resolveText, hook } from "./presentation";
 function webSearchHook(source: any) {
   return function useWebSearchCard(selector: (s: any) => any) {
@@ -72,8 +73,37 @@ const idlestate = {
   approvedBuilds: [],
   enabling: false,
 };
+/**
+ * Whether this profile actually mounts the plugin market.
+ *
+ * A bundle can be enabled while the plugin it carries is absent from the Host's
+ * runtime tree: `dsh-plugin-market` answers HTTP 404 for every
+ * `pluginMarket/*` endpoint then. The bundle list alone cannot tell the two
+ * apart, so the mounted inventory is asked instead. Nothing in this client
+ * serves `pluginMarket/*`, so an unmounted market must not be offered as a tab.
+ */
+async function pluginMarketMounted(ctx: any): Promise<boolean> {
+  if (!ctx.operations?.pluginInventory) return false;
+  try {
+    const inventory = await request("pluginInventory");
+    return ((inventory as any)?.entries ?? []).some((entry: any) => {
+      const name = String(entry?.moduleName ?? entry?.entryId ?? "");
+      return (
+        name.includes("plugin-market") &&
+        entry?.enabled !== false &&
+        (entry?.fiberPhase === undefined || entry?.fiberPhase === "active")
+      );
+    });
+  } catch {
+    // An inventory this client cannot read cannot vouch for a market either.
+    return false;
+  }
+}
+
 export default function Plugins({ ctx }: { ctx: any }) {
   const [notice, setNotice] = useState("");
+  // `null` until the inventory answers, so no empty state flashes on a mount.
+  const [market, setMarket] = useState<{ mounted: boolean } | null>(null);
   const manager = useMemo(
     () =>
       store<any>({
@@ -294,11 +324,14 @@ export default function Plugins({ ctx }: { ctx: any }) {
         request("listPlugins"),
         loadSettings(),
       ]);
-      tabs.set(
-        bundles.some((b: any) => b.name.includes("plugin-market") && b.enabled)
-          ? [{ id: "discover", label: "发现" }]
-          : [],
+      // A disabled bundle cannot serve its tab, and an unmounted plugin cannot
+      // serve its endpoints: only a mounted market gets the discover tab.
+      const offered = bundles.some(
+        (b: any) => b.name.includes("plugin-market") && b.enabled,
       );
+      const mounted = offered ? await pluginMarketMounted(ctx) : false;
+      setMarket({ mounted });
+      tabs.set(mounted ? [{ id: "discover", label: "发现" }] : []);
       manager.set({
         ...manager.getSnapshot(),
         status: "ready",
@@ -425,32 +458,52 @@ export default function Plugins({ ctx }: { ctx: any }) {
     disable();
     return () => observer.disconnect();
   }, []);
+  // One card region: a card whose settings namespace or bundle this profile
+  // does not serve keeps its own line instead of taking the page down.
+  const card = (id: string, node: React.ReactNode) => (
+    <CompatBoundary scope="card" label={id}>
+      {node}
+    </CompatBoundary>
+  );
   const renderSlot = (name: string, props: any, select: any) => {
     if (name === "plugins.item") {
       const id = select?.only,
         controller = controllers.get(id);
       if (!controller) return null;
-      const face = controller.inject();
-      if (id === "shell")
+      let face: any;
+      try {
+        face = controller.inject();
+      } catch {
+        // The controller cannot even describe its face; say so and keep the page.
         return (
+          <p role="note" className="compat-boundary" data-compat-label={id}>
+            该设置项在本机不可用
+          </p>
+        );
+      }
+      if (id === "shell")
+        return card(
+          id,
           <ShellCard
             {...props}
             {...face}
             useShellCard={hook(face.hooks.shellCard)}
             t={translate(shellZh) as any}
-          />
+          />,
         );
       if (id === "agent-loop")
-        return (
+        return card(
+          id,
           <AgentLoopCard
             {...props}
             {...face}
             useAgentLoopCard={hook(face.hooks.agentLoopCard)}
             t={translate(loopZh) as any}
-          />
+          />,
         );
       if (id === "subagent")
-        return (
+        return card(
+          id,
           <SubagentCard
             {...props}
             {...face}
@@ -459,10 +512,11 @@ export default function Plugins({ ctx }: { ctx: any }) {
               face.hooks.subagentModelSelectionCard,
             )}
             t={translate(subagentZh) as any}
-          />
+          />,
         );
       if (id === "web-search")
-        return (
+        return card(
+          id,
           <div
             title={
               props.view === "page"
@@ -527,6 +581,16 @@ export default function Plugins({ ctx }: { ctx: any }) {
         <p role="status" className="notice">
           {notice}
           <button onClick={() => setNotice("")}>关闭</button>
+        </p>
+      ) : null}
+      {market && !market.mounted ? (
+        <p
+          role="status"
+          className="compat-market-empty"
+          data-compat-empty="plugin-market"
+          title="本机 profile 未挂载 dsh-plugin-market，插件索引与发现不可用"
+        >
+          本机未安装插件市场
         </p>
       ) : null}
       <PluginManagerPage {...props} />

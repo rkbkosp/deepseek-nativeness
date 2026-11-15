@@ -17,7 +17,8 @@ body,
   flex-direction: column;
   overflow: hidden;
 }
-.compat-boundary {
+.compat-boundary,
+.compat-market-empty {
   flex: none;
   font-size: 12px;
   color: var(--dsw-alias-label-tertiary);

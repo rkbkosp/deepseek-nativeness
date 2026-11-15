@@ -14,9 +14,6 @@ import (
 )
 
 func main() {
-	if !mygo.App.RequestSingleInstanceLock() {
-		return
-	}
 	demo := flag.Bool("demo", false, "show clearly labeled local UI replay; never connects")
 	helper := flag.String("helper", "", "path to client-only Remote helper; bundled helper by default")
 	capture := flag.String("capture", "", "capture native UI PNG after startup")
@@ -28,6 +25,7 @@ func main() {
 	localRuntime := flag.Bool("local", false, "start the bundled local dsh runtime and show the served web client")
 	localNative := flag.Bool("local-native", false, "start the bundled local dsh runtime and drive the native UI over /api/remote.mux")
 	captureAfter := flag.Duration("capture-after", 0, "delay before --capture (QA only)")
+	captureCompat := flag.String("capture-compat", "", "capture the compatibility web view itself (QA only; --capture only reaches the native layer)")
 	recoveryProbe := flag.String("recovery-probe", "", "SIGKILL the local Host once and write local recovery evidence (QA only)")
 	uiState := flag.String("ui-state", "", "open one reviewable surface on the first connected frame (QA only; see qa_ui_state.go)")
 	theme := flag.String("theme", "", "client appearance: system, light, dark")
@@ -37,7 +35,17 @@ func main() {
 	defaultTables := flag.Bool("qa-default-tables", false, "explicit demo only: use framework table renderer")
 	demoPane := flag.Bool("demo-right-pane", false, "explicit demo only: constrain conversation with right pane")
 	fontCalibration := flag.Bool("font-calibration", false, "explicit demo only: compare native font weights at the original 14 DIP")
+	checkUpdateOnce := flag.String("check-update-once", "", "run one update check without a window and write its JSON evidence (development builds; QA only)")
 	flag.Parse()
+	// A headless QA check runs before the single-instance lock: a real client
+	// may already own it, and this launch must not hand its command line over
+	// and exit instead of checking. It never opens a window.
+	if *checkUpdateOnce != "" {
+		os.Exit(runUpdateCheckOnce(*checkUpdateOnce))
+	}
+	if !mygo.App.RequestSingleInstanceLock() {
+		return
+	}
 	localNativeMode = *localNative
 	runtimeRecoveryProbePath = *recoveryProbe
 	if localNativeMode {
@@ -140,6 +148,13 @@ func main() {
 					}
 				})
 			}()
+		}
+		if *captureCompat != "" {
+			delay := time.Second
+			if *captureAfter > 0 {
+				delay = *captureAfter
+			}
+			a.captureCompatPage(*captureCompat, delay)
 		}
 		if *capture != "" {
 			delay := time.Second

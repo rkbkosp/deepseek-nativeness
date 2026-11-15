@@ -5,10 +5,18 @@ import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { installIconSprite } from "../../../deepseek-harness/packages/client/ui-theme/src/client/icon-sprite.ts";
 import { context } from "./bridge";
+import {
+  CompatBoundary,
+  recordFailure,
+  recordWindowFailure,
+} from "./error-boundary";
 import { no } from "./presentation";
 import { loadRoute } from "./route-loader";
 import { installSettingsKeys } from "./settings-keys";
+const routeName = () =>
+  new URLSearchParams(location.search).get("page") ?? "plugins";
 function App() {
+  const page = routeName();
   const [Page, setPage] = useState<React.ComponentType<{ ctx: any }> | null>(
     null,
   );
@@ -16,7 +24,6 @@ function App() {
     [error, setError] = useState("");
   useEffect(() => {
     let disposed = false;
-    const page = new URLSearchParams(location.search).get("page") ?? "plugins";
     document.body.toggleAttribute(
       "data-native-model-menu",
       page === "model-menu",
@@ -70,7 +77,15 @@ function App() {
         );
       })
       .catch((e) => {
+        // No route, no context: the page genuinely cannot work.
         setError(e.message);
+        recordFailure({
+          scope: "page",
+          label: page,
+          message: String(e?.message ?? e),
+          stack: e instanceof Error ? e.stack : undefined,
+          at: new Date().toISOString(),
+        });
         fatal();
       });
     const cleanup: Array<() => void> = [];
@@ -101,13 +116,23 @@ function App() {
         正在连接原生客户端…
       </p>
     );
-  return Page ? <Page ctx={ctx} /> : null;
+  return Page ? (
+    <CompatBoundary scope="page" label={page}>
+      <Page ctx={ctx} />
+    </CompatBoundary>
+  ) : null;
 }
+/** Report the page as failed; the shell closes it and shows its banner. */
 const fatal = () => {
   void window.mygo
     ?.call("CompatAPI.ReportFailure")
     .catch(() => window.mygo?.call("CompatAPI.Close").catch(() => {}));
 };
-window.addEventListener("error", fatal);
-window.addEventListener("unhandledrejection", fatal);
+// A page that cannot name its own failure must not report itself dead: these
+// are recorded for the probe and the page keeps rendering. Only `loadRoute` and
+// `context()` failures below still report, because then there is no page at all.
+window.addEventListener("error", (event) => recordWindowFailure("error", event));
+window.addEventListener("unhandledrejection", (event) =>
+  recordWindowFailure("unhandledrejection", event),
+);
 createRoot(document.getElementById("root")!).render(<App />);

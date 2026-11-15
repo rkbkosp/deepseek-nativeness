@@ -19,6 +19,11 @@ import (
 
 var compatNotifications = mygo.NewEvent[bridge.Notification]("notification")
 
+// compatTraceEnv records which caller closed a compatibility page. It is the one
+// diagnostic that cannot perturb the page: reading the document from the shell
+// would inject an evaluation the page sees as its own error.
+const compatTraceEnv = "NATIVE_DSH_COMPAT_TRACE"
+
 // The bundled presentation page receives only this allowlisted low-frequency
 // surface. The untrusted Remote Web view never receives these methods.
 type CompatAPI struct{ a *app }
@@ -75,7 +80,11 @@ var compatMethods = map[string]bool{
 	"capabilities": true, "modelCatalog": true, "selectModel": true, "sessionProjections": true,
 	"describeSettings": true, "updateSettings": true, "replaceSettings": true, "mutateSettings": true,
 	"listPlugins": true, "listBundles": true, "listPluginVersions": true, "readBundleDetail": true,
-	"pluginInventory":  true,
+	"pluginInventory": true,
+	// Market browsing is read-only here. Installing a bundle changes this
+	// machine's runtime, so it stays out of the compatibility allowlist until it
+	// has its own reviewed path.
+	"pluginMarketIndexes": true, "searchPluginMarket": true, "readPluginMarketEntry": true,
 	"setPluginEnabled": true, "setBundleEnabled": true, "updateBundle": true,
 	"describeCredentials": true, "setCredential": true,
 	"unsetCredential":  true,
@@ -347,7 +356,6 @@ func (a *app) openCompatAt(page, placement string) {
 				e.PreventDefault()
 			}
 		})
-		a.probeCompatPage(page, owner)
 		v.Page().OnDidFailLoad(func(e *mygo.LoadError) {
 			if a.compatOwner == owner {
 				a.error = "兼容页面加载失败，请重新打开。"
@@ -439,11 +447,12 @@ func (a *app) compatView(c *ui.Context) {
 	}
 }
 func (a *app) closeCompat() {
-	// A QA probe needs to know who closed the page it is about to inspect: a
-	// blank compatibility page and a page that was torn down look identical on
-	// screen.
-	if os.Getenv(compatProbeEnv) != "" && a.compatPage != "" {
-		log.Printf("compat probe: closing %s\n%s", a.compatPage, debug.Stack())
+	// A compatibility page and a page that tore itself down look identical on
+	// screen; NATIVE_DSH_COMPAT_TRACE records the caller so the two cases can be
+	// told apart. Reading the page from the shell is deliberately not offered:
+	// an injected evaluation is itself observable as a page error.
+	if os.Getenv(compatTraceEnv) != "" && a.compatPage != "" {
+		log.Printf("compat trace: closing %s\n%s", a.compatPage, debug.Stack())
 	}
 	reload := a.compatPage == "models" || a.compatPage == "model-menu"
 	owner, pending := a.compatOwner, a.compatPendingOwner
