@@ -34,7 +34,9 @@ func defaultViewPreferences() viewPreferences {
 	return viewPreferences{Theme: "system", GroupBy: "workspace", OrderBy: "updated", Archived: "default", Expanded: map[string]bool{}, ManualOrder: map[string][]string{}, FontSize: 14, CodeFontSize: 11, TerminalFontSize: 13, SendMode: "queue", Language: "zh", StepsDetail: "standard", StepsCollapse: "completion", FoldedReplies: "all", CodeWorkView: true, LinkOpen: "sidebar", UsageDetail: "detailed"}
 }
 func (a *app) applyAppearance(c *ui.Context) {
-	dark := a.systemDark
+	// IsDark reports the current app appearance, including an explicit override.
+	// It is not a separately cached copy of the desktop's system preference.
+	dark := a.effectiveDark
 	if a.uiPrefs.Theme == "dark" {
 		dark = true
 	} else if a.uiPrefs.Theme == "light" {

@@ -63,9 +63,12 @@ func main() {
 		a.applyDemoDocument(*document)
 	}
 	mygo.App.SetName("Native DSH Remote")
+	// Set the app's AppKit appearance before its first window/material exists.
+	// Rendering tokens alone do not change native vibrancy or title controls.
+	mygo.Theme.SetSource(nativeAppearanceSource(a.uiPrefs.Theme))
 	mygo.App.WhenReady(func() {
-		a.systemDark = mygo.Theme.IsDark()
-		mygo.Theme.OnUpdated(func() { a.update(func() { a.systemDark = mygo.Theme.IsDark() }) })
+		a.effectiveDark = mygo.Theme.IsDark()
+		mygo.Theme.OnUpdated(func() { a.update(func() { a.effectiveDark = mygo.Theme.IsDark() }) })
 		a.win = mygo.NewWindow(mygo.WindowOptions{Title: "Native DSH Remote", Width: 1280, Height: 820, MinWidth: 780, MinHeight: 560, TitleBarStyle: mygo.TitleBarHiddenInset, Transparent: true, Vibrancy: mygo.VibrancySidebar, BackgroundColor: "#00000000", Content: ui.View(a.view)})
 		// Show after assigning the handle. This supported call avoids depending
 		// on the deferred first-show callback or a later capture/getter.

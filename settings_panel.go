@@ -190,7 +190,7 @@ func (a *app) settingsView(c *ui.Context) {
 				}
 			})
 		})
-	}).Padding(0).Gap(0).Radius(24).Background(a.colors.Popup).Width(panelWidth).Height(panelHeight).FontWeight(300).Clip().Label("设置")
+	}).Padding(0).Gap(0).Radius(24).Background(a.settingsPanelFill()).Width(panelWidth).Height(panelHeight).FontWeight(300).Clip().Label("设置")
 	if !a.settingsOpen {
 		a.closeSettings()
 	}
@@ -290,8 +290,7 @@ func (a *app) generalSettings(c *ui.Context, host *settingsHostState) {
 					})
 				})
 				if card.Clicked() {
-					a.uiPrefs.Theme = option.value
-					a.savePreferences()
+					a.selectAppearance(option.value)
 				}
 			}
 		})

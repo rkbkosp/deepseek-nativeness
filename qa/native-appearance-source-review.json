@@ -1,0 +1,53 @@
+{
+  "createdAt": "2026-11-15T00:07:38.720Z",
+  "scope": "Source-only app appearance and settings layer-2 seam. GUI9 bundles/resources remain frozen. No GUI launched, no OS theme changed.",
+  "evidence": [
+    {
+      "path": "../deepseek-harness/packages/client/ui-settings-general/src/client/SettingsRoot.module.css",
+      "lines": "95-110",
+      "claim": ".panel background is var(--dsw-alias-bg-layer-2)",
+      "sha256": "c61ed2371dd6e86c0e850658f84edc9cc45c5662e61b5340d2235ba4a2ec1d9f"
+    },
+    {
+      "path": "../deepseek-harness/packages/client/ui-theme/src/styles/design-platform.css",
+      "lines": "56,73,182,334",
+      "claim": "light layer-2 -> neutral-bluish-00 rgb255/255/255; dark -> neutral-bluish-850 rgb44/44/46",
+      "sha256": "3234f318769ea5065013793d58d98b235948486789d69ea16e850bd3713babcc"
+    },
+    {
+      "path": "../mygo/modules.go",
+      "lines": "389-398,548-579",
+      "claim": "public Theme.SetSource supports before-Run startup and app source overrides; IsDark is effective app appearance",
+      "sha256": "980bdd0f6aa37dc883da93d683cc164535c2a1e31e94ff995e1621ad72c4d9c3"
+    },
+    {
+      "path": "../mygo/internal/darwin/system.go",
+      "lines": "384-395",
+      "claim": "ThemeSource maps light/dark to NSAppearance Aqua/DarkAqua; system uses nil NSApplication appearance",
+      "sha256": "f68d0f6b184646ef03abe56a838064d6f76fe4b78d3bf4f716a64c0ff191ae6f"
+    }
+  ],
+  "changes": {
+    "native": "SetSource once at startup before first window; only changed explicit user preferences call it later. ThemeSystem restores nil override; effectiveDark explicitly names the app-effective value rather than caching an alleged system value.",
+    "settings": "Only settings modal background resolves original layer-2. Global popup palette and compatibility shell CSS are unchanged."
+  },
+  "files": {
+    "appearance.go": "ab01ff590078e28ee69474aa7aff52538c3cd28310099526e904b00791ef5e62",
+    "appearance_test.go": "8a5b5e36e8e1bb3c86b827ba1b11c884610c12336d13be9097b485287481a86e",
+    "main.go": "edbde4bbf5d97099cd72757da75f033dfaf0058b2e8fae7a86bedc9e44686a76",
+    "app.go": "568edbfebec91f3ca1f6887695915d374569fca371baf5854521ba9a0145f738",
+    "theme.go": "be60c222e55fe6264560663b5008df7a783832e033d669f6691967595f820dfe",
+    "settings_panel.go": "1beb2ea253b66f3aaaa1962df886b36be6918c96f27a4fbbef5705b415ac9b76"
+  },
+  "checks": {
+    "intent": "Passed injected native-source/effective-appearance fixture: light host -> force dark -> system, dark host -> force light -> system; repeated/invalid selection does not call setter.",
+    "settings": "Passed actual ui.Tester pixel check of blank settings native rail in light and dark. This is headless native rendering, not NSVisualEffectView compositor acceptance.",
+    "normal": "CGO_ENABLED=0 go test . ./internal/bridge and CGO_ENABLED=0 go vet . ./internal/bridge passed. Independent component WIP is outside these app-target checks and production imports."
+  },
+  "pending": [
+    "Independent remote source review",
+    "Actual native vibrancy under opposite system theme",
+    "Actual WK/native settings boundary composed screenshot",
+    "macOS15.8 and M1 acceptance"
+  ]
+}

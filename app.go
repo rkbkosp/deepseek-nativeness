@@ -43,7 +43,7 @@ type app struct {
 	mutations                                                map[string]*mutationIntent
 	uiPrefs                                                  viewPreferences
 	colors                                                   palette
-	systemDark                                               bool
+	effectiveDark                                            bool
 	settingsOpen                                             bool
 	fontSettingsOpen                                         bool
 	settingsSection                                          string
