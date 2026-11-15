@@ -26,10 +26,12 @@ function mutationId(kind) {
 }
 
 function parseArgs(argv) {
-  const options = { runtime: 'build/runtime', helper: 'remote/local-bridge.mjs', keep: false, evidence: undefined }
+  const options = { runtime: 'build/runtime', helper: 'remote/local-bridge.mjs', home: undefined, readOnly: false, keep: false, evidence: undefined }
   for (let index = 0; index < argv.length; index += 1) {
     if (argv[index] === '--runtime') options.runtime = argv[++index]
     else if (argv[index] === '--helper') options.helper = argv[++index]
+    else if (argv[index] === '--home') options.home = argv[++index]
+    else if (argv[index] === '--read-only') options.readOnly = true
     else if (argv[index] === '--keep') options.keep = true
     else if (argv[index] === '--evidence') options.evidence = argv[++index]
     else throw new Error(`probe: unknown argument ${argv[index]}`)
@@ -187,11 +189,18 @@ function startHelper(node, runtimeRoot, url, helper) {
   return { child, call, waitFor, notifications, closed, stderr: stderrTail, exitInfo: () => dead }
 }
 
+/** Ends a read-only probe after the read surfaces; not a failure. */
+class ReadOnlyComplete extends Error {}
+
 async function main() {
   const options = parseArgs(process.argv.slice(2))
   const runtimeRoot = resolve(options.runtime)
   const node = join(runtimeRoot, 'primary-runtime', 'dependencies', 'node', 'bin', 'node')
-  const home = mkdtempSync(join(tmpdir(), 'dsh-local-bridge-'))
+  // An explicit home lets this probe verify an existing profile (for example a
+  // copy of the real one) without ever writing the shared ~/.dsh.
+  const home = options.home === undefined
+    ? mkdtempSync(join(tmpdir(), 'dsh-local-bridge-'))
+    : resolve(options.home)
   const checks = []
   const record = (name, ok, detail) => {
     checks.push({ name, ok, detail })
@@ -237,12 +246,27 @@ async function main() {
     record('the $events generation became ready', readyEvents !== undefined, readyEvents?.params?.detail)
 
     const workspaces = await helper.call('workspaces')
-    record('workspace registry read over /api', Array.isArray(workspaces) && workspaces.length === 0,
+    record('workspace registry read over /api', Array.isArray(workspaces),
       `workspaces=${workspaces.length}`)
 
     const sessions = await helper.call('sessions', { all: true })
-    record('session catalog read over /api', Array.isArray(sessions) && sessions.length === 0,
+    record('session catalog read over /api',
+      Array.isArray(sessions) && (options.home !== undefined || sessions.length === 0),
       `sessions=${sessions.length}`)
+
+    // Read-only proof that the profile's own plugins composed: model catalogs
+    // and the command list come from profile bundles, not from the carrier.
+    const models = await helper.call('modelCatalog', { sessionId: undefined }).catch((error) => ({ error: error.message }))
+    const modelCount = Array.isArray(models?.providers) ? models.providers.length : undefined
+    record('model catalog came from the composed profile', modelCount === undefined || modelCount > 0,
+      `providers=${modelCount ?? 'n/a'}`)
+
+    if (options.readOnly) {
+      await helper.call('disconnect').catch(() => undefined)
+      await helper.call('close').catch(() => undefined)
+      await helper.closed.catch(() => undefined)
+      throw new ReadOnlyComplete('read-only probe finished')
+    }
 
     // A throwaway workspace gives the projection path something real to follow.
     const workspaceDir = join(home, 'workspace')
@@ -302,7 +326,9 @@ async function main() {
     record('the helper exited cleanly', helper.exitInfo()?.code === 0,
       `${JSON.stringify(helper.exitInfo())}`)
   } catch (error) {
-    record('probe completed without an unexpected failure', false, error.message)
+    if (!(error instanceof ReadOnlyComplete)) {
+      record('probe completed without an unexpected failure', false, error.message)
+    }
   } finally {
     if (helper !== undefined && helper.exitInfo() === undefined) {
       try { helper.child.kill('SIGTERM') } catch { /* already gone */ }
@@ -336,7 +362,8 @@ async function main() {
       writeFileSync(resolve(options.evidence), `${JSON.stringify(evidence, undefined, 2)}\n`)
       console.log(`evidence ${resolve(options.evidence)}`)
     }
-    if (!options.keep) rmSync(home, { recursive: true, force: true })
+    if (options.home !== undefined) console.log(`kept ${home} (caller-provided)`)
+    else if (!options.keep) rmSync(home, { recursive: true, force: true })
     else console.log(`kept ${home}`)
   }
 

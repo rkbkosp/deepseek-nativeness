@@ -51,9 +51,15 @@ func (a *app) openWorkspaceCreate() {
 		a.error = "当前是本地界面回放。请以正常模式连接 Remote 后操作。"
 		return
 	}
-	if !a.connected {
+	switch a.workspaceCreateIntent() {
+	case intentOpenConnection:
 		a.connectionOpen = true
 		a.fetchDevices()
+		return
+	case intentHold:
+		// A local launch has no login page to send the reader to; the Host is
+		// still starting or failed, and the status line already says which.
+		a.error = a.localHostPhaseLabel()
 		return
 	}
 	s := a.workspaceEditor()

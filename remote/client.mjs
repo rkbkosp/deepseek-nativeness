@@ -23,6 +23,22 @@ const fail = (code, message) => {
   throw Object.assign(new Error(message), { code, delivery: "rejected" });
 };
 const logger = { debug() {}, info() {}, warn() {}, error() {} };
+
+/**
+ * Shape one local Host upload like the frozen uploader's accepted result, so a
+ * caller reads the same `status`/`name`/`bytes` on either carrier. The Host's
+ * staged receipt rides along: a later prompt cites that, not a path.
+ */
+function localUploadResult(upload) {
+  return {
+    status: "accepted",
+    name: upload.file.name,
+    bytes: upload.file.bytes,
+    receiptId: upload.receiptId,
+    file: upload.file,
+  };
+}
+
 const PAGE_INVALIDATIONS = new Set([
   "schedule/changed",
   "settings/document-updated",
@@ -1451,20 +1467,42 @@ export class RemoteAdapter {
         );
         if (!metadata.capabilities?.includes("workspace.upload.v1"))
           fail("FEATURE_NOT_SUPPORTED", "Host未提供工作区文件上传。");
-        const value = await uploadRemoteFile(
-          client,
-          sessionId,
-          localPath,
-          name,
-          this.lifetime.signal,
-          () => {
-            if (
-              this.connected?.client !== client ||
-              generation !== this.connectionGeneration
-            )
-              fail("STALE_CONNECTION", "连接已经切换。");
-          },
-        );
+        const assertCurrent = () => {
+          if (
+            this.connected?.client !== client ||
+            generation !== this.connectionGeneration
+          )
+            fail("STALE_CONNECTION", "连接已经切换。");
+        };
+        // The local carrier streams the bytes over the Host's own raw upload
+        // route; a Remote server keeps the frozen chunked uploader unchanged.
+        let value;
+        try {
+          value =
+            typeof client.uploadFile === "function"
+              ? localUploadResult(
+                  await client.uploadFile({
+                    sessionId,
+                    path: localPath,
+                    name,
+                    signal: this.lifetime.signal,
+                    onProgress: assertCurrent,
+                  }),
+                )
+              : await uploadRemoteFile(
+                  client,
+                  sessionId,
+                  localPath,
+                  name,
+                  this.lifetime.signal,
+                  assertCurrent,
+                );
+        } catch (error) {
+          // A Host refusal observed by the carrier proves nothing was staged,
+          // so the caller may retry it; anything else stays uncertain.
+          if (error?.rejected === true) error.delivery = "rejected";
+          throw error;
+        }
         return {
           ...value,
           requestId: key,

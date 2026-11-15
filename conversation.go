@@ -136,12 +136,18 @@ func (a *app) conversation(c *ui.Context) {
 	} else if placeholder != conversationChat {
 		switch placeholder {
 		case conversationConnect:
+			host := a.hostPlaceholder()
 			ui.Column(c).Grow(1).Center().Gap(12).Padding(30).Children(func() {
-				ui.Text(c, "连接你的工作主机").FontSize(25).FontWeight(500)
-				ui.Text(c, "工作留在 MacMini，界面在这里。").TextColor(a.theme.TextMuted)
-				if ui.Button(c, "选择 Remote 主机").Clicked() {
-					a.connectionOpen = true
-					a.fetchDevices()
+				ui.Text(c, host.Title).FontSize(25).FontWeight(500)
+				body := ui.Text(c, host.Body).TextColor(a.theme.TextMuted)
+				if host.Wrap {
+					body.Wrap()
+				}
+				if host.Action != "" {
+					if ui.Button(c, host.Action).Clicked() {
+						a.connectionOpen = true
+						a.fetchDevices()
+					}
 				}
 			})
 		case conversationNoSession:

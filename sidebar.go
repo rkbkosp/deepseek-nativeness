@@ -25,10 +25,7 @@ func (a *app) sidebarView(c *ui.Context) {
 			}
 			ui.Image(c, logo).Width(190).Height(25).Label("DeepSeek Harness")
 		})
-		label := "新会话"
-		if !a.connected && !a.demo {
-			label = "连接远程主机"
-		}
+		label := a.newSessionLabel()
 		newBg := a.theme.Surface
 		if c.Vibrancy() {
 			if a.theme.Dark {
@@ -38,12 +35,7 @@ func (a *app) sidebarView(c *ui.Context) {
 			}
 		}
 		if ui.ButtonBase(c).Height(38).Padding(0, 10).Gap(8).Radius(10).Background(newBg).Border(1, a.theme.Border).Label(label).Disabled(a.connected && !a.can("createSession")).Justify(ui.Center).Children(func() { icon(c, "new-chat-outline", 16); ui.Text(c, label) }).Clicked() {
-			if !a.connected {
-				a.connectionOpen = true
-				a.fetchDevices()
-			} else {
-				a.createSession()
-			}
+			a.applyNewSessionIntent()
 		}
 		a.navButton(c, "插件", "plugin-pinwheel-outline", func() { a.openCompat("plugins") }).Disabled(!a.connected).Tooltip("管理工作主机上的插件")
 		a.navButton(c, "自动化任务", "alarm-clock-outline", func() { a.openCompat("automation") }).Disabled(!a.can("scheduleCatalog"))
@@ -54,14 +46,18 @@ func (a *app) sidebarView(c *ui.Context) {
 			if m.Item("Agent 预设").Disabled(!a.can("listAgentPresets")).Chosen() {
 				a.openSettingsSection("agent-presets")
 			}
-			if m.Item("Remote Web · 独立网页").Chosen() {
-				a.openWeb()
+			if a.hostMenuItemVisible(hostMenuRemoteWeb) {
+				if m.Item("Remote Web · 独立网页").Chosen() {
+					a.openWeb()
+				}
 			}
-			if m.Item("Remote 连接").Chosen() {
-				a.closeCompat()
-				a.closeWeb()
-				a.connectionOpen = true
-				a.fetchDevices()
+			if a.hostMenuItemVisible(hostMenuRemoteConnection) {
+				if m.Item("Remote 连接").Chosen() {
+					a.closeCompat()
+					a.closeWeb()
+					a.connectionOpen = true
+					a.fetchDevices()
+				}
 			}
 			if m.Item("设置").Chosen() {
 				a.settingsOpen = true

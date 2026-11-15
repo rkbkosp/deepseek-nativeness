@@ -221,7 +221,9 @@ func (a *app) paneStart(c *ui.Context, s *rightPaneState) {
 		}
 		card("工作区文件", "浏览会话工作区的文件", "folder-open-outline", "", a.can("listFiles"), func() { s.Tab = "files"; a.loadPaneDirectory(s, "") })
 		card("新建终端", "打开会话终端", "code-outline", "", a.can("listTerminals"), func() { a.openCompatAt("terminal", "right") })
-		card("浏览器", "浏览网页", "globe-outline", "", true, func() { a.openWeb() })
+		// The Browser card hosts the Remote web page; a launch that owns its Host
+		// has no Remote server to browse.
+		card("浏览器", "浏览网页", "globe-outline", "", !a.localMode(), func() { a.openWeb() })
 		more := card("更多工具", "选择工作区工具", "apps-add-outline", "", true, nil)
 		more.Menu(func(m *ui.Menu) {
 			current := a.rightPane == s && s.HostID == a.hostID && s.SessionID == a.sessionID && s.RemoteGeneration == a.remoteGeneration
@@ -232,7 +234,7 @@ func (a *app) paneStart(c *ui.Context, s *rightPaneState) {
 			if m.Item("终端").Disabled(!current || !a.can("listTerminals")).Chosen() {
 				a.openCompatAt("terminal", "right")
 			}
-			if m.Item("浏览器").Disabled(!current).Chosen() {
+			if m.Item("浏览器").Disabled(!current || a.localMode()).Chosen() {
 				a.openWeb()
 			}
 		})

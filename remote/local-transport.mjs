@@ -10,10 +10,16 @@
  *   GET  /connect?token=…&interactions=answer  → 302 + authority-bound Cookie
  *   POST /api/<endpoint>                       → {type:"server-response", rpcId, result}
  *   WS   /api/remote.mux                       → logical stream frames
+ *   POST /api/session/uploadFileBinary         → {ok:true,value} for raw file bytes
  *
- * This module implements exactly those three routes as a drop-in replacement
- * for the frozen `RemoteClientCore` that `RemoteTypertGateway` consumes, so the
+ * This module implements exactly those routes as a drop-in replacement for the
+ * frozen `RemoteClientCore` that `RemoteTypertGateway` consumes, so the
  * projection, notification and method layers stay one implementation.
+ *
+ * The last one is not a Typert method at all: the Host's file-upload service
+ * registers it as an exact Fetch route on the same `/api` channel, which is why
+ * the Remote-only `workspace.upload.*` chunker is unnecessary here — the bytes
+ * travel once, streamed, instead of base64-chunked through JSON.
  *
  * Wire framing is not re-invented here: the Host's own
  * `@deepseek-ai/dsh-api-gateway/stream-protocol` parser and path constants are
@@ -21,6 +27,8 @@
  */
 
 import { randomUUID } from "node:crypto";
+import { constants } from "node:fs";
+import { open } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -30,6 +38,15 @@ export const LOCAL_HOST_ID = "local";
 
 /** One stable identity/account scope: local mode has no accounts. */
 export const LOCAL_ACCOUNT_SCOPE = "local";
+
+/** Capabilities this carrier was verified to provide, and only those. */
+const LOCAL_CAPABILITIES = ["workspace.upload.v1"];
+
+/** Exact raw-byte upload route the Host's file-upload service registers. */
+export const FILE_UPLOAD_PATH = "/api/session/uploadFileBinary";
+
+/** Read granularity for one upload; also the progress cadence. */
+const UPLOAD_CHUNK_BYTES = 64 * 1024;
 
 const ENDPOINT_SEGMENT_PATTERN = /^[A-Za-z0-9_$.-]+$/;
 const CONNECT_PATH = "/connect";
@@ -300,7 +317,7 @@ export class LocalTransport {
     if (this.closed) throw localFailure("CANCELLED", "本地 Host 连接已关闭。");
     switch (method) {
       case "harness.transport.describe":
-        return { capabilities: [], transport: "local-mux" };
+        return { capabilities: [...LOCAL_CAPABILITIES], transport: "local-mux" };
       case "harness.remote.call":
         return this.call(params, signal, options);
       case "harness.remote.stream.open":
@@ -394,6 +411,94 @@ export class LocalTransport {
     return { closed: true };
   }
 
+  /**
+   * Stream one local regular file to the Host's raw-byte upload route.
+   *
+   * The Host stores the exact submitted bytes under the Session's Agent scope
+   * and answers with `{ok:true,value:{receiptId,file:{attachmentId,name,bytes}}}`.
+   * The body is one ordered chunk stream, so a file of any size crosses without
+   * a base64 envelope or a buffered JSON cap; a zero-byte file is an empty body
+   * that still produces a receipt.
+   *
+   * @param options.sessionId - Session whose Agent scope owns the receipt.
+   * @param options.path - local path of the file to read (never the Host's name).
+   * @param options.name - optional display name; the Host sanitizes it.
+   * @param options.signal - caller cancellation, also aborts the file reads.
+   * @param options.onProgress - called with the bytes handed to the carrier.
+   * @returns the Host's `FileUploadValue`.
+   */
+  async uploadFile({ sessionId, path, name, signal, onProgress } = {}) {
+    if (this.closed) throw localFailure("CANCELLED", "本地 Host 连接已关闭。");
+    const session = requireNonEmptyString(sessionId, "sessionId");
+    const localPath = requireNonEmptyString(path, "path");
+    const target = new URL(FILE_UPLOAD_PATH, this.origin);
+    target.searchParams.set("sessionId", session);
+    if (typeof name === "string" && name !== "")
+      target.searchParams.set("name", name);
+    signal?.throwIfAborted();
+    let handle;
+    try {
+      handle = await open(
+        localPath,
+        constants.O_RDONLY |
+          (constants.O_NOFOLLOW ?? 0) |
+          (constants.O_NONBLOCK ?? 0),
+      );
+    } catch (error) {
+      throw localFailure(
+        "INVALID_LOCAL_UPLOAD_FILE",
+        "无法读取要上传的本地文件。",
+        { cause: String(error?.code ?? error?.message ?? error) },
+      );
+    }
+    try {
+      const stat = await handle.stat();
+      if (!stat.isFile())
+        throw localFailure("INVALID_LOCAL_UPLOAD_FILE", "只能上传普通文件。");
+      if (!Number.isSafeInteger(stat.size) || stat.size < 0)
+        throw localFailure("INVALID_LOCAL_UPLOAD_FILE", "本地文件长度无效。");
+      const size = stat.size;
+      const request = {
+        method: "POST",
+        headers: { "content-type": "application/octet-stream", cookie: this.cookie },
+        ...(signal === undefined ? {} : { signal }),
+        ...(size === 0
+          ? { body: new Uint8Array(0) }
+          : {
+              // An async iterable body needs half duplex, and it keeps the
+              // carrier honest: nothing is buffered whole before sending.
+              body: readFileChunks(handle, size, signal, onProgress),
+              duplex: "half",
+            }),
+      };
+      this.requests += 1;
+      let response;
+      try {
+        response = await this.fetchImpl(target, request);
+      } catch (error) {
+        if (signal?.aborted) throw signal.reason ?? error;
+        const fault = codedFault(error);
+        if (fault !== undefined) throw fault;
+        // The bytes may have been partially accepted before the carrier broke,
+        // so this is not a proven rejection.
+        throw localFailure("TRANSPORT_CLOSED", "无法连接本地 Host。", {
+          cause: String(error?.message ?? error),
+        });
+      }
+      const value = await parseUploadResponse(response);
+      // The Host stores verbatim bytes, so its receipt must report our size.
+      if (value.file.bytes !== size)
+        throw localFailure(
+          "PROTOCOL_ERROR",
+          "本地 Host 保存的字节数与本地文件不一致。",
+          { expected: size, actual: value.file.bytes },
+        );
+      return value;
+    } finally {
+      await handle.close().catch(() => undefined);
+    }
+  }
+
   async close() {
     if (this.closed) return;
     this.closed = true;
@@ -453,6 +558,145 @@ function httpFailure(status, endpoint) {
     status,
     endpoint,
   });
+}
+
+function requireNonEmptyString(value, name) {
+  if (typeof value !== "string" || value === "")
+    throw localFailure("INVALID_ARGUMENT", `本地上传缺少 ${name}。`);
+  return value;
+}
+
+/**
+ * Ordered bytes of one file, bounded to the size observed before the upload.
+ * A file that shrank stops the transfer instead of uploading its prefix.
+ */
+async function* readFileChunks(handle, size, signal, onProgress) {
+  let offset = 0;
+  while (offset < size) {
+    signal?.throwIfAborted();
+    const length = Math.min(UPLOAD_CHUNK_BYTES, size - offset);
+    const buffer = Buffer.allocUnsafe(length);
+    const { bytesRead } = await handle.read(buffer, 0, length, offset);
+    if (bytesRead === 0)
+      throw localFailure(
+        "LOCAL_UPLOAD_FILE_CHANGED",
+        "本地文件在上传过程中改变了。",
+      );
+    offset += bytesRead;
+    if (typeof onProgress === "function") onProgress(offset);
+    yield buffer.subarray(0, bytesRead);
+  }
+}
+
+/**
+ * The carrier wraps one body-stream fault in `TypeError: fetch failed`; keep the
+ * coded failure this module raised so a cancelled progress check stays visible.
+ */
+function codedFault(error) {
+  let node = error;
+  for (let depth = 0; node !== undefined && depth < 4; depth += 1) {
+    if (typeof node.code === "string" && node.code !== "" && isRecord(node.details))
+      return node;
+    node = node.cause;
+  }
+  return undefined;
+}
+
+/** A Host refusal this carrier observed: the bytes were not stored. */
+function uploadFailure(code, message, details = {}) {
+  return Object.assign(localFailure(code, message, details), { rejected: true });
+}
+
+function uploadHttpFailure(status) {
+  if (status === 401)
+    return uploadFailure("AUTH_REQUIRED", "本地 Host 拒绝了启动凭据。", {
+      status,
+    });
+  if (status === 403)
+    return uploadFailure("PERMISSION_DENIED", "本地 Host 拒绝了该上传。", {
+      status,
+    });
+  if (status === 404)
+    return uploadFailure(
+      "FEATURE_NOT_SUPPORTED",
+      "本地 Host 未提供文件上传路由。",
+      { status },
+    );
+  if (status === 405 || status === 415)
+    return uploadFailure("PROTOCOL_ERROR", "本地 Host 拒绝了上传请求形状。", {
+      status,
+    });
+  if (status === 413)
+    return uploadFailure("REQUEST_TOO_LARGE", "上传超过 Host 的请求体上限。", {
+      status,
+    });
+  return uploadFailure("UPLOAD_FAILED", `本地 Host 返回 HTTP ${status}。`, {
+    status,
+  });
+}
+
+/**
+ * Validate one raw-byte upload answer.
+ *
+ * The route answers `{ok:true,value}` / `{ok:false,error}` with HTTP 200 after
+ * request validation, so the two channels are discriminated exactly like a
+ * unary envelope's `result` — but without an `rpcId`, because this route is
+ * request-shaped rather than RPC-shaped.
+ */
+export async function parseUploadResponse(response) {
+  if (!response.ok) throw uploadHttpFailure(response.status);
+  const mediaType = response.headers
+    .get("content-type")
+    ?.split(";", 1)[0]
+    ?.trim()
+    .toLowerCase();
+  if (mediaType !== "application/json")
+    throw localFailure("PROTOCOL_ERROR", "本地 Host 的上传回包不是 JSON。", {
+      mediaType: mediaType ?? null,
+    });
+  let body;
+  try {
+    body = await response.json();
+  } catch {
+    throw localFailure("PROTOCOL_ERROR", "本地 Host 的上传回包无法解析。");
+  }
+  if (!isRecord(body))
+    throw localFailure("PROTOCOL_ERROR", "本地 Host 的上传回包形状无效。");
+  if (body.ok === false) {
+    const error = isRecord(body.error) ? body.error : {};
+    throw uploadFailure(
+      typeof error.code === "string" && error.code !== ""
+        ? error.code
+        : "UPLOAD_FAILED",
+      typeof error.message === "string" && error.message !== ""
+        ? error.message
+        : "本地 Host 拒绝了这个上传。",
+      isRecord(error.details) ? error.details : {},
+    );
+  }
+  const value = body.value;
+  const file = isRecord(value) ? value.file : undefined;
+  if (
+    body.ok !== true ||
+    !isRecord(value) ||
+    typeof value.receiptId !== "string" ||
+    value.receiptId === "" ||
+    !isRecord(file) ||
+    typeof file.attachmentId !== "string" ||
+    file.attachmentId === "" ||
+    typeof file.name !== "string" ||
+    !Number.isSafeInteger(file.bytes) ||
+    file.bytes < 0
+  )
+    throw localFailure("PROTOCOL_ERROR", "本地 Host 的上传回执形状无效。");
+  return {
+    receiptId: value.receiptId,
+    file: {
+      attachmentId: file.attachmentId,
+      name: file.name,
+      bytes: file.bytes,
+    },
+  };
 }
 
 /** Validate one JSON unary envelope. */

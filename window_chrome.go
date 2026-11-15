@@ -23,7 +23,7 @@ func (a *app) sidebarFrame(c *ui.Context, shown float32) {
 				})
 			}
 		}
-		surface.Children(func() {ui.Column(c).Width(280).FillHeight().Opacity(shown).Children(func(){a.sidebarView(c)})})
+		surface.Children(func() { ui.Column(c).Width(280).FillHeight().Opacity(shown).Children(func() { a.sidebarView(c) }) })
 	})
 }
 func (a *app) captionControls(c *ui.Context) {
@@ -36,12 +36,7 @@ func (a *app) captionControls(c *ui.Context) {
 			a.sidebar = true
 		}
 		if ui.ButtonBase(c).Size(28, 28).Radius(6).TextColor(a.theme.TextMuted).Label("新会话").Disabled(a.connected && !a.can("createSession")).Children(func() { icon(c, "new-chat-outline", 16) }).Clicked() {
-			if a.connected {
-				a.createSession()
-			} else {
-				a.connectionOpen = true
-				a.fetchDevices()
-			}
+			a.applyNewSessionIntent()
 		}
 	})
 }
