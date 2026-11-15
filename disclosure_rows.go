@@ -84,8 +84,9 @@ func (a *app) reasoningView(c *ui.Context, key, raw string, open *bool, running 
 		}
 	}
 	summary = strings.ReplaceAll(summary, "**", "")
-	a.disclosureRow(c, key, "think-outline", "思考", summary, open, false, false, 22, func() {
-		markdown.View(c, text, &a.mdCompact)
+	// Reasoning is model prose that can quote a credential it just read.
+	a.disclosureRow(c, key, "think-outline", "思考", maskSecrets(summary), open, false, false, 22, func() {
+		markdown.View(c, maskSecrets(text), &a.mdCompact)
 	})
 }
 
@@ -102,9 +103,9 @@ func (a *app) contextView(c *ui.Context, m message, key string) {
 		summary = m.Context.Producer.Label
 	}
 	open := a.foldState("context:"+key, false)
-	a.disclosureRow(c, key, "context-injection-outline", title, summary, open, false, false, 22, func() {
+	a.disclosureRow(c, key, "context-injection-outline", title, maskSecrets(summary), open, false, false, 22, func() {
 		ui.Scroll(c).MaxHeight(141).Children(func() {
-			ui.Text(c, m.Text).FontSize(13).FixedLineHeight(20).TextColor(a.colors.Tertiary).Wrap().Selectable()
+			ui.Text(c, maskSecrets(m.Text)).FontSize(13).FixedLineHeight(20).TextColor(a.colors.Tertiary).Wrap().Selectable()
 		})
 	})
 }

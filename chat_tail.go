@@ -194,7 +194,8 @@ func (a *app) steeringView(c *ui.Context, row chatRow) {
 	ui.Row(c).Children(func() {
 		ui.Spacer(c)
 		ui.Column(c).MaxWidth(a.chatContentWidth(c) * .702).Gap(6).Children(func() {
-			ui.Text(c, m.Text).FontSize(a.uiPrefs.FontSize).FixedLineHeight(22).Wrap().Padding(10, 16).Radius(20).Background(a.colors.Bubble).Opacity(.92)
+			// The steering echo is a sent user message, so it masks the same way.
+			ui.Text(c, maskSecrets(m.Text)).FontSize(a.uiPrefs.FontSize).FixedLineHeight(22).Wrap().Padding(10, 16).Radius(20).Background(a.colors.Bubble).Opacity(.92)
 		})
 	})
 }

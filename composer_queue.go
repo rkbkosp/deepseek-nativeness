@@ -49,7 +49,9 @@ func (a *app) composerQueueView(c *ui.Context, s *composerState) {
 							} else {
 								ui.Row(c).AlignItems(ui.Center).Gap(8).Children(func() {
 									if editable {
-										ui.Text(c, text).FontSize(13).MaxLines(2).Grow(1)
+										// A queued message has not been sent yet: the preview masks
+										// it, and opening the editor shows the original text.
+										ui.Text(c, maskSecrets(text)).FontSize(13).MaxLines(2).Grow(1)
 									} else {
 										ui.Text(c, label).FontSize(13).Grow(1)
 									}

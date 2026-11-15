@@ -450,7 +450,9 @@ func (a *app) messagePartViewTerminal(c *ui.Context, m message, part, nodeKey st
 				ui.Column(c).Gap(8).Children(func() {
 					a.messageImageGallery(c, m)
 					if m.Text != "" {
-						ui.Text(c, m.Text).FontSize(a.uiPrefs.FontSize).FixedLineHeight(22).Selectable().Wrap().Padding(10, 16).Radius(20).Background(a.colors.Bubble)
+						// Display masking only: the message text, the copy action and
+						// the wire keep the original characters (ui-secret-mask).
+						ui.Text(c, maskSecrets(m.Text)).FontSize(a.uiPrefs.FontSize).FixedLineHeight(22).Selectable().Wrap().Padding(10, 16).Radius(20).Background(a.colors.Bubble)
 					}
 				})
 				a.actionStrip(c, m)
@@ -601,16 +603,22 @@ func (a *app) cancelPending(p interaction) {
 }
 
 func (a *app) pendingView(c *ui.Context, p interaction) {
+	review := planReviewOf(p)
 	card := ui.Column(c).Padding(12).Gap(8).Radius(12).Background(a.colors.Subtle).Border(1, a.theme.Border)
 	card.Children(func() {
-		ui.Text(c, p.Title).FontWeight(500)
+		// A plan review names itself; the generic question title would hide the
+		// intent the asker sent.
+		if review == nil {
+			ui.Text(c, maskSecrets(p.Title)).FontWeight(500)
+		}
 		if p.SessionID != "" {
 			ui.Text(c, "来源会话："+p.SessionID).FontSize(11).TextColor(a.theme.TextMuted)
 		}
 		if p.Reason != "" {
-			ui.Text(c, p.Reason).Wrap().FontSize(13)
+			ui.Text(c, maskSecrets(p.Reason)).Wrap().FontSize(13)
 		}
-		if p.Kind == "approval" {
+		switch {
+		case p.Kind == "approval":
 			// The pair is one Tab stop: Tab lands on a choice and the arrows
 			// move between them, so Enter confirms whichever one has the focus.
 			// The card takes no focus of its own, and the composer it replaced
@@ -627,15 +635,21 @@ func (a *app) pendingView(c *ui.Context, p interaction) {
 					}
 				}
 			})
-		} else if p.Kind == "questions" {
+		case review != nil:
+			a.planReviewView(c, p, review)
+		case p.Kind == "questions":
 			a.questionsView(c, p)
+		default:
+			// A kind this client does not know still draws its facts and one
+			// dismissal, never a card with no controls.
+			a.unknownPendingView(c, p)
 		}
 	})
 	// Esc takes the cancel choice wherever the focus is inside the card: MyGo
 	// routes a key to the innermost element of the focus chain that registered
 	// it, and no other surface claims Esc while a card holds the composer seat.
 	if !a.busy && card.Shortcut(0, ui.KeyEscape) {
-		a.cancelPending(p)
+		a.cancelOrDismissPending(p)
 	}
 }
 func (a *app) trajectoryView(c *ui.Context) {

@@ -111,6 +111,13 @@ type question struct {
 	MultiSelect bool             `json:"multiSelect"`
 	Intent      *struct {
 		Kind string `json:"kind"`
+		// `plan-review` names the option that approves the plan; every other
+		// option declines it. Named rather than positional on the wire, so no
+		// UI infers the verdict from option order (dsh-api-session-controller
+		// `userQuestions.active[].questions[].intent`).
+		Approve string `json:"approve"`
+		// `plan-review` only: the logged tool invocation holding the plan.
+		CallID string `json:"callId"`
 	} `json:"intent"`
 }
 type questionOption struct {

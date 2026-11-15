@@ -158,7 +158,7 @@ func (a *app) toolView(c *ui.Context, m *message, key string) {
 	}
 	open := a.foldState("tool:"+key, false)
 	running := t.Phase == "preparing" || t.Phase == "start"
-	summary := toolSummary(t)
+	summary := maskSecrets(toolSummary(t))
 	if running && summary == "" {
 		summary = "运行中…"
 	}
@@ -224,7 +224,7 @@ func (a *app) toolIOCard(c *ui.Context, label, text string, stateError bool) {
 		ui.Row(c).AlignItems(ui.Start).Gap(14).Children(func() {
 			ui.Text(c, label).Font(monoFont(a)).FontSize(11).FixedLineHeight(16).TextColor(a.colors.Caption).Shrink(0)
 			ui.Scroll(c).MaxHeight(150).Children(func() {
-				ui.Text(c, text).Font(monoFont(a)).FontSize(11).FixedLineHeight(16).TextColor(color).Wrap().Selectable()
+				ui.Text(c, maskSecrets(text)).Font(monoFont(a)).FontSize(11).FixedLineHeight(16).TextColor(color).Wrap().Selectable()
 			})
 		})
 	})
@@ -321,7 +321,7 @@ func (a *app) toolDiffBody(c *ui.Context, name string, args map[string]any, resu
 		ui.Scroll(c).MaxHeight(224).Children(func() {
 			ui.Column(c).Gap(0).Children(func() {
 				for _, line := range lines {
-					ui.Text(c, line.text).Font(monoFont(a)).FontSize(11).FixedLineHeight(16).TextColor(line.color).NoWrap().Selectable()
+					ui.Text(c, maskSecrets(line.text)).Font(monoFont(a)).FontSize(11).FixedLineHeight(16).TextColor(line.color).NoWrap().Selectable()
 				}
 			})
 		})
@@ -430,11 +430,11 @@ func (a *app) terminalToolBody(c *ui.Context, m *message) bool {
 		})
 		ui.Scroll(c).MaxHeight(224).Direction(ui.LeftToRight).Children(func() {
 			ui.Column(c).FillWidth().MinWidth(0).Padding(12, 14).Gap(4).Children(func() {
-				ui.Text(c, "$ "+command).Font(monoFont(a)).FontSize(11).FixedLineHeight(18).TextColor(a.theme.Text).Wrap().Selectable()
+				ui.Text(c, "$ "+maskSecrets(command)).Font(monoFont(a)).FontSize(11).FixedLineHeight(18).TextColor(a.theme.Text).Wrap().Selectable()
 				if output == "" {
 					ui.Text(c, "无输出").Font(monoFont(a)).FontSize(11).FixedLineHeight(18).TextColor(a.colors.Tertiary)
 				} else {
-					ui.Text(c, output).Font(monoFont(a)).FontSize(11).FixedLineHeight(18).TextColor(a.colors.Secondary).Wrap().Selectable()
+					ui.Text(c, maskSecrets(output)).Font(monoFont(a)).FontSize(11).FixedLineHeight(18).TextColor(a.colors.Secondary).Wrap().Selectable()
 				}
 			})
 		})
