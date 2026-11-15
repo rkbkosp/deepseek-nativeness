@@ -92,7 +92,14 @@ CGO_ENABLED=0 go build -buildvcs=false -trimpath -tags mygo_noinspector -ldflags
 if [ "$remote_assets" = "dist-chat-process-next" ]; then
   cp "build/runtime-chat-process-next/node" "$app/Contents/MacOS/node"
 else
-  cp "$(command -v node)" "$app/Contents/MacOS/node"
+  # Prefer the runtime's own Node so a packaged build never embeds the
+  # developer's interpreter; fall back to PATH only without a payload.
+  payload_node="build/runtime/primary-runtime/dependencies/node/bin/node"
+  if [ "$with_runtime" -eq 1 ] && [ -x "$payload_node" ]; then
+    cp "$payload_node" "$app/Contents/MacOS/node"
+  else
+    cp "$(command -v node)" "$app/Contents/MacOS/node"
+  fi
 fi
 if [ ! -f "remote/$remote_assets/bridge.bundle.mjs" ] || [ ! -f "compat/$assets/index.html" ]; then
   echo 'Build the selected Remote and compatibility assets before packaging.' >&2
