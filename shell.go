@@ -135,14 +135,60 @@ func (a *app) confirmQuit() bool {
 	return result.Button == 1
 }
 
-// installApplicationMenu builds the menu the original shell provides: About,
-// Window-level items, an explicit entry for the local workspace, and the
-// standard hide/quit roles.
+// installApplicationMenu builds the menu the original shell provides: the
+// application menu (About, Services, hide, quit), a File menu with the window's
+// own close and the Session archive, the edit roles, an explicit entry for the
+// local workspace, and the window list.
 func (a *app) installApplicationMenu() {
-	about := &mygo.MenuItem{
-		ID:    "about",
-		Label: "关于 " + productName,
-		Click: func(*mygo.MenuItem, *mygo.Window) { a.showAbout() },
+	mygo.App.SetMenu(a.applicationMenu())
+}
+
+// applicationMenu is the template itself, without installing it, so that a test
+// reads the same roles and items the application gets.
+func (a *app) applicationMenu() *mygo.Menu {
+	// The application menu is MyGo's own expansion with this client's About
+	// panel in place of the native one: the panel reports the runtime version,
+	// which is what support questions need.
+	appMenu := &mygo.MenuItem{
+		Role: mygo.RoleAppMenu,
+		Submenu: []*mygo.MenuItem{
+			{
+				ID:    "about",
+				Label: "关于 " + productName,
+				Click: func(*mygo.MenuItem, *mygo.Window) { a.showAbout() },
+			},
+			mygo.Separator(),
+			// An empty submenu (rather than no submenu) is what makes AppKit
+			// own the Services menu and fill it as it opens.
+			{ID: "app.services", Role: mygo.RoleServices, Submenu: []*mygo.MenuItem{}},
+			mygo.Separator(),
+			{ID: "app.hide", Role: mygo.RoleHide},
+			{ID: "app.hideOthers", Role: mygo.RoleHideOthers},
+			{ID: "app.unhide", Role: mygo.RoleUnhide},
+			mygo.Separator(),
+			// The role, not a Click of its own: MyGo's quit role asks the
+			// application to quit, which runs OnBeforeQuit and therefore the
+			// existing confirmation and Host shutdown.
+			{ID: "app.quit", Role: mygo.RoleQuit},
+		},
+	}
+	// Closing the window hides it while this process owns a Host (the close
+	// policy below), and ends the process otherwise; the role only asks the
+	// window to close, so both modes keep that one path.
+	zip := sessionZipOffer(a.canExportSessionZip())
+	fileMenu := &mygo.MenuItem{
+		Role: mygo.RoleFileMenu,
+		Submenu: []*mygo.MenuItem{
+			{ID: "file.close", Role: mygo.RoleClose},
+			mygo.Separator(),
+			{
+				ID:       "file.exportSessionZip",
+				Label:    "导出会话 ZIP…",
+				Disabled: !zip.Enabled,
+				ToolTip:  zip.Tooltip,
+				Click:    func(*mygo.MenuItem, *mygo.Window) { a.exportSessionZip() },
+			},
+		},
 	}
 	workspace := &mygo.MenuItem{
 		Label: "工作区",
@@ -175,7 +221,7 @@ func (a *app) installApplicationMenu() {
 	}
 	window := &mygo.MenuItem{Role: mygo.RoleWindowMenu}
 	edit := &mygo.MenuItem{Role: mygo.RoleEditMenu}
-	mygo.App.SetMenu(mygo.NewMenu([]*mygo.MenuItem{about, edit, workspace, window}))
+	return mygo.NewMenu([]*mygo.MenuItem{appMenu, fileMenu, edit, workspace, window})
 }
 
 // showAbout reports the versions this shell depends on. The runtime version is

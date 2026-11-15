@@ -115,7 +115,16 @@ func (a *app) sessionMoreMenu(c *ui.Context) {
 		if m.Item("复制已加载消息为 Markdown").Disabled(len(a.current.Messages) == 0).Chosen() {
 			c.WriteClipboard(a.loadedMarkdown())
 		}
-		m.Item("下载 Session 日志").Disabled(true).Tooltip("当前 Remote 未提供原始 Session 日志下载接口")
+		// The archive is built beside a Host this process owns, so the entry
+		// follows the launch rather than a Remote capability. A Remote launch
+		// keeps the copy and the disabled state it always had.
+		zip := sessionZipOffer(a.canExportSessionZip())
+		if zip.Enabled && a.sessionID == "" {
+			zip = sessionZipEntry{Tooltip: "请先打开一个会话"}
+		}
+		if m.Item("下载 Session 日志").Disabled(!zip.Enabled).Tooltip(zip.Tooltip).Chosen() {
+			a.exportSessionZip()
+		}
 		m.Separator()
 		m.Item("在应用中打开").Disabled(true)
 		m.Item("反馈").Disabled(true)
@@ -527,8 +536,73 @@ func (a *app) messagePartViewTerminal(c *ui.Context, m message, part, nodeKey st
 		}
 	}
 }
+
+// A pending card blocks the turn that asks it, and it takes the composer's seat
+// while it waits: both modes render the same projection, so the pointer and the
+// keyboard answer it the same way in either.
+
+// pendingChoice is one answer a pending card offers. A pointer clicks it, Tab
+// and Enter reach it, and Esc takes the card's cancel choice; every route sends
+// the same request.
+type pendingChoice struct {
+	Label   string // the button's text
+	Outcome string // the approval outcome the helper receives
+	Default bool   // the choice Enter takes when the card, not a button, has the focus
+	Cancel  bool   // the choice Esc takes
+}
+
+// approvalChoices is the approval card's answers, in the order it shows them.
+func approvalChoices() []pendingChoice {
+	return []pendingChoice{
+		{Label: "拒绝", Outcome: "rejected", Cancel: true},
+		{Label: "允许一次", Outcome: "allowed-once", Default: true},
+	}
+}
+
+// approvalAnswer is the request one approval choice sends.
+func approvalAnswer(requestID string, choice pendingChoice) (string, map[string]any) {
+	return "answerApproval", map[string]any{"requestId": requestID, "outcome": choice.Outcome}
+}
+
+// pendingCancelRequest is what Esc sends for a pending card: the approval's own
+// cancel choice, or a questions card's cancel, which its "取消回答" button
+// already sends. A kind this client does not know has no cancel of its own.
+func pendingCancelRequest(p interaction) (string, map[string]any) {
+	switch p.Kind {
+	case "approval":
+		for _, choice := range approvalChoices() {
+			if choice.Cancel {
+				return approvalAnswer(p.ID, choice)
+			}
+		}
+	case "questions":
+		return "answerQuestions", map[string]any{"requestId": p.ID, "cancelled": true}
+	}
+	return "", nil
+}
+
+// answerPendingApproval sends the choice the focused button shows.
+func (a *app) answerPendingApproval(p interaction, choice pendingChoice) {
+	if a.busy {
+		return
+	}
+	method, params := approvalAnswer(p.ID, choice)
+	a.request(method, params, nil)
+}
+
+// cancelPending sends the card's cancel choice, as Esc does.
+func (a *app) cancelPending(p interaction) {
+	if a.busy {
+		return
+	}
+	if method, params := pendingCancelRequest(p); method != "" {
+		a.request(method, params, nil)
+	}
+}
+
 func (a *app) pendingView(c *ui.Context, p interaction) {
-	ui.Column(c).Padding(12).Gap(8).Radius(12).Background(a.colors.Subtle).Border(1, a.theme.Border).Children(func() {
+	card := ui.Column(c).Padding(12).Gap(8).Radius(12).Background(a.colors.Subtle).Border(1, a.theme.Border)
+	card.Children(func() {
 		ui.Text(c, p.Title).FontWeight(500)
 		if p.SessionID != "" {
 			ui.Text(c, "来源会话："+p.SessionID).FontSize(11).TextColor(a.theme.TextMuted)
@@ -537,18 +611,32 @@ func (a *app) pendingView(c *ui.Context, p interaction) {
 			ui.Text(c, p.Reason).Wrap().FontSize(13)
 		}
 		if p.Kind == "approval" {
-			ui.Row(c).Gap(8).Children(func() {
-				if ui.Button(c, "拒绝").Disabled(a.busy).Clicked() {
-					a.request("answerApproval", map[string]any{"requestId": p.ID, "outcome": "rejected"}, nil)
-				}
-				if ui.PrimaryButton(c, "允许一次").Disabled(a.busy).Clicked() {
-					a.request("answerApproval", map[string]any{"requestId": p.ID, "outcome": "allowed-once"}, nil)
+			// The pair is one Tab stop: Tab lands on a choice and the arrows
+			// move between them, so Enter confirms whichever one has the focus.
+			// The card takes no focus of its own, and the composer it replaced
+			// is not built while the card waits, so a keystroke typed ahead can
+			// never approve anything.
+			ui.Row(c).Gap(8).FocusGroup(ui.Horizontal).Children(func() {
+				for _, choice := range approvalChoices() {
+					build := ui.Button
+					if choice.Default {
+						build = ui.PrimaryButton
+					}
+					if build(c, choice.Label).Disabled(a.busy).Clicked() {
+						a.answerPendingApproval(p, choice)
+					}
 				}
 			})
 		} else if p.Kind == "questions" {
 			a.questionsView(c, p)
 		}
 	})
+	// Esc takes the cancel choice wherever the focus is inside the card: MyGo
+	// routes a key to the innermost element of the focus chain that registered
+	// it, and no other surface claims Esc while a card holds the composer seat.
+	if !a.busy && card.Shortcut(0, ui.KeyEscape) {
+		a.cancelPending(p)
+	}
 }
 func (a *app) trajectoryView(c *ui.Context) {
 	if len(a.current.Trajectory) == 0 {
