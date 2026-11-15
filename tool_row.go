@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"regexp"
@@ -172,21 +173,49 @@ func (a *app) toolView(c *ui.Context, m *message, key string) {
 	a.disclosureRow(c, key, toolIcon(t.Name), toolTitle(t.Name), summary, open, false, t.IsError, 4, body)
 }
 
+// toolHasBody mirrors the original tool row's `expandable`
+// (`state !== 'preparing' && (inputRaw !== null || outputText !== null || card !== null)`):
+// a preparing call has nothing to show yet, while any later call with
+// arguments, output, an error or sub-calls opens its details. Arguments count
+// for every tool, including ones the client has no friendly formatter for
+// (MCP and plugin tools), so no row is a dead end.
 func toolHasBody(m *message) bool {
 	t := m.Tool
 	if t == nil {
 		return false
 	}
+	if t.Phase == "preparing" {
+		return false
+	}
 	if t.IsError || m.Text != "" {
 		return true
 	}
-	if args := parseToolArgs(t.ArgsRaw); toolInputText(t.Name, args) != "" {
+	// Cheap on every frame: the pretty-printed form is built only once the
+	// row is open. `null` is the wire's "no arguments" envelope.
+	if raw := strings.TrimSpace(t.ArgsRaw); raw != "" && raw != "null" {
 		return true
 	}
 	if len(t.SubCalls) > 0 && string(t.SubCalls) != "null" && string(t.SubCalls) != "[]" {
 		return true
 	}
 	return false
+}
+
+// toolArgsText is the original `formatToolBody`: the call's arguments as
+// pretty-printed JSON, or the raw text when it does not parse. Indentation
+// keeps the argument order the Host recorded, as JSON.stringify does, instead
+// of sorting keys through a map. A null envelope yields nothing, so a bare
+// call stays a summary row.
+func toolArgsText(raw string) string {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" || trimmed == "null" {
+		return ""
+	}
+	var formatted bytes.Buffer
+	if err := json.Indent(&formatted, []byte(trimmed), "", "  "); err != nil {
+		return trimmed
+	}
+	return formatted.String()
 }
 
 func (a *app) toolBody(c *ui.Context, m *message, key string) {
@@ -203,8 +232,13 @@ func (a *app) toolBody(c *ui.Context, m *message, key string) {
 			return
 		}
 	}
-	if len(args) > 0 && t.ArgsRaw != "" && !t.IsError {
+	// The original shows the whole argument JSON when no dedicated card owns
+	// the input, so tools without a friendly argument formatter (MCP and
+	// plugin tools) still have a readable input section.
+	if !t.IsError {
 		if formatted := toolInputText(t.Name, args); formatted != "" {
+			a.toolIOCard(c, "输入", formatted, false)
+		} else if formatted := toolArgsText(t.ArgsRaw); formatted != "" {
 			a.toolIOCard(c, "输入", formatted, false)
 		}
 	}
