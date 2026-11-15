@@ -125,6 +125,14 @@ loop:
 				break loop
 			}
 			methods[ev.Method]++
+			if ev.Method == "chatPresentationPatch" {
+				var p chatPresentationPatch
+				if json.Unmarshal(ev.Params, &p) == nil {
+					methods["messageUpsert"] += len(p.PayloadChanges.Upserts)
+					methods["messageRemove"] += len(p.PayloadChanges.Removes)
+					methods["messageDelta"] += len(p.PayloadChanges.Deltas)
+				}
+			}
 			a.notification(ev)
 		case <-ctx.Done():
 			t.Fatal(ctx.Err())

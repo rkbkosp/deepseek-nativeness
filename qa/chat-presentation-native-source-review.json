@@ -1,0 +1,116 @@
+{
+  "createdAt": "2026-11-15T02:10:48.694Z",
+  "scope": "Go consumer/render/cache semantic slice only; no App or resource rebuild, no GUI/Host mutation, no composer_native import.",
+  "schema": {
+    "baseline": "schema1 + baselineSerial monotonic per helper + epoch token + initial revision0",
+    "transaction": "chatPresentationPatch base/next revision, turn/step upserts/removes, payload upserts/removes/suffixes and raw timelineTurnUpserts admitted before any mutation; one scoped UI update",
+    "causality": "stale serial/epoch/revision ignored, invalid/gap preserves valid state with explicit reopen error; no automatic session reopen or mutation replay",
+    "scalars": "sessionState/pending/sessionProjections/trajectory also version guarded in metadata sessions; legacy without presentation remains compatible"
+  },
+  "rules": [
+    "Latest chronological step/final qualification comes from helper authority; unknown/image are replies, later empty/tool step never promotes older text. Retired/unreferenced assistant bodies stay in arena but never fall back to printable text UI.",
+    "Reasoning/response reference one existing body by stable nodeKey+part; suffix changes visible through the same cache. UI node key never replaces durable Seq/SourceMessageID.",
+    "Only assistant layout references use fractional anchors; raw nonassistant source order/unpositioned barriers are retained. Successful retained anchor2.5 crosses input3 until step/end restores durable4, with unchanged UI key and no duplicate.",
+    "Exactly one independent turn controller, including pure final; open turns have no closed control; always-open/interleaved/partial insufficient states cannot collapse. Loaded end without start may fold when source authority permits.",
+    "Explicit disclosure choice is scoped by account/Host/session+turn+answerStep; all reply parts share it, and later default timing changes do not overwrite a saved choice for that answer.",
+    "Nonblank reasoning matches ECMAScript trim; terminal marker deliberately uses the original raw block-kind predicate. Original BOM/blank text quirk retained (reasoning-only marker can be0); NEL response has1.",
+    "Process bodies are individual virtual List part rows; preserved bounded image cache and paint-only spinner scheduling."
+  ],
+  "tests": {
+    "redBefore": "Original consumer failed closing-unknown-with-empty-Text and later-tool-only no-backward-answer fixtures before implementation.",
+    "sourceAndReceiver": "Author actual notification/arena atomic/gap/stale/rebaseline/partial prepend/source IDs, cross-turn barrier, Unicode/source marker, controller sharing and actual view gates passed.",
+    "realHelper": "fixtureChatPresentationStream: live/staged/retained/latest-empty/structured-final full fields incl raw timeline; fixtureStructuredStream rich metadata and empty argsRaw preserved.",
+    "realPipe": "Real SessionProjection+PresentationPublisher -> JSON stdio -> scoped a.notification -> actual native view. RPC old/new baseline copies inserted at four queue positions; retained assistant/input/step-end order and stable keys passed.",
+    "independent": "Root seven pinned assembler -> actual view cases plus corrected Unicode overlay passed before final checkpoint; final independent Go reviewer pending.",
+    "commands": [
+      "CGO_ENABLED=0 go test . ./internal/bridge",
+      "CGO_ENABLED=0 go vet . ./internal/bridge",
+      "go test -race -run ^TestPresentation|^TestOpenPresentation|^TestTurnController|^TestAssistantNonblank|^TestRealPublisherStructuredMetadata -count=1 ."
+    ]
+  },
+  "virtualization": {
+    "historySizes": [
+      1000,
+      10000
+    ],
+    "coldUniqueParts": 28,
+    "warmUniqueParts": 10,
+    "coldRawRendererInvocations": 200,
+    "warmRawRendererInvocations": 200,
+    "note": "MyGo intrinsic/layout passes repeat the same viewport renderers. These are headless actual a.view counters, not screenshots or a claim of10 total calls. Neither unique nor raw counts grow with history; full grouping cache retained on suffix."
+  },
+  "performance": {
+    "path": "qa/chat-presentation-native-budget.json",
+    "sha256": "e3d8358dcc97b7f401591574bc571506069955b4b1ee585b51cbc01d5a109021"
+  },
+  "originalSources": [
+    {
+      "path": "../deepseek-harness/packages/client/ui-chat/src/client/chat/ChatNodeSeat.tsx",
+      "sha256": "e3184a591fb0e2d71f6cf64031a36a4a6599edc90c15dd9ed55357d16e7ea754"
+    },
+    {
+      "path": "../deepseek-harness/packages/client/ui-chat/src/client/chat/AssistantMarkdown.tsx",
+      "sha256": "07f1fde40b63cfa4723bd049692d2e8ed705a3223ff67cfe6584e65f11a46e51"
+    },
+    {
+      "path": "../deepseek-harness/packages/client/ui-chat/src/client/chat/TurnProcessNodeView.tsx",
+      "sha256": "b7aa82eeb7c8e32bc7e67cca6f4695d23d0ee497c4fc537160a78716a3283dd6"
+    },
+    {
+      "path": "../deepseek-harness/packages/client/ui-chat/src/client/contract/assistant-content.ts",
+      "sha256": "a736c22b643545b1acd072e850add94bdf628c25c13e5fb1dd1046fffaa18c85"
+    },
+    {
+      "path": "../deepseek-harness/packages/client/ui-chat/src/client/contract/turn-process.ts",
+      "sha256": "dce44841b376607f143df8c990b4f9e54579655a2d6adc8fead2fe7112efe7ef"
+    },
+    {
+      "path": "../deepseek-harness/packages/client/ui-chat/src/client/conversation-nodes/common.ts",
+      "sha256": "c5bbb87bcd7ac1d25d467a45447c09d2f34f49ac7c98c4d5dfbc0779c47c0509"
+    },
+    {
+      "path": "../deepseek-harness/packages/client/ui-chat/src/client/conversation-nodes/process-groups.ts",
+      "sha256": "53e9f137db840f90b2d1a419ff39687234e35ae7d8a68a5a17795db93e82cd95"
+    }
+  ],
+  "sourceFiles": {
+    "app.go": "ec9da7b2514b17b1b937f8a38be660d7341b7f0aa7cc868fe07751e02df2d278",
+    "assistant_content.go": "402f128d3db3aad6ec77e52ff234796ea135a7c4ba20e7373887d933011e6bbe",
+    "chat_layout.go": "99da5283764bb86e4d9cdb02909890d2ce413e1f974415e617f7d706c3f726ce",
+    "chat_message_delta.go": "3fcecea842c1b4ebe0a61629f060f5ce781e2c2183c90e8ac69c33b6f50d7796",
+    "chat_presentation.go": "e96f2042d95953ca363dec5742424b5b0a9b568bf0697c4fb67d98cf49bac0b9",
+    "chat_presentation_index.go": "f4549749f8c108af6f7ffa4f6561770fca63e1f10ca967d8736f39dc52fd9690",
+    "chat_presentation_rows.go": "ffefd5d9022cddc296dc9c995d5b1505c0004f090b63b3ded7d0c1586b1072be",
+    "chat_presentation_test.go": "bef86fd6868c43020759b17352d28369d8c6711b57e9a213d3cc28bae11edab2",
+    "chat_presentation_wire_test.go": "24938fb4043a0234d0726097a4c2bab486630b614d511dad6aa93753fc88239e",
+    "chat_virtualization_test.go": "e718b30f22cb74f1886e272e4137ea4851faa0fd0305d1b5b0685100e6c21d58",
+    "connection.go": "558faeccb474e53147e706762ae1ffeeae0af3468b5b34362c2451568a19378e",
+    "conversation.go": "fa861173f81fa2ed5833d06773c2238a2d8f74b65a09ea6a9a8ef222d66808e9",
+    "conversation_rows.go": "ad8ceeabdb2406e81b472575f005f5c7dd7003f01297f18ad250e0d8d11fe934",
+    "indicator.go": "f276a3e0fc5519e7c1a6ddb9a0a61e9204468e6812f7cfb56c057cbaf17ecedb",
+    "incremental.go": "5f65324f18660b13a28d55eb040635253f0e08142782eeff3c54f08e3684c30a",
+    "message_json.go": "6b8abdc0802715f4cf693e6f6c61f5a78e8bf0566db1ca5933629c719575d4fe",
+    "model.go": "7e796b593367fd5cfdd0ca14b98f7c7ad3de2c77958980ff9e5bee1f0ebe77ab",
+    "remote_integration_test.go": "454da8d909a00eb5150054ac33c8d4c799733a5da73bb4da1d0ad0172c59a37a",
+    "structured_publisher_test.go": "bac25cfbdb4d16a5734a5ed4eeb10f1cc480c1ab6e20d54f512df27228a793b8",
+    "turn_controller.go": "c9b9a4e37dedfd1455608ab6644a147d38048f089453c939a8f0f4b21c285476",
+    "turn_controller_test.go": "3995d65d39ca674b171dfe5fefe8abcf75bf72c6dbe10d1092575b6314bed885",
+    "internal/fixtures/chat-process-wire.mjs": "d4176336e26fed0993e9f8530ec39ef92d041ddde0b8ae8cbcd74e9f7a79a413",
+    "internal/fixtures/chat-retained-wire.mjs": "96f63fbd89da7d013b9b92ebce1792b16bb87f5bf9e31bbab1a1463e1ef10f2d"
+  },
+  "spinner": {
+    "functionUnchanged": true,
+    "sha256": "d37d395cd303d8c4baae642b145c66c6c4e9e715841cdb9693109af048bce5e2"
+  },
+  "pending": [
+    "Final independent Go cross review",
+    "Actual GUI11 screenshots and user interactions",
+    "macOS15.8/M1 full-app memory/CPU",
+    "Full step-group styling/animation and rich tool-specific preview parity outside this slice"
+  ],
+  "limitations": [
+    "Large single-turn metadata regroup remains O(owning turn refs); global visible-row headers remain O(row count) on structural metadata. Ordinary suffix stays cached. Bench Go allocation bytes do not bound native/GPU/resident peaks.",
+    "No automatic rebaseline on a version gap: preserve the current valid UI and request reopening the session.",
+    "Previous GUI7/8/9/10 apps and compat resources remain frozen."
+  ]
+}

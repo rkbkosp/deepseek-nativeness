@@ -13,14 +13,45 @@ type chatRowsCache struct {
 	rows                      []chatRow
 	// Groups with skipped tool-only assistant records keep indices, so their
 	// small non-contiguous projection can be refreshed without history copies.
-	gathered []chatGather
+	gathered        []chatGather
+	presented       bool
+	turnRows        map[int][]chatRow
+	idsByTurn       map[int][]string
+	turnOrder       []int
+	dirtyTurns      map[int]bool
+	indexDirty      bool
+	lastUser        int
+	rowStarts       map[string][]chatRow
+	rowEnds         map[string][]chatRow
+	visible         []chatRow
+	layoutIDs       []string
+	layoutPositions map[string]int
+	segments        map[string]int
 }
 type chatGather struct {
 	row     int
 	indices []int
 }
 
-func (a *app) invalidateChatRows() { a.chatStructureRevision++; a.chatRowsCache = nil }
+func (a *app) invalidateChatRows() {
+	a.chatStructureRevision++
+	a.chatRowsCache = nil
+	a.chatPresentationIndex = nil
+}
+func (a *app) invalidateChatTurns(turns map[int]bool, indexChanged bool) {
+	a.chatStructureRevision++
+	if c := a.chatRowsCache; c != nil && c.presented {
+		if c.dirtyTurns == nil {
+			c.dirtyTurns = map[int]bool{}
+		}
+		for turn := range turns {
+			c.dirtyTurns[turn] = true
+		}
+		c.indexDirty = c.indexDirty || indexChanged
+	} else {
+		a.chatRowsCache = nil
+	}
+}
 func assistantHasVisibleContent(m *message) bool {
 	if m.Interrupted || m.Text != "" || m.Reasoning != "" || m.ReasoningDisplay != "" {
 		return true
@@ -32,7 +63,36 @@ func assistantHasVisibleContent(m *message) bool {
 	}
 	return false
 }
+
+func assistantHasReplyContent(m *message) bool {
+	if len(m.AssistantBlocks) == 0 {
+		return assistantNonblank(m.Text)
+	}
+	for _, b := range m.AssistantBlocks {
+		switch b.Kind {
+		case "text":
+			if assistantNonblank(b.Text) {
+				return true
+			}
+		case "reasoning", "tool-call":
+		default:
+			return true
+		}
+	}
+	return false
+}
+func assistantHasRawResponseBlock(m *message) bool {
+	for _, b := range m.AssistantBlocks {
+		if b.Kind != "reasoning" && b.Kind != "tool-call" {
+			return true
+		}
+	}
+	return false
+}
 func (a *app) chatRows() []chatRow {
+	if a.current.ChatPresentation != nil {
+		return a.presentedChatRows()
+	}
 	messages := a.current.Messages
 	if len(messages) == 0 {
 		a.chatRowsCache = nil

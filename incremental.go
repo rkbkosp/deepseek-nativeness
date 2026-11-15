@@ -5,7 +5,26 @@ import (
 	"fmt"
 )
 
-func (a *app) replaceSnapshot(s snapshot) {
+func (a *app) replaceSnapshot(s snapshot) bool {
+	if before := a.current.ChatPresentation; before != nil && a.current.SessionID == s.SessionID {
+		if s.ChatPresentation == nil {
+			a.error = "远程对话结构缺少基线版本，请重新打开会话"
+			return false
+		}
+		if s.ChatPresentation.BaselineSerial <= before.BaselineSerial {
+			return false
+		}
+	}
+	if s.ChatPresentation != nil {
+		payloads := map[string]bool{}
+		for _, m := range s.Messages {
+			payloads[m.ID] = true
+		}
+		if err := validateChatPresentation(s.ChatPresentation, payloads); err != nil {
+			a.error = err.Error()
+			return false
+		}
+	}
 	a.invalidateChatRows()
 	a.current = s
 	a.sessionID = s.SessionID
@@ -22,6 +41,7 @@ func (a *app) replaceSnapshot(s snapshot) {
 			delete(a.answers, id)
 		}
 	}
+	return true
 }
 func (a *app) reindexMessages() {
 	a.messageIndex = make(map[string]int, len(a.current.Messages))
@@ -31,19 +51,27 @@ func (a *app) reindexMessages() {
 }
 
 func (a *app) applyIncremental(method string, raw json.RawMessage) error {
-	var target struct {
-		SessionID string `json:"sessionId"`
-	}
+	var target chatFrameHeader
 	if err := json.Unmarshal(raw, &target); err != nil {
 		return err
 	}
 	if target.SessionID != a.sessionID {
 		return nil
 	}
+	if method != "chatPresentationPatch" {
+		if accepted, err := a.admitChatFrame(target); err != nil || !accepted {
+			return err
+		}
+	}
+	if a.current.ChatPresentation != nil && (method == "messageUpsert" || method == "messageRemove") {
+		return fmt.Errorf("远程对话内容更新缺少原子结构事务，请重新打开会话")
+	}
 	if a.messageIndex == nil {
 		a.reindexMessages()
 	}
 	switch method {
+	case "chatPresentationPatch":
+		return a.applyChatPresentationPatch(raw)
 	case "trajectoryUpsert":
 		var p struct {
 			Event trajectoryEvent `json:"event"`
@@ -54,12 +82,12 @@ func (a *app) applyIncremental(method string, raw json.RawMessage) error {
 		if p.Event.ID == "" {
 			return fmt.Errorf("轨迹事件缺少标识")
 		}
-		if a.chatRowsCache != nil && p.Event.Turn > a.chatRowsCache.activeTurn {
+		if a.current.ChatPresentation == nil && a.chatRowsCache != nil && p.Event.Turn > a.chatRowsCache.activeTurn {
 			a.invalidateChatRows()
 		}
 		for i, v := range a.current.Trajectory {
 			if v.ID == p.Event.ID {
-				if a.chatRowsCache != nil && v.Turn == a.chatRowsCache.activeTurn && p.Event.Turn < v.Turn {
+				if a.current.ChatPresentation == nil && a.chatRowsCache != nil && v.Turn == a.chatRowsCache.activeTurn && p.Event.Turn < v.Turn {
 					a.invalidateChatRows()
 				}
 				a.current.Trajectory[i] = p.Event
@@ -85,7 +113,7 @@ func (a *app) applyIncremental(method string, raw json.RawMessage) error {
 		}
 		kept := a.current.Trajectory[:0]
 		for _, v := range a.current.Trajectory {
-			if a.chatRowsCache != nil && v.Turn == a.chatRowsCache.activeTurn && containsID(p.IDs, v.ID) {
+			if a.current.ChatPresentation == nil && a.chatRowsCache != nil && v.Turn == a.chatRowsCache.activeTurn && containsID(p.IDs, v.ID) {
 				a.invalidateChatRows()
 			}
 			if !containsID(p.IDs, v.ID) {
@@ -146,49 +174,22 @@ func (a *app) applyIncremental(method string, raw json.RawMessage) error {
 		a.current.Messages = kept
 		a.reindexMessages()
 	case "messageDelta":
-		var p struct {
-			MessageID              string  `json:"messageId"`
-			TextAppend             string  `json:"textAppend"`
-			ReasoningAppend        string  `json:"reasoningAppend"`
-			Streaming              bool    `json:"streaming"`
-			ReasoningDisplay       *string `json:"reasoningDisplay"`
-			ReasoningDisplayAppend string  `json:"reasoningDisplayAppend"`
-			TextBlockIndex         *int    `json:"textBlockIndex"`
-			ReasoningBlockIndex    *int    `json:"reasoningBlockIndex"`
-		}
+		var p chatMessageDelta
 		if err := json.Unmarshal(raw, &p); err != nil {
 			return err
 		}
+
 		index, ok := a.messageIndex[p.MessageID]
 		if !ok {
 			return fmt.Errorf("远程增量缺少消息基线，请重新打开会话")
 		}
 		m := &a.current.Messages[index]
-		for _, block := range []struct {
-			index  *int
-			kind   string
-			append string
-		}{{p.TextBlockIndex, "text", p.TextAppend}, {p.ReasoningBlockIndex, "reasoning", p.ReasoningAppend}} {
-			if block.index != nil && (*block.index < 0 || *block.index >= len(m.AssistantBlocks) || m.AssistantBlocks[*block.index].Kind != block.kind) {
-				return fmt.Errorf("远程内容块增量缺少对应基线，请重新打开会话")
-			}
+		if err := validateChatMessageDelta(m, p); err != nil {
+			return err
 		}
-		wasVisible := assistantHasVisibleContent(m)
-		hadText := m.Text != ""
-		m.Text += p.TextAppend
-		m.Reasoning += p.ReasoningAppend
-		if p.ReasoningDisplay != nil {
-			m.ReasoningDisplay = *p.ReasoningDisplay
-		}
-		m.ReasoningDisplay += p.ReasoningDisplayAppend
-		if p.TextBlockIndex != nil {
-			m.AssistantBlocks[*p.TextBlockIndex].Text += p.TextAppend
-		}
-		if p.ReasoningBlockIndex != nil {
-			m.AssistantBlocks[*p.ReasoningBlockIndex].Text += p.ReasoningAppend
-		}
-		m.Streaming = p.Streaming
-		if wasVisible != assistantHasVisibleContent(m) || hadText != (m.Text != "") {
+		wasVisible, hadText := assistantHasVisibleContent(m), m.Text != ""
+		appendChatMessageDelta(m, p)
+		if a.current.ChatPresentation == nil && (wasVisible != assistantHasVisibleContent(m) || hadText != (m.Text != "")) {
 			a.invalidateChatRows()
 		}
 	case "sessionState":

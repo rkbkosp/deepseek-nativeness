@@ -82,6 +82,33 @@ loop:
 				}
 			}
 			a.notification(ev)
+			if ev.Method == "chatPresentationPatch" {
+				var patch chatPresentationPatch
+				if err := json.Unmarshal(ev.Params, &patch); err != nil {
+					t.Fatal(err)
+				}
+				for _, upsert := range patch.PayloadChanges.Upserts {
+					index, ok := a.messageIndex[upsert.Message.ID]
+					if !ok {
+						t.Fatal("atomic upsert missing native identity")
+					}
+					expectedRaw, _ := json.Marshal(upsert.Message)
+					actualRaw, _ := json.Marshal(a.current.Messages[index])
+					var expected, actual any
+					_ = json.Unmarshal(expectedRaw, &expected)
+					_ = json.Unmarshal(actualRaw, &actual)
+					assertPresentationFields(t, "atomic.upsert", expected, actual)
+					upserts++
+				}
+				for _, delta := range patch.PayloadChanges.Deltas {
+					if delta.TextBlockIndex != nil {
+						textDeltas++
+					}
+					if delta.ReasoningBlockIndex != nil {
+						reasoningDeltas++
+					}
+				}
+			}
 			if ev.Method == "messageUpsert" {
 				var p struct{ Message json.RawMessage }
 				if json.Unmarshal(ev.Params, &p) != nil {

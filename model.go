@@ -34,6 +34,7 @@ type session struct {
 func (s session) updated() time.Time { return time.UnixMilli(int64(s.UpdatedAt)) }
 
 type message struct {
+	seqPresent       bool
 	Seq              int64            `json:"seq"`
 	SourceMessageID  json.RawMessage  `json:"sourceMessageId,omitempty"`
 	Blocks           json.RawMessage  `json:"blocks,omitempty"`
@@ -91,7 +92,7 @@ type assistantBlock struct {
 	Attachment json.RawMessage `json:"attachment,omitempty"`
 	CallID     string          `json:"callId,omitempty"`
 	Name       string          `json:"name,omitempty"`
-	ArgsRaw    string          `json:"argsRaw,omitempty"`
+	ArgsRaw    string          `json:"argsRaw"`
 	Block      json.RawMessage `json:"block,omitempty"`
 }
 type operationCapability struct {
@@ -122,26 +123,29 @@ type interaction struct {
 	Questions []question `json:"questions"`
 }
 type snapshot struct {
-	Projections json.RawMessage   `json:"projections,omitempty"`
-	Trajectory  []trajectoryEvent `json:"trajectory"`
-	Turns       []json.RawMessage `json:"turns"`
-	Cursor      int64             `json:"cursor"`
-	HasMore     bool              `json:"hasMore"`
-	SessionID   string            `json:"sessionId"`
-	Messages    []message         `json:"messages"`
-	Pending     []interaction     `json:"pending"`
-	Running     bool              `json:"running"`
+	ChatPresentation *chatPresentation `json:"chatPresentation,omitempty"`
+	Projections      json.RawMessage   `json:"projections,omitempty"`
+	Trajectory       []trajectoryEvent `json:"trajectory"`
+	Turns            []json.RawMessage `json:"turns"`
+	Cursor           int64             `json:"cursor"`
+	HasMore          bool              `json:"hasMore"`
+	SessionID        string            `json:"sessionId"`
+	Messages         []message         `json:"messages"`
+	Pending          []interaction     `json:"pending"`
+	Running          bool              `json:"running"`
 }
 type trajectoryEvent struct {
-	ID      string          `json:"id"`
-	Seq     int64           `json:"seq"`
-	Type    string          `json:"type"`
-	Time    float64         `json:"time"`
-	Turn    int             `json:"turn"`
-	Step    int             `json:"step"`
-	Kind    string          `json:"kind"`
-	Summary string          `json:"summary"`
-	Data    json.RawMessage `json:"data"`
+	SurfaceOp       json.RawMessage `json:"surfaceOp,omitempty"`
+	SourceEventSeqs []int64         `json:"sourceEventSeqs,omitempty"`
+	ID              string          `json:"id"`
+	Seq             int64           `json:"seq"`
+	Type            string          `json:"type"`
+	Time            float64         `json:"time"`
+	Turn            int             `json:"turn"`
+	Step            int             `json:"step"`
+	Kind            string          `json:"kind"`
+	Summary         string          `json:"summary"`
+	Data            json.RawMessage `json:"data"`
 }
 
 // decodeRows accepts the helper's plain arrays and its named catalog envelope.

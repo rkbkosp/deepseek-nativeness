@@ -174,6 +174,17 @@ func (a *app) notification(ev bridge.Notification) {
 	}
 	switch ev.Method {
 	case "sessionProjections":
+		var header chatFrameHeader
+		if err := json.Unmarshal(ev.Params, &header); err != nil {
+			a.error = err.Error()
+			return
+		}
+		if accepted, err := a.admitChatFrame(header); err != nil || !accepted {
+			if err != nil {
+				a.error = err.Error()
+			}
+			return
+		}
 		var p struct {
 			SessionID   string          `json:"sessionId"`
 			Projections json.RawMessage `json:"projections"`
@@ -199,13 +210,13 @@ func (a *app) notification(ev bridge.Notification) {
 		if err := json.Unmarshal(ev.Params, &s); err != nil {
 			a.error = "远程会话数据无效，请重新打开会话。"
 		} else if a.sessionID == "" || s.SessionID == a.sessionID {
-			a.replaceSnapshot(s)
-			if a.connected && s.SessionID != "" && a.composerBaselineKey != a.currentComposerBaselineKey() {
+			adopted := a.replaceSnapshot(s)
+			if adopted && a.connected && s.SessionID != "" && a.composerBaselineKey != a.currentComposerBaselineKey() {
 				a.composerBaselineKey = a.currentComposerBaselineKey()
 				a.reloadComposer()
 			}
 		}
-	case "messageUpsert", "messageRemove", "messageDelta", "sessionState", "pending", "trajectoryUpsert", "trajectoryRemove":
+	case "chatPresentationPatch", "messageUpsert", "messageRemove", "messageDelta", "sessionState", "pending", "trajectoryUpsert", "trajectoryRemove":
 		if err := a.applyIncremental(ev.Method, ev.Params); err != nil {
 			a.error = err.Error()
 		}

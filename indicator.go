@@ -39,11 +39,12 @@ func spinnerGeometry(elapsed time.Duration) (rotation, length, offset float64) {
 }
 
 type renderStats struct {
-	Builds          uint64 `json:"viewBuilds"`
-	IndicatorPaints uint64 `json:"indicatorPaints"`
-	AnimationFrames uint64 `json:"animationFrames"`
-	lastPaint       time.Time
-	FixedTime       *time.Duration `json:"-"`
+	Builds            uint64 `json:"viewBuilds"`
+	MessagePartBuilds uint64 `json:"messagePartBuilds"`
+	IndicatorPaints   uint64 `json:"indicatorPaints"`
+	AnimationFrames   uint64 `json:"animationFrames"`
+	lastPaint         time.Time
+	FixedTime         *time.Duration `json:"-"`
 }
 
 func stateIndicator(c *ui.Context, running bool, epoch time.Time, color ui.Color, stats *renderStats) {

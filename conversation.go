@@ -112,13 +112,20 @@ func (a *app) conversation(c *ui.Context) {
 		})
 	} else {
 		rows := a.chatRows()
+		if a.chatRowsCache != nil && a.chatRowsCache.presented {
+			rows = a.chatRowsCache.visible
+		}
 		a.list.Key = func(i int) any { return rows[i].ID }
 		list := ui.List(c, &a.list, len(rows), func(i int) {
 			r := rows[i]
 			ui.Row(c).Justify(ui.Center).MinWidth(0).Children(func() {
 				ui.Column(c).Width(a.chatContentWidth(c)).Shrink(1).MinWidth(0).Font(a.messageFontFamily()).FontWeight(a.messageNormalWeight()).Gap(12).Children(func() {
-					if r.Process {
+					if r.Control {
+						a.turnControllerView(c, r)
+					} else if r.Process {
 						a.processView(c, r)
+					} else if len(r.Parts) > 0 {
+						a.chatPartView(c, r.Parts[0])
 					} else {
 						a.messageView(c, r.Messages[0])
 					}
@@ -133,11 +140,23 @@ func (a *app) conversation(c *ui.Context) {
 }
 
 type chatRow struct {
-	ID          string
-	Process     bool
-	Messages    []message
-	Turn        int
-	DefaultOpen bool
+	ID                string
+	Process           bool
+	Messages          []message
+	Turn              int
+	DefaultOpen       bool
+	AlwaysOpen        bool
+	FoldKey           string
+	Parts             []chatPartRef
+	ProcessSpec       *chatProcessSpec
+	ProcessReason     string
+	ProcessStatus     string
+	ProcessDuration   *float64
+	Control           bool
+	CanCollapse       bool
+	PositionPayloadID string
+	PositionAfter     bool
+	LayoutAnchor      float64
 }
 
 func (a *app) managedFold(id string, initial bool) *bool {
@@ -162,13 +181,31 @@ func (a *app) foldState(id string, initial bool) *bool {
 	return p
 }
 func (a *app) processView(c *ui.Context, row chatRow) {
+	if row.ProcessSpec != nil {
+		for _, part := range row.Parts {
+			a.chatPartView(c, part)
+		}
+		return
+	}
 	tools, contexts := 0, 0
+	for _, part := range row.Parts {
+		if m := a.chatPartMessage(part); m != nil {
+			if m.Tool != nil {
+				tools++
+			} else {
+				contexts++
+			}
+		}
+	}
 	for _, m := range row.Messages {
 		if m.Tool != nil {
 			tools++
 		} else {
 			contexts++
 		}
+	}
+	if row.ProcessSpec != nil {
+		tools = row.ProcessSpec.ToolCallCount + row.ProcessSpec.SubagentCount
 	}
 	label := "执行过程"
 	if tools > 0 && contexts > 0 {
@@ -178,15 +215,70 @@ func (a *app) processView(c *ui.Context, row chatRow) {
 	} else {
 		label = fmt.Sprintf("%d 条上下文", contexts)
 	}
-	ui.Collapsible(c, label, a.managedFold(row.ID, row.DefaultOpen), func() {
+	if row.ProcessSpec != nil {
+		label = "已完成"
+		if row.ProcessDuration != nil {
+			label = "已完成，用时 " + formatProcessDuration(*row.ProcessDuration)
+		}
+		if row.ProcessReason == "aborted" || row.ProcessReason == "interrupted" {
+			label = "已停止"
+		} else if row.ProcessReason == "error" {
+			label = "处理失败"
+		}
+	}
+	body := func() {
 		ui.Column(c).Gap(10).Padding(8, 0, 0, 12).BorderWidth(0, 0, 0, 1).BorderColor(a.theme.Border).Children(func() {
+			for _, part := range row.Parts {
+				a.chatPartView(c, part)
+			}
 			for _, m := range row.Messages {
 				a.messageView(c, m)
 			}
 		})
-	})
+	}
+	if row.ProcessSpec != nil && row.ProcessStatus != "closed" {
+		body()
+		return
+	}
+	if row.AlwaysOpen {
+		ui.Text(c, label).FontSize(13).TextColor(a.theme.TextMuted)
+		body()
+		return
+	}
+	key := row.FoldKey
+	if key == "" {
+		key = row.ID
+	}
+	control := ui.Collapsible(c, label, a.managedFold(key, row.DefaultOpen), body)
+	if row.ProcessSpec != nil {
+		control.Tooltip(fmt.Sprintf("%d 条回复 · %d 次工具调用 · %d 次子任务", row.ProcessSpec.MessageCount, row.ProcessSpec.ToolCallCount, row.ProcessSpec.SubagentCount))
+	}
+}
+
+func formatProcessDuration(ms float64) string {
+	total := int(max(1000, ms) / 1000)
+	hours, minutes, seconds := total/3600, total/60%60, total%60
+	text := ""
+	if hours > 0 {
+		text += fmt.Sprintf("%d小时", hours)
+	}
+	if total >= 60 {
+		text += fmt.Sprintf("%d分", minutes)
+	}
+	return text + fmt.Sprintf("%d秒", seconds)
 }
 func (a *app) messageView(c *ui.Context, m message) {
+	a.messagePartView(c, m, "", m.ID)
+}
+func (a *app) messagePartView(c *ui.Context, m message, part, nodeKey string) {
+	a.messagePartViewTerminal(c, m, part, nodeKey, nil)
+}
+func (a *app) messagePartViewTerminal(c *ui.Context, m message, part, nodeKey string, terminal *bool) {
+	a.metrics.MessagePartBuilds++
+	if a.testChatPartBuild != nil {
+		a.testChatPartBuild(nodeKey, part)
+	}
+	m.ID = nodeKey
 	switch {
 	case m.Context != nil || m.Kind == "context" || m.Kind == "compaction":
 		label := "已注入上下文"
@@ -234,7 +326,14 @@ func (a *app) messageView(c *ui.Context, m message) {
 		if reasoning == "" {
 			reasoning = m.Reasoning
 		}
-		if reasoning != "" {
+		hasReasoningBlock := false
+		for _, block := range m.AssistantBlocks {
+			if block.Kind == "reasoning" {
+				hasReasoningBlock = true
+				break
+			}
+		}
+		if assistantNonblank(reasoning) && !hasReasoningBlock && part != "response" {
 			ui.Collapsible(c.Key("reasoning:"+m.ID), "思考过程", a.foldState("reasoning:"+m.ID, false), func() {
 				ui.Text(c, reasoning).Wrap().Selectable().FontSize(a.uiPrefs.FontSize).TextColor(a.theme.TextMuted)
 			})
@@ -242,7 +341,17 @@ func (a *app) messageView(c *ui.Context, m message) {
 		if len(m.AssistantBlocks) > 0 {
 			for i := 0; i < len(m.AssistantBlocks); i++ {
 				b := m.AssistantBlocks[i]
+				if part == "reasoning" && b.Kind != "reasoning" || part == "response" && b.Kind == "reasoning" {
+					continue
+				}
 				switch b.Kind {
+				case "reasoning":
+					if assistantNonblank(b.Text) {
+						key := fmt.Sprintf("%s:reasoning:%d", m.ID, i)
+						ui.Collapsible(c.Key(key), "思考过程", a.foldState(key, false), func() {
+							ui.Text(c, b.Text).Wrap().Selectable().FontSize(a.uiPrefs.FontSize).TextColor(a.theme.TextMuted)
+						})
+					}
 				case "text":
 					if m.Streaming {
 						markdown.Stream(c.Key(fmt.Sprintf("%s:block:%d", m.ID, i)), b.Text, &a.md)
@@ -260,18 +369,27 @@ func (a *app) messageView(c *ui.Context, m message) {
 					group.ID = fmt.Sprintf("%s:image:%d", m.ID, start)
 					group.AssistantBlocks = m.AssistantBlocks[start : i+1]
 					a.messageImageGallery(c, group)
-				case "reasoning", "tool-call":
+				case "tool-call":
 					// Reasoning and grouped tool rows are rendered separately.
 				default:
 					a.unknownAssistantBlock(c.Key(fmt.Sprintf("%s:unknown:%d", m.ID, i)), b.Block)
 				}
 			}
+		} else if part == "reasoning" {
+			// Legacy aggregate reasoning was rendered above, without duplicating text.
 		} else if m.Streaming {
 			markdown.Stream(c.Key(m.ID), m.Text, &a.md)
 		} else {
 			markdown.View(c.Key(m.ID), m.Text, &a.md)
 		}
-		if m.Interrupted {
+		// Deliberately distinct from nonblank reply qualification: the original
+		// terminal marker tests raw block kinds, including blank/BOM text blocks.
+		hasResponse := assistantHasRawResponseBlock(&m)
+		showStopped := m.Interrupted && (part != "reasoning" || !hasResponse)
+		if terminal != nil {
+			showStopped = *terminal
+		}
+		if showStopped {
 			// AssistantMarkdown's terminal tag belongs to the whole response,
 			// after its blocks, including an otherwise empty aborted response.
 			background := ui.RGBA(38, 49, 72, .06)
@@ -284,7 +402,7 @@ func (a *app) messageView(c *ui.Context, m message) {
 				ui.Text(c, "已停止").FontSize(11).FixedLineHeight(18).Height(18).Padding(0, 6).Radius(8).Background(background).TextColor(foreground)
 			})
 		}
-		if m.Text != "" {
+		if m.Text != "" && part != "reasoning" {
 			a.messageActions(c, m, false)
 		}
 	}

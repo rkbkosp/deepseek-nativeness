@@ -1,0 +1,108 @@
+{
+  "createdAt": "2026-11-15T02:10:48.694Z",
+  "baseCommit": "2bad88851dc0289fa20752ebccdcc4cd06bdaa44",
+  "scope": "Go consumer/render/cache semantic slice only; no App or resource rebuild, no GUI/Host mutation, no composer_native import.",
+  "files": {
+    "app.go": {
+      "sha256": "ec9da7b2514b17b1b937f8a38be660d7341b7f0aa7cc868fe07751e02df2d278",
+      "bytes": 11297
+    },
+    "assistant_content.go": {
+      "sha256": "402f128d3db3aad6ec77e52ff234796ea135a7c4ba20e7373887d933011e6bbe",
+      "bytes": 518
+    },
+    "chat_layout.go": {
+      "sha256": "99da5283764bb86e4d9cdb02909890d2ce413e1f974415e617f7d706c3f726ce",
+      "bytes": 2138
+    },
+    "chat_message_delta.go": {
+      "sha256": "3fcecea842c1b4ebe0a61629f060f5ce781e2c2183c90e8ac69c33b6f50d7796",
+      "bytes": 1621
+    },
+    "chat_presentation.go": {
+      "sha256": "e96f2042d95953ca363dec5742424b5b0a9b568bf0697c4fb67d98cf49bac0b9",
+      "bytes": 15305
+    },
+    "chat_presentation_index.go": {
+      "sha256": "f4549749f8c108af6f7ffa4f6561770fca63e1f10ca967d8736f39dc52fd9690",
+      "bytes": 1824
+    },
+    "chat_presentation_rows.go": {
+      "sha256": "ffefd5d9022cddc296dc9c995d5b1505c0004f090b63b3ded7d0c1586b1072be",
+      "bytes": 9918
+    },
+    "chat_presentation_test.go": {
+      "sha256": "bef86fd6868c43020759b17352d28369d8c6711b57e9a213d3cc28bae11edab2",
+      "bytes": 21961
+    },
+    "chat_presentation_wire_test.go": {
+      "sha256": "24938fb4043a0234d0726097a4c2bab486630b614d511dad6aa93753fc88239e",
+      "bytes": 8266
+    },
+    "chat_virtualization_test.go": {
+      "sha256": "e718b30f22cb74f1886e272e4137ea4851faa0fd0305d1b5b0685100e6c21d58",
+      "bytes": 2811
+    },
+    "connection.go": {
+      "sha256": "558faeccb474e53147e706762ae1ffeeae0af3468b5b34362c2451568a19378e",
+      "bytes": 14096
+    },
+    "conversation.go": {
+      "sha256": "fa861173f81fa2ed5833d06773c2238a2d8f74b65a09ea6a9a8ef222d66808e9",
+      "bytes": 16987
+    },
+    "conversation_rows.go": {
+      "sha256": "ad8ceeabdb2406e81b472575f005f5c7dd7003f01297f18ad250e0d8d11fe934",
+      "bytes": 5542
+    },
+    "indicator.go": {
+      "sha256": "f276a3e0fc5519e7c1a6ddb9a0a61e9204468e6812f7cfb56c057cbaf17ecedb",
+      "bytes": 2522
+    },
+    "incremental.go": {
+      "sha256": "5f65324f18660b13a28d55eb040635253f0e08142782eeff3c54f08e3684c30a",
+      "bytes": 6330
+    },
+    "message_json.go": {
+      "sha256": "6b8abdc0802715f4cf693e6f6c61f5a78e8bf0566db1ca5933629c719575d4fe",
+      "bytes": 354
+    },
+    "model.go": {
+      "sha256": "7e796b593367fd5cfdd0ca14b98f7c7ad3de2c77958980ff9e5bee1f0ebe77ab",
+      "bytes": 7516
+    },
+    "remote_integration_test.go": {
+      "sha256": "454da8d909a00eb5150054ac33c8d4c799733a5da73bb4da1d0ad0172c59a37a",
+      "bytes": 5416
+    },
+    "structured_publisher_test.go": {
+      "sha256": "bac25cfbdb4d16a5734a5ed4eeb10f1cc480c1ab6e20d54f512df27228a793b8",
+      "bytes": 4810
+    },
+    "turn_controller.go": {
+      "sha256": "c9b9a4e37dedfd1455608ab6644a147d38048f089453c939a8f0f4b21c285476",
+      "bytes": 1909
+    },
+    "turn_controller_test.go": {
+      "sha256": "3995d65d39ca674b171dfe5fefe8abcf75bf72c6dbe10d1092575b6314bed885",
+      "bytes": 5412
+    },
+    "internal/fixtures/chat-process-wire.mjs": {
+      "sha256": "d4176336e26fed0993e9f8530ec39ef92d041ddde0b8ae8cbcd74e9f7a79a413",
+      "bytes": 3852
+    },
+    "internal/fixtures/chat-retained-wire.mjs": {
+      "sha256": "96f63fbd89da7d013b9b92ebce1792b16bb87f5bf9e31bbab1a1463e1ef10f2d",
+      "bytes": 2151
+    }
+  },
+  "sourceReview": {
+    "path": "qa/chat-presentation-native-source-review.json",
+    "sha256": "f1af40e450a12949970a2ccc21374845bab15ee8aa165a6ab9fc8f9097bb7193"
+  },
+  "budget": {
+    "path": "qa/chat-presentation-native-budget.json",
+    "sha256": "e3d8358dcc97b7f401591574bc571506069955b4b1ee585b51cbc01d5a109021"
+  },
+  "checks": "App + bridge test/vet and targeted race passed; final independent review pending."
+}

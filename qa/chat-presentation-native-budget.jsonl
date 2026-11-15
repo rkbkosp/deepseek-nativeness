@@ -1,0 +1,49 @@
+{"Time":"2026-11-15T10:08:09.663339+08:00","Action":"start","Package":"native-dsh/desktop"}
+{"Time":"2026-11-15T10:08:09.899569+08:00","Action":"output","Package":"native-dsh/desktop","Output":"goos: darwin\n"}
+{"Time":"2026-11-15T10:08:09.900316+08:00","Action":"output","Package":"native-dsh/desktop","Output":"goarch: arm64\n"}
+{"Time":"2026-11-15T10:08:09.900322+08:00","Action":"output","Package":"native-dsh/desktop","Output":"pkg: native-dsh/desktop\n"}
+{"Time":"2026-11-15T10:08:09.900333+08:00","Action":"output","Package":"native-dsh/desktop","Output":"cpu: Apple M4\n"}
+{"Time":"2026-11-15T10:08:09.90034+08:00","Action":"run","Package":"native-dsh/desktop","Test":"BenchmarkPresentationSuffixRows"}
+{"Time":"2026-11-15T10:08:09.900343+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationSuffixRows","Output":"=== RUN   BenchmarkPresentationSuffixRows\n","OutputType":"frame"}
+{"Time":"2026-11-15T10:08:09.900358+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationSuffixRows","Output":"BenchmarkPresentationSuffixRows\n"}
+{"Time":"2026-11-15T10:08:09.900368+08:00","Action":"run","Package":"native-dsh/desktop","Test":"BenchmarkPresentationSuffixRows/1000"}
+{"Time":"2026-11-15T10:08:09.900378+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationSuffixRows/1000","Output":"=== RUN   BenchmarkPresentationSuffixRows/1000\n","OutputType":"frame"}
+{"Time":"2026-11-15T10:08:09.900382+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationSuffixRows/1000","Output":"BenchmarkPresentationSuffixRows/1000\n"}
+{"Time":"2026-11-15T10:08:10.127211+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationSuffixRows/1000","Output":"BenchmarkPresentationSuffixRows/1000-10     \t   93025\t      1201 ns/op\t     216 B/op\t       7 allocs/op\n"}
+{"Time":"2026-11-15T10:08:10.127242+08:00","Action":"run","Package":"native-dsh/desktop","Test":"BenchmarkPresentationSuffixRows/10000"}
+{"Time":"2026-11-15T10:08:10.127249+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationSuffixRows/10000","Output":"=== RUN   BenchmarkPresentationSuffixRows/10000\n","OutputType":"frame"}
+{"Time":"2026-11-15T10:08:10.127251+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationSuffixRows/10000","Output":"BenchmarkPresentationSuffixRows/10000\n"}
+{"Time":"2026-11-15T10:08:10.352741+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationSuffixRows/10000","Output":"BenchmarkPresentationSuffixRows/10000-10    \t  100443\t      1211 ns/op\t     216 B/op\t       7 allocs/op\n"}
+{"Time":"2026-11-15T10:08:10.352765+08:00","Action":"run","Package":"native-dsh/desktop","Test":"BenchmarkPresentationMetadataBoundary"}
+{"Time":"2026-11-15T10:08:10.352767+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationMetadataBoundary","Output":"=== RUN   BenchmarkPresentationMetadataBoundary\n","OutputType":"frame"}
+{"Time":"2026-11-15T10:08:10.352769+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationMetadataBoundary","Output":"BenchmarkPresentationMetadataBoundary\n"}
+{"Time":"2026-11-15T10:08:10.354432+08:00","Action":"run","Package":"native-dsh/desktop","Test":"BenchmarkPresentationMetadataBoundary/1000"}
+{"Time":"2026-11-15T10:08:10.354438+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationMetadataBoundary/1000","Output":"=== RUN   BenchmarkPresentationMetadataBoundary/1000\n","OutputType":"frame"}
+{"Time":"2026-11-15T10:08:10.35445+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationMetadataBoundary/1000","Output":"BenchmarkPresentationMetadataBoundary/1000\n"}
+{"Time":"2026-11-15T10:08:10.477521+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationMetadataBoundary/1000","Output":"BenchmarkPresentationMetadataBoundary/1000-10         \t    2451\t     44762 ns/op\t    2888 B/op\t      24 allocs/op\n"}
+{"Time":"2026-11-15T10:08:10.477538+08:00","Action":"run","Package":"native-dsh/desktop","Test":"BenchmarkPresentationMetadataBoundary/10000"}
+{"Time":"2026-11-15T10:08:10.477539+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationMetadataBoundary/10000","Output":"=== RUN   BenchmarkPresentationMetadataBoundary/10000\n","OutputType":"frame"}
+{"Time":"2026-11-15T10:08:10.477541+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationMetadataBoundary/10000","Output":"BenchmarkPresentationMetadataBoundary/10000\n"}
+{"Time":"2026-11-15T10:08:10.704689+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationMetadataBoundary/10000","Output":"BenchmarkPresentationMetadataBoundary/10000-10        \t     262\t    426824 ns/op\t    2926 B/op\t      24 allocs/op\n"}
+{"Time":"2026-11-15T10:08:10.704735+08:00","Action":"run","Package":"native-dsh/desktop","Test":"BenchmarkPresentationLongTurnBoundary"}
+{"Time":"2026-11-15T10:08:10.704739+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationLongTurnBoundary","Output":"=== RUN   BenchmarkPresentationLongTurnBoundary\n","OutputType":"frame"}
+{"Time":"2026-11-15T10:08:10.704746+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationLongTurnBoundary","Output":"BenchmarkPresentationLongTurnBoundary\n"}
+{"Time":"2026-11-15T10:08:10.705435+08:00","Action":"run","Package":"native-dsh/desktop","Test":"BenchmarkPresentationLongTurnBoundary/1000/all"}
+{"Time":"2026-11-15T10:08:10.705441+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationLongTurnBoundary/1000/all","Output":"=== RUN   BenchmarkPresentationLongTurnBoundary/1000/all\n","OutputType":"frame"}
+{"Time":"2026-11-15T10:08:10.705443+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationLongTurnBoundary/1000/all","Output":"BenchmarkPresentationLongTurnBoundary/1000/all\n"}
+{"Time":"2026-11-15T10:08:10.844047+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationLongTurnBoundary/1000/all","Output":"BenchmarkPresentationLongTurnBoundary/1000/all-10     \t     619\t    182797 ns/op\t  789271 B/op\t      25 allocs/op\n"}
+{"Time":"2026-11-15T10:08:10.84406+08:00","Action":"run","Package":"native-dsh/desktop","Test":"BenchmarkPresentationLongTurnBoundary/1000/final"}
+{"Time":"2026-11-15T10:08:10.844061+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationLongTurnBoundary/1000/final","Output":"=== RUN   BenchmarkPresentationLongTurnBoundary/1000/final\n","OutputType":"frame"}
+{"Time":"2026-11-15T10:08:10.844063+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationLongTurnBoundary/1000/final","Output":"BenchmarkPresentationLongTurnBoundary/1000/final\n"}
+{"Time":"2026-11-15T10:08:10.985502+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationLongTurnBoundary/1000/final","Output":"BenchmarkPresentationLongTurnBoundary/1000/final-10   \t     615\t    190015 ns/op\t  790177 B/op\t      29 allocs/op\n"}
+{"Time":"2026-11-15T10:08:10.985522+08:00","Action":"run","Package":"native-dsh/desktop","Test":"BenchmarkPresentationLongTurnBoundary/10000/all"}
+{"Time":"2026-11-15T10:08:10.985524+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationLongTurnBoundary/10000/all","Output":"=== RUN   BenchmarkPresentationLongTurnBoundary/10000/all\n","OutputType":"frame"}
+{"Time":"2026-11-15T10:08:10.985525+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationLongTurnBoundary/10000/all","Output":"BenchmarkPresentationLongTurnBoundary/10000/all\n"}
+{"Time":"2026-11-15T10:08:11.121778+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationLongTurnBoundary/10000/all","Output":"BenchmarkPresentationLongTurnBoundary/10000/all-10    \t      58\t   1795049 ns/op\t 7417639 B/op\t      29 allocs/op\n"}
+{"Time":"2026-11-15T10:08:11.121807+08:00","Action":"run","Package":"native-dsh/desktop","Test":"BenchmarkPresentationLongTurnBoundary/10000/final"}
+{"Time":"2026-11-15T10:08:11.121809+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationLongTurnBoundary/10000/final","Output":"=== RUN   BenchmarkPresentationLongTurnBoundary/10000/final\n","OutputType":"frame"}
+{"Time":"2026-11-15T10:08:11.121811+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationLongTurnBoundary/10000/final","Output":"BenchmarkPresentationLongTurnBoundary/10000/final\n"}
+{"Time":"2026-11-15T10:08:11.264952+08:00","Action":"output","Package":"native-dsh/desktop","Test":"BenchmarkPresentationLongTurnBoundary/10000/final","Output":"BenchmarkPresentationLongTurnBoundary/10000/final-10  \t      62\t   1793165 ns/op\t 7417979 B/op\t      30 allocs/op\n"}
+{"Time":"2026-11-15T10:08:11.26498+08:00","Action":"output","Package":"native-dsh/desktop","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-11-15T10:08:11.26638+08:00","Action":"output","Package":"native-dsh/desktop","Output":"ok  \tnative-dsh/desktop\t1.603s\n"}
+{"Time":"2026-11-15T10:08:11.266387+08:00","Action":"pass","Package":"native-dsh/desktop","Elapsed":1.603}

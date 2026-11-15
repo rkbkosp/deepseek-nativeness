@@ -1,0 +1,64 @@
+{
+  "createdAt": "2026-11-15T02:08:11.285Z",
+  "machine": "Apple M4 darwin arm64",
+  "samples": "single 100ms per shape; source fixture, not full app/M1",
+  "metrics": [
+    {
+      "name": "BenchmarkPresentationSuffixRows/1000-10",
+      "iterations": 93025,
+      "nsPerOp": 1201,
+      "bytesPerOp": 216,
+      "allocsPerOp": 7
+    },
+    {
+      "name": "BenchmarkPresentationSuffixRows/10000-10",
+      "iterations": 100443,
+      "nsPerOp": 1211,
+      "bytesPerOp": 216,
+      "allocsPerOp": 7
+    },
+    {
+      "name": "BenchmarkPresentationMetadataBoundary/1000-10",
+      "iterations": 2451,
+      "nsPerOp": 44762,
+      "bytesPerOp": 2888,
+      "allocsPerOp": 24
+    },
+    {
+      "name": "BenchmarkPresentationMetadataBoundary/10000-10",
+      "iterations": 262,
+      "nsPerOp": 426824,
+      "bytesPerOp": 2926,
+      "allocsPerOp": 24
+    },
+    {
+      "name": "BenchmarkPresentationLongTurnBoundary/1000/all-10",
+      "iterations": 619,
+      "nsPerOp": 182797,
+      "bytesPerOp": 789271,
+      "allocsPerOp": 25
+    },
+    {
+      "name": "BenchmarkPresentationLongTurnBoundary/1000/final-10",
+      "iterations": 615,
+      "nsPerOp": 190015,
+      "bytesPerOp": 790177,
+      "allocsPerOp": 29
+    },
+    {
+      "name": "BenchmarkPresentationLongTurnBoundary/10000/all-10",
+      "iterations": 58,
+      "nsPerOp": 1795049,
+      "bytesPerOp": 7417639,
+      "allocsPerOp": 29
+    },
+    {
+      "name": "BenchmarkPresentationLongTurnBoundary/10000/final-10",
+      "iterations": 62,
+      "nsPerOp": 1793165,
+      "bytesPerOp": 7417979,
+      "allocsPerOp": 30
+    }
+  ],
+  "limits": "Suffix is actual JSON delta receiver + retained grouping refs. Metadata multi-turn includes atomic patch and global row projection; long-turn toggles final eligibility over 1k/10k existing bodies. Byte figures are Go allocations, not resident or native peak memory."
+}

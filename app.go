@@ -12,11 +12,14 @@ import (
 type app struct {
 	markdownCopy                                             *sessionMarkdownCopy
 	testMarkdownClipboard                                    func(string) error
+	testChatPartBuild                                        func(string, string)
 	messageImages                                            *historyImageCache
 	imagePreviewAttachments                                  []imageAttachment
 	imagePreviewIndex                                        int
 	compatRouteCache                                         map[string]bool
 	chatRowsCache                                            *chatRowsCache
+	chatPresentationIndex                                    *chatPresentationIndex
+	turnProcessChoices                                       map[string]bool
 	chatStructureRevision                                    uint64
 	composerDrafts                                           map[string]*composerDraftState
 	composerBaselineKey                                      string
