@@ -34,6 +34,10 @@ type RemoteError struct {
 	Code     string `json:"code"`
 	Message  string `json:"message"`
 	Delivery string `json:"delivery"`
+	// Details is the Host's own failure detail object, kept raw so a caller can
+	// discriminate on it (a missing capability names which one this backend
+	// serves) without this package learning each endpoint's vocabulary.
+	Details json.RawMessage `json:"details,omitempty"`
 }
 
 func (e *RemoteError) Error() string { return e.Message }

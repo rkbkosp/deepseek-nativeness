@@ -411,6 +411,9 @@ export const OPERATIONS = {
   setCredential: w("credentials/set", flat(["ref", "value"], ["ref", "value"])),
   unsetCredential: w("credentials/unset", flat(["ref"], ["ref"])),
   listDirectories: r("directoryPicker/list", flat(["path"])),
+  // The Host's own chooser. A profile that composes the native picker serves
+  // this instead of the in-app browser.
+  pickDirectory: r("directoryPicker/pick", () => ({})),
   listFileReferences: r("fileReferences/list", (p) => ({
     ...agent(p),
     query: p.query ?? "",

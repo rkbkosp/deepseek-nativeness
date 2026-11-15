@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"strconv"
 	"strings"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
+	"native-dsh/desktop/internal/bridge"
 )
 
 // A Workspace is a directory registered on the Host. This sheet only holds
@@ -35,6 +37,12 @@ type workspaceCreateState struct {
 	RemoteGeneration                  uint64
 	Listing                           workspaceDirectoryListing
 	Loading, Creating, Listed         bool
+	// PickerMode is what the Host's composed directory picker serves: empty
+	// until it answers, "browse" for the in-app browser, "native" for the
+	// Host's own OS chooser. A "native" backend refuses every list call, so
+	// the sheet must not keep asking it for one.
+	PickerMode string
+	Picking    bool
 	// Open marks the new-Workspace sheet, and keeps a row that is only being
 	// renamed from opening it. The inline rename (Rename) shares this
 	// Host-scoped state because *app is frozen for this batch, and both edits
@@ -103,6 +111,71 @@ func (a *app) closeWorkspaceCreate() {
 	a.workspaceCreate = nil
 }
 
+// directoryPickerMode reports which backend the Host's composed directory
+// picker serves when a list call was refused for that reason, and "" for every
+// other failure. The Host names the capability it serves in the failure
+// details; older details-less refusals still name it in the message.
+func directoryPickerMode(err error) string {
+	var remote *bridge.RemoteError
+	if !errors.As(err, &remote) || remote.Code != "directory-picker/unavailable" {
+		return ""
+	}
+	var details struct {
+		Capability string `json:"capability"`
+	}
+	if len(remote.Details) > 0 && json.Unmarshal(remote.Details, &details) == nil && details.Capability != "" {
+		return details.Capability
+	}
+	for _, mode := range []string{"native", "browse"} {
+		if strings.Contains(remote.Message, `"`+mode+`"`) {
+			return mode
+		}
+	}
+	return "unknown"
+}
+
+// pickWorkspaceDirectory asks the Host's own chooser for a directory. A local
+// Host opens that panel on this display, which is exactly the interaction the
+// operator expects; a cancel resolves with no path and is not an error.
+func (a *app) pickWorkspaceDirectory() {
+	s := a.workspaceEditor()
+	if a.client == nil || !a.connected || s.Picking {
+		return
+	}
+	host, scope, generation, client := a.hostID, a.accountScope, a.remoteGeneration, a.client
+	s.Picking = true
+	s.Error = ""
+	go func() {
+		// A chooser waits for a human, so the deadline is generous.
+		ctx, cancel := context.WithTimeout(a.ctx, 5*time.Minute)
+		defer cancel()
+		raw, err := client.Call(ctx, "pickDirectory", nil)
+		a.update(func() {
+			if a.workspaceCreate != s || a.hostID != host || a.accountScope != scope || a.remoteGeneration != generation || a.client != client {
+				return
+			}
+			s.Picking = false
+			if err != nil {
+				if mode := directoryPickerMode(err); mode != "" && mode != "native" {
+					// The Host serves a browser after all: fall back to it.
+					s.PickerMode = mode
+					a.loadWorkspaceDirectory("")
+					return
+				}
+				s.Error = "无法打开目录选择器：" + err.Error()
+				return
+			}
+			var picked string
+			if json.Unmarshal(raw, &picked) != nil || strings.TrimSpace(picked) == "" {
+				return // cancelled
+			}
+			s.Path = picked
+			s.Listed = false
+			s.Listing = workspaceDirectoryListing{}
+		})
+	}()
+}
+
 // loadWorkspaceDirectory lists one Host directory. An empty path asks the Host
 // for its home directory, which is also where the sheet starts.
 func (a *app) loadWorkspaceDirectory(directory string) {
@@ -131,6 +204,15 @@ func (a *app) loadWorkspaceDirectory(directory string) {
 			}
 			s.Loading = false
 			if err != nil {
+				if mode := directoryPickerMode(err); mode != "" {
+					// This Host serves its own chooser, not a browser. Remember
+					// that and offer the pick instead of an error the operator
+					// can do nothing with.
+					s.PickerMode = mode
+					s.Error = ""
+					s.Listed = false
+					return
+				}
 				s.Error = err.Error()
 				return
 			}
@@ -141,6 +223,7 @@ func (a *app) loadWorkspaceDirectory(directory string) {
 			}
 			s.Listing = listing
 			s.Listed = true
+			s.PickerMode = "browse"
 			if directory == "" || s.Path == "" {
 				s.Path = listing.Home
 			}
@@ -222,8 +305,8 @@ func (a *app) workspaceCreateView(c *ui.Context) {
 	open := true
 	ui.Modal(c, &open, func() {
 		ui.Column(c).Width(520).Gap(12).Children(func() {
-			ui.Text(c, "新建远端工作区").FontSize(18).FontWeight(500)
-			ui.Text(c, "工作区是主机上的一个目录。填写已存在的绝对路径，或从下面的目录中选择。").FontSize(12).TextColor(a.theme.TextMuted).Wrap()
+			ui.Text(c, a.workspaceCreateTitle()).FontSize(18).FontWeight(500)
+			ui.Text(c, a.workspaceCreateHint()).FontSize(12).TextColor(a.theme.TextMuted).Wrap()
 			ui.TextInput(c, &s.Path).Label("主机目录").Placeholder("/Users/you/projects/app").AutoFocus()
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 				if s.Listing.Home != "" && s.Listing.Path != s.Listing.Home {
@@ -235,14 +318,31 @@ func (a *app) workspaceCreateView(c *ui.Context) {
 				if s.Listing.Path != "" {
 					ui.Text(c, s.Listing.Path).FontSize(11).TextColor(a.theme.TextMuted).SingleLine().Ellipsis("…").Grow(1)
 				}
-				if ui.ButtonBase(c).Label("刷新目录").Padding(4, 8).Children(func() { ui.Text(c, "刷新").FontSize(12) }).Clicked() {
-					a.loadWorkspaceDirectory(strings.TrimSpace(s.Path))
-				}
-				if ui.ButtonBase(c).Label("选择上级目录").Padding(4, 8).Children(func() { ui.Text(c, "上一级").FontSize(12) }).Clicked() {
-					a.loadWorkspaceDirectory(parentDirectory(s.Listing.Path))
+				// Browsing verbs only exist for a Host that serves a browser; a
+				// native chooser owns navigation inside its own panel.
+				if s.PickerMode != "native" {
+					if ui.ButtonBase(c).Label("刷新目录").Padding(4, 8).Children(func() { ui.Text(c, "刷新").FontSize(12) }).Clicked() {
+						a.loadWorkspaceDirectory(strings.TrimSpace(s.Path))
+					}
+					if ui.ButtonBase(c).Label("选择上级目录").Padding(4, 8).Children(func() { ui.Text(c, "上一级").FontSize(12) }).Clicked() {
+						a.loadWorkspaceDirectory(parentDirectory(s.Listing.Path))
+					}
 				}
 			})
-			if s.Loading {
+			if s.PickerMode == "native" {
+				// The Host composes its own OS chooser: there is no directory
+				// list to browse, and asking for one is refused by design.
+				ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+					if ui.Button(c, "选择文件夹…").Disabled(s.Picking).Clicked() {
+						a.pickWorkspaceDirectory()
+					}
+					hint := "主机会打开它自己的目录选择器。"
+					if s.Picking {
+						hint = "请在目录选择器中选择…"
+					}
+					ui.Text(c, hint).FontSize(12).TextColor(a.theme.TextMuted).Grow(1).Wrap()
+				})
+			} else if s.Loading {
 				ui.Text(c, "正在读取主机目录…").FontSize(12).TextColor(a.theme.TextMuted)
 			} else if s.Listed {
 				entries := make([]workspaceDirectoryEntry, 0, len(s.Listing.Entries))

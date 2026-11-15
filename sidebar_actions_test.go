@@ -258,6 +258,11 @@ type sidebarHostOptions struct {
 	caps       []string
 	rejects    []string
 	broken     []string
+	// nativePicker makes the fixture behave like a profile that composes the
+	// Host's own OS chooser: list is refused for the capability it lacks and
+	// pick answers with pickedPath.
+	nativePicker bool
+	pickedPath   string
 }
 
 // sidebarHost is a real bridge.Client over a fake Host process. Every request
@@ -290,10 +295,12 @@ func sidebarHelperScript(logPath string, opts sidebarHostOptions) string {
 		broken = []string{}
 	}
 	state, err := json.Marshal(map[string]any{
-		"workspaces": workspaces,
-		"sessions":   sessions,
-		"rejects":    rejects,
-		"broken":     broken,
+		"workspaces":   workspaces,
+		"sessions":     sessions,
+		"rejects":      rejects,
+		"broken":       broken,
+		"nativePicker": opts.nativePicker,
+		"pickedPath":   opts.pickedPath,
 	})
 	if err != nil {
 		panic(err)
@@ -313,6 +320,13 @@ rl.on("line", (line) => {
     return;
   }
   if (req.method === "workspaces") { write({ id: req.id, result: { items: state.workspaces } }); return; }
+  if (req.method === "listDirectories" && state.nativePicker) {
+    write({ id: req.id, error: { code: "directory-picker/unavailable", delivery: "rejected",
+      message: 'directoryPicker.list needs the browse capability; the composed picker serves "native"',
+      details: { capability: "native" } } });
+    return;
+  }
+  if (req.method === "pickDirectory") { write({ id: req.id, result: state.pickedPath || null }); return; }
   if (req.method === "sessions") { write({ id: req.id, result: { items: state.sessions } }); return; }
   if (state.rejects.includes(req.method)) {
     write({ id: req.id, error: { code: "INVALID_ARGUMENT", delivery: "rejected", message: "fixture refusal: " + req.method } });
@@ -1001,5 +1015,97 @@ func TestSessionMenuArchiveEntryFollowsCapability(t *testing.T) {
 			}
 			tt.CloseMenu()
 		})
+	}
+}
+
+// drainUntil runs queued UI updates until cond holds. A directory call answers
+// from a goroutine that is not tracked by pendingRequests, so settle alone can
+// return before its reply lands.
+func (f *sidebarHost) drainUntil(t *testing.T, cond func() bool) {
+	t.Helper()
+	deadline := time.Now().Add(10 * time.Second)
+	for {
+		for {
+			select {
+			case fn := <-f.updates:
+				fn()
+				continue
+			default:
+			}
+			break
+		}
+		if cond() {
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("the sheet never reached the expected state")
+		}
+		select {
+		case fn := <-f.updates:
+			fn()
+		case <-time.After(5 * time.Millisecond):
+		}
+	}
+}
+
+// A Host that composes its own OS chooser refuses every browse call. The sheet
+// must report that plainly, offer the picker instead of a broken browser, and
+// never surface the raw refusal as an error the operator cannot act on.
+func TestWorkspaceSheetUsesTheHostChooserWhenThePickerIsNative(t *testing.T) {
+	f := newSidebarHost(t, sidebarHostOptions{nativePicker: true})
+	a := f.a
+	a.operationCaps["createWorkspace"] = operationCapability{Supported: true}
+
+	a.openWorkspaceCreate()
+	f.drainUntil(t, func() bool {
+		return a.workspaceCreate != nil && !a.workspaceCreate.Loading && a.workspaceCreate.PickerMode != ""
+	})
+
+	s := a.workspaceCreate
+	if s == nil {
+		t.Fatal("the sheet never opened")
+	}
+	if s.PickerMode != "native" {
+		t.Fatalf("picker mode = %q, want native (requests: %v)", s.PickerMode, f.requests(t))
+	}
+	if s.Error != "" {
+		t.Fatalf("the refusal leaked as an error: %q", s.Error)
+	}
+	if s.Listed {
+		t.Fatal("a native picker must not report a directory listing")
+	}
+}
+
+// Picking resolves with the Host's own choice; a cancel changes nothing, and
+// neither path reports an error.
+func TestWorkspacePickSetsTheChosenPathAndIgnoresACancel(t *testing.T) {
+	picked := "/Users/someone/projects/app"
+	f := newSidebarHost(t, sidebarHostOptions{nativePicker: true, pickedPath: picked})
+	a := f.a
+	a.operationCaps["createWorkspace"] = operationCapability{Supported: true}
+
+	a.openWorkspaceCreate()
+	f.drainUntil(t, func() bool {
+		return a.workspaceCreate != nil && !a.workspaceCreate.Loading && a.workspaceCreate.PickerMode != ""
+	})
+	if mode := a.workspaceCreate.PickerMode; mode != "native" {
+		t.Fatalf("picker mode = %q, want native", mode)
+	}
+
+	a.pickWorkspaceDirectory()
+	f.drainUntil(t, func() bool { return !a.workspaceCreate.Picking && a.workspaceCreate.Path == picked })
+	if got := a.workspaceCreate.Path; got != picked {
+		t.Fatalf("path = %q, want the Host's pick %q", got, picked)
+	}
+
+	// A cancel answers null: the typed path stays and nothing is reported.
+	before := a.workspaceCreate.Path
+	a.pickWorkspaceDirectory()
+	f.drainUntil(t, func() bool { return !a.workspaceCreate.Picking })
+	if a.workspaceCreate.Path != before {
+		t.Fatalf("a cancel changed the path to %q", a.workspaceCreate.Path)
+	}
+	if a.workspaceCreate.Error != "" {
+		t.Fatalf("a cancel produced an error: %q", a.workspaceCreate.Error)
 	}
 }

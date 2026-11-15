@@ -203,3 +203,25 @@ func (a *app) deleteWorkspaceConfirmation(w workspace) mygo.MessageOptions {
 		DestructiveButtons: []int{1},
 	}
 }
+
+// workspaceCreateTitle names the Workspace sheet for whichever Host this launch
+// talks to: a local Host is this Mac, not a remote machine.
+func (a *app) workspaceCreateTitle() string {
+	if a.localMode() {
+		return "新建本地工作区"
+	}
+	return "新建远端工作区"
+}
+
+// workspaceCreateHint explains where the directory lives and how to pick it,
+// which differs once the Host composes its own directory chooser.
+func (a *app) workspaceCreateHint() string {
+	where := "主机"
+	if a.localMode() {
+		where = "本机"
+	}
+	if a.workspaceCreate != nil && a.workspaceCreate.PickerMode == "native" {
+		return where + "上的一个目录。填写已存在的绝对路径，或点「选择文件夹…」让 " + where + " 打开它自己的选择器。"
+	}
+	return where + "上的一个目录。填写已存在的绝对路径，或从下面的目录中选择。"
+}
