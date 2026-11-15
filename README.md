@@ -51,6 +51,23 @@
 - **零侵入设计**：Remote 模式绝不读取、迁移、刷新或覆盖本机 `~/.dsh` 目录下的已有凭据与配置。账号密码仅在登录时通过私有 stdio 管道传递给本地通信 helper，不会写入日志或落盘。
 - **本地 Profile 锁保护**：在启动本地工作区（`--local` / `--local-native`）前，客户端会主动检查 `~/.dsh` 的 desktop profile 占用状态；若原版桌面应用正在运行，将拒绝并发接管以保护本地数据安全。
 
+### 交付包
+
+`build/DeepSeek Nativeness.app` 是签名、公证并 staple 过的发布产物：
+
+- 身份 `Developer ID Application: Wei Huang (8U6DAJ62JT)`，`flags=0x10000(runtime)`，带安全时间戳；
+- 公证 `Accepted` 并已 staple，`spctl -a -vvv` 报 `accepted, source=Notarized Developer ID`；离线首启也不需要联网取票；
+- 干净 `DSH_HOME` 启动 → 本地 Host 就绪 → 原生界面连接成功（`qa/captures/delivery-notarized-launch.png`）。
+
+重建（需要钥匙串里的 Developer ID 与公证凭据）：
+
+```sh
+sh scripts/build-app.sh --with-runtime --sign          # 签名（含 hardened runtime 与时间戳）
+NOTARY_PROFILE=<profile> sh scripts/package-runtime.sh "build/DeepSeek Nativeness.app" --notarize
+```
+
+**只带 `--notarize` 的那一步不会重新签名、也不会重新拷贝运行时载荷**——两者都会让封签失效，公证随即变成 `Invalid`。
+
 ## 本地开发与从源码构建
 
 ### 环境要求
