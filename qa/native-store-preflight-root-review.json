@@ -1,0 +1,29 @@
+{
+  "checkedAt": "2026-11-15T03:11:25.841Z",
+  "reviewer": "root",
+  "sourceOnly": true,
+  "acceptedScope": "DocumentStore read-only prepare and conditional local settlement primitive; not production adapter or live receipt acceptance",
+  "source": {
+    "composer_native/document_store.go": "2bc99b72fe614fe410d628620bee7b72deed44f911f55c84159a8f7da82e1045",
+    "composer_native/document_store_prepare_test.go": "9001f2f14bed8d9a14347ef4910dbe4f35667009d86f3aac7fa1ef708616880b"
+  },
+  "independentTests": {
+    "command": "CGO_ENABLED=0 go test -overlay=qa/native-stage0-root-overlay.json ./composer_native -run ^TestRootPreparedAccepted -count=1 -v",
+    "passed": 3,
+    "groups": [
+      "Abandoned native attempt leaves text and receipt untouched; sibling pure preparation usable; Preview mutation isolated; committed prefix preserves suffix",
+      "Image-only accepted receipt leaves text unchanged but invalidates outstanding preflight capability",
+      "Cold settled request followed by identical plain retyping and invalid fence remains AlreadySettled before native CAS; text and fence retained"
+    ]
+  },
+  "sourceReview": [
+    "Private preparation copies capture and preview, no ticket registry or second receipt ledger",
+    "Store/entry/mutation identity and expected binding/revision/fence reject stale capabilities",
+    "Existing CommitAccepted remains atomic and preserves former API; prepared API cannot assert external native CAS success"
+  ],
+  "qualification": [
+    "Initial root fixture indexed an empty projected remaining run and panicked; corrected fixture supplies a real new suffix. Not an implementation defect.",
+    "Two-model native CAS + Store commit, cold native-cache settlement/rebinding and actual send are not integrated.",
+    "All App/Proof/frozen report payloads remain separate; this primitive is not included in GUI11 notarized delivery."
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "checkedAt": "2026-11-14T10:18:24.389Z",
-  "stage": "GUI11 real completed Remote controller and signed WK/read-only subchecks passed; Apple notarization in progress; full parity/M1/15.8 unaccepted",
+  "stage": "GUI11 Developer ID notarization/staple/Gatekeeper and independently extracted final ZIP passed; source composer stage0 remains separate; full parity/M1/15.8 unaccepted",
   "commands": [
     {
       "command": "npm test --prefix remote",
@@ -174,7 +174,7 @@
     "scope": "macOS >=15.8; M1 target; no live writes or performance acceptance"
   },
   "historicalRecordedAt": "2026-11-14T10:18:24.389Z",
-  "updatedAt": "2026-11-15T02:58:21.091Z",
+  "updatedAt": "2026-11-15T03:09:54.097Z",
   "historicalCommandsQualification": "Existing commands and early spinner counters below are retained historical results; their counts/hash/sample are not the current candidate full-suite results.",
   "latestGui": {
     "report": "qa/parity-gui-round11.json",
@@ -195,5 +195,14 @@
     "qa/native-semantic-final-root-review.json",
     "qa/root-chat-process-first-review.json"
   ],
-  "nativeEditorGui": "qa/native-editor-theme3-gui-review.json"
+  "nativeEditorGui": "qa/native-editor-theme3-gui-review.json",
+  "latestDistribution": {
+    "report": "qa/gui11-notarization-root-review.json",
+    "app": "build/signed-gui11/Native DSH Remote.app",
+    "zip": "build/notary-gui11/Native DSH Remote-macOS-arm64-notarized.zip",
+    "sha256": "68c587285692678764559be22c6359fe92f7435690f555d1e35886ebddc08a6e",
+    "appleSubmissionId": "8431530d-dd42-4365-a64c-f254f3245451",
+    "status": "Accepted",
+    "publicRelease": false
+  }
 }

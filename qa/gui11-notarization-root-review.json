@@ -1,0 +1,42 @@
+{
+  "checkedAt": "2026-11-15T03:05:51.807Z",
+  "reviewer": "root",
+  "zip": "build/notary-gui11/Native DSH Remote-macOS-arm64-notarized.zip",
+  "zipBytes": 67487387,
+  "zipSha256": "68c587285692678764559be22c6359fe92f7435690f555d1e35886ebddc08a6e",
+  "manifest": "build/notary-gui11/postnotary-manifest.json",
+  "manifestSha256": "5e788b173fe63d7d42ca1a9971a2014ff286cff2003a750de329e4772892ede2",
+  "extractedApp": "build/notary-gui11/root-extracted/Native DSH Remote.app",
+  "inventoryEntries": 3601,
+  "errors": [],
+  "changedSinceSignedGui": [
+    "Contents/CodeResources"
+  ],
+  "original3600FilesUnchanged": true,
+  "apple": {
+    "id": "8431530d-dd42-4365-a64c-f254f3245451",
+    "status": "Accepted",
+    "issues": null,
+    "acceptedUploadSha256": "c337267823a2e7a05aface830d97cb027646559024f497579d69cb0d326ae0ee"
+  },
+  "pass": true,
+  "validation": {
+    "extractedCodesignStrictDeep": {
+      "exitCode": 0
+    },
+    "extractedStaplerValidate": {
+      "exitCode": 0,
+      "result": "The validate action worked!"
+    },
+    "extractedGatekeeper": {
+      "exitCode": 0,
+      "source": "Notarized Developer ID"
+    },
+    "liveAppleInfo": {
+      "status": "Accepted",
+      "submissionId": "8431530d-dd42-4365-a64c-f254f3245451"
+    }
+  },
+  "publicPublishing": false,
+  "guiQualification": "Pre-notary exact signed app passed real Remote/WK GUI. Stapling only added ticket; no post-staple GUI claimed."
+}

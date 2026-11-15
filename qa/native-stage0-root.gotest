@@ -1,0 +1,125 @@
+package composer_native_test
+
+import (
+	"errors"
+	"testing"
+
+	cn "native-dsh/desktop/composer_native"
+)
+
+func rootStage0Draft(t *testing.T) (*cn.DocumentStore, cn.DocumentID, cn.SubmissionCapture) {
+	t.Helper()
+	s := cn.NewDocumentStore()
+	id := cn.DocumentID{AccountScope: "root-local", HostID: "fixture", SessionID: "A", Slot: "main"}
+	if err := s.Seed(id, []cn.Run{{Kind: "text", Text: "已捕获🙂"}}, 0, 0); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.Bind(id, "e1"); err != nil {
+		t.Fatal(err)
+	}
+	c, err := s.Capture(id, "e1", []string{"image-at-send"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return s, id, c
+}
+
+func TestRootPreparedAcceptedAbandonedNativeAttemptAndReadIsolation(t *testing.T) {
+	s, id, capture := rootStage0Draft(t)
+	before, _ := s.Read(id)
+	updated := before.Snapshot
+	updated.Revision++
+	updated.SemanticRevision++
+	updated.Runs = []cn.Run{{Kind: "text", Text: capture.CanonicalText + " 新后缀"}}
+	updated.DetectText, updated.CanonicalText, _ = cn.ProjectRuns(updated.Runs)
+	updated.SemanticDigest, _ = cn.SemanticDigest(updated.Runs)
+	if err := s.Accept(id, "e1", updated); err != nil {
+		t.Fatal(err)
+	}
+	a := cn.AcceptedSettlement{RequestID: "existing-request", Capture: capture}
+	one, err := s.PrepareAccepted(a)
+	if err != nil {
+		t.Fatal(err)
+	}
+	two, err := s.PrepareAccepted(a)
+	if err != nil {
+		t.Fatal(err)
+	}
+	copy := one.Preview()
+	copy.Document.Snapshot.Runs[0].Text = "caller corruption"
+	// A native CAS failure is represented by abandoning one, without a Store call.
+	d, _ := s.Read(id)
+	if d.Snapshot.CanonicalText != updated.CanonicalText || two.Preview().AlreadySettled {
+		t.Fatal("read/abandoned attempt mutated draft or receipt")
+	}
+	r, err := s.CommitPreparedAccepted(a, two)
+	if err != nil || !r.Changed || r.Document.Snapshot.CanonicalText != " 新后缀" {
+		t.Fatalf("second pure preparation failed: %+v %v", r, err)
+	}
+	if _, err = s.CommitPreparedAccepted(a, one); !errors.Is(err, cn.ErrStaleAcceptedPreparation) {
+		t.Fatal("sibling preparation survived settlement")
+	}
+}
+
+func TestRootPreparedAcceptedImageOnlySettlementInvalidatesOldCapability(t *testing.T) {
+	s, id, capture := rootStage0Draft(t)
+	a := cn.AcceptedSettlement{RequestID: "text-request", Capture: capture}
+	p, err := s.PrepareAccepted(a)
+	if err != nil {
+		t.Fatal(err)
+	}
+	empty := capture
+	empty.Runs = nil
+	empty.CanonicalText = ""
+	empty.SemanticDigest, _ = cn.SemanticDigest(nil)
+	r, err := s.CommitAccepted(cn.AcceptedSettlement{RequestID: "image-only-request", Capture: empty})
+	if err != nil || r.Changed || !r.Preserved {
+		t.Fatalf("image-only touched text: %+v %v", r, err)
+	}
+	if _, err = s.CommitPreparedAccepted(a, p); !errors.Is(err, cn.ErrStaleAcceptedPreparation) {
+		t.Fatal("text-identical receipt mutation did not stale capability")
+	}
+	d, _ := s.Read(id)
+	if d.Snapshot.CanonicalText != capture.CanonicalText {
+		t.Fatal("failed preparation changed text")
+	}
+	if next, err := s.PrepareAccepted(a); err != nil || !next.Preview().Changed {
+		t.Fatal("fresh text receipt lost actionable prefix")
+	}
+}
+
+func TestRootPreparedAcceptedColdDuplicateCannotRemoveRetypedPlainText(t *testing.T) {
+	s, id, capture := rootStage0Draft(t)
+	a := cn.AcceptedSettlement{RequestID: "accepted-before-return", Capture: capture}
+	s.RetireDocument(id)
+	if r, err := s.CommitAccepted(a); err != nil || !r.Changed {
+		t.Fatal("cold accepted failed", err)
+	}
+	d, err := s.Bind(id, "e2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	n := d.Snapshot
+	n.Revision++
+	n.SemanticRevision++
+	n.Runs = append([]cn.Run(nil), capture.Runs...)
+	n.DetectText, n.CanonicalText, _ = cn.ProjectRuns(n.Runs)
+	n.SemanticDigest, _ = cn.SemanticDigest(n.Runs)
+	if err = s.Accept(id, "e2", n); err != nil {
+		t.Fatal(err)
+	}
+	if !s.Fence(id, "e2", n.Revision, "activation requires a fresh full snapshot") {
+		t.Fatal("fence failed")
+	}
+	p, err := s.PrepareAccepted(a)
+	if err != nil || !p.Preview().AlreadySettled || p.Preview().Changed || p.Preview().Deferred {
+		t.Fatal("duplicate was not inert before native CAS", err)
+	}
+	if _, err = s.CommitPreparedAccepted(a, p); err != nil {
+		t.Fatal(err)
+	}
+	after, _ := s.Read(id)
+	if after.Snapshot.CanonicalText != capture.CanonicalText || !after.Snapshot.Invalid {
+		t.Fatal("duplicate cleared retyped text or invalid fence")
+	}
+}
