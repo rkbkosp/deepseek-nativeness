@@ -1,0 +1,97 @@
+{
+  "checkedAt": "2026-11-14T18:01:37.688Z",
+  "reviewer": "root",
+  "status": "observed-subchecks-passed-native-theme-fidelity-failed",
+  "sourceCommit": "2e721cf3a89ab3c7298a47c1c17db62cc3152801",
+  "candidateNativeSha256": "483c646a6cbc57e5a055e13d21be77bdc19478f096424e254a82a0b456b9f2c6",
+  "normalApp": "build/Native DSH Remote GUI9.app",
+  "forcedApp": "build/Native DSH Remote Anchor QA GUI9.app",
+  "normalManifest": "build/gui-checkpoints/gui9-normal-manifest.json",
+  "forcedManifest": "build/gui-checkpoints/gui9-forced-manifest.json",
+  "integrity": "qa/gui9-integrity-root-review.json",
+  "sourceProvenance": "build/gui-checkpoints/gui9-source-provenance.json",
+  "packagesLaunched": true,
+  "passedSubchecks": [
+    {
+      "id": "activation-auto-restore",
+      "detail": "Normal and forced packages restored own saved login, Host/workspace and completed Figma session, without new credentials or sends.",
+      "evidence": "/tmp/native-dsh-parity/118-native-core9-restored-light.png"
+    },
+    {
+      "id": "narrow-table-wrapping",
+      "detail": "With right pane open, actual two-column long paths wrap within transcript. Readonly title mode label hides at narrow width and appears adjacent to title at wide width.",
+      "evidence": [
+        "/tmp/native-dsh-parity/118-native-core9-restored-light.png",
+        "/tmp/native-dsh-parity/119-native-core9-narrow-light.png"
+      ]
+    },
+    {
+      "id": "complete-markdown-menu",
+      "detail": "Enabled complete-session Markdown and separate loaded-messages actions observed; raw log/open-in-app/feedback disabled. No clipboard copy performed."
+    },
+    {
+      "id": "forced-menu-placement-escape",
+      "detail": "Forced fallback package original plugin-preset portal Menu visibly aligned to trigger with four choices/check; first Escape closed menu, second closed settings and removed HTML; connection and empty native composer remained. No preset/settings mutation.",
+      "evidence": "/tmp/native-dsh-parity/120-core9-forced-preset-light.png"
+    },
+    {
+      "id": "structured-replay-gallery",
+      "detail": "Same normal binary launched explicitly with --demo --demo-document structured --demo-running0 --theme dark. Visible local replay banner, two repeated image occurrences in adjacent64-DIP tiles, followed by text-separated240-DIP long-edge singleton. Images synthetic only; preview explicitly unavailable.",
+      "evidence": "/tmp/native-dsh-parity/127-core9-structured-replay.png"
+    },
+    {
+      "id": "structured-replay-unknown-stop",
+      "detail": "Unknown block starts closed, expands readable JSON with Unicode and truncated21192-character footer in finite scroll surface; outer conversation scroll reveals complete body and empty interrupted reply single static stopped tag. Reclosed before quitting. No Host/file read.",
+      "evidence": "/tmp/native-dsh-parity/128-core9-json-stopped.png"
+    }
+  ],
+  "failedSubchecks": [
+    {
+      "id": "forced-dark-native-sidebar",
+      "detail": "System light appearance: explicit --theme dark replay has dark main content and light gray native vibrancy sidebar with light foreground. Native appearance and Go palette do not agree; author traced absent public Theme.SetSource wiring, source fix assigned. No framework/OS change authorized.",
+      "evidence": "/tmp/native-dsh-parity/127-core9-structured-replay.png"
+    }
+  ],
+  "environmentAttempts": [
+    {
+      "target": "Fixed dd9d native input proof",
+      "result": "Cold getApp cgWindowNotFound; running inventory then warm getApp same failure. Exact proof PID terminated afterward."
+    },
+    {
+      "target": "Existing original DeepSeek Harness",
+      "result": "getApp read timed out20s; CUA kernel reset and completion summary recorded."
+    },
+    {
+      "target": "GUI9 normal, forced and dd9d input proof after user unlock",
+      "result": "Actual AX and screenshots available; all planned bounded observations completed."
+    }
+  ],
+  "environmentQualification": "Earlier visibility failures retained as environment attempts. All current passes below use actual screen evidence after unlock.",
+  "handoff": "User confirmed unlocked; root completed normal, forced, fixed input proof and local replay in one desktop session. No further unlock needed for this round.",
+  "remoteMutations": [],
+  "remaining": [
+    "Full visual/operation parity unaccepted; new forced-theme defects assigned",
+    "Independent input remains outside normal production; PNG/drop/height/physical IME and actual two-window lifecycle pending",
+    "Four custom WK owners and nested SubmenuPanel have source fixtures; actual original generic preset Menu observed only",
+    "Actual macOS15.8 and M1 CPU/footprint remain untested",
+    "Original final-answer/process grouping, reasoning order, full image preview/large-image transport and supported footer actions remain separate frontend gaps"
+  ],
+  "updatedAt": "2026-11-15T00:02:33.695Z",
+  "platform": {
+    "chip": "Apple M4",
+    "macOS": "27.2.1",
+    "target": "macOS15.8+ / M1 target; actual15.8/M1 untested"
+  },
+  "observations": [
+    {
+      "id": "light-wk-modal-background-seam",
+      "status": "source-review-needed-not-confirmed-reference-mismatch",
+      "detail": "In light forced settings, white WK page rectangle is visible inside off-white native modal. Original token/CSS comparison requested before any fix.",
+      "evidence": "/tmp/native-dsh-parity/120-core9-forced-preset-light.png"
+    }
+  ],
+  "independentInputReview": "qa/native-editor-next-gui-review.json",
+  "exit": "Every own normal/forced/Next/demo app quit with Cmd+Q; CUA inventory confirms all not running. Exact own app/helper process query returns none. Empty draft and no test image attachments. Original app remains running.",
+  "cuaCompletion": "完成第九轮集中验收",
+  "privacy": "Private captures local /tmp mode0600 only; do not publish. Screenshot bytes may be JPEG despite png suffix."
+}

@@ -1,7 +1,7 @@
 {
   "checkedAt": "2026-11-14T16:52:25.941Z",
   "reviewer": "root",
-  "status": "failed-component-gui-not-integrated",
+  "status": "candidate-popup-and-draft-subchecks-passed-forced-theme-failed",
   "accepted": false,
   "manifestSha256": "3c5db4535c372732dfdf7697f2ac0b433bcb6cd9346e9ea4162190840c7f3792",
   "nativeSha256": "4388a8b9e8de3aae511d7fcf93e585599f09d45a0bea1af42ab6ff5b2a9759ab",
@@ -14,7 +14,8 @@
       "evidence": [
         "/tmp/native-dsh-parity/114-native-editor-next-candidates.png",
         "/tmp/native-dsh-parity/115-native-editor-next-candidate-refresh.png"
-      ]
+      ],
+      "resolvedByObservedManifest": "dd9dcef8924dad1ea5846d4e71832b588a8c25b4cd876e60640a961884468e9e"
     },
     {
       "id": "reference-chip-paint",
@@ -27,7 +28,8 @@
       "status": "failed-interactive-test-isolation",
       "detail": "Clicking Native popup made the ordinary popup visible, while previous chip disappeared and placeholder returned. Cause may be delayed fixture/selftest cleanup; assigned author diagnosis. No claim of confirmed blur defect.",
       "evidence": "/tmp/native-dsh-parity/117-native-editor-next-popup.png",
-      "diagnosis": "Author source and timestamp review identifies background selftest receipt handler unconditionally applying empty scope immediately before selftest result write; that write coincides with capture117. Interactive/selftest separation is required. This is not evidence of an intrinsic blur defect."
+      "diagnosis": "Author source and timestamp review identifies background selftest receipt handler unconditionally applying empty scope immediately before selftest result write; that write coincides with capture117. Interactive/selftest separation is required. This is not evidence of an intrinsic blur defect.",
+      "fixedDefaultInteractiveRetest": "Observed generic popup blur/typing/Escape preserved draft in dd9d; old failure remains historical."
     }
   ],
   "scope": "Independent fixture-only native editor. No Host, auth, network or main GUI8 integration. No physical Pinyin acceptance.",
@@ -35,9 +37,9 @@
   "next": "Author to separate interactive and selftest modes, repair visible candidate positioning, preserve old checkpoint, and return a new fixed proof.",
   "historicalManifest": "qa/checkpoints/native-editor-next-before-popup-fix/manifest.json",
   "retest": {
-    "checkedAt": "2026-11-14T17:00:56.824Z",
+    "checkedAt": "2026-11-15T00:02:33.697Z",
     "manifestSha256": "dd9dcef8924dad1ea5846d4e71832b588a8c25b4cd876e60640a961884468e9e",
-    "status": "window-read-blocked-not-accepted",
+    "status": "actual-partial-pass-new-theme-failure",
     "result": "CUA getApp returned cgWindowNotFound; inventory confirmed own proof running. No actual AX/screenshot or interaction. No new unlock request until consolidated candidates ready.",
     "selfExitSeconds": 600,
     "artifactsIndependentlyVerified": 6,
@@ -46,6 +48,42 @@
       "command": "CGO_ENABLED=0 go test ./composer_native ./qa/native-editor-next -count=1",
       "exitCode": 0,
       "scope": "Contract and fixture layout tests; not actual AppKit compositing/IME or main app integration"
-    }
-  }
+    },
+    "platform": "M4/macOS27.2.1/system light",
+    "passes": [
+      {
+        "id": "visible-candidates",
+        "detail": "Three fixture buttons actually visible; native field retains focus while typing @ then Fi. Mock catalog returns the same fixture list, so real catalog filtering semantics are not accepted here.",
+        "evidence": "/tmp/native-dsh-parity/121-next-candidates-theme.png"
+      },
+      {
+        "id": "keyboard-and-pointer",
+        "detail": "Down visibly highlights second candidate; Escape closes without changing @Fi. Reopen and actual screenshot-coordinate click selects Chinese file reference; native chip and quoted canonical path appear; input regains focus. One earlier pointer attempt used wrong coordinate scale and hit text area; corrected screen coordinate400,780 successfully hit visible candidate, not an application failure.",
+        "evidence": [
+          "/tmp/native-dsh-parity/122-next-arrow-highlight.png",
+          "/tmp/native-dsh-parity/123-next-pointer-chip.png"
+        ]
+      },
+      {
+        "id": "blur-keeps-draft",
+        "detail": "Generic popup opened, Popup input clicked and typed local popup with actual focus, Escape closed it while native file chip/canonical remained. No background selftest clear observed.",
+        "evidence": "/tmp/native-dsh-parity/124-next-blur-preserved.png"
+      }
+    ],
+    "failures": [
+      {
+        "id": "forced-dark-white-backing",
+        "detail": "System light: default forced-dark proof has white native pane with near-white text; toggling light gives coherent light colors, toggling back dark reproduces white backing. Assigned app-owned native background/appearance source fix; no normal integration.",
+        "evidence": [
+          "/tmp/native-dsh-parity/121-next-candidates-theme.png",
+          "/tmp/native-dsh-parity/125-next-light.png",
+          "/tmp/native-dsh-parity/126-next-forced-dark-white-surface.png"
+        ]
+      }
+    ],
+    "exit": "Local fixture draft cleared via button, app Cmd+Q and inventory/process exit confirmed; no Host, real account or send."
+  },
+  "updatedAt": "2026-11-15T00:02:33.697Z",
+  "currentObservedManifest": "dd9dcef8924dad1ea5846d4e71832b588a8c25b4cd876e60640a961884468e9e",
+  "metadataQualification": "Original top-level manifest/native/dylib hashes and exit describe the first failed proof, retained as history. Current screen evidence is explicitly scoped to retest.manifestSha256/currentObservedManifest; source f8 or later is not inside that proof."
 }
