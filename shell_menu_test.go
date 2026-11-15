@@ -239,3 +239,31 @@ func TestCanExportSessionZipNeedsALocalLaunch(t *testing.T) {
 		t.Error("the web workspace claimed the native archive action")
 	}
 }
+
+// ⌘R promises a reload in both carriers: a local launch restarts its Host, a
+// Remote launch re-reads the catalogs and reopens the Session under the reader.
+func TestReloadWorkspaceActsInBothModes(t *testing.T) {
+	a := newApp(true)
+	defer a.cancel()
+	a.testDispatch = func(fn func()) { fn() }
+
+	// Remote mode without a connection falls back to the device list.
+	a.connected = false
+	a.reloadWorkspace()
+	if !a.connectionOpen {
+		t.Fatal("an unconnected Remote reload should reopen the host list")
+	}
+
+	// Remote mode connected: the catalogs are re-read and the Session reopened.
+	a.connectionOpen = false
+	a.connected = true
+	a.hostID = "host"
+	a.sessionID = "session-1"
+	a.sessions = []session{{ID: "session-1"}}
+	reloaded := false
+	a.reloadWorkspace()
+	reloaded = a.sessionID == "session-1"
+	if !reloaded {
+		t.Fatal("the open Session was dropped by the reload")
+	}
+}

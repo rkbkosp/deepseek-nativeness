@@ -219,12 +219,7 @@ func (a *app) applicationMenu() *mygo.Menu {
 				ID:          "workspace.reload",
 				Label:       "重新加载工作区",
 				Accelerator: "CmdOrCtrl+R",
-				Click: func(*mygo.MenuItem, *mygo.Window) {
-					if a.localRuntime != nil {
-						a.closeLocalRuntime()
-						a.startLocalRuntime()
-					}
-				},
+				Click:       func(*mygo.MenuItem, *mygo.Window) { a.reloadWorkspace() },
 			},
 		},
 	}
@@ -280,4 +275,34 @@ func (a *app) shellDiagnostics() string {
 		return "shell: local workspace starting"
 	}
 	return fmt.Sprintf("shell: local workspace %s", local.url)
+}
+
+// reloadWorkspace re-reads everything the window shows. With a local Host it
+// restarts that Host (the only way to pick up a new payload); in Remote mode it
+// re-reads the catalogs and reopens the Session the reader was looking at,
+// which is what the key promises there.
+func (a *app) reloadWorkspace() {
+	if a.localRuntime != nil {
+		a.closeLocalRuntime()
+		a.startLocalRuntime()
+		return
+	}
+	if !a.connected || a.client == nil {
+		a.fetchDevices()
+		return
+	}
+	session := a.sessionID
+	a.fetchCapabilities()
+	a.refreshWorkspaces(func() {
+		a.fetchSessions()
+		if session == "" {
+			return
+		}
+		for _, row := range a.sessions {
+			if row.ID == session && a.sessionID != session {
+				a.chooseSession(row)
+				return
+			}
+		}
+	})
 }
