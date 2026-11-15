@@ -40,6 +40,15 @@ Actual read-only acceptance on this Mac has covered independent login restoratio
 
 Each GUI candidate is checkpointed locally with a source commit and a manifest of packaged native/helper/browser hashes. `scripts/build-app.sh --use-next-assets` packages explicitly reviewed `dist-next` directories without rebuilding them. The split browser entry-size report is a build-size measurement, not a runtime memory or M1 performance result. Terminal visual composition, narrow composer controls, and newly added settings pages require GUI acceptance of their exact candidate; source, AX nodes, and separate WK screenshots alone do not establish that they are visible on screen.
 
+GUI11 has two isolated local build targets. They require the reviewed `remote/dist-chat-process-next`, `build/runtime-chat-process-next/node`, and frozen `compat/dist-anchor-reflow-next` / `dist-anchor-reflow-forced-test` trees:
+
+```sh
+sh scripts/build-app.sh --use-gui11-assets
+sh scripts/build-app.sh --use-gui11-forced-assets
+```
+
+The outputs are `build/Native DSH Remote GUI11.app` and `build/Native DSH Remote Anchor QA GUI11.app`. Both use the same native application and chat-presentation helper; only the compatibility-page compile-time fallback gate and QA bundle identity differ. Earlier candidates and standalone native-editor proofs are preserved; the proofs are not imported into the normal application. These commands package existing reviewed resources and do not launch the app or establish GUI acceptance of the new chat rendering.
+
 Visual parity is in progress. Original DSH SVG artwork and the sidebar/header/composer proportions are reused; exact typography, all transitions, and M1 CPU/memory comparisons remain acceptance work. Do not infer M1 performance from local synthetic tests.
 
 The source references `../deepseek-harness` and `../mygo` are read-only. No backend code, configuration, database schema, application installation, or installed plugin has been changed.
