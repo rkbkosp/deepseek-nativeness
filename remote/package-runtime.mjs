@@ -22,6 +22,10 @@ await cp(
   join(root, buildDirectory, "bridge.bundle.mjs"),
   join(destination, "bridge.mjs"),
 );
+await cp(
+  join(root, buildDirectory, "local-bridge.bundle.mjs"),
+  join(destination, "local-bridge.mjs"),
+);
 const lock = JSON.parse(
   await readFile(join(root, "package-lock.json"), "utf8"),
 );
@@ -50,6 +54,7 @@ await writeFile(
   JSON.stringify(
     {
       helper: "bridge.mjs",
+      localHelper: "local-bridge.mjs",
       upstream: {
         name: "ds-harness-remote",
         version: "0.6.4",
@@ -70,5 +75,6 @@ console.log(
     destination,
     packages,
     helperBytes: (await stat(join(destination, "bridge.mjs"))).size,
+    localHelperBytes: (await stat(join(destination, "local-bridge.mjs"))).size,
   }),
 );

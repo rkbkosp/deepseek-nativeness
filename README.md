@@ -34,6 +34,7 @@
 除了作为纯远程客户端连接远端 Host，应用还支持直接启动并托管本地 `dsh` 运行时：
 
 - 可通过菜单栏 **「工作区 → 打开本地工作区」**（快捷键 `Cmd+Shift+L`）或启动参数 `--local` 进入本地工作区，使用 **`Cmd+Shift+N`** 随时返回原生界面。
+- **原生 UI 直连本地 Host**：启动参数 `--local-native` 会在拉起本地 Host 后，用原生界面（而不是托管网页）直接连接它——经回路 HTTP `/api/<endpoint>` 与 `/api/remote.mux` WebSocket 通道通信，复用运行时自带的官方 `@deepseek-ai/dsh-api-gateway` 帧协议与 `ws`。此模式不需要 Remote 服务、账号、设备列表或 WebRTC，审批与提问也由原生界面直接应答。
 - 自动校验并拉起内置的官方 `dsh` Host 运行时，在窗口内承载完整的本地工作区界面。
 - 提供完整的桌面外壳体验：单实例锁、应用菜单、关闭窗口自动隐藏保活后台任务、点击 Dock 图标重新唤醒、退出前运行任务中断确认，以及 `dsh://` 登录回调深度链接支持。
 
@@ -48,7 +49,7 @@
   - Remote 设备身份与凭据存储在 `~/Library/Application Support/Native DSH/remote/<server-hash>/`。
   - 客户端界面偏好与连接配置存储在 `~/Library/Application Support/Native DSH Remote/preferences.json`。
 - **零侵入设计**：Remote 模式绝不读取、迁移、刷新或覆盖本机 `~/.dsh` 目录下的已有凭据与配置。账号密码仅在登录时通过私有 stdio 管道传递给本地通信 helper，不会写入日志或落盘。
-- **本地 Profile 锁保护**：在启动本地工作区（`--local`）前，客户端会主动检查 `~/.dsh` 的 desktop profile 占用状态；若原版桌面应用正在运行，将拒绝并发接管以保护本地数据安全。
+- **本地 Profile 锁保护**：在启动本地工作区（`--local` / `--local-native`）前，客户端会主动检查 `~/.dsh` 的 desktop profile 占用状态；若原版桌面应用正在运行，将拒绝并发接管以保护本地数据安全。
 
 ## 本地开发与从源码构建
 

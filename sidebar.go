@@ -132,7 +132,7 @@ func (a *app) sidebarView(c *ui.Context) {
 			}
 		}).Grow(1).Gap(2)
 		if len(rows) == 0 {
-			ui.Text(c, "连接主机后显示远程工作区").FontSize(12).TextColor(a.theme.TextMuted).Padding(8).Wrap()
+			ui.Text(c, a.workspaceHintLabel()).FontSize(12).TextColor(a.theme.TextMuted).Padding(8).Wrap()
 		}
 		ui.Row(c).Padding(8).Gap(7).Children(func() {
 			backing := indicatorBacking{Color: a.colors.Sidebar}
@@ -149,9 +149,15 @@ func (a *app) sidebarView(c *ui.Context) {
 			}
 		}
 		ui.Row(c).Height(34).Gap(6).Children(func() {
-			a.navButton(c, "Remote", "globe-outline", func() {
+			a.navButton(c, a.hostNavLabel(), "globe-outline", func() {
 				a.closeCompat()
 				a.closeWeb()
+				if a.localMode() {
+					// There is no Remote login or device list to fall back to;
+					// the Host facts live on the settings surface.
+					a.settingsOpen = true
+					return
+				}
 				a.connectionOpen = !a.connectionOpen
 				if a.connectionOpen {
 					a.fetchDevices()

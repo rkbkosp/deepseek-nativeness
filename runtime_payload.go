@@ -130,7 +130,14 @@ var errRuntimeIncomplete = errors.New("运行时载荷不完整")
 
 // loadRuntimePayload validates one candidate runtime root.
 func loadRuntimePayload(root string) (*runtimePayload, error) {
-	root = filepath.Clean(root)
+	// Every path this returns is handed to exec as both the command and the
+	// child's Dir. Since Go resolves a relative command against Cmd.Dir, a
+	// development root such as `build/runtime` must become absolute here or the
+	// launcher is looked up inside the runtime directory itself.
+	root, err := filepath.Abs(filepath.Clean(root))
+	if err != nil {
+		return nil, err
+	}
 	dsh := filepath.Join(root, "dsh")
 	descriptorRaw, err := os.ReadFile(filepath.Join(dsh, runtimeDescriptor))
 	if err != nil {
@@ -184,7 +191,7 @@ func loadRuntimePayload(root string) (*runtimePayload, error) {
 	if raw, err := os.ReadFile(filepath.Join(root, runtimeManifest)); err == nil {
 		var manifest struct {
 			Source struct {
-				App       string `json:"app"`
+				App        string `json:"app"`
 				AsarSha256 string `json:"asarSha256"`
 			} `json:"source"`
 		}

@@ -78,6 +78,30 @@ const helperBuild = await build({
   legalComments: "eof",
   metafile: true,
 });
+// The local helper shares the client, projection and publisher sources with the
+// Remote helper; only its carrier differs. `ws` stays external because the
+// runtime tree this helper is packaged beside supplies the Host's own build.
+const localBuild = await build({
+  entryPoints: [resolve(root, "local-bridge.mjs")],
+  outfile: resolve(output, "local-bridge.bundle.mjs"),
+  bundle: true,
+  format: "esm",
+  platform: "node",
+  target: "node24",
+  external: ["ws", "@roamhq/wrtc", "werift"],
+  plugins: [
+    {
+      name: "selected-upstream-output",
+      setup(b) {
+        b.onResolve({ filter: /[\/]dist[\/]upstream\.mjs$/ }, () => ({
+          path: resolve(output, "upstream.mjs"),
+        }));
+      },
+    },
+  ],
+  legalComments: "eof",
+  metafile: true,
+});
 const { readFile, writeFile } = await import("node:fs/promises");
 const meta = JSON.parse(
   await readFile(resolve(output, "build-meta.json"), "utf8"),
@@ -93,6 +117,7 @@ for (const input of Object.keys(helperBuild.metafile.inputs)) {
   };
 }
 const helper = await readFile(resolve(output, "bridge.bundle.mjs"));
+const localHelper = await readFile(resolve(output, "local-bridge.bundle.mjs"));
 await writeFile(
   resolve(output, "build-meta.json"),
   JSON.stringify(
@@ -104,6 +129,10 @@ await writeFile(
       helper: {
         bytes: helper.length,
         sha256: createHash("sha256").update(helper).digest("hex"),
+      },
+      localHelper: {
+        bytes: localHelper.length,
+        sha256: createHash("sha256").update(localHelper).digest("hex"),
       },
     },
     null,

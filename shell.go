@@ -18,6 +18,11 @@ import (
 // shellAutoQuit marks a bounded QA launch: it must not block on a quit prompt.
 var shellAutoQuit bool
 
+// shellQuitting is set once the quit sequence has been approved. The window
+// close handler must then let the close happen: preventing it would cancel the
+// quit that asked for it.
+var shellQuitting bool
+
 // installShell wires the process-level shell behaviour. It runs after the
 // window exists, on the main thread.
 func (a *app) installShell(autoQuit bool) {
@@ -39,6 +44,9 @@ func (a *app) installShell(autoQuit bool) {
 			e.PreventDefault()
 			return
 		}
+		// The quit sequence closes this window itself; a close listener that
+		// still prevented it would cancel that quit.
+		shellQuitting = true
 		// The Host is owned by this process: stop it before the process dies so
 		// it can report shutdown-complete instead of being orphaned.
 		a.stopLocalRuntimeForQuit()
@@ -59,6 +67,9 @@ func (a *app) installShell(autoQuit bool) {
 		// the Host (and its tasks) running. Quitting is the explicit action that
 		// stops anything, and it asks first.
 		a.win.OnClose(func(e *mygo.CloseEvent) {
+			if shellQuitting {
+				return
+			}
 			e.PreventDefault()
 			if a.windowCloseAction() == closeHide {
 				a.win.Hide()
@@ -101,7 +112,7 @@ func (a *app) confirmQuit() bool {
 		return true
 	}
 	local := a.localRuntime
-	if local == nil || local.page == nil {
+	if local == nil || (local.page == nil && !local.native) {
 		return true
 	}
 	detail := "本地工作区会关闭，正在运行的任务会被中断。"

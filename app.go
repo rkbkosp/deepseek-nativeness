@@ -162,7 +162,9 @@ func (a *app) view(c *ui.Context) {
 	a.builds++
 	a.metrics.Builds++
 	a.applyAppearance(c)
-	if a.localRuntime != nil {
+	// The local web workspace replaces the whole window; the native local mode
+	// only owns the Host, so the normal native surfaces stay in place.
+	if a.localRuntime != nil && !a.localRuntime.native {
 		a.localView(c)
 		return
 	}

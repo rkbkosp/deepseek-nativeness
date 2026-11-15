@@ -26,6 +26,7 @@ func main() {
 	running := flag.Int("demo-running", 2, "running session count in explicit demo (QA only)")
 	hideSidebar := flag.Bool("hide-sidebar", false, "start with sidebar collapsed (QA only)")
 	localRuntime := flag.Bool("local", false, "start the bundled local dsh runtime and show the served web client")
+	localNative := flag.Bool("local-native", false, "start the bundled local dsh runtime and drive the native UI over /api/remote.mux")
 	captureAfter := flag.Duration("capture-after", 0, "delay before --capture (QA only)")
 	theme := flag.String("theme", "", "client appearance: system, light, dark")
 	windowDiagnostics := flag.String("window-diagnostics", "", "write this client's own window visibility and bounds after startup")
@@ -35,6 +36,12 @@ func main() {
 	demoPane := flag.Bool("demo-right-pane", false, "explicit demo only: constrain conversation with right pane")
 	fontCalibration := flag.Bool("font-calibration", false, "explicit demo only: compare native font weights at the original 14 DIP")
 	flag.Parse()
+	localNativeMode = *localNative
+	if localNativeMode {
+		// The native client is the application in this mode; the web workspace
+		// entry point is not a separate surface.
+		*localRuntime = true
+	}
 	a := newApp(*demo)
 	if a.demo {
 		a.fontCalibration = *fontCalibration

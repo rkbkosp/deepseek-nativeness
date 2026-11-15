@@ -80,6 +80,13 @@ func (a *app) startBridge(command string, args []string) {
 	}
 	a.client = client
 	a.configure(func() {
+		if a.localRuntime != nil && a.localRuntime.native {
+			// The local Host is the only host: connect immediately instead of
+			// offering a Remote device list that does not exist.
+			a.authorized = true
+			a.connect(localHostID)
+			return
+		}
 		if a.authorized {
 			a.fetchDevices()
 		} else {
@@ -141,7 +148,7 @@ func (a *app) acceptStatus(raw json.RawMessage) error {
 	a.connected = s.Connected
 	a.authorized = s.Authorized
 	if s.Connected {
-		a.status = "Remote 已连接"
+		a.status = a.connectedLabel()
 		a.hostID = s.HostID
 	} else if s.Authorized {
 		a.status = "已登录，选择工作主机"
@@ -296,7 +303,7 @@ func (a *app) connect(id string) {
 			return err
 		}
 		a.connected = true
-		a.status = "Remote 已连接"
+		a.status = a.connectedLabel()
 		if a.restoreTarget == nil {
 			a.rememberSelection()
 		}

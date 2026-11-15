@@ -21,12 +21,25 @@ import (
 	"github.com/egoist/mygo"
 )
 
+// localNativeMode selects the native client over the local Host for this launch
+// (`--local-native`). The served web client stays available as the comparison
+// surface (`--local`).
+var localNativeMode bool
+
+// localHostID is the single host the local helper advertises; the native client
+// connects to it instead of a Remote device list.
+const localHostID = "local"
+
 type localRuntime struct {
 	payload *runtimePayload
 	host    *runtimeHost
 	page    *mygo.WebView
 	url     string
 	home    string
+
+	// native selects the native client over the local Host (M4b) instead of the
+	// served web client in a web view (M4a).
+	native bool
 
 	// status is the human-readable phase while starting; err is terminal.
 	status  string
@@ -52,7 +65,7 @@ func (a *app) startLocalRuntime() {
 			return // already starting
 		}
 	}
-	local := &localRuntime{status: "正在查找本地运行时…", started: time.Now()}
+	local := &localRuntime{status: "正在查找本地运行时…", started: time.Now(), native: localNativeMode}
 	a.localRuntime = local
 	a.update(func() { a.error = "" })
 
@@ -88,9 +101,9 @@ func (a *app) startLocalRuntime() {
 				"--bin", payload.NodeBin,
 				"--client-version", payload.Version,
 			},
-			Env:      inheritedEnvironment(),
-			Dir:      payload.Root,
-			OnEvent:  a.onRuntimeEvent(local),
+			Env:          inheritedEnvironment(),
+			Dir:          payload.Root,
+			OnEvent:      a.onRuntimeEvent(local),
 			ReadyTimeout: 240 * time.Second,
 		}
 		host := newRuntimeHost(launch)
@@ -114,6 +127,15 @@ func (a *app) startLocalRuntime() {
 			local.url = ready.URL
 			local.status = ""
 		})
+		if local.native {
+			mygo.RunOnMain(func() {
+				if a.localRuntime != local {
+					return
+				}
+				a.openLocalBridge(local)
+			})
+			return
+		}
 		a.openLocalPage(local)
 	}()
 }
@@ -154,6 +176,23 @@ func (a *app) failLocalRuntime(local *localRuntime, message string) {
 		local.status = ""
 		a.error = message
 	})
+}
+
+// openLocalBridge starts the native client's helper against the Host this
+// process started. It speaks the same stdio contract as the Remote helper, so
+// nothing above the transport knows the difference.
+func (a *app) openLocalBridge(local *localRuntime) {
+	if local.payload == nil {
+		a.failLocalRuntime(local, "本地运行时载荷不可用。")
+		return
+	}
+	helper, err := resolveLocalHelper()
+	if err != nil {
+		a.failLocalRuntime(local, "找不到本地通信模块："+err.Error())
+		return
+	}
+	// The runtime root supplies the official stream-protocol parser and `ws`.
+	a.startBridge(nodeExecutable(), []string{helper, "--url", local.url, "--runtime", local.payload.Root})
 }
 
 // openLocalPage creates the web view for the served client. It runs on the main
@@ -229,6 +268,12 @@ func (a *app) closeLocalRuntime() {
 	a.localRuntime = nil
 	page, host := local.page, local.host
 	local.page, local.host = nil, nil
+	if local.native && a.client != nil {
+		_ = a.client.Close()
+		a.client = nil
+		a.connected = false
+		a.status = "本地 Host 已停止"
+	}
 	mygo.RunOnMain(func() {
 		if page != nil {
 			page.Destroy()
@@ -290,6 +335,12 @@ func (a *app) stopLocalRuntimeForQuit() {
 	page, host := local.page, local.host
 	a.localRuntime = nil
 	local.page, local.host = nil, nil
+	if local.native && a.client != nil {
+		// Release the helper before the Host goes away: it owns the only
+		// answering Peer, and its process exits when the transport does.
+		_ = a.client.Close()
+		a.client = nil
+	}
 	if page != nil {
 		mygo.RunOnMain(func() { page.Destroy() })
 	}
