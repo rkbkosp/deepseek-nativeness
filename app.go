@@ -117,6 +117,12 @@ type app struct {
 	configuredServer                                         string
 	authorized                                               bool
 	pendingSend                                              *sendIntent
+	// searchPick is the session the search keyboard chose, by ID so it
+	// survives the hits changing as the query is typed; searchRow is that
+	// session's row in the sidebar list, -1 for none, which is also the
+	// list's Selected while a search is open (see searchView).
+	searchPick string
+	searchRow  int
 }
 
 func newApp(demo bool) *app {

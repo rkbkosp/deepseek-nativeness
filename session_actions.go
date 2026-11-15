@@ -165,14 +165,57 @@ func (a *app) sessionMenu(c *ui.Context, m *ui.Menu, s session) {
 	}
 	m.Item("在应用中打开").Disabled(true)
 	m.Separator()
-	label, archive := "归档会话", "archiveSession"
+	label := "归档会话"
 	if s.Archived {
-		label, archive = "取消归档", "unarchiveSession"
+		label = "取消归档"
 	}
-	if m.Item(label).Disabled(!a.can(archive)).Chosen() {
-		a.mutate(archive, map[string]any{"sessionId": s.ID, "stopActivity": false}, func(json.RawMessage) error { a.fetchSessions(); return nil })
+	if m.Item(label).Disabled(!a.can(sessionArchiveMethod(s))).Chosen() {
+		a.setSessionArchived(s, !s.Archived)
 	}
 }
+
+// sessionArchiveMethod names the operation that moves a Session into the
+// archive, or back out of it.
+func sessionArchiveMethod(s session) string {
+	if s.Archived {
+		return "unarchiveSession"
+	}
+	return "archiveSession"
+}
+
+// setSessionArchived archives or restores one Session. Archiving keeps the
+// Session's activity running (stopActivity:false): the Host's archive changes
+// where the Session is listed, and the archived list is the way back, so the
+// action is reversible and never silently kills a running turn.
+func (a *app) setSessionArchived(s session, archived bool) {
+	method, params, action := "archiveSession", map[string]any{"sessionId": s.ID, "stopActivity": false}, "归档"
+	if !archived {
+		// The Host's unarchive descriptor accepts only the Session ID.
+		method, params, action = "unarchiveSession", map[string]any{"sessionId": s.ID}, "取消归档"
+	}
+	if !a.connected || a.client == nil {
+		a.error = "Remote 未连接，操作未发送。"
+		return
+	}
+	if !a.can(method) {
+		a.error = "当前连接不允许" + action + "会话。"
+		return
+	}
+	a.mutateWithFailure(method, params, func(json.RawMessage) error {
+		// The Host accepted the change, so the list filter applies now; the read
+		// below replaces this with the Host's own rows.
+		for i := range a.sessions {
+			if a.sessions[i].ID == s.ID {
+				a.sessions[i].Archived = archived
+			}
+		}
+		a.fetchSessions()
+		return nil
+	}, func(err error) {
+		a.error = action + "会话失败：" + err.Error()
+	})
+}
+
 func (a *app) renameView(c *ui.Context) {
 	open := a.renameID != ""
 	ui.Modal(c, &open, func() {

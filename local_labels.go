@@ -1,5 +1,7 @@
 package main
 
+import "github.com/egoist/mygo"
+
 // Wording for the two ways this client reaches a Harness Host, plus the small
 // decisions that keep Remote-only chrome out of a launch that owns its Host.
 //
@@ -171,4 +173,33 @@ func (a *app) hostNavLabel() string {
 		return "本地 Host"
 	}
 	return "Remote"
+}
+
+// workspaceRevealAvailable reports whether a Workspace's directory can be
+// shown in this Mac's Finder. A Remote Host's path names a directory on
+// another machine, so the entry is not offered there instead of revealing a
+// same-named local folder by accident.
+func (a *app) workspaceRevealAvailable(w workspace) bool {
+	return a.localMode() && w.ID != "" && w.Path != ""
+}
+
+// deleteWorkspaceConfirmation is the second confirmation a Workspace delete
+// shows. The directory and its logs stay on whichever machine runs the Host;
+// only where they stay changes with the mode, so the sentence that promises
+// the files are kept must not.
+func (a *app) deleteWorkspaceConfirmation(w workspace) mygo.MessageOptions {
+	where := "主机"
+	if a.localMode() {
+		where = "这台 Mac"
+	}
+	return mygo.MessageOptions{
+		Parent:             a.win,
+		Type:               mygo.MessageWarning,
+		Message:            "删除工作区「" + w.Name + "」？",
+		Detail:             "只从列表移除并解除会话归属，不删除磁盘文件：目录与日志仍保留在" + where + "上。工作区内的会话会回到「未分组」。",
+		Buttons:            []string{"取消", "删除"},
+		DefaultButton:      0,
+		CancelButton:       0,
+		DestructiveButtons: []int{1},
+	}
 }

@@ -65,13 +65,10 @@ func (a *app) sidebarView(c *ui.Context) {
 		})
 		ui.Row(c).Padding(16, 8, 3).Gap(8).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, "工作区").FontSize(14).TextColor(a.theme.TextMuted).Grow(1)
-			if ui.ButtonBase(c).Label("搜索会话").Tooltip("搜索会话 ⌘K").Children(func() { icon(c, "search-outline", 16).TextColor(a.theme.TextMuted) }).Clicked() {
-				a.searchOpen = !a.searchOpen
-				if !a.searchOpen {
-					a.search = ""
-				}
+			if ui.ButtonBase(c).Label("搜索会话").Tooltip(a.searchTooltip()).Children(func() { icon(c, "search-outline", 16).TextColor(a.theme.TextMuted) }).Clicked() {
+				a.toggleSearch()
 			}
-			ui.ButtonBase(c).Label("视图选项").Tooltip("视图选项").Children(func() { icon(c, "flat-list-outline", 16).TextColor(a.theme.TextMuted) }).Menu(a.sidebarViewMenu)
+			ui.ButtonBase(c).Label("视图选项").Tooltip(a.sidebarViewTooltip()).Children(func() { icon(c, a.sidebarViewIcon(), 16).TextColor(a.theme.TextMuted) }).Menu(a.sidebarViewMenu)
 			addTip := "在主机上新建工作区"
 			if reason := a.operationCaps["createWorkspace"].Reason; reason != "" {
 				addTip = reason
@@ -80,10 +77,12 @@ func (a *app) sidebarView(c *ui.Context) {
 				a.openWorkspaceCreate()
 			}
 		})
-		if a.searchOpen {
-			ui.TextInput(c, &a.search).Placeholder("搜索会话").Label("搜索会话输入框").AutoFocus()
-		}
 		rows := a.sidebarRows()
+		if a.searchOpen {
+			a.searchView(c, rows)
+		} else {
+			a.sessionList.Selected = nil
+		}
 		a.sessionList.Key = func(i int) any { return rows[i].Key }
 		ui.List(c, &a.sessionList, len(rows), func(i int) {
 			r := rows[i]
@@ -91,8 +90,11 @@ func (a *app) sidebarView(c *ui.Context) {
 			case "workspace":
 				expanded, ok := a.uiPrefs.Expanded[r.Workspace.ID]
 				expanded = !ok || expanded
+				host, scope := a.hostID, a.accountScope
+				rename := a.activeWorkspaceRename()
+				editing := rename != nil && rename.WorkspaceID == r.Workspace.ID
 				row := ui.Row(c.Key(r.Key)).Height(32).Padding(0, 8+float32(r.Depth)*12).Gap(6).Radius(7).AlignItems(ui.Center)
-				if row.Hovered() {
+				if row.Hovered() && !editing {
 					row.Background(a.colors.RowHover)
 				}
 				row.Children(func() {
@@ -101,19 +103,36 @@ func (a *app) sidebarView(c *ui.Context) {
 					if r.Workspace.ID == a.workspaceID {
 						color = a.theme.Accent
 					}
-					if row.Hovered() {
+					if row.Hovered() && !editing {
 						name = "chevron-right-outline"
 						if expanded {
 							name = "chevron-down-outline"
 						}
 					}
 					icon(c, name, 16).TextColor(color)
+					if editing {
+						// Inline rename: Enter saves, the ✕ abandons it. The row
+						// itself keeps drawing the Workspace it is renaming.
+						input := ui.TextInput(c, &rename.Title).Label("工作区名称").Placeholder("工作区名称").AutoFocus().Grow(1)
+						if input.Submitted() {
+							a.commitWorkspaceRename()
+						}
+						if ui.ButtonBase(c).Label("取消重命名").Padding(2).Children(func() { icon(c, "close-outline", 14).TextColor(a.theme.TextMuted) }).Clicked() {
+							a.cancelWorkspaceRename()
+						}
+						return
+					}
 					ui.Text(c, r.Workspace.Name).FontSize(14).Grow(1).SingleLine().Ellipsis("…")
 				})
-				if row.Clicked() {
+				if !editing && row.Clicked() {
 					a.uiPrefs.Expanded[r.Workspace.ID] = !expanded
 					a.savePreferences()
 				}
+				row.ContextMenu(func(m *ui.Menu) {
+					if host == a.hostID && scope == a.accountScope {
+						a.workspaceMenu(m, r.Workspace)
+					}
+				})
 			case "more":
 				if ui.ButtonBase(c.Key(r.Key)).Height(30).Padding(0, 30+float32(r.Depth)*12).Label("展开更多 " + r.Workspace.Name).Children(func() {
 					ui.Text(c, fmt.Sprintf("展开更多 (%d)", r.Count)).FontSize(12).TextColor(a.theme.TextMuted)

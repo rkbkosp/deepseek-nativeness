@@ -76,21 +76,7 @@ func (a *app) sidebarRows() []sidebarRow {
 		return out
 	}
 	groups := append([]workspace(nil), a.workspaces...)
-	owners := map[string]string{}
-	workspaceIDs := map[string]bool{}
-	for _, w := range a.workspaces {
-		workspaceIDs[w.ID] = true
-		for _, id := range w.SessionIDs {
-			if _, exists := owners[id]; !exists {
-				owners[id] = w.ID
-			}
-		}
-	}
-	for _, s := range a.sessions {
-		if _, exists := owners[s.ID]; !exists && s.WorkspaceID != "" && workspaceIDs[s.WorkspaceID] {
-			owners[s.ID] = s.WorkspaceID
-		}
-	}
+	owners := a.sessionOwners()
 	var unassigned []string
 	for _, s := range a.sessions {
 		_, owned := owners[s.ID]
@@ -165,4 +151,58 @@ func relativeTime(at float64, now time.Time) string {
 	default:
 		return strconv.Itoa(int(d/(30*24*time.Hour))) + "个月"
 	}
+}
+
+// sessionOwners resolves each Session to the one Workspace that draws it: the
+// Workspace's own Session list wins, and a Session that no list mentions
+// belongs to the Workspace its own workspaceId names, when that Workspace
+// still exists. A deleted Workspace therefore leaves its Sessions unowned,
+// which is what puts them under 未分组.
+func (a *app) sessionOwners() map[string]string {
+	owners := map[string]string{}
+	workspaceIDs := map[string]bool{}
+	for _, w := range a.workspaces {
+		workspaceIDs[w.ID] = true
+		for _, id := range w.SessionIDs {
+			if _, exists := owners[id]; !exists {
+				owners[id] = w.ID
+			}
+		}
+	}
+	for _, s := range a.sessions {
+		if _, exists := owners[s.ID]; !exists && s.WorkspaceID != "" && workspaceIDs[s.WorkspaceID] {
+			owners[s.ID] = s.WorkspaceID
+		}
+	}
+	return owners
+}
+
+// workspaceSessions returns the Sessions the sidebar draws under w, in the
+// sidebar's order, so the Workspace menu can offer the same rows it shows.
+func (a *app) workspaceSessions(w workspace) []session {
+	if w.ID == "" {
+		return nil
+	}
+	owners := a.sessionOwners()
+	var out []session
+	for _, s := range a.sessions {
+		// The row filter hides an empty Session that is not the one on screen;
+		// the menu offers the rows the list can show, so it hides it too.
+		if s.Blank && s.ID != a.sessionID {
+			continue
+		}
+		if owners[s.ID] == w.ID {
+			out = append(out, s)
+		}
+	}
+	sort.SliceStable(out, func(i, j int) bool {
+		if out[i].Pinned != out[j].Pinned {
+			return out[i].Pinned
+		}
+		if out[i].UpdatedAt != out[j].UpdatedAt {
+			return out[i].UpdatedAt > out[j].UpdatedAt
+		}
+		return out[i].ID < out[j].ID
+	})
+	return out
 }
