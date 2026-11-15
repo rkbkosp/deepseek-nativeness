@@ -109,6 +109,7 @@ func TestPresentationAtomicSettlementRebindsStablePartsWithoutCopyingHistory(t *
 	var parts []chatPartRef
 	for _, r := range rows {
 		parts = append(parts, r.Parts...)
+		parts = append(parts, r.GroupParts...)
 	}
 	if len(parts) != 3 || parts[1].Part != "reasoning" || parts[2].Part != "response" || parts[1].NodeKey != parts[2].NodeKey {
 		t.Fatal("reasoning and response must independently reference one stable node", parts)

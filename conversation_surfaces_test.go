@@ -50,3 +50,17 @@ func TestTriggerCardRendersSourceKind(t *testing.T) {
 		t.Fatalf("trigger card missing: %v", tt.Texts())
 	}
 }
+
+func TestTodoPanelUsesProjectedList(t *testing.T) {
+	a := newApp(true)
+	t.Cleanup(a.cancel)
+	a.sessionID = "s"
+	todos := []todoItem{{Content: "读取文件", Status: "completed"}, {Content: "运行测试", Status: "in_progress"}}
+	a.composer = &composerState{sessionID: "s", values: composerProjectionValues{Todos: &todos}}
+	a.current = snapshot{SessionID: "s", Messages: []message{{ID: "u", Role: "user", Text: "go", Turn: 1}}}
+	tt := ui.NewTester(a.view, 1280, 820)
+	tt.Frame()
+	if !tt.HasText("任务") || !tt.HasText("1 已完成  ·  1 进行中") {
+		t.Fatalf("todo panel missing: %v", tt.Texts())
+	}
+}

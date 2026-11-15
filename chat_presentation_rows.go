@@ -231,18 +231,32 @@ func (a *app) buildPresentationTurnRows(turn int, ids []string, cache *chatRowsC
 	if hasControl {
 		control.LayoutAnchor = t.Spec.ControlAnchorSeq - .1
 	}
+	ready := known && t.Spec != nil && t.FoldEligible && cache.detail != "verbose"
 	flush := func(before string) {
 		if pendingStart < 0 {
 			return
 		}
 		pending := partsArena[pendingStart:]
-		for i := range pending {
-			part := pending[i]
-			rows = append(rows, chatRow{ID: part.key(), Process: true, Turn: turn, Parts: pending[i : i+1], DefaultOpen: open, AlwaysOpen: always, FoldKey: foldKey, ProcessSpec: t.Spec, ProcessReason: string(t.EndReasonKind), ProcessStatus: t.Status, ProcessDuration: duration})
+		groupable := true
+		for _, part := range pending {
+			if part.Part == "response" {
+				groupable = false
+				break
+			}
+		}
+		if ready && groupable {
+			group := chatRow{ID: "group:" + pending[0].key(), Process: true, Group: true, GroupParts: append([]chatPartRef(nil), pending...), Turn: turn,
+				PositionPayloadID: pending[0].PayloadID, DefaultOpen: false, AlwaysOpen: always, FoldKey: foldKey, ProcessSpec: t.Spec,
+				ProcessReason: string(t.EndReasonKind), ProcessStatus: t.Status, ProcessDuration: duration}
+			rows = append(rows, group)
+		} else {
+			for i := range pending {
+				part := pending[i]
+				rows = append(rows, chatRow{ID: part.key(), Process: true, Turn: turn, Parts: pending[i : i+1], DefaultOpen: open, AlwaysOpen: always, FoldKey: foldKey, ProcessSpec: t.Spec, ProcessReason: string(t.EndReasonKind), ProcessStatus: t.Status, ProcessDuration: duration})
+			}
 		}
 		pendingStart = -1
 	}
-	ready := known && t.Spec != nil && t.FoldEligible && cache.detail != "verbose"
 	for _, it := range items {
 		r := it.ref
 		if it.barrier {
@@ -287,6 +301,17 @@ func (a *app) buildPresentationTurnRows(turn int, ids []string, cache *chatRowsC
 		}
 	}
 	flush("tail")
+	if kind := string(t.EndReasonKind); kind == "error" || kind == "max-tokens" || kind == "max_tokens" {
+		notice := chatRow{ID: fmt.Sprintf("notice:%d", turn), Notice: true, Turn: turn, NoticeKind: kind}
+		if detail := a.turnErrorDetail(turn); detail != "" {
+			notice.NoticeText = detail
+		}
+		if len(ids) > 0 {
+			notice.PositionPayloadID = ids[len(ids)-1]
+			notice.PositionAfter = true
+		}
+		rows = append(rows, notice)
+	}
 	if hasControl && !controlAdded && len(ids) > 0 {
 		control.PositionPayloadID = ids[len(ids)-1]
 		control.PositionAfter = true
@@ -294,7 +319,7 @@ func (a *app) buildPresentationTurnRows(turn int, ids []string, cache *chatRowsC
 	}
 	canCollapse := false
 	for _, row := range rows {
-		if row.Process && len(row.Parts) > 0 {
+		if row.Process && (len(row.Parts) > 0 || len(row.GroupParts) > 0) {
 			canCollapse = true
 			break
 		}

@@ -30,5 +30,5 @@ npm run --prefix remote build
 
 - Go 全包测试通过；remote helper 73 项通过。
 - 会话页结构、间距、运行行、尾部操作条、思考/上下文/工具/命令/触发行均有可断言的文本/尺寸测试。
-- 受冻结 MyGo 限制、尚未 1:1 的项：行内代码 chip 的边框/圆角/padding、`hr` 的 32px 间距、链接 hover 下划线、KaTeX 排版、文字 shimmer、活动组摘要、Todo 面板、Retry/TurnError/MaxTokens 详情。
-- M8 的 helper 只新增了 `trigger` 元数据；活动组/统计/todo/错误详情仍需后续 helper 扩展。
+- 受冻结 MyGo 限制、尚未 1:1 的项：行内代码 chip 的边框/圆角/padding、`hr` 的 32px 间距、链接 hover 下划线、KaTeX 排版、文字 shimmer。
+- M8 的 helper 只新增了 `trigger` 元数据；活动组头、Todo、错误/上限 notice、轮/步/tok/s/token/缓存统计已由原生从现有投影派生；Retry 行仍需 helper；上下文百分比/tok/s 已从 `contextPressure` 与消息 usage 派生。

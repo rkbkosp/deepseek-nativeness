@@ -59,7 +59,7 @@ conversation()                                  desktop/conversation.go:95
 | B1 | 用户气泡 | P1 | 圆角 16 / padding 12,18 / Subtle / 无 70.2% 上限 | 圆角 20 / 10,16 / bubble token / 70.2% 上限 | C |
 | B2 | Markdown 节奏 | P1 | 行高 23.8；块距 11.9；标题 600 | 行高 24；块距 16；标题 700 | C |
 | B3 | 代码块 | P1 | 圆角 12、Surface、无 banner 底色、22px 内边距、15.4 行高 | 圆角 16、code-block token、banner 分带、16px 内边距、19px 行高 | C |
-| B3.1 | 表格 | P1 | 外框 + 竖线网格、14px、8.4/5.6 内边距 | 仅底横线、13px、10/16、宽表扩展 | C |
+| B3.1 | 表格 | — | 已由 `markdownBlock` 自定义：仅底横线、13px、10/16、宽表扩展 | 仅底横线、13px、10/16、宽表扩展 | 已对齐 |
 | B3.2 | 行内/块级 Markdown | P2 | 链接 300、行内代码无边框；引用文字变灰；hr 1px/3.5 | 链接 500；代码 chip；引用 primary；hr 0.5px/32 | C |
 | B3.3 | 数学公式 | P2 | 原始 TeX（等宽、muted、横向滚动） | KaTeX 排版 | C |
 | B4 | 推理行 | P1 | “思考过程”箭头折叠 + 纯文本 14 | “思考”24px 行 + 图标/摘要/shimmer + compact Markdown | C |

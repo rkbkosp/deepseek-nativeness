@@ -38,6 +38,7 @@ type composerState struct {
 	queryGeneration                           uint64
 	dismissedToken                            string
 	queueExpanded                             bool
+	todoOpen                                  bool
 	editingID, editingText                    string
 	confirmPermission                         string
 	permissionAcknowledged                    bool
@@ -109,7 +110,13 @@ type composerProjectionValues struct {
 	Permissions *struct {
 		CurrentValue string `json:"currentValue"`
 	} `json:"permissions"`
-	Inbox map[string][]composerQueueItem `json:"inbox"`
+	Inbox           map[string][]composerQueueItem `json:"inbox"`
+	Todos           *[]todoItem                    `json:"todos"`
+	ContextPressure *struct {
+		PressureTokens  *int64 `json:"pressureTokens"`
+		ProjectedTokens *int64 `json:"projectedTokens"`
+		ContextWindow   *int64 `json:"contextWindow"`
+	} `json:"contextPressure"`
 }
 type composerCompletion struct{ ID, Label, Description, Replacement, Kind, Unavailable, Value string }
 type composerSessionReference struct {
@@ -297,6 +304,14 @@ func (a *app) acceptComposerProjections(raw json.RawMessage) error {
 			s.values.Inbox = inbox
 		case "agentPreset":
 			if err := json.Unmarshal(v, &s.values.AgentPreset); err != nil {
+				return err
+			}
+		case "contextPressure":
+			if err := json.Unmarshal(v, &s.values.ContextPressure); err != nil {
+				return err
+			}
+		case "todos":
+			if err := json.Unmarshal(v, &s.values.Todos); err != nil {
 				return err
 			}
 		case "plan":

@@ -382,8 +382,8 @@ M1 + M2 + M4：先把“间距、token、气泡/代码块、运行态/尾部操�
 | M5 | ✅ 大部分 | 工具标题/摘要/图标/错误色、bash TerminalBlock、command 卡、diff 卡、IN/OUT 卡、子调用递归 |
 | M6 | ✅ | 加载更早、位置保持、`adoptHistorySnapshot`、回到底部、轮次轨、底部渐隐 |
 | M7 | ✅ 大部分 | Hero/居中输入、队列贴附+附件标签、pending steering、发送色、头部 30px/32 间距、反馈对话框 |
-| M8 | ✅ 原生侧 | TurnTrigger 卡、轮/步+token+缓存统计、底部渐隐；helper 新增 `trigger` |
-| 残余（helper） | ⏳ | 活动组摘要、Todo 面板、Retry/TurnError/MaxTokens 详情、真实 tok/s/上下文百分比 |
-| 残余（MyGo 冻结） | ⏳ | 行内代码 chip、hr 32px、链接 hover 下划线、KaTeX、文字 shimmer |
+| M8 | ✅ 原生侧 | 活动组头+折叠、Todo 面板、TurnTrigger 卡、轮/步+tok/s+token+缓存统计、错误/上限 notice、底部渐隐；helper 新增 `trigger` |
+| 残余（helper） | ⏳ | Retry 行；活动组/Todo/错误/上限/上下文百分比/tok/s 已由原生从现有投影派生 |
+| 残余（MyGo 冻结） | ⏳ | 行内代码 chip、hr 32px、链接 hover 下划线、KaTeX、文字 shimmer；表格已由 `markdownBlock` 自定义，不在此列 |
 
 全量：`GOCACHE=/tmp/dsh-go-cache CGO_ENABLED=0 go test ./...` 通过；`npm test --prefix remote` 73 项通过。

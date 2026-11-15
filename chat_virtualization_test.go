@@ -16,6 +16,7 @@ func TestOpenPresentationBuildsOnlyViewportPartsThroughActualView(t *testing.T) 
 			a.sessionID = "virtual-open"
 			a.current = snapshot{SessionID: a.sessionID, Running: true}
 			a.uiPrefs.FoldedReplies = "final"
+			a.uiPrefs.StepsDetail = "verbose"
 			p := &chatPresentation{SchemaVersion: 1, BaselineSerial: 1, PresentationEpoch: "chat:1", Turns: []chatTurn{{Turn: 1, Status: "open", StartLoaded: true, FoldEligible: true, AlwaysOpen: true, Spec: &chatProcessSpec{Turn: 1, ControlAnchorSeq: 1, ProcessStartSeq: 1}}}}
 			for i := 0; i < n; i++ {
 				id := fmt.Sprintf("body:%d", i)

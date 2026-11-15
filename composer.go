@@ -36,6 +36,7 @@ func (a *app) composerView(c *ui.Context) {
 					})
 				})
 			}
+			a.todoPanelView(c, s)
 			a.composerQueueView(c, s)
 			card := ui.Column(c).FillWidth().MinWidth(0).Padding(8, 0, 0).Gap(12).Radius(28).InsetShadow(0, 0, 0, .5, a.theme.Border).Shadow(0, 8, 24, 0, ui.RGBA(0, 0, 0, .12)).Background(a.colors.Composer)
 			if a.connected && !a.busy && s.values.ImageLimits.available() && !a.composerArtifacts().Loading {

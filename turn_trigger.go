@@ -1,6 +1,10 @@
 package main
 
-import "github.com/egoist/mygo/ui"
+import (
+	"encoding/json"
+
+	"github.com/egoist/mygo/ui"
+)
 
 var triggerLabels = map[string]struct{ title, icon string }{
 	"github":   {"收到 GitHub 事件", "branch-outline"},
@@ -49,5 +53,51 @@ func (a *app) turnTriggerView(c *ui.Context, m *message, key string) {
 				})
 			})
 		}
+	})
+}
+
+func (a *app) turnErrorDetail(turn int) string {
+	for _, raw := range a.current.Turns {
+		var value struct {
+			Turn   int `json:"turn"`
+			Reason struct {
+				Kind    string `json:"kind"`
+				Message string `json:"message"`
+				Code    string `json:"code"`
+				Error   *struct {
+					Message string `json:"message"`
+					Code    string `json:"code"`
+				} `json:"error"`
+			} `json:"reason"`
+		}
+		if json.Unmarshal(raw, &value) != nil || value.Turn != turn {
+			continue
+		}
+		if value.Reason.Error != nil && value.Reason.Error.Message != "" {
+			return value.Reason.Error.Message
+		}
+		return value.Reason.Message
+	}
+	return ""
+}
+
+func (a *app) turnNoticeView(c *ui.Context, row chatRow) {
+	maxTokens := row.NoticeKind == "max-tokens" || row.NoticeKind == "max_tokens"
+	dot := a.theme.Danger
+	title := "处理失败"
+	body := row.NoticeText
+	if maxTokens {
+		dot = a.theme.Warning
+		title = "达到 token 上限"
+		body = "回复在输出上限处结束，可能不完整。"
+	} else if body == "" {
+		body = "本轮执行失败。"
+	}
+	ui.Row(c).FillWidth().MinWidth(0).Gap(8).AlignItems(ui.Start).Children(func() {
+		ui.Box(c).Size(6, 6).Radius(3).Shrink(0).Margin(7, 0, 0, 0).Background(dot)
+		ui.Column(c).MinWidth(0).Shrink(1).Gap(2).Children(func() {
+			ui.Text(c, title).FontSize(13).FixedLineHeight(20).FontWeight(600).TextColor(dot)
+			ui.Text(c, body).FontSize(13).FixedLineHeight(20).TextColor(a.colors.Secondary).Wrap()
+		})
 	})
 }

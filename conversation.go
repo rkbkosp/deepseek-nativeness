@@ -193,6 +193,10 @@ func (a *app) conversation(c *ui.Context) {
 						}
 						if r.Control {
 							a.turnControllerView(c, r)
+						} else if r.Notice {
+							a.turnNoticeView(c, r)
+						} else if r.Group {
+							a.groupView(c, r)
 						} else if r.Process {
 							a.processView(c, r)
 						} else if len(r.Parts) > 0 {
@@ -256,6 +260,11 @@ func (a *app) conversationPlaceholder() conversationPlaceholder {
 type chatRow struct {
 	ID                string
 	Process           bool
+	Group             bool
+	Notice            bool
+	NoticeKind        string
+	NoticeText        string
+	GroupParts        []chatPartRef
 	Running           bool
 	History           bool
 	Steering          bool
