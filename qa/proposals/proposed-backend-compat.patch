@@ -1,0 +1,51 @@
+--- a/packages/plugin/src/harness-remote-bridge.ts
++++ b/packages/plugin/src/harness-remote-bridge.ts
+@@ -230,6 +230,8 @@
+  * request itself before delegating.
+  */
+ export interface ScheduleCreateService {
++  /** Present on the pinned 0.2.2 Host; payload validation remains in its generated Gateway descriptor. */
++  readonly remoteCreate?: unknown
+   create(sessionId: string, request: ScheduleCreateRequest, signal?: AbortSignal): Promise<unknown>
+ }
+ 
+@@ -393,6 +395,18 @@
+ 
+   /** Validate one untrusted create request, then delegate to the Host schedule service. */
+   private async createSchedule(payload: unknown): Promise<TypertRpcResult> {
++    if (typeof this.schedule?.remoteCreate === 'function') {
++      // The current Host already exposes its human-caller create(request, signal) descriptor.
++      // Do not call the legacy in-process create(sessionId, request, signal) signature.
++      const modern = z.object({ args: z.object({
++        request: z.record(z.string(), z.unknown()),
++      }).strict() }).strict().safeParse(payload)
++      if (!modern.success) return {
++        ok: false,
++        error: { code: 'INVALID_MESSAGE', message: 'This Host requires the typed schedule request envelope.', details: {} },
++      }
++      return this.gateway.dispatch('schedule/create', modern.data, AbortSignal.timeout(60_000))
++    }
+     if (this.schedule === undefined) {
+       return {
+         ok: false,
+@@ -636,13 +650,19 @@
+       args: z.object({
+         name: z.string().min(1).max(4096),
+         version: z.string().min(1).max(256),
++        options: z.object({
++          registry: z.union([z.string().min(1).max(4096), z.null()]).optional(),
++          spec: z.string().min(1).max(4096).optional(),
++          requestId: z.string().min(1).max(256).optional(),
++        }).strict().optional(),
+       }).strict(),
+     }).strict().safeParse(payload)
+     if (!parsed.success) throw new RpcError('INVALID_MESSAGE', 'Invalid plugin update request.')
+     const result = await this.gateway.dispatch('pluginManager/listBundles', { args: {} }, AbortSignal.timeout(60_000))
+     if (!result.ok || !Array.isArray(result.value)) throw new RpcError('PERMISSION_DENIED', 'Cannot verify the Host plugin inventory.')
+     const row = result.value.find(value => isRecord(value) && value.name === parsed.data.args.name)
+-    if (!isRecord(row) || row.readOnlyReason !== undefined || row.updatable !== true) {
++    if (!isRecord(row) || row.readOnlyReason !== undefined
++      || (row.updatable !== true && row.update !== 'registry' && row.update !== 'git')) {
+       throw new RpcError('PERMISSION_DENIED', 'The Host plugin cannot be updated remotely.')
+     }
+     if (remoteOwnedBundleRow(row, false)) {
