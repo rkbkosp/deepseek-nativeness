@@ -20,13 +20,16 @@ func (a *app) requestWithFailure(method string, params any, accept func(json.Raw
 	a.requestGuarded(method, params, accept, failed, nil)
 }
 func (a *app) scopedRead(method string, params map[string]any, accept func(json.RawMessage) error) {
+	a.scopedRequest(method, params, accept, nil)
+}
+func (a *app) scopedRequest(method string, params map[string]any, accept func(json.RawMessage) error, failed func(error)) {
 	host, account, generation, client := a.hostID, a.accountScope, a.remoteGeneration, a.client
 	owned := make(map[string]any, len(params)+1)
 	for k, v := range params {
 		owned[k] = v
 	}
 	owned["clientScope"] = map[string]any{"hostId": host, "generation": generation}
-	a.requestGuarded(method, owned, accept, nil, func() bool {
+	a.requestGuarded(method, owned, accept, failed, func() bool {
 		return a.hostID == host && a.accountScope == account && a.remoteGeneration == generation && a.client == client
 	})
 }
@@ -269,6 +272,7 @@ func (a *app) connect(id string) {
 	a.hostID = id
 	a.sessionID = ""
 	a.workspaceID = ""
+	a.sessionOpening = ""
 	a.draft = ""
 	a.current = snapshot{}
 	a.composer = nil
@@ -342,6 +346,18 @@ func (a *app) fetchSessions() {
 		return err
 	})
 }
+
+// sessionNavigation is the state a switch replaces. A rejected switch restores
+// it, so a failed select/pick cannot leave the window on an empty transcript
+// that looks like a lost Remote connection.
+type sessionNavigation struct {
+	sessionID, workspaceID, draft, opening string
+	list                                   ui.ListState
+	current                                snapshot
+	composer                               *composerState
+	focusDraft                             bool
+}
+
 func (a *app) chooseSession(s session) {
 	a.releaseComposerImages()
 	a.resetMessageImages()
@@ -360,6 +376,7 @@ func (a *app) chooseSession(s session) {
 	}
 	a.drafts[a.viewKey(a.sessionID)] = a.draft
 	a.scrolls[a.viewKey(a.sessionID)] = a.list
+	previous := sessionNavigation{sessionID: a.sessionID, workspaceID: a.workspaceID, draft: a.draft, opening: a.sessionOpening, list: a.list, current: a.current, composer: a.composer, focusDraft: a.focusDraft}
 	a.draft = a.drafts[a.viewKey(s.ID)]
 	if state, ok := a.scrolls[a.viewKey(s.ID)]; ok {
 		a.list = state
@@ -370,22 +387,46 @@ func (a *app) chooseSession(s session) {
 	generation := a.navigationGeneration
 	a.sessionID = s.ID
 	a.current = snapshot{SessionID: s.ID}
+	a.sessionOpening = s.ID
 	a.composer = nil
 	a.connectionOpen = false
+	failed := func(err error) {
+		if generation != a.navigationGeneration {
+			return
+		}
+		a.navigationGeneration++
+		a.sessionOpening = ""
+		a.sessionID = previous.sessionID
+		a.workspaceID = previous.workspaceID
+		a.current = previous.current
+		a.composer = previous.composer
+		a.draft = previous.draft
+		a.list = previous.list
+		a.focusDraft = previous.focusDraft
+		if previous.opening != "" && previous.opening == previous.sessionID {
+			// The superseded switch was itself still loading, so its reply is
+			// retired with its navigation epoch. Ask again instead of leaving an
+			// opened Session on the empty placeholder.
+			a.openSession(previous.sessionID)
+		}
+		// The retry above starts its own request, which clears the shared error
+		// slot, so report the rejected switch last.
+		a.error = "切换会话失败：" + err.Error()
+	}
 	if s.WorkspaceID != "" && s.WorkspaceID != a.workspaceID {
-		a.scopedRead("selectWorkspace", map[string]any{"workspaceId": s.WorkspaceID}, func(raw json.RawMessage) error {
+		a.scopedRequest("selectWorkspace", map[string]any{"workspaceId": s.WorkspaceID}, func(raw json.RawMessage) error {
 			if generation != a.navigationGeneration {
 				return nil
 			}
 			a.workspaceID = s.WorkspaceID
-			a.openSession(s.ID)
+			a.openSessionWith(s.ID, failed)
 			return nil
-		})
+		}, failed)
 	} else {
 		if s.WorkspaceID == "" {
 			a.workspaceID = ""
 		}
-		a.openSession(s.ID)
+		a.openSessionWith(s.ID, failed)
 	}
 }
 func (a *app) viewKey(id string) string {
@@ -396,12 +437,17 @@ func (a *app) viewKey(id string) string {
 }
 
 func (a *app) openSession(id string) {
+	a.openSessionWith(id, nil)
+}
+
+func (a *app) openSessionWith(id string, failed func(error)) {
 	a.resetMessageImages()
 	a.invalidateChatRows()
 	generation, host := a.navigationGeneration, a.hostID
 	a.sessionID = id
 	a.current = snapshot{SessionID: id}
-	a.scopedRead("openSession", map[string]any{"workspaceId": a.workspaceID, "sessionId": id}, func(raw json.RawMessage) error {
+	a.sessionOpening = id
+	a.scopedRequest("openSession", map[string]any{"workspaceId": a.workspaceID, "sessionId": id}, func(raw json.RawMessage) error {
 		if a.sessionID != id || generation != a.navigationGeneration || host != a.hostID {
 			return nil
 		}
@@ -415,7 +461,7 @@ func (a *app) openSession(id string) {
 		a.composerBaselineKey = a.currentComposerBaselineKey()
 		a.rememberSelection()
 		return nil
-	})
+	}, failed)
 }
 func (a *app) currentComposerBaselineKey() string {
 	return fmt.Sprintf("%s\x00%d\x00%s", a.hostID, a.remoteGeneration, a.sessionID)

@@ -28,6 +28,9 @@ func (a *app) replaceSnapshot(s snapshot) bool {
 	a.invalidateChatRows()
 	a.current = s
 	a.sessionID = s.SessionID
+	if a.sessionOpening == s.SessionID {
+		a.sessionOpening = ""
+	}
 	a.reindexMessages()
 	if len(s.Projections) > 0 {
 		_ = a.acceptComposerProjections(s.Projections)

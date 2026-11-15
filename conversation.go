@@ -93,6 +93,7 @@ func (a *app) header(c *ui.Context) {
 	})
 }
 func (a *app) conversation(c *ui.Context) {
+	placeholder := a.conversationPlaceholder()
 	if a.currentTab == "trajectory" {
 		if a.compat != nil && a.compatPlacement == "trajectory" {
 			ui.WebView(c, a.compat).Grow(1).MinHeight(0)
@@ -101,15 +102,33 @@ func (a *app) conversation(c *ui.Context) {
 		} else {
 			a.trajectoryView(c)
 		}
-	} else if len(a.current.Messages) == 0 {
-		ui.Column(c).Grow(1).Center().Gap(12).Padding(30).Children(func() {
-			ui.Text(c, "连接你的工作主机").FontSize(25).FontWeight(500)
-			ui.Text(c, "工作留在 MacMini，界面在这里。").TextColor(a.theme.TextMuted)
-			if ui.Button(c, "选择 Remote 主机").Clicked() {
-				a.connectionOpen = true
-				a.fetchDevices()
-			}
-		})
+	} else if placeholder != conversationChat {
+		switch placeholder {
+		case conversationConnect:
+			ui.Column(c).Grow(1).Center().Gap(12).Padding(30).Children(func() {
+				ui.Text(c, "连接你的工作主机").FontSize(25).FontWeight(500)
+				ui.Text(c, "工作留在 MacMini，界面在这里。").TextColor(a.theme.TextMuted)
+				if ui.Button(c, "选择 Remote 主机").Clicked() {
+					a.connectionOpen = true
+					a.fetchDevices()
+				}
+			})
+		case conversationNoSession:
+			ui.Column(c).Grow(1).Center().Gap(12).Padding(30).Children(func() {
+				ui.Text(c, "选择或新建会话").FontSize(25).FontWeight(500)
+				ui.Text(c, "左侧列出的是工作主机上已有的任务。").TextColor(a.theme.TextMuted)
+			})
+		case conversationLoading:
+			ui.Column(c).Grow(1).Center().Gap(10).Padding(30).Children(func() {
+				stateIndicator(c, true, a.epoch, a.theme.TextMuted, &a.metrics)
+				ui.Text(c, "正在载入会话…").TextColor(a.theme.TextMuted)
+			})
+		default:
+			ui.Column(c).Grow(1).Center().Gap(10).Padding(30).Children(func() {
+				ui.Text(c, "这个会话还没有消息").FontSize(20).FontWeight(500)
+				ui.Text(c, "在下方描述任务开始协作。").TextColor(a.theme.TextMuted)
+			})
+		}
 	} else {
 		rows := a.chatRows()
 		if a.chatRowsCache != nil && a.chatRowsCache.presented {
@@ -137,6 +156,36 @@ func (a *app) conversation(c *ui.Context) {
 		}
 	}
 	a.composerView(c)
+}
+
+// conversationPlaceholder separates "no Remote connection", "no Session
+// selected", "that Session is still loading" and "that Session is empty". The
+// connect panel used to stand in for all four, so every switch and every blank
+// Session looked like a lost connection.
+type conversationPlaceholder int
+
+const (
+	conversationChat conversationPlaceholder = iota
+	conversationConnect
+	conversationNoSession
+	conversationLoading
+	conversationEmpty
+)
+
+func (a *app) conversationPlaceholder() conversationPlaceholder {
+	if !a.demo && !a.connected {
+		return conversationConnect
+	}
+	if a.sessionID == "" {
+		return conversationNoSession
+	}
+	if len(a.current.Messages) > 0 {
+		return conversationChat
+	}
+	if a.sessionOpening == a.sessionID {
+		return conversationLoading
+	}
+	return conversationEmpty
 }
 
 type chatRow struct {

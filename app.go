@@ -88,6 +88,7 @@ type app struct {
 	sessions                                                 []session
 	current                                                  snapshot
 	hostID, workspaceID, sessionID                           string
+	sessionOpening                                           string
 	draft, search, account, password, server, questionAnswer string
 	list, sessionList                                        ui.ListState
 	md                                                       markdown.Options

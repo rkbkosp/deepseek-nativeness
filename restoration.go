@@ -31,6 +31,7 @@ func (a *app) adoptAccountScope(scope string) {
 		a.hostID = ""
 		a.workspaceID = ""
 		a.sessionID = ""
+		a.sessionOpening = ""
 		a.draft = ""
 		a.sessions = nil
 		a.workspaces = nil

@@ -253,6 +253,7 @@ func (a *app) clearMain() {
 	a.closeWeb()
 	a.sessionID = ""
 	a.workspaceID = ""
+	a.sessionOpening = ""
 	a.current = snapshot{}
 	a.composer = nil
 	a.draft = ""
