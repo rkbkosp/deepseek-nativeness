@@ -1,0 +1,76 @@
+{
+  "checkedAt": "2026-11-14T15:08:51.238Z",
+  "reviewer": "root",
+  "status": "observed-subchecks-passed-full-parity-open",
+  "candidateNativeSha256": "8b44e6c8decd1f7b1fc167cbe519372ac7a68afe7df6e4c4e6ce472bfeeb5b15",
+  "candidateHelperSha256": "fa1b467d4384f156d602991f42b96638a61712beb3bf137118b95ca716cb3481",
+  "candidateCompatEntrySha256": "d740c53248191702895b29a0deb41b54c4d8c8abf3ae2b44405a516fa295dd49",
+  "sourceCommit": "4d095a0c59e47fe452501edec4f769c537f48267",
+  "manifest": "build/gui-checkpoints/gui7-manifest.json",
+  "platformAudit": "build/gui-checkpoints/gui7-platform.json",
+  "passedSubchecks": [
+    {
+      "id": "activation-auto-restore",
+      "detail": "Actual launch activated app and restored saved independent authorization, online Host, workspace and completed session without new login or stale-scope banner.",
+      "evidence": "/tmp/native-dsh-parity/100-native-core7-restored.png"
+    },
+    {
+      "id": "settings-wk-escape",
+      "detail": "Plugin settings search focused in actual WK; type tool-bash, clear, single Escape closed settings. HTML removed, native composer and connection remain.",
+      "evidence": "/tmp/native-dsh-parity/101-native-core7-plugin-settings.png"
+    },
+    {
+      "id": "settings-nested-escape",
+      "detail": "Agent preset How-to opens original nested guide. First Escape closes guide while WK settings stays; second Escape closes settings and removes HTML. No preset toggles changed."
+    },
+    {
+      "id": "narrow-chat-axis",
+      "detail": "Actual 1280×820 window, sidebar and 576px right pane open: prose wraps inside corrected shared axis, native composer retains width+32. Independent actual view geometry 360px transcript/392px composer matches. Table content separately fails.",
+      "evidence": "/tmp/native-dsh-parity/102-native-core7-narrow.png"
+    },
+    {
+      "id": "local-image-picker-preview-remove",
+      "detail": "System Add Images picker selected only synthetic build/qa/gui-image-fixture.png (256×128). Real thumbnail button, aspect-preserving native preview, Escape and remove worked. Selection stayed local; removal restored empty draft and disabled Send.",
+      "evidence": [
+        "/tmp/native-dsh-parity/103-native-core7-local-image-preview.png",
+        "/tmp/native-dsh-parity/104-native-core7-local-image-rail.png"
+      ]
+    },
+    {
+      "id": "session-reference-draft",
+      "detail": "Actual @Figma lookup showed completed session candidate. Clicking inserted canonical @[label](dsh-session:...) into draft; no session navigation or send. Cleared draft with Cmd+A/Backspace, Send disabled. Rich chip presentation remains open."
+    },
+    {
+      "id": "code-toolbar-icons",
+      "detail": "Actual code block displays icon-only wrap/nowrap and copy controls rather than checkbox/visible text labels. No clipboard changed.",
+      "evidence": "/tmp/native-dsh-parity/107-native-core7-code-toolbar.png"
+    }
+  ],
+  "failedSubchecks": [
+    {
+      "id": "narrow-table-clipping",
+      "detail": "In narrow transcript with right pane open, two-column table retains oversized width; right cell text is clipped by pane edge. Original under-four-column table semantics not yet reproduced.",
+      "evidence": "/tmp/native-dsh-parity/102-native-core7-narrow.png"
+    },
+    {
+      "id": "reference-chip-presentation",
+      "detail": "Selected session reference appears as raw canonical Markdown URI in native draft. Original contenteditable reference chip presentation/editing semantics need dedicated source review; functional insertion alone is not full parity."
+    }
+  ],
+  "remoteMutations": [],
+  "localDraftOnly": [
+    "Synthetic image selected, previewed and removed",
+    "Slash picker opened only file action",
+    "Session reference inserted and cleared"
+  ],
+  "remaining": [
+    "Full visual/operation matrix not accepted",
+    "Narrow tables, session reference rich editor and header preset seat remain frontend gaps",
+    "Generic staged files and large images remain qualified frontend/protocol gaps",
+    "Frozen schedule/plugin/resource limits remain unchanged",
+    "Actual macOS15.8 and M1 full-client performance not tested",
+    "No live send, cancellation, approval, queue/model/permission/settings or terminal writes"
+  ],
+  "exit": "Cmd+Q, then CUA inventory confirmed isRunning=false. Empty draft/zero test images before exit. Original app unchanged.",
+  "privacy": "Private local captures remain /tmp mode0600 and must not be published. Some getScreenshot bytes are JPEG despite png suffix."
+}

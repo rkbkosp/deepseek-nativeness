@@ -1,0 +1,66 @@
+{
+  "checkedAt": "2026-11-14T15:34:10.183Z",
+  "reviewer": "root",
+  "status": "helper-source-fixture-live-read-and-native-clipboard-fixture-passed-packaged-GUI-pending",
+  "helperCandidate": "remote/dist-export-next/bridge.bundle.mjs",
+  "helperSha256": "33b66739e16f742975bf698240be3ff4f0264d8f4e461f7be1bc8a1363fbdb13",
+  "sourceHashes": {
+    "remote/client.mjs": "6aa9592cc7e71e4142a5bde66a902e11e3f52e30c914865746b5d4f477052a0f",
+    "remote/session-markdown.mjs": "1cdad991680a9d2b805865ca4e54f03c151e50eccd068778faa8960ee1a4e1ed",
+    "remote/operations.mjs": "c207fbee5f30ac267eeb3bd5ad694a748cd653c5bbfb7459798de9ea9e3bccd8",
+    "remote/test/session-markdown.test.mjs": "6c87f416ef8f25f32fa50048c6897d224cc84f4b6891be4245134bd9ab086c16",
+    "remote/test/feedback-fork.test.mjs": "89c38f8ba97155429bce12bd002c44de99bb45b055a058fef044a547a36ac80f",
+    "remote/test/export-pipe.test.mjs": "a10b47dcda2d20f850c00eb1018e145c75788ef4541c45b350b113c616bed1be",
+    "../deepseek-harness/packages/session-query/session-log-export/src/markdown.ts": "df31523d62cd8a9d43602d586d1758fbc870a98302f008bdecdea258065d4841"
+  },
+  "tests": {
+    "command": "NATIVE_DSH_REMOTE_CANDIDATE=$PWD/remote/dist-export-next/bridge.bundle.mjs node --test remote/test/session-markdown.test.mjs remote/test/feedback-fork.test.mjs remote/test/export-pipe.test.mjs",
+    "passed": 13,
+    "scope": "Actual original formatter, exact candidate JSON-lines pipe, fixed cut/dedup/missing/conflicting/limits/cancel-owner, CAS/message identity/fork partial+unknown contracts; mutation fixtures only"
+  },
+  "liveReadOnly": {
+    "pass": true,
+    "readOnly": true,
+    "interactionAnswerer": false,
+    "remoteMutations": 0,
+    "transport": "LAN",
+    "stage": "complete-markdown",
+    "complete": true,
+    "throughSeq": 55,
+    "eventCount": 56,
+    "sourcePathIncluded": false,
+    "utf8Bytes": 34262,
+    "sha256": "87db2e53aab4c1587ff39f58c406b5f600f785c8dfe5465e2118c5207be58122",
+    "contentSaved": false,
+    "remainingOwners": 0,
+    "source": "Actual source RemoteAdapter over existing Native identity, not original dsh tokens",
+    "privateReport": "/tmp/native-dsh-acceptance/gui8-markdown-readonly.json"
+  },
+  "sourceEvidence": {
+    "formatter": "Original HTTP session.markdown uses same formatSessionMarkdown(snapshot.events, metadata.location.path); candidate deliberately omits optional source file metadata block",
+    "peerCompaction": "remote_reference/packages/plugin/src/service.ts103+ creates per-connection HarnessRemoteBridge; rpc-router.ts167-174 changes only that bridge.compactHistoryEnabled"
+  },
+  "limits": [
+    "Live completed saved session fits a single events page; overlapping multi-page completeness is fixture-verified",
+    "Live operation used source adapter; exact built helper was independently exercised through fixture pipe",
+    "No real fork/feedback performed",
+    "No rawZIP carrier added; no backend changes; not actual15.8/M1 acceptance"
+  ],
+  "updatedAt": "2026-11-14T16:17:06.385Z",
+  "nativeCopy": {
+    "status": "independently-reviewed-and-fixture-passed-actual-OS-clipboard-not-exercised",
+    "command": "NATIVE_DSH_REMOTE_CANDIDATE=$PWD/remote/dist-export-next/bridge.bundle.mjs CGO_ENABLED=0 go test -tags mygo_noinspector -run ^TestFullMarkdown -count=1 -v .",
+    "groups": 7,
+    "scenarios": 12,
+    "goSourceSha256": "a4a4b766d3a40ada101baacbd5425d09043492b911cb0e724ff7817972a3953a",
+    "testSourceSha256": "86c9f8c7a4789a8c7d9574373eef9ca9c27bbd1ee876e201a0ddd34d4e9a39d1",
+    "checkpoint": "qa/checkpoints/_markdown-native-final-20261114T160843Z",
+    "findings": [
+      "Actual header menu through exact candidate helper reaches isolated clipboard once",
+      "Late registration after close releases again, performs zero export reads",
+      "Late UI callbacks across6 scopes cannot copy or show success",
+      "Read completion/timeout releases owner before UI completion consumes result; a still-current intent copies exactly once",
+      "No ui.Context retained; original success/failure toast consumed at next view; private OS clipboard untouched"
+    ]
+  }
+}

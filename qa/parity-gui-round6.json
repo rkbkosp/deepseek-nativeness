@@ -1,0 +1,88 @@
+{
+  "checkedAt": "2026-11-14T13:33:31.611Z",
+  "reviewer": "root",
+  "status": "partial-subchecks-passed-settings-rejected-not-parity",
+  "candidateNativeSha256": "3112327842118ed943e3c1ee4f6a4b114990b78ccaa2521ff9c5dbaf50df95de",
+  "candidateHelperSha256": "83b440d5038f42f6bdc62b224330493b2e167390d747ac89cb9f7ed0c933f8ee",
+  "candidateCompatEntrySha256": "e6f7b100cc0e62cc8ad9ac0910c0f9d8e6c726180d975eba184963e0e36eff74",
+  "sourceCommit": "19caec1d6d6496003fe794c1aa5ea530ce2e34b6",
+  "manifest": "build/gui-checkpoints/gui6-manifest.json",
+  "independentFullManifest": "build/gui-checkpoints/gui6-full-bundle-root.json",
+  "viewport": {
+    "logical": [
+      1280,
+      820
+    ],
+    "physical": [
+      2560,
+      1640
+    ],
+    "theme": "system-dark",
+    "captureEncoding": "JPEG bytes despite png capture filename suffix"
+  },
+  "activationFinding": {
+    "detail": "Window Raise did not activate app. AX terminal became current while screenshot retained native start cards. Clicking native header activated/updated canvas and actual terminal became visible; no confirmed framework z-order defect.",
+    "before": "/tmp/native-dsh-parity/80-native-core6-terminal.png",
+    "after": "/tmp/native-dsh-parity/81-native-core6-terminal-focus.png"
+  },
+  "passedSubchecks": [
+    {
+      "id": "terminal-real-empty-state",
+      "detail": "Start-card entry leads to original TerminalGuide, shell selector, refresh and actual empty owned-terminal inventory. No terminal created or attached.",
+      "evidence": "/tmp/native-dsh-parity/81-native-core6-terminal-focus.png"
+    },
+    {
+      "id": "terminal-close",
+      "detail": "Close right pane removes terminal HTML content from AX."
+    },
+    {
+      "id": "narrow-composer",
+      "detail": "At424logical chat column controls remain inside card and full model caption wraps rather than clipping; text area still available. Pixel-perfect parity not asserted."
+    },
+    {
+      "id": "models-settings-read",
+      "detail": "Three actual configured providers and credential-presence dots match known original directory; no editor opened.",
+      "evidence": "/tmp/native-dsh-parity/82-native-core6-model-settings.ax.txt"
+    },
+    {
+      "id": "preset-settings-read",
+      "detail": "Four real preset cards/default state load; standard mode explanation opens and closes without selecting a preset.",
+      "evidence": "/tmp/native-dsh-parity/84-native-core6-presets.png"
+    },
+    {
+      "id": "settings-release",
+      "detail": "Switch back to general destroys HTML content and restores native controls; closing settings returns chat."
+    },
+    {
+      "id": "automation-read-filter",
+      "detail": "Real empty catalog loads; 全部 filter updates empty-state text. New/Create not clicked.",
+      "evidence": "/tmp/native-dsh-parity/86-native-core6-automation.png"
+    },
+    {
+      "id": "split-model-popup",
+      "detail": "Current model fallback now appears in main row, Default reasoning/teamoff visible; catalog subpane loads actual models; Escape closes all HTML content.",
+      "evidence": "/tmp/native-dsh-parity/87-native-core6-model-popup.png"
+    }
+  ],
+  "failedSubchecks": [
+    {
+      "id": "settings-background-clip",
+      "detail": "Settings content bg-base visibly differs from modal bg-layer2, and dark WK rectangle appears to extend past native modal bottom over chat/composer. Repeated title click capture still fails.",
+      "evidence": "/tmp/native-dsh-parity/83-native-core6-model-settings-focused.png"
+    },
+    {
+      "id": "builtin-settings-route",
+      "detail": "内置插件 rail incorrectly embeds global Plugin Manager (installed/discover/experimental/package sections), rather than original PluginsSettingsSection/PluginInventorySettingsTab.",
+      "evidence": "/tmp/native-dsh-parity/85-native-core6-builtin-settings.png"
+    }
+  ],
+  "remaining": [
+    "Full visual and operation matrix remains unaccepted",
+    "Activation, settings geometry/background and route repairs require exact packaged GUI recheck",
+    "Automation new/creator front-end blank-navigation missing; schedule create backend contract blocked",
+    "M1 whole-app performance, streaming workload, real writes and terminal input unverified"
+  ],
+  "remoteMutations": [],
+  "exit": "Cmd+Q; CUA inventory confirmed Native absent. Original DSH left running.",
+  "privacy": "Captures remain private local mode0600 in mode0700 directory; no private histories added to fixtures."
+}

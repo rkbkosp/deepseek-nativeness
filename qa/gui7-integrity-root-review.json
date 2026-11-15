@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-11-14T15:12:34.141Z",
+  "reviewer": "root",
+  "candidate": "GUI7",
+  "files": 3599,
+  "bundleDiskBytes": 209411884,
+  "allPackagedHashesMatch": true,
+  "sourceCommit": "4d095a0c59e47fe452501edec4f769c537f48267",
+  "platform": "Apple M4 / macOS27.2.1 / arm64",
+  "declaredTarget": "macOS15.8+ / Apple Silicon",
+  "runtimeQualification": "Observed GUI subchecks on this M4 only. macOS15.8/M1 not tested. Disk bytes do not measure runtime RAM.",
+  "guiReport": "qa/parity-gui-round7.json",
+  "platformAudit": "build/gui-checkpoints/gui7-platform.json"
+}

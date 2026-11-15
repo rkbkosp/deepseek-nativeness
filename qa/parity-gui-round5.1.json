@@ -1,0 +1,54 @@
+{
+  "checkedAt": "2026-11-14T12:59:47.032Z",
+  "reviewer": "root",
+  "status": "partial-subchecks-passed-not-parity",
+  "candidateNativeSha256": "47dc5bb22d65e03e33de9a11209ee4093afd61ff236511521a96353350414712",
+  "candidateHelperSha256": "74b4ca3f54a4dabaa89bc2648bafcbab135613bb19f5a34fe81c7515198cb54b",
+  "candidateCompatSha256": "401e824ae9b4df7d9368c381873b16a7a29cdbca282db9baf38e3852fe2f4565",
+  "sourceCommit": "e7449100e667747cc594ae6dfd5bac47644a1a17",
+  "manifest": "build/gui-checkpoints/gui5.1-manifest.json",
+  "passedSubchecks": [
+    {
+      "id": "automatic-restore",
+      "detail": "Launch using separate saved login automatically connects to MacMini and restores the same completed Figma session without manual selection.",
+      "evidence": "/tmp/native-dsh-parity/70-native-core51-restored.ax.txt"
+    },
+    {
+      "id": "composer-scope-reload",
+      "detail": "After restore and trajectory navigation, persistent stale Host/session footer absent; no remote sends performed."
+    },
+    {
+      "id": "composer-model-caption",
+      "detail": "Native label now DeepSeek-Flash · Qoder CN Default, matching source naming rule.",
+      "evidence": "/tmp/native-dsh-parity/72-native-core51-return-chat.png"
+    },
+    {
+      "id": "permission-caption",
+      "detail": "Menu now 仅可查看 / 工作区内修改 / 完全权限; no option selected."
+    },
+    {
+      "id": "trajectory-real-render",
+      "detail": "Actual original timeline, semantic request/context/tool rows and search appear through frozen Remote; native composer remains below.",
+      "evidence": "/tmp/native-dsh-parity/71-native-core51-trajectory.png"
+    },
+    {
+      "id": "trajectory-search-collapse",
+      "detail": "Typing figma_setup in local search filters rows; clearing restores rows. Collapse all rounds shows two summary rows; expanded again before returning."
+    },
+    {
+      "id": "trajectory-close",
+      "detail": "Clicking 对话 removes HTML content from AX and restores native history/composer; no stale context error.",
+      "evidence": "/tmp/native-dsh-parity/72-native-core51-return-chat.png"
+    }
+  ],
+  "remaining": [
+    "Whole UI and operation parity not accepted; matrix retains all unverified operations.",
+    "Terminal entry and visual layering failures from round5 unchanged by this minimal candidate.",
+    "Narrow composer responsive and sidebar/header visual differences remain.",
+    "WK model row fallback source-only fix not packaged here.",
+    "No M1 CPU/memory or real terminal/paid/mutation acceptance."
+  ],
+  "remoteMutations": [],
+  "exit": "Cmd+Q then CUA inventory confirmed Native absent; original left running.",
+  "privacy": "Private screenshots and AX remain local, mode0600, in mode0700 directory; no session bodies copied into fixtures."
+}

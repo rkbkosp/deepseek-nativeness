@@ -1,0 +1,48 @@
+{
+  "checkedAt": "2026-11-14T11:56:45.052Z",
+  "reviewer": "/root/acceptance_audit",
+  "scope": "Independent review of RemoteAdapter and Go page-owner layer. Author-owned terminal component tests remain separate self-tests.",
+  "commands": [
+    {
+      "command": "node --test qa/owner-lifecycle.test.mjs",
+      "passed": 8,
+      "failed": 0
+    },
+    {
+      "command": "node qa/run-parity-acceptance.mjs",
+      "passed": 12,
+      "failed": 0,
+      "independentCoreAndGoOwner": 7,
+      "authorOwnedSettingsAndFiles": 5
+    },
+    {
+      "command": "node qa/verify-freeze.mjs",
+      "passed": 6,
+      "failed": 0
+    }
+  ],
+  "foundAndFixed": [
+    {
+      "issue": "Special terminalInput bypassed an explicit readOnly fence",
+      "reproduction": "readOnly=true with existing ready attachment could dispatch input",
+      "resolution": "Remote author added the explicit READ_ONLY gate; independent test now passes",
+      "liveIncident": false
+    }
+  ],
+  "coverage": [
+    "20 owners × 2 scoped streams retire all simulated carrier iterators, stream contexts and input receipts",
+    "Close before deferred open dispatches nothing",
+    "Reused owner label cannot revive queued work under an old owner ticket",
+    "Changing Host/gateway/generation rejects queued and stale writes before dispatch",
+    "Scoped pages cannot close another owner stream",
+    "Explicit Host refusal remains rejected; transport loss remains cached unknown without replay",
+    "Destroy aborts in-flight settings carrier",
+    "Actual Go closeCompat releases 20 active/pending owner fields through the same Node fixture helper, closes its session stream and refuses subsequent stale access"
+  ],
+  "boundaries": [
+    "Fixture-only, no live prompts, approvals, shell operations or Host settings writes",
+    "Go test uses active/pending owner fields and real helper pipes, not a native WK process or UI event loop; physical WK crash/destroy remains a separate GUI acceptance case",
+    "Original reference and installed profile hash checks pass"
+  ],
+  "round4GuiReview": "qa/parity-gui-round4.json"
+}

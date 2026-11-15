@@ -1,0 +1,32 @@
+{
+  "checkedAt": "2026-11-14T11:04:49.461Z",
+  "reviewer": "root",
+  "status": "rejected-main-rendering",
+  "candidateNativeSha256": "4859b8eb50f2ef52319481c3ca93883ffc733948a7e6f34e822028195924b556",
+  "candidateHelperSha256": "bc803ee2290a92abe5c89e82c6f13b30bd4bee3a0600b474c7549919e8ed98ef",
+  "privacy": "Screenshots contain private data; keep local.",
+  "findings": [
+    {
+      "id": "main-drawing",
+      "severity": "P0",
+      "status": "observed-failed",
+      "evidence": [
+        "/tmp/native-dsh-parity/30-native-core2-chat.png",
+        "/tmp/native-dsh-parity/30b-native-core2-chat.png"
+      ],
+      "detail": "Entire main content is blank while AX and actual remote history are present. Repeated captures stable. Native settings overlay can draw; inspect root clipping."
+    },
+    {
+      "id": "settings-bounds",
+      "status": "observed-passed-subcheck",
+      "evidence": "/tmp/native-dsh-parity/31-native-core2-settings.png",
+      "detail": "Rail, header and close control now fit the modal and content stays inside it. This does not accept remaining disabled operations, exact typography or full settings parity."
+    },
+    {
+      "id": "catalog-scope",
+      "status": "AX-observed-passed-visual-blocked",
+      "detail": "All workspace session rows remain in AX after opening the comparison session; main drawing failure prevents visual acceptance."
+    }
+  ],
+  "actions": "Existing own login and same MacMini read-only history. No live writes. Cmd+Q exited candidate; inventory confirmed absent."
+}

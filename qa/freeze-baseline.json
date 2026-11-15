@@ -1,0 +1,16 @@
+{
+  "capturedBy": "root",
+  "scope": "Frozen reference repositories, installed Desktop application archive, installed Remote code and existing Desktop profile configuration; runtime credential refreshes are outside this comparison.",
+  "repositories": [
+    { "path": "deepseek-harness", "head": "39163dd30f703a79079e2d2446545cff3c453738" },
+    { "path": "mygo", "head": "ec96dbe0c47717f42d8484a36b4f2e4eaf32e8f0" }
+  ],
+  "files": [
+    { "path": "/Users/rkbkosp/.dsh/profiles/desktop/package.json", "sha256": "b0a9f2caac6f043e190ada8cf6d33da6ced4c1236dd76a954db06335da0bd3ff" },
+    { "path": "/Users/rkbkosp/.dsh/profiles/desktop/cordis.yml", "sha256": "c300dcf2ebc5f02062d6591268d29d3db6fe45e0cb138f5467276fe2ba06076e" },
+    { "path": "/Users/rkbkosp/.dsh/profiles/desktop/cordis.patch.yml", "sha256": "c1e96bfe08fd52759698da66db33565efd1c683f6591d62b9aa02af794753afe" },
+    { "path": "/Users/rkbkosp/.dsh/profiles/desktop/pnpm-lock.yaml", "sha256": "f320820b057fbd3d97b305035a4e24a19c3e0827f71e646a9c012899dcc1d03e" },
+    { "path": "/Applications/DeepSeek Harness.app/Contents/Resources/app.asar", "sha256": "c0ce89f77d25e98e11952728d1fc054b6e2300db17402af83a1a225c8b36e843", "kind": "installed-desktop-archive" },
+    { "path": "/Users/rkbkosp/.dsh/profiles/desktop/node_modules/ds-harness-remote/dist/index.js", "sha256": "805d33ca4dec0c0503fc7458db3f7b5b4e5bd69ad9a27cf0df816b018032af32", "kind": "installed-remote-code" }
+  ]
+}

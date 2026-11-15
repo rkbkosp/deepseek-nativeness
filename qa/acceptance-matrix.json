@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "referenceScreenshot": "/tmp/native-dsh-acceptance/reference-dsh.png",
+  "privacy": "Screenshot contains private session content. Keep it local; do not publish or copy into public fixtures.",
+  "checks": [
+    {
+      "id": "frozen-backend",
+      "gate": "required",
+      "status": "passed-local",
+      "evidence": "Run node qa/verify-freeze.mjs. This checks repository HEAD/clean status and profile configuration hashes, not every runtime data file."
+    },
+    {
+      "id": "build-and-launch",
+      "gate": "required",
+      "status": "passed-local",
+      "evidence": "Independently build with CGO_ENABLED=0 and launch the compiled application. Record exact commands and exit codes."
+    },
+    {
+      "id": "real-read-only-remote",
+      "gate": "required",
+      "status": "passed-live-LAN",
+      "evidence": "Distinct client identity connects through existing Remote protocol; enumerate authorized Hosts, workspaces and actual history without sending a model prompt or modifying existing tasks. Credential values must not enter logs."
+    },
+    {
+      "id": "history-live-recovery",
+      "gate": "required",
+      "status": "history-passed-live-stream-recovery-unverified",
+      "evidence": "Session snapshots, cursor/gap handling, assistant revisions, cancellation and disconnect are exercised. Label fixture coverage separately from real Host observations."
+    },
+    {
+      "id": "prompt-and-interactions",
+      "gate": "required",
+      "status": "fixture-passed-live-unverified",
+      "evidence": "Fixture tests assert actual outgoing session/prompt, cancel, $events and $events/result protocol fields. No real approval, interruption or paid model prompt is authorized for smoke testing."
+    },
+    {
+      "id": "no-hidden-heavy-runtime",
+      "gate": "required",
+      "status": "passed-local-code-and-process-design",
+      "evidence": "Runtime process inventory verifies no full local dsh runtime and no permanent hidden WebView holding the transport. Record helper dependencies and bundle size."
+    },
+    {
+      "id": "visual-fidelity",
+      "gate": "required",
+      "status": "GUI9-observed-subchecks-native-forced-theme-failed-full-parity-open",
+      "evidence": "Actual normal/forced connected screens and isolated synthetic structured replay recorded in qa/parity-gui-round9.json. Independent input popup/arrow/pointer/blur behavior passed, but native forced-dark sidebar/input backing mismatch failed. No complete parity,15.8 or M1 claim."
+    },
+    {
+      "id": "animation-fidelity",
+      "gate": "required",
+      "status": "passed-local-functional",
+      "evidence": "Verify 1.5 second rotation plus breathing arc and shared phase with time-controlled samples or screen recording; verify no per-frame business state mutation and no animation scheduler after all indicators disappear."
+    },
+    {
+      "id": "webview-lifecycle",
+      "gate": "required",
+      "status": "root-observed-pass",
+      "evidence": "Opening and closing a compatibility page creates/destroys it while remote connection survives. Closing the window terminates only this app's owned helper."
+    },
+    {
+      "id": "m1-performance",
+      "gate": "target-device",
+      "status": "unverified",
+      "evidence": "Needs the user's M1 MacBook Air. Use the same remote session, viewport, animation count and event replay. Include helper and attributable WebKit processes; measure default-animation official and reduced-motion baselines independently. M4 development tests do not satisfy this gate."
+    }
+  ]
+}

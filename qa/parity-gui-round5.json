@@ -1,0 +1,77 @@
+{
+  "checkedAt": "2026-11-14T12:47:57.332Z",
+  "reviewer": "root",
+  "status": "rejected-not-parity",
+  "candidateNativeSha256": "924408fac9ff2fb67dc1605b44e767f559c3c7eef0dc613c3ed95d58c793199c",
+  "candidateHelperSha256": "74b4ca3f54a4dabaa89bc2648bafcbab135613bb19f5a34fe81c7515198cb54b",
+  "candidateCompatSha256": "401e824ae9b4df7d9368c381873b16a7a29cdbca282db9baf38e3852fe2f4565",
+  "viewport": {
+    "logical": [
+      1280,
+      820
+    ],
+    "physical": [
+      2560,
+      1640
+    ],
+    "theme": "system-dark"
+  },
+  "privacy": "Private captures remain in mode-0700 tmp directory; do not publish history or copy into fixtures.",
+  "passedSubchecks": [
+    {
+      "id": "native-font-material",
+      "detail": "Default normal300 typography and sidebar material visually closer to original; full parity still unaccepted.",
+      "evidence": "/tmp/native-dsh-parity/60-native-core5-chat.png"
+    },
+    {
+      "id": "collapsed-caption",
+      "detail": "Sidebar fully disappears; caption has traffic-light clearance and title begins x168 logical; expansion restores sidebar.",
+      "evidence": "/tmp/native-dsh-parity/62-native-core5-collapsed.png"
+    },
+    {
+      "id": "anchored-model-popup",
+      "detail": "WK model popup opens above composer in place; Escape removes HTML content; current label row still fails parity.",
+      "evidence": "/tmp/native-dsh-parity/61-native-core5-model-popover.png"
+    },
+    {
+      "id": "plugin-frame",
+      "detail": "Original cards and real Host data load; global caption and horizontal inset now align with reference. Sidebar selected-plugin background missing.",
+      "evidence": "/tmp/native-dsh-parity/65-native-core5-plugins-loaded.png"
+    }
+  ],
+  "failedSubchecks": [
+    {
+      "id": "composer-stale-context",
+      "detail": "Footer shows stale Host/session error after successful comparison-session selection; source fix pending real GUI recheck."
+    },
+    {
+      "id": "model-caption",
+      "detail": "Incorrect provider suffix Magpie and missing Default reasoning; popup model row fallback swallowed."
+    },
+    {
+      "id": "permission-caption",
+      "detail": "Read-only label differs: candidate 只读 versus original 仅可查看."
+    },
+    {
+      "id": "terminal-visible-pane",
+      "detail": "Header More→Terminal eventually creates terminal HTML/AX and actual empty-inventory guide, but screenshot still paints native start cards over it. Start-card entry itself disabled as unimplemented; no terminal created.",
+      "evidence": "/tmp/native-dsh-parity/67-native-core5-terminal-loaded.png"
+    },
+    {
+      "id": "narrow-composer",
+      "detail": "Opening right pane clips model control at chat right edge; responsive layout required.",
+      "evidence": "/tmp/native-dsh-parity/63-native-core5-right-pane.png"
+    },
+    {
+      "id": "trajectory-gate",
+      "detail": "Known candidate missing watchSession/sessionPage allowlist; source-only repair is not GUI proof."
+    }
+  ],
+  "remoteMutations": [],
+  "exit": "Cmd+Q exited candidate; inventory confirmed absent. Original DSH left running.",
+  "remaining": [
+    "Full operation and visual matrix not accepted.",
+    "Source repairs require exact packaged GUI verification.",
+    "No current M1 performance or comparable full-package memory result."
+  ]
+}

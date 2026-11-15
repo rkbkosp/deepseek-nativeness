@@ -1,0 +1,61 @@
+{
+  "checkedAt": "2026-11-14T13:57:33.148Z",
+  "reviewer": "root",
+  "candidate": "GUI6.1",
+  "status": "historical-GUI6.1-audit; next package targets user macOS15.8+",
+  "evidence": "Live file/vtool/go version -m/PlistBuddy on the exact frozen bundle",
+  "binaries": [
+    {
+      "file": "Contents/MacOS/native-dsh",
+      "architecture": "arm64",
+      "minimumMacOS": "13.0",
+      "goArm64": "v8.0",
+      "cgo": false
+    },
+    {
+      "file": "Contents/MacOS/node",
+      "architecture": "arm64",
+      "minimumMacOS": "13.5"
+    },
+    {
+      "file": "Contents/Resources/remote/node_modules/@roamhq/wrtc-darwin-arm64/wrtc.node",
+      "architecture": "arm64",
+      "minimumMacOS": "11.0"
+    }
+  ],
+  "bundleDeclaredMinimumMacOS": "13.0",
+  "requiredBinaryFloorAtLeast": "13.5",
+  "browserBuildTarget": "safari17.4",
+  "limits": [
+    "Architecture/binary load-command audit is not M1 launch or performance acceptance",
+    "Actual WK API/OS support also needs a supported-system test",
+    "Frozen GUI6.1 bundle not modified; next packaging source must correct declared minimum",
+    "User-supported15.8+ range is a requirement, not proof this exact OS has run the app"
+  ],
+  "requirementUpdatedAt": "2026-11-14T14:01:21.100Z",
+  "userSupportedMacOSMinimum": "15.8",
+  "followup": "User requirement supersedes 13.x/14.x compatibility. Build script and README now target15.8. Earlier binary13.5 floor remains factual historical evidence, not a requested support target.",
+  "historicalFloorQualification": "Earlier binary-floor inspection retained as historical evidence; user-selected >=15.8 target supersedes 13.x/14.x coverage requirements. Does not establish actual 15.8 runtime test.",
+  "sourceAPIAudit": {
+    "checkedAt": "2026-11-14T14:56:12.900Z",
+    "kind": "local-Apple-SDK-and-pinned-MyGo-source-only",
+    "thumbnail": {
+      "headers": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/ImageIO.framework/Headers/CGImageSource.h",
+      "symbols": [
+        "CGImageSourceCreateThumbnailAtIndex",
+        "kCGImageSourceShouldCache",
+        "kCGImageSourceThumbnailMaxPixelSize",
+        "kCGImageSourceCreateThumbnailWithTransform"
+      ],
+      "declaredAvailableSince": "10.4"
+    },
+    "focus": {
+      "source": "../mygo/internal/darwin/app.go",
+      "selector": "activateIgnoringOtherApps:",
+      "SDK": "NSApplication.h",
+      "declaredAvailableSince": "10.0",
+      "note": "Still present; deprecated in a future release according to current SDK. No frozen framework edit."
+    },
+    "conclusion": "These newly used boundaries do not require an OS above15.8 according to local primary headers; not a launch/runtime compatibility proof."
+  }
+}

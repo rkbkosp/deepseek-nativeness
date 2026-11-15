@@ -1,0 +1,5 @@
+{
+  "Replace": {
+    "/Volumes/SuperDisk/native-dsh/desktop/qa_parity_overlay_test.go": "/Volumes/SuperDisk/native-dsh/desktop/qa/parity-acceptance.gotest"
+  }
+}

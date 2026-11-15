@@ -1,0 +1,76 @@
+{
+  "checkedAt": "2026-11-14T10:23:12.517Z",
+  "reviewer": "root",
+  "artifact": "build/Native DSH Remote.app",
+  "sha": {
+    "native": "cde22aea59cbb0dbb16b0ee37354403683ddc9c99ecf3f9b4c0531e71cfdb0b7",
+    "helper": "25d1c3e659f5d188ddd764971f99ee95a9e2539b5b89b410cb119dc001145c7f"
+  },
+  "steps": [
+    {
+      "step": 1,
+      "name": "Normal independent app launch",
+      "status": "passed",
+      "evidence": "Actual CUA launch; private login state; native account and secure password fields."
+    },
+    {
+      "step": 2,
+      "name": "Sidebar collapse and restore",
+      "status": "passed",
+      "evidence": "Actual native controls and updated accessibility tree."
+    },
+    {
+      "step": 3,
+      "name": "On-demand WebKit page",
+      "status": "passed-with-limit",
+      "evidence": "Actual Remote website loaded; Close removed HTML content and restored native login. This is an independent webpage, not verified shared-session plugin embedding."
+    },
+    {
+      "step": 4,
+      "name": "Brand and unauthenticated navigation",
+      "status": "passed-with-limit",
+      "evidence": "Final 2560x1640 capture has original whale, name and white HARNESS label; no raw protocol-error banner. Full typography and animation visual parity remain open."
+    },
+    {
+      "step": 5,
+      "name": "Authorized Host and native history presentation",
+      "status": "passed-read-path-only",
+      "evidence": "User completed native login. CUA verified saved authorization survived app restart, online MacMini connection, MAM-Go workspace filtering and a completed session rendered with native Markdown/table. No prompt, cancellation or approval action was performed. The independent readOnly probe has separate evidence in runtime-results/live-readonly.json."
+    }
+  ],
+  "screenshots": [
+    "/tmp/native-dsh-acceptance/reference-dsh.png",
+    "/tmp/native-dsh-acceptance/native-web-v1.png",
+    "/tmp/native-dsh-acceptance/native-login-ready.png",
+    "/tmp/native-dsh-acceptance/native-live-history-initial.png"
+  ],
+  "limitations": [
+    "Reference screenshot contains private session data and remains local.",
+    "M1 performance and battery consumption not tested.",
+    "Published release signing and notarization not performed.",
+    "Local fixture and functional frame counters are not live Remote performance evidence.",
+    "No currently running Host session existed for live streaming/reconnect observations.",
+    "Real prompt/cancel/approval/question operations remain fixture-verified only.",
+    "Original context/tool grouping and complete visual parity are not yet reproduced.",
+    "Real-history screenshot includes private data and must remain local."
+  ],
+  "localMemoryObservation": {
+    "machine": "Development MacMini Apple M4",
+    "at": "2026-11-14T10:23:12.517Z",
+    "method": "vmmap -summary, physical footprint, one observation after real completed history displayed",
+    "processes": [
+      {
+        "kind": "Go native UI",
+        "pid": 11766,
+        "physicalFootprintMiB": 84.7
+      },
+      {
+        "kind": "Node Remote helper",
+        "pid": 11768,
+        "physicalFootprintMiB": 40.1
+      }
+    ],
+    "sumMiB": 124.8,
+    "limits": "Not a same-workload comparison, not M1, not a sustained or peak application measurement. No compatibility WebView open."
+  }
+}

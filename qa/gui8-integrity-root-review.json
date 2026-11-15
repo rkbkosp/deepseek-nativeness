@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-11-14T16:14:35.122Z",
+  "reviewer": "root",
+  "status": "fixed-artifact-integrity-pass-gui-pending",
+  "candidates": [
+    {
+      "name": "normal",
+      "app": "/Volumes/SuperDisk/native-dsh/desktop/build/Native DSH Remote GUI8.app",
+      "sourceCommit": "a3a38ac3b8e37b37ac6ccea1cd3b832c6df66be0",
+      "files": 3599,
+      "diskBytes": 209501707,
+      "allHashMatch": true
+    },
+    {
+      "name": "forced",
+      "app": "/Volumes/SuperDisk/native-dsh/desktop/build/Native DSH Remote Anchor QA.app",
+      "sourceCommit": "a3a38ac3b8e37b37ac6ccea1cd3b832c6df66be0",
+      "files": 3599,
+      "diskBytes": 209507406,
+      "allHashMatch": true
+    }
+  ],
+  "scope": "Exact source a3a38ac, two complete bundles; disk bytes are not runtime memory. Normal/forced composed UI and actual15.8/M1 remain unaccepted.",
+  "clipboardPolicy": "Only isolated fixture sink tested; do not copy private content during GUI smoke"
+}

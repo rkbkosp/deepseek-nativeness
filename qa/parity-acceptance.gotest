@@ -1,0 +1,205 @@
+package main
+
+import (
+ "testing"
+ "encoding/json"
+ "github.com/egoist/mygo/ui"
+ "github.com/egoist/mygo"
+ "os"
+ "image/png"
+ "strings"
+ "reflect"
+ "math"
+ "fmt"
+ "context"
+ "os/exec"
+ "path/filepath"
+ "time"
+ "native-dsh/desktop/internal/bridge"
+)
+
+func TestQAChatRowsUniqueAcrossInterleavedProcessGroups(t *testing.T) {
+	a:=&app{uiPrefs:defaultViewPreferences(),current:snapshot{Messages:[]message{
+		{ID:"context-1",Kind:"context",Turn:1},
+		{ID:"answer-1",Role:"assistant",Kind:"assistant",Text:"First answer",Turn:1},
+		{ID:"tool-1",Role:"tool",Kind:"tool",Turn:1},
+		{ID:"answer-2",Role:"assistant",Kind:"assistant",Text:"Second answer",Turn:1},
+		{ID:"tool-2",Role:"tool",Kind:"tool",Turn:1},
+	}}}
+	seen:=map[string]bool{}
+	for _,row:=range a.chatRows(){if row.ID==""||seen[row.ID]{t.Fatalf("duplicate or missing row id %q",row.ID)};seen[row.ID]=true}
+	before:=a.chatRows();a.current.Messages[4].Text="Tool output changed";after:=a.chatRows()
+	for i:=range before{if before[i].ID!=after[i].ID{t.Fatal("content update replaced stable row identity")}}
+}
+
+func TestQACompletedHistoryRemainsFoldedDuringLaterRunningTurn(t *testing.T) {
+	a:=&app{uiPrefs:defaultViewPreferences(),current:snapshot{Running:true,Messages:[]message{
+		{ID:"history-tool",Kind:"tool",Turn:1},
+		{ID:"history-answer",Kind:"assistant",Role:"assistant",Text:"Complete",Turn:1},
+		{ID:"new-user",Kind:"user",Role:"user",Text:"Continue",Turn:2},
+		{ID:"active-tool",Kind:"tool",Turn:2},
+	}}}
+	rows:=a.chatRows();if rows[0].DefaultOpen{t.Fatal("a new running turn reopened completed historical work")}
+	if !rows[len(rows)-1].DefaultOpen{t.Fatal("active work should be expanded")}
+}
+
+func TestQAFoldPreferencesChangeExistingGroupState(t *testing.T) {
+	a:=&app{uiPrefs:defaultViewPreferences(),flowOpen:map[string]*bool{},current:snapshot{Messages:[]message{{ID:"tool",Kind:"tool",Turn:1},{ID:"answer",Role:"assistant",Kind:"assistant",Text:"Done",Turn:1}}}}
+	row:=a.chatRows()[0];state:=a.managedFold(row.ID,row.DefaultOpen);if *state{t.Fatal("completion must initially fold")}
+	a.uiPrefs.StepsCollapse="next-input";row=a.chatRows()[0];a.managedFold(row.ID,row.DefaultOpen);if !*state{t.Fatal("saved next-input choice did not affect an existing group")}
+	a.current.Messages=append(a.current.Messages,message{ID:"next",Role:"user",Kind:"user",Turn:2});row=a.chatRows()[0];a.managedFold(row.ID,row.DefaultOpen);if *state{t.Fatal("next-input did not fold after next user message")}
+	a.uiPrefs.StepsDetail="verbose";row=a.chatRows()[0];a.managedFold(row.ID,row.DefaultOpen);if !*state{t.Fatal("verbose did not expand existing process")}
+}
+
+func TestQAFilePaneDoesNotReuseAnotherHostOrSession(t *testing.T) {
+	a:=&app{hostID:"host-a",sessionID:"same-id"};original:=a.currentRightPane();original.TextReady=true;original.Text.Text="Private A"
+	a.hostID="host-b";fresh:=a.currentRightPane();if fresh==original||fresh.TextReady||fresh.Text.Text!=""{t.Fatal("same session id on another host inherited file content")}
+	a.sessionID="other";if a.currentRightPane()==fresh{t.Fatal("another session inherited file state")}
+	prior:=a.currentRightPane();a.remoteGeneration++;if a.currentRightPane()==prior{t.Fatal("reconnected same Host/session reused a stale scope")}
+}
+
+func TestQAFileTreeRejectsTraversalEntryAndHonorsDisclosure(t *testing.T) {
+	s:=&rightPaneState{Directories:map[string]paneDirectory{"":{Entries:[]paneFileEntry{{Name:"..",Type:"directory"},{Name:"a/b",Type:"file"},{Name:".hidden",Type:"file"},{Name:"folder",Type:"directory"}}},"folder":{Entries:[]paneFileEntry{{Name:"visible.txt",Type:"file"}}}},Expanded:map[string]bool{}}
+	rows:=paneRows(s,"",0);if len(rows)!=1||rows[0].Path!="folder"{t.Fatalf("unsafe/hidden or collapsed entries included: %+v",rows)}
+	s.Expanded["folder"]=true;rows=paneRows(s,"",0);if len(rows)!=2||rows[1].Path!="folder/visible.txt"{t.Fatal("folder expansion did not reveal child")}
+}
+
+func TestQASendReceiptClearsOnlyOriginalHostAndOriginalDraft(t *testing.T) {
+	intent:=&sendIntent{ID:"r1",HostID:"host-a",SessionID:"s",Text:"Sent",Draft:"  Sent  ",Unknown:true}
+	a:=&app{hostID:"host-b",sessionID:"s",draft:"Draft B",drafts:map[string]string{"host-a\x00s":"  Sent  ","host-b\x00s":"Draft B"},pendingSend:intent}
+	if err:=a.acceptSend(json.RawMessage(`{"status":"accepted","requestId":"r1"}`),intent);err!=nil{t.Fatal(err)}
+	if a.draft!="Draft B"||a.drafts["host-b\x00s"]!="Draft B"||a.drafts["host-a\x00s"]!=""{t.Fatal("receipt cleared another host's draft or failed to clear sent draft")}
+	if intent.Unknown||a.pendingSend!=nil{t.Fatal("accepted send did not settle original intent")}
+	intent=&sendIntent{ID:"r2",HostID:"host-b",SessionID:"s",Text:"Old",Draft:"Old",Unknown:true}
+	a.draft="New editing";a.drafts["host-b\x00s"]="New editing"
+	if err:=a.acceptSend(json.RawMessage(`{"status":"accepted","requestId":"r2"}`),intent);err!=nil{t.Fatal(err)}
+	if a.draft!="New editing"||a.drafts["host-b\x00s"]!="New editing"{t.Fatal("late receipt deleted newer edits")}
+}
+
+func TestQASelectionRestoresTargetDraftBeforeAnyWorkspaceReply(t *testing.T) {
+	a:=&app{hostID:"h",sessionID:"old",workspaceID:"old-w",draft:"Old draft",drafts:map[string]string{"h\x00a":"Draft A","h\x00b":"Draft B"}}
+	// No client: requests fail synchronously. Navigation still must immediately
+	// own the target and its draft, before an async selectWorkspace can return.
+	a.chooseSession(session{ID:"a",WorkspaceID:"wa"});generation:=a.navigationGeneration
+	if a.sessionID!="a"||a.draft!="Draft A"||a.drafts["h\x00old"]!="Old draft"{t.Fatal("first target was deferred until workspace response")}
+	a.draft="Updated A";a.chooseSession(session{ID:"b",WorkspaceID:"wb"})
+	if a.navigationGeneration<=generation||a.sessionID!="b"||a.draft!="Draft B"||a.drafts["h\x00a"]!="Updated A"{t.Fatal("rapid target switch lost draft ownership")}
+}
+
+// Development headless rendering only: root still independently verifies the
+// actual .app. This guards the specific overflow seen in real capture 21.
+func TestQASettingsHeaderRailAndScrollStayInsideModal(t *testing.T) {
+	a:=newApp(true);defer a.cancel();a.settingsOpen=true;a.settingsSection="general";a.uiPrefs.Theme="dark"
+	tt:=ui.NewTester(func(c *ui.Context){a.applyAppearance(c);a.settingsView(c)},1280,820)
+	check:=func(name string,minY,maxY float32){t.Helper();r,ok:=tt.Find(name);if !ok||r.Y<minY||r.Y+r.H>maxY{t.Fatalf("%q has invalid bounds %+v (found %v)",name,r,ok)}}
+	check("关闭设置",68,130);check("通用设置",120,190);check("权限",122,200)
+	if err:=tt.Click("深色");err!=nil{t.Fatal(err)};if a.uiPrefs.Theme!="dark"{t.Fatal("theme selection did not apply")}
+	tt.Scroll(900,600,0,450);check("关闭设置",68,130);check("通用设置",120,190)
+	if err:=os.MkdirAll("qa/captures",0700);err!=nil{t.Fatal(err)}
+	f,err:=os.Create("qa/captures/settings-headless.png");if err!=nil{t.Fatal(err)};defer f.Close();if err=png.Encode(f,tt.Image());err!=nil{t.Fatal(err)}
+}
+
+func TestQAHostSettingReceiptRequiresMatchingReadback(t *testing.T) {
+	valid:=json.RawMessage(`{"status":"accepted","requestId":"r","value":{"ns":"permission","revision":5,"value":{"defaultPreset":"read-only"}}}`)
+	view,err:=acceptedHostSetting(valid,"r","permission","defaultPreset","read-only");if err!=nil||view.Revision!=5{t.Fatal("valid accepted view refused",err)}
+	for _,raw:=range []json.RawMessage{
+	 json.RawMessage(`{"status":"unknown","requestId":"r"}`),
+	 json.RawMessage(`{"status":"accepted","requestId":"other","value":{"ns":"permission","value":{"defaultPreset":"read-only"}}}`),
+	 json.RawMessage(`{"status":"accepted","requestId":"r","value":{"ns":"permission","value":{"defaultPreset":"danger-full-access"}}}`),
+	 json.RawMessage(`{"status":"accepted","requestId":"r","value":{"ns":"permission","value":{}}}`),
+	}{if _,err:=acceptedHostSetting(raw,"r","permission","defaultPreset","read-only");err==nil{t.Fatal("unconfirmed or mismatched settings value accepted")}}
+}
+
+func TestQAFileReaderLongPageKeepsNavigationInsidePane(t *testing.T) {
+	a:=newApp(true);defer a.cancel();a.rightPaneOpen=true
+	s:=a.currentRightPane();s.Tab="document";s.Selected="example.txt";s.TextReady=true;s.Text=paneTextFile{AbsolutePath:"/fixture/example.txt",Offset:1,Lines:500,Text:strings.Repeat("Long line in a simulated file preview.\n",500)}
+	tt:=ui.NewTester(func(c *ui.Context){a.applyAppearance(c);ui.Column(c).Fill().MinHeight(0).Children(func(){a.rightPaneView(c)})},576,744)
+	for _,name:=range []string{"收起右侧边栏","上一页","下一页"}{r,ok:=tt.Find(name);if !ok||r.Y<0||r.Y+r.H>744{t.Fatalf("%s escaped pane: %+v, found %v",name,r,ok)}}
+}
+
+// Tester publicly exposes visible AX/label bounds only. This read-only
+// reflection is deliberately pinned to the frozen MyGo engine's node arena and
+// scene layout so offscreen measured descendants are covered without modifying
+// the frozen reference or exporting test hooks into the application.
+func assertAllFiniteGeometry(t *testing.T,tt *ui.Tester) {
+	t.Helper()
+	rt:=reflect.ValueOf(tt).Elem().FieldByName("rt").Elem()
+	c:=rt.FieldByName("c");chunks:=c.FieldByName("chunks");used:=int(c.FieldByName("used").Int())
+	if !chunks.IsValid()||used<20{t.Fatal("frozen MyGo geometry inspection contract changed or test built no scene")}
+	checkFloat:=func(v float64,label string){t.Helper();if math.IsNaN(v)||math.IsInf(v,0){t.Fatalf("nonfinite geometry %s = %v",label,v)}}
+	var floats func(reflect.Value,string)
+	floats=func(v reflect.Value,label string){switch v.Kind(){case reflect.Float32,reflect.Float64:checkFloat(v.Float(),label);case reflect.Struct:for i:=0;i<v.NumField();i++{floats(v.Field(i),label+"."+v.Type().Field(i).Name)};case reflect.Array,reflect.Slice:for i:=0;i<v.Len();i++{floats(v.Index(i),fmt.Sprintf("%s[%d]",label,i))}}}
+	checkNode:=func(n reflect.Value,label string){
+		for _,field:=range []string{"x","y","w","h","ink","world","originX","originY"}{floats(n.FieldByName(field),label+"."+field)}
+		x,y,w,h:=n.FieldByName("x").Float(),n.FieldByName("y").Float(),n.FieldByName("w").Float(),n.FieldByName("h").Float()
+		checkFloat(float64(float32(x)+float32(w)),label+".right");checkFloat(float64(float32(y)+float32(h)),label+".bottom")
+		if w<0||h<0{t.Fatalf("negative layout size at %s: %v×%v",label,w,h)}
+	}
+	index:=0
+	for i:=0;i<chunks.Len()&&index<used;i++{chunk:=chunks.Index(i);for j:=0;j<chunk.Len()&&index<used;j++{checkNode(chunk.Index(j),fmt.Sprintf("arena[%d]",index));index++}}
+	// Traverse retained/exit children too, even if not in this frame's arena.
+	seen:=map[uintptr]bool{};var walk func(reflect.Value)
+	walk=func(pointer reflect.Value){if !pointer.IsValid()||pointer.IsNil(){return};id:=pointer.Pointer();if seen[id]{return};seen[id]=true;n:=pointer.Elem();checkNode(n,fmt.Sprintf("reachable[%x]",id));walk(n.FieldByName("first"));walk(n.FieldByName("next"))};walk(c.FieldByName("root"))
+	scene:=rt.FieldByName("scene")
+	for _,field:=range []string{"Scale","Zoom","Ops","Glyphs","Effects"}{floats(scene.FieldByName(field),"draw."+field)}
+}
+
+func TestQATableAndLongTextHaveFiniteOffscreenLayoutAndDrawGeometry(t *testing.T) {
+	a:=newApp(true);defer a.cancel();a.current.Running=false
+	table:="| 项目 | 值 |\n| --- | --- |\n| 模式 | 原生 fixture |\n| 文件 | `/tmp/fixture/manifest.json` |\n\n"
+	a.current.Messages=[]message{{ID:"geometry-fixture",Kind:"assistant",Role:"assistant",Text:table+strings.Repeat("A long fixture paragraph that wraps within the conversation and extends beyond the viewport.\n\n",300)+table}}
+	tt:=ui.NewTester(a.view,1280,820);assertAllFiniteGeometry(t,tt)
+	for _,dy:=range []float32{-5000,1800,5000}{tt.Scroll(900,400,0,dy);assertAllFiniteGeometry(t,tt)}
+	a.sidebar=false;tt.Frame();assertAllFiniteGeometry(t,tt)
+}
+
+func TestQAGoDestroyRetiresTwentyActiveAndPendingOwnersThroughActualHelper(t *testing.T) {
+	ctx,cancel:=context.WithTimeout(context.Background(),15*time.Second);defer cancel()
+	node,err:=exec.LookPath("node");if err!=nil{t.Fatal(err)};helper,_:=filepath.Abs("remote/bridge.mjs")
+	client,err:=bridge.Start(ctx,node,helper,"--fixture");if err!=nil{t.Fatal(err)};defer client.Close()
+	call:=func(method string,p any)json.RawMessage{t.Helper();raw,err:=client.Call(ctx,method,p);if err!=nil{t.Fatalf("%s: %v",method,err)};return raw}
+	call("configure",map[string]any{"serverUrl":"fixture://local"});devices,err:=decodeRows[device](call("devices",map[string]any{}),"devices");if err!=nil||len(devices)==0{t.Fatal("fixture host missing")}
+	var status struct{HostID string `json:"hostId"`;Generation uint64 `json:"connectionGeneration"`};if err=json.Unmarshal(call("connect",map[string]any{"hostId":devices[0].ID}),&status);err!=nil{t.Fatal(err)}
+	sessions,err:=decodeRows[session](call("sessions",map[string]any{}),"sessions");if err!=nil||len(sessions)==0{t.Fatal("fixture session missing")}
+	sid:=sessions[0].ID;call("openSession",map[string]any{"sessionId":sid})
+	a:=newApp(true);defer a.cancel();a.client=client
+	for i:=0;i<20;i++ {
+		owner:=newPageOwner();scope:=map[string]any{"hostId":status.HostID,"generation":status.Generation,"sessionId":sid}
+		call("registerOwner",map[string]any{"ownerId":owner,"clientScope":scope});scope["ownerId"]=owner
+		call("watchSession",map[string]any{"sessionId":sid,"clientScope":scope})
+		var stats struct{Owners,Streams,TerminalInputAttachments int};if err=json.Unmarshal(call("runtimeStats",map[string]any{}),&stats);err!=nil||stats.Owners!=1||stats.Streams!=1{t.Fatalf("owner did not hold actual helper stream: %+v %v",stats,err)}
+		if i%2==0{a.compatOwner=owner}else{a.compatPendingOwner=owner}
+		a.closeCompat()
+		for{if err=json.Unmarshal(call("runtimeStats",map[string]any{}),&stats);err!=nil{t.Fatal(err)};if stats.Owners==0&&stats.Streams==0&&stats.TerminalInputAttachments==0{break};select{case<-ctx.Done():t.Fatal(ctx.Err());case<-time.After(time.Millisecond):}}
+		if a.compatOwner!=""||a.compatPendingOwner!=""{t.Fatal("Go owner fields remained after close")}
+		if _,err=client.Call(ctx,"modelCatalog",map[string]any{"clientScope":scope});err==nil{t.Fatal("destroyed page still had helper access")}
+	}
+	call("devices",map[string]any{}) // the same helper and pipe remain usable.
+}
+
+func TestQASettingsCompatContentKeepsNativeRailHeaderAndEscape(t *testing.T) {
+ a:=newApp(true);defer a.cancel();a.settingsOpen=true;a.settingsSection="models";a.settingsPageRequested="models"
+ tt:=ui.NewTester(a.view,1280,820)
+ rects:=composerUnclippedRects(t,tt)
+ for _,name:=range []string{"通用设置","模型","内置插件","Agent 预设","关闭设置"}{r,ok:=rects[name];if !ok||r.X<240||r.X+r.W>1040||r.Y<68||r.Y+r.H>752{t.Fatalf("settings rail/header missing or escaped: %s %+v",name,r)}}
+ close,_:=tt.Find("关闭设置");if close.Y>125{t.Fatal("settings header not fixed at top")}
+ // The headless lane has no real WK; it qualifies the native frame and
+ // dismissal path only, never the real platform compositing layer.
+ tt.Key(0,ui.KeyEscape);tt.Frame();if a.settingsOpen||a.settingsPageRequested!=""{t.Fatal("Escape retained settings scope")}
+}
+func TestQASettingsCloseRetiresPendingOwnerThroughActualHelper(t *testing.T) {
+ f:=newComposerTestPeer(t);a:=f.a;owner:="qa-settings-pending-owner"
+ if _,err:=a.client.Call(f.ctx,"registerOwner",map[string]any{"ownerId":owner,"clientScope":a.operationScope()});err!=nil{t.Fatal(err)}
+ a.settingsOpen=true;a.settingsPageRequested="models";a.compatPlacement="settingsContent";a.compatPendingOwner=owner
+ a.closeSettings()
+ for{raw,err:=a.client.Call(f.ctx,"runtimeStats",map[string]any{});if err!=nil{t.Fatal(err)};var stats struct{Owners,Streams int};if err=json.Unmarshal(raw,&stats);err!=nil{t.Fatal(err)};if stats.Owners==0&&stats.Streams==0{break};select{case<-time.After(time.Millisecond):case<-f.ctx.Done():t.Fatal(f.ctx.Err())}}
+ if a.settingsOpen||a.settingsPageRequested!=""||a.compatPendingOwner!=""||a.compatPlacement!=""{t.Fatal("closed modal retained native pending scope")}
+}
+
+func TestQASettingsActualWebViewPlacementDoesNotEscapeModal(t *testing.T) {
+ a:=newApp(true);defer a.cancel();a.settingsOpen=true;a.settingsSection="models";a.settingsPageRequested="models";a.compatPlacement="settingsContent";a.compatPage="model-settings";a.compat=&mygo.WebView{}
+ tt:=ui.NewTester(a.view,1280,820);tt.Frame()
+ if tt.WebViewAt(800,300)!=a.compat{t.Fatal("fixture has no real NativeWebView placement in modal")}
+ if tt.WebViewAt(800,760)!=nil||tt.WebViewAt(800,800)!=nil{t.Fatal("NativeWebView placement escaped modal below y752")}
+ if tt.WebViewAt(300,300)!=nil||tt.WebViewAt(800,100)!=nil{t.Fatal("NativeWebView covered rail/header")}
+}

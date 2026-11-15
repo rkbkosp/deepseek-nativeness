@@ -1,0 +1,48 @@
+{
+  "checkedAt": "2026-11-14T15:48:10.431Z",
+  "reviewer": "root",
+  "status": "reviewed-source-and-independent-fixtures-pass-actual-fallback-pixels-pending",
+  "checks": [
+    {
+      "command": "node --test compat/test/menu-anchor.test.mjs",
+      "passed": 6,
+      "scope": "Own geometry/runtime/React hook harness with mock DOM, not mounted actual original menu pixels"
+    },
+    {
+      "command": "CGO_ENABLED=0 go test -tags mygo_noinspector -run TestHeaderPreset -count=1 -v .",
+      "passed": 2
+    },
+    {
+      "command": "CGO_ENABLED=0 go test -tags mygo_noinspector -run TestTableFillNarrow|TestWideAndQuotedTablePolicies|TestLongCodeWrap|TestWideTableIsATabStop -count=1 -v .",
+      "passed": 4
+    }
+  ],
+  "sourceHashes": {
+    "compat/src/menu-anchor-geometry.ts": "ddcdbb53cf5897208ece7128ec5b88fa263b46d8a93206ae4ad77fe7481822fb",
+    "compat/src/menu-anchor-runtime.ts": "7b13e110b17e26b458ca13a7b27904baadbc9fae54ff7ede83efb0b71d74d6e4",
+    "compat/src/menu-anchor-fallback.ts": "d1bb9ce3374fb514620a91d3663de21eb4fa8f5a3abc3fa23368f16fb9e53b28",
+    "compat/src/menu-anchor-fallback.css": "d9e42389b07af80e7944abb92d6a86e976093b2eca8bf71e3858467105b81182",
+    "compat/build.mjs": "da5a494f750ba6c0685c9551de2c582dbf8637dc130f8443769141c2a9a86169",
+    "header_preset.go": "25f2a767e55cfe9cc16c25617f6327551639f10a9cf21816e14402fa8fb46646",
+    "markdown_parity.go": "a8cac947f2c07983c4bbdf1fda9d195302bf094ab877b3f671addc09391f3ef6"
+  },
+  "sizeQualification": {
+    "modelsReportedBytes": 280192,
+    "modelsActualStatSum": 280192,
+    "initialFiles": 14,
+    "scope": "Static packaged JS file sizes; does not measure parsed heap/process memory/CPU"
+  },
+  "findings": [
+    "Only mounted fallback nodes allocate local observers/listeners; RAF update coalesced and teardown restores style/ref state",
+    "Supported feature path stays original; native-root model popup keeps its own explicit positioning",
+    "Build adaptation fails if the pinned original seam text changes; original source repository remains untouched",
+    "Header readonly Label vs blank-hero Seat distinction now correct",
+    "No new always-resident WebKit composer or global CSS polyfill"
+  ],
+  "limits": [
+    "Actual forced-fallback original component menu geometry, clipping, focus and nested behavior await dedicated packaged CUA",
+    "No actual macOS15.8/M1 proof",
+    "Read-only original header background token remains unresolved at runtime; do not invent color from an undefined CSS variable",
+    "Future forced-build gate changes need a final source/artifact hash followup"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "checkedAt": "2026-11-14T17:59:41.471Z",
+  "reviewer": "root",
+  "status": "fixed-artifact-integrity-pass-gui-pending",
+  "candidates": [
+    {
+      "name": "normal",
+      "app": "/Volumes/SuperDisk/native-dsh/desktop/build/Native DSH Remote GUI9.app",
+      "sourceCommit": "2e721cf3a89ab3c7298a47c1c17db62cc3152801",
+      "files": 3599,
+      "nativeInputs": 197,
+      "diskBytes": 209525749,
+      "allHashMatch": true,
+      "manifestSha256": "bbb3cdbcef6086aabc43a52afc17ea25c3d3ea99ee28f2f0492eb07cdd56b82e"
+    },
+    {
+      "name": "forced",
+      "app": "/Volumes/SuperDisk/native-dsh/desktop/build/Native DSH Remote Anchor QA GUI9.app",
+      "sourceCommit": "2e721cf3a89ab3c7298a47c1c17db62cc3152801",
+      "files": 3599,
+      "nativeInputs": 197,
+      "diskBytes": 209531458,
+      "allHashMatch": true,
+      "manifestSha256": "f81f1b499ec26dfc12114a0927cc749bb4643c03215a7fc96e7af6751cafba91"
+    }
+  ],
+  "scope": "Recursively verifies whole-tree inventory (including adds/removes), every packaged file byte count/hash and every enumerated native input. Disk bytes are not runtime memory; no GUI or actual15.8/M1 acceptance.",
+  "currentWindowProbe": "Fixed Next app repeated cold/warm cgWindowNotFound, existing original app read timed out20s; no new screenshots accepted; own proof process terminated after exact-path PID verification.",
+  "postGui": {
+    "checkedAt": "2026-11-15T00:03:02.346Z",
+    "bundleFilesVerified": 7198,
+    "inputProofArtifactsVerified": 6,
+    "allUnchanged": true,
+    "qualification": "Current source WIP for next fixes is separate; no claim that future edits are inside GUI9."
+  }
+}

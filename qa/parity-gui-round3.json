@@ -1,0 +1,44 @@
+{
+  "checkedAt": "2026-11-14T11:15:26.983Z",
+  "reviewer": "root",
+  "status": "not-parity-accepted",
+  "candidateNativeSha256": "5c4a05cedc3096c95dbc85b8348301b0c26681cdd1d7f56770da764121547dff",
+  "candidateHelperSha256": "bc803ee2290a92abe5c89e82c6f13b30bd4bee3a0600b474c7549919e8ed98ef",
+  "privacy": "Local private screenshots and AX only. No history in fixtures.",
+  "findings": [
+    {
+      "id": "main-drawing",
+      "status": "observed-failed",
+      "evidence": [
+        "/tmp/native-dsh-parity/40-native-core3-launch.png",
+        "/tmp/native-dsh-parity/41-native-core3-chat.png"
+      ],
+      "detail": "Launch view paints; loading the real completed conversation blanks main canvas. Switching to compatibility view restores native shell drawing. Native author later isolated custom table infinite geometry via actual local pixel captures; fix awaits new app verification."
+    },
+    {
+      "id": "shared-compat-connection",
+      "status": "observed-passed-subcheck",
+      "evidence": [
+        "/tmp/native-dsh-parity/42-native-core3-plugins.png",
+        "/tmp/native-dsh-parity/43-native-core3-terminal-config.png"
+      ],
+      "detail": "Bundled original React plugin UI and terminal config load real Host values through the current connection without a new login. No plugin switches or settings saved. Closing returns to connected native history."
+    },
+    {
+      "id": "compat-visuals",
+      "status": "observed-incomplete",
+      "detail": "Extra chat header, compatibility toolbar/banner, missing plugin cards/tabs and typography differ from original; Remote module is filtered by Host policy, not an adapter omission."
+    },
+    {
+      "id": "model-current-selection",
+      "status": "observed-failed",
+      "evidence": [
+        "/tmp/native-dsh-parity/44-native-core3-model.png",
+        "/tmp/native-dsh-parity/45-native-core3-model-menu.png"
+      ],
+      "detail": "Actual model catalog loads, but current selection incorrectly reads empty. Provider labels must be checked against source/current catalog before treating them as wrong. No model choice was made."
+    }
+  ],
+  "referenceAdditional": "/tmp/native-dsh-parity/13-original-terminal-config.png",
+  "actions": "Read-only view navigation; source app restored to original comparison conversation. Candidate Cmd+Q exited and CUA inventory confirmed absent."
+}

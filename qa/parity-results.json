@@ -1,0 +1,82 @@
+{
+  "checkedAt": "2026-11-14T14:23:42.800Z",
+  "status": "NOT PARITY ACCEPTED",
+  "sourceHashes": {
+    "settings_panel.go": "3a21249b862cbb3e52c41a796ab080710352d9b8b872b9162ef5d8505fc2266e",
+    "right_pane.go": "21891ce4251f5b45b9817f27bef2111ab217b81f37ae3e52c51e9c5155623069",
+    "qa/parity-acceptance.gotest": "3b6588a34c6fb78fe72b3396296cbe52d203fd1518875c8ec977a62837ca15c6"
+  },
+  "checks": [
+    {
+      "command": "npm test --prefix remote",
+      "passed": 20,
+      "failed": 0,
+      "type": "simulated protocol and pure projection"
+    },
+    {
+      "command": "node --test qa/projection-acceptance.test.mjs qa/remote-contract.test.mjs",
+      "passed": 17,
+      "failed": 0,
+      "type": "independent simulated protocol"
+    },
+    {
+      "command": "CGO_ENABLED=0 go test ./... -count=1 -timeout=45s",
+      "packagesPassed": 3,
+      "type": "local build and fixture"
+    },
+    {
+      "command": "node qa/run-parity-acceptance.mjs",
+      "passed": 12,
+      "failed": 0,
+      "type": "7 independent core/Go-owner checks plus 5 author-owned settings/file checks"
+    },
+    {
+      "command": "node qa/verify-freeze.mjs",
+      "passed": 6,
+      "failed": 0,
+      "type": "frozen reference and profile hash verification"
+    },
+    {
+      "command": "node --test qa/owner-lifecycle.test.mjs",
+      "passed": 8,
+      "failed": 0,
+      "type": "independent Remote owner, scope and receipt fixtures"
+    }
+  ],
+  "guiReviews": [
+    "qa/parity-gui-round1.json",
+    "qa/parity-gui-round2.json",
+    "qa/parity-gui-round3.json",
+    "qa/parity-gui-round4.json"
+  ],
+  "latestGuiStatus": "Round 4 real read paths and layout subchecks pass; complete visual/operation parity remains unaccepted.",
+  "runtimeAcceptance": "No new live writes or live workload created. Prior LAN history proof retained in latest-results.json and runtime-results/live-readonly.json. Real running stream, M1 cross-machine memory/CPU, complete operation parity remain unverified.",
+  "wireBudget": {
+    "completedMessages": 1000,
+    "flushes": 100,
+    "bytes": 16598,
+    "scope": "semantic projection fixture; old history not reserialized"
+  },
+  "hostSettings": "Code wired through existing Remote descriptors; opening reads only; explicit controls write flat path operations with expectedRevision and unique requestId; readback receipt required. No live settings mutation performed.",
+  "geometryNegativeControl": {
+    "command": "node qa/run-parity-acceptance.mjs --prove-inf-regression",
+    "regressionDetected": true,
+    "failure": "node arena[0].ink[0] = NaN",
+    "method": "Go overlay only restores Basis(ui.Auto); implementation source remains unchanged"
+  },
+  "lifecycleReview": "qa/owner-lifecycle-results.json",
+  "composerAuthorSelfTest": {
+    "report": "qa/composer-component-results.json",
+    "testGroups": 24,
+    "independentAcceptance": false,
+    "liveMutations": false
+  },
+  "latestFixedRegression": {
+    "checkedAt": "2026-11-14T14:23:42.800Z",
+    "goPackages": 3,
+    "goVet": "passed after native owner removed markdown.Options lock copy",
+    "overlay": 15,
+    "independentRemoteProtocol": 25,
+    "freeze": 8
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "checkedAt": "2026-11-14T11:42:19.099Z",
+  "status": "implemented-fixture-passed-real-GUI-pending",
+  "files": {
+    "compat/src/terminal.tsx": "7fc838450e065323cb397e3d8d6f58fa400e42644aabc0bec39276490bbf6ba7",
+    "compat/src/terminal-runtime.ts": "07376bc9c0cb8f8b1782785fbac65e62f5afd8dd67a1a2b02e302995eb853309"
+  },
+  "sourceCommit": "39163dd30f703a79079e2d2446545cff3c453738",
+  "reusedOriginalSource": [
+    "api/terminal-controller/src/client/model.ts (TerminalView)",
+    "api/terminal-controller/src/client/inventory.ts",
+    "api/terminal-controller/src/client/retention.ts",
+    "api/gateway/src/client/remote-stream.ts",
+    "client/ui-sidebar-terminal/src/client/LazyTerminalBody.tsx",
+    "client/ui-sidebar-terminal/src/client/TerminalGuide.tsx",
+    "client/ui-sidebar-terminal/src/client/TerminalTitle.tsx",
+    "client/ui-sidebar-terminal/src/client/terminal.tsx and its original theme/cursor/CSS"
+  ],
+  "externalDependencies": [
+    "@xterm/xterm@6.0.0",
+    "@xterm/addon-fit@0.11.0"
+  ],
+  "dependencyBoundary": "The sole runtime import isRemoteStreamCarrierFailure in original TerminalView resolves to original gateway/src/client/stream-client.ts. No Cordis ClientTerminals service or Host runtime starts.",
+  "checks": [
+    {
+      "command": "node --test qa/terminal-runtime.test.mjs",
+      "passed": 6,
+      "failed": 0,
+      "scope": "Original model plus explicitly simulated Host, no shell or network"
+    },
+    {
+      "command": "npm run build --prefix compat",
+      "status": "passed",
+      "evidence": "dist/source-manifest.json includes original terminal model, renderer, CSS and xterm"
+    },
+    {
+      "command": "npx -y react-doctor@latest --verbose --scope full (cwd compat)",
+      "score": 87,
+      "newTerminalFindings": 0,
+      "remaining": "one warning in existing trajectory.tsx about createObjectURL"
+    }
+  ],
+  "behavior": [
+    "Opening page only lists owned terminals. A deliberate New action allocates a stable terminal identity.",
+    "Original model retains before attaching, waits for xterm render acknowledgement, validates output sequence and enforces input byte limits.",
+    "Input and resize use shared inputSequence, ordered dispatch, stable UUID per submission, and acknowledgement only after confirmed Host receipt.",
+    "Unknown input ends the attachment without replay; helper has a bounded per-attachment input ledger.",
+    "Hidden document detaches the screen while keeping process retention; remount requests a new snapshot.",
+    "Page disposal detaches streams and models without closing terminal processes; Native ownerId cleanup must also cancel streams when WK is destroyed.",
+    "Input confirmation must match both requestId and inputSequence before synthesizing the model acknowledgement."
+  ],
+  "limits": [
+    "No real Host terminal was created, attached, typed into or closed in this work.",
+    "Actual WK display, focus, IME, sizing and owner teardown await root independent GUI verification.",
+    "Remote device ownership filters visible terminals; this is not the whole original Host terminal roster.",
+    "Frozen Remote input does not forward the typed field used by original agent-terminal takeover semantics.",
+    "Full Dockkit split/tab layout, global terminal shortcut configuration and persisted cleanup/recovery ownership are broader integration work."
+  ]
+}

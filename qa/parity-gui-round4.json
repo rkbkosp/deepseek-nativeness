@@ -1,0 +1,68 @@
+{
+  "checkedAt": "2026-11-14T11:48:36.103Z",
+  "reviewer": "root",
+  "status": "partial-subchecks-passed-not-parity",
+  "candidateNativeSha256": "4bf33ef99df311b07c5228a8c14478294b036131f0901a1a050dac8885c032e9",
+  "candidateHelperSha256": "ebc02d9fb9645bea3dc288d608665177c4ed8bf8d39c1464386c3b630d2395a3",
+  "viewport": {
+    "logical": [
+      1280,
+      820
+    ],
+    "physical": [
+      2560,
+      1640
+    ],
+    "theme": "system-dark"
+  },
+  "privacy": "All captures and AX files remain local and contain private session content; do not publish or copy bodies into fixtures.",
+  "startup": {
+    "result": "global-ui-access-block-resolved-after-user-unlock",
+    "detail": "Original DSH and candidate both failed CUA window lookup while locked; user confirmed unlock and both became accessible. Candidate own normal startup capture also rendered successfully. Do not classify prior CG lookup errors as a confirmed app startup defect."
+  },
+  "passedSubchecks": [
+    {
+      "id": "real-history-render",
+      "evidence": "/tmp/native-dsh-parity/51-native-core4-chat.png",
+      "detail": "Same completed conversation now renders its long Markdown/table; header and composer are inside window; all workspaces retain session rows."
+    },
+    {
+      "id": "real-file-read",
+      "evidence": "/tmp/native-dsh-parity/53-native-core4-file-read.png",
+      "detail": "Read existing workspace directory and README through Remote; no file writes."
+    },
+    {
+      "id": "settings-live-read",
+      "evidence": "/tmp/native-dsh-parity/54-native-core4-settings.png",
+      "detail": "Actual Host default permission and log-upload state load. No Host setting changed."
+    },
+    {
+      "id": "client-font-pref",
+      "evidence": "/tmp/native-dsh-parity/55-native-core4-font15.png",
+      "detail": "Only candidate local presentation preference changed text 14 to15 and restored14; actual body reflow observed."
+    },
+    {
+      "id": "model-current",
+      "evidence": "/tmp/native-dsh-parity/56-native-core4-model.ax.txt",
+      "detail": "Actual model current selection and Default reasoning now present; no selection changed."
+    },
+    {
+      "id": "plugin-shared-connection",
+      "evidence": "/tmp/native-dsh-parity/58-native-core4-plugins.png",
+      "detail": "Original four built-in cards and installed/discover tab frame load real data without second login. Discover and installation remain unavailable under frozen interface."
+    },
+    {
+      "id": "compat-return",
+      "detail": "Clicked existing comparison session from plugin page; HTML content disappeared while native composer and Remote-connected status remained. Cmd+Q then exited candidate and CUA inventory confirmed absent."
+    }
+  ],
+  "remaining": [
+    "Native typography still heavier than source; calibration pending.",
+    "Sidebar vibrancy, collapse motion, caption geometry and button/icon states differ.",
+    "Plugin viewport insets differ from original global viewport; complete shell CSS dependency closure still being corrected.",
+    "Footer metrics/current composer labels, queue/permission/commands/feedback/fork and other matrix operations still incomplete.",
+    "Original trajectory and terminal integration have fixture coverage but are not in this GUI candidate.",
+    "M1 cross-machine performance and real paid/live mutations remain unverified."
+  ],
+  "referenceFontEvidence": "/tmp/native-dsh-parity/16-original-font-settings.ax.txt"
+}

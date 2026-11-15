@@ -1,0 +1,50 @@
+{
+  "checkedAt": "2026-11-14T13:43:21.098Z",
+  "reviewer": "root",
+  "status": "settings-visual-repair-passed-keyboard-gap-not-parity",
+  "candidateNativeSha256": "f228aa3ef0d95a8db4d9f42482aa5e030b420214cc04361e8039c325866760ef",
+  "candidateHelperSha256": "83b440d5038f42f6bdc62b224330493b2e167390d747ac89cb9f7ed0c933f8ee",
+  "candidateCompatEntrySha256": "ef6f9f76df8c708db807922980d0d463056c01eea9e529e79385e2490aec6183",
+  "sourceCommit": "8092824",
+  "sourceWorktree": "build/_gui61-source",
+  "manifest": "build/gui-checkpoints/gui6.1-manifest.json",
+  "passedSubchecks": [
+    {
+      "id": "activation",
+      "detail": "First launch/restored session and settings capture display active traffic lights and correct current content without extra header click."
+    },
+    {
+      "id": "settings-visual-clip",
+      "detail": "Models page now shares modal layer background, stays inside right content region and respects modal lower edge/rounded corner.",
+      "evidence": "/tmp/native-dsh-parity/90-native-core61-model-settings.png"
+    },
+    {
+      "id": "plugin-settings-correct-page",
+      "detail": "Actual original built-in inventory section now loads Host session/global plugin groups and preset view; global plugin-management headers/tabs are absent.",
+      "evidence": "/tmp/native-dsh-parity/91-native-core61-plugin-settings.png"
+    },
+    {
+      "id": "plugin-inventory-interaction",
+      "detail": "Local search tool-bash filters proper plugin entries and other preset matches. Expanding Bash reveals actual full package, source preset, configuration/run status and disabled condition. No settings changed."
+    },
+    {
+      "id": "settings-button-close",
+      "detail": "Close button removes settings and all HTML content, native composer and Remote-connected status remain."
+    }
+  ],
+  "failedSubchecks": [
+    {
+      "id": "settings-wk-escape",
+      "detail": "After clearing inventory search, two Escape presses fail to close settings while focus is in WK. Close button works. Original key rules must be verified and restored without intercepting nested dialogs."
+    }
+  ],
+  "remoteMutations": [],
+  "remaining": [
+    "Full visual/operation matrix not accepted",
+    "Keyboard bridge repair requires packaged recheck",
+    "Current package excludes new history/publisher optimizations and attachment work",
+    "M1 full-client performance remains untested"
+  ],
+  "exit": "Cmd+Q and CUA inventory confirmed Native absent; original unchanged.",
+  "privacy": "Private local JPEG captures saved under png suffix; do not publish or copy private session content into fixtures."
+}

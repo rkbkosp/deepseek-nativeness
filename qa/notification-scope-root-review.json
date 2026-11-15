@@ -1,0 +1,57 @@
+{
+  "checkedAt": "2026-11-14T14:51:02.287Z",
+  "reviewer": "root",
+  "status": "source-fixtures-independently-passed-not-gui",
+  "checks": [
+    {
+      "command": "CGO_ENABLED=0 go test -tags mygo_noinspector -run TestQueuedHelperNotificationsCannotCrossAccountOrGeneration|TestQueuedStatusCannotUndoIntendedHostOrRollGenerationBack -count=1 .",
+      "passed": 2
+    },
+    {
+      "command": "node --test remote/test/notification-scope.test.mjs",
+      "passed": 4
+    },
+    {
+      "command": "node qa/verify-freeze.mjs",
+      "passed": 8
+    }
+  ],
+  "sources": {
+    "notification_scope.go": "981879c33a64111bb59fcdc466f9304d94874f9f95a301d44059123d7a336a8c",
+    "notification_scope_test.go": "f6daba0cde62c907dc42e2ddec2b62e65ae07a1b93b9fe6bea10343fbf1c2ada",
+    "remote/client.mjs": "cdd89f4a958197a5e688988f09cec257629a808a68f02af9aaeb34ad728a394c",
+    "remote/test/notification-scope.test.mjs": "8838b4cb0b5904e8cc0f0783848ca09d117f9d422a2a24d1d6359acf117668d0",
+    "connection.go": "cbb9fea4ba8077a91ccf083159013620f243c5217111bddbc79a03d86edb5f4e",
+    "qa/status-producer-real-refresh.test.mjs": "dba33bae97e28cfbea444188dbcdf4344e7e82964e9d55e99ad964a6e843413c",
+    "qa/native-status-retest.gotest": "69671f77472171bca2305015a286ae929f6fac4e98f6f321134a6925791e2226"
+  },
+  "limits": [
+    "Mock/fixture only, not actual reconnect or macOS UI acceptance",
+    "Earlier same-generation account race was reproduced and repaired; new independent real-refresh/RPC ordering gates passed. No actual account switch or credentials used."
+  ],
+  "updatedAt": "2026-11-14T14:57:29.099Z",
+  "identityBoundary": {
+    "producerCommand": "node --test qa/status-producer-real-refresh.test.mjs",
+    "producerPass": 1,
+    "producerEpoch": [
+      8,
+      9
+    ],
+    "rpcEpoch": 9,
+    "goCommand": "CGO_ENABLED=0 go test -tags mygo_noinspector -overlay qa/native-status-retest-overlay.json -run ^TestQARealLoginRPCThenQueuedOldStatusThenFreshStatus$ -count=1 -v .",
+    "goPass": 1,
+    "detail": "Real Go login callback adopts new authority before queued old status; old status cannot regress account/gen/status; fresh status works either before or after login callback",
+    "liveNetwork": false
+  },
+  "crossReviewRerun": {
+    "command": "CGO_ENABLED=0 go test -tags mygo_noinspector -overlay qa/native-cross-retest-overlay.json -run ^TestQA -count=1 -v .",
+    "passedGroups": 4,
+    "actualGeometry": {
+      "chatX": 312,
+      "chatWidth": 360,
+      "composerX": 296,
+      "composerWidth": 392
+    },
+    "scope": "Real view tree; real helper fixture 14 old/new notification frames; pending direct Go"
+  }
+}

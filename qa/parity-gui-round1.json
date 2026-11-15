@@ -1,0 +1,82 @@
+{
+  "checkedAt": "2026-11-14T11:01:12.610Z",
+  "reviewer": "root",
+  "status": "rejected-needs-retest",
+  "candidateNativeSha256": "a1d4a3dc44999c2a00ad59ae08f78b51179f0898ca72af321f9e20d8ecca9017",
+  "candidateHelperSha256": "b36ef41e2756b5d070eb54268d2d2e9aac728e835038a1400f729ed0ca8d2f76",
+  "reference": "/tmp/native-dsh-parity/01-original-chat.png",
+  "viewport": {
+    "logical": [
+      1280,
+      820
+    ],
+    "physical": [
+      2560,
+      1640
+    ],
+    "theme": "system-dark"
+  },
+  "privacy": "Screenshots and AX captures contain private session content. Keep local. Do not publish or include session bodies in test fixtures.",
+  "observed": [
+    "Existing independent login survived the rebuild.",
+    "Connected to the existing MacMini Host and passively opened the same completed conversation as the official reference.",
+    "Opened settings, right pane, and trajectory. No real prompts, approvals, cancellation, settings mutations, or terminal creation were performed.",
+    "Exited this candidate with Cmd+Q; CUA application inventory confirmed it was no longer running."
+  ],
+  "findings": [
+    {
+      "severity": "P0",
+      "id": "chat-layout",
+      "result": "failed",
+      "evidence": "/tmp/native-dsh-parity/20-native-core-chat.png",
+      "detail": "Long content paints through the header and pushes the composer beyond the window bottom. Child flex height constraints need correction; clipping alone is insufficient."
+    },
+    {
+      "severity": "P0",
+      "id": "catalog-scope",
+      "result": "failed",
+      "evidence": "/tmp/native-dsh-parity/20-native-core-chat.png",
+      "detail": "After selecting the comparison conversation, other workspaces keep their headings but lose their session rows. Full Host catalog must remain independent from the active workspace."
+    },
+    {
+      "severity": "P0",
+      "id": "settings-layout",
+      "result": "failed",
+      "evidence": "/tmp/native-dsh-parity/21-native-core-settings.png",
+      "detail": "Settings rail is vertically centered; scrolling content exceeds the modal boundary and hides its header/close button."
+    },
+    {
+      "severity": "P1",
+      "id": "right-pane-layout",
+      "result": "failed",
+      "evidence": "/tmp/native-dsh-parity/22-native-core-right-pane.png",
+      "detail": "Right pane starts below the top of the content area. Files control remains disabled because capabilities are not yet integrated."
+    },
+    {
+      "severity": "P1",
+      "id": "typography",
+      "result": "failed",
+      "evidence": "/tmp/native-dsh-parity/20-native-core-chat.png",
+      "detail": "Body and sidebar appear heavier than the official reference. Recheck system font weight after the font selection fix."
+    },
+    {
+      "severity": "P1",
+      "id": "trajectory-parity",
+      "result": "failed",
+      "evidence": "/tmp/native-dsh-parity/23-native-core-trajectory.png",
+      "detail": "Raw event list does not match the official request/context/tool rows, timeline overview, filters and search. Data availability is not UI parity."
+    },
+    {
+      "severity": "P1",
+      "id": "remaining-actions",
+      "result": "incomplete",
+      "detail": "Model/permission/commands/feedback/fork and other visible operations still await capability wiring. Compatibility plugin page is not in this candidate."
+    }
+  ],
+  "freeze": {
+    "checkedAt": "2026-11-14T10:53:43.293Z",
+    "pass": true,
+    "method": "qa/verify-freeze.mjs plus clean git status of both frozen source references"
+  },
+  "acceptanceBoundary": "Go/fixture checks and developer M4 measurements do not establish visual or M1 performance acceptance. Report fixes only after rebuilding and observing them in the actual app."
+}
