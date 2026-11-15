@@ -778,21 +778,12 @@ func (a *app) settingsFontFamily(c *ui.Context, title, description string, value
 }
 
 // settingsShortcutRows is the one read-only shortcut list both the reference
-// section and the shortcuts page show. Every row names a handler this build
-// installs: the ⌘B/⌘K/⌘, checks in app.go, the composer's Enter handling, the
-// approval card's Esc, and the application menu's accelerators. A shortcut
-// with no handler is absent rather than inert.
-var settingsShortcutRows = [][2]string{
-	{"⌘B", "展开或收起侧边栏"},
-	{"⌘K", "搜索会话"},
-	{"⌘,", "打开设置"},
-	{"Esc", "关闭弹层；取消当前等待的审批或提问"},
-	{"Enter", "发送消息；繁忙时按「繁忙时的发送行为」处理"},
-	{"⌘Enter / Ctrl+Enter", "以另一种发送行为发送"},
-	{"⌘⇧L", "打开本地工作区"},
-	{"⌘⇧N", "返回原生界面"},
-	{"⌘C / ⌘V / ⌘A", "复制、粘贴、全选（系统编辑菜单）"},
-}
+// section and the shortcuts page show. It is derived from shortcutBindings in
+// shortcuts.go — the table the window dispatches — plus the keys this build
+// installs in the composer, the pending cards and the application menu, which
+// externalShortcuts names. Nothing here is written by hand, so a row cannot
+// outlive the handler it describes, and a key with no handler has no row.
+var settingsShortcutRows = shortcutReferenceRows()
 
 // settingsReadOnlyBlock is the shape the reference sections share: a heading
 // with an explanatory line, then values this launch read from the Host or from

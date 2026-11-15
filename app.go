@@ -178,16 +178,9 @@ func (a *app) view(c *ui.Context) {
 		a.fontCalibrationView(c)
 		return
 	}
-	if c.Shortcut(ui.Cmd, ui.KeyB) {
-		a.sidebar = !a.sidebar
-	}
-	if c.Shortcut(ui.Cmd, ui.KeyK) {
-		a.sidebar = true
-		a.searchOpen = true
-	}
-	if c.Shortcut(ui.Cmd, ui.KeyComma) {
-		a.settingsOpen = true
-	}
+	// Every window shortcut is one row of shortcuts.go: the dispatcher reads
+	// the key and the command from the same table the settings reference shows.
+	a.dispatchShortcuts(c)
 	c.Root().FontWeight(300)
 	if c.Vibrancy() {
 		c.Root().Background(ui.Transparent)

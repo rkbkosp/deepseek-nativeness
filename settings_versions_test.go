@@ -126,7 +126,12 @@ func TestShortcutReferenceOnlyListsBoundKeys(t *testing.T) {
 	if !tt.HasText("⌘B") || !tt.HasText("展开或收起侧边栏") {
 		t.Fatalf("shortcuts page does not render the shared table: %v", tt.Texts())
 	}
-	if tt.HasText("⌘R") {
-		t.Fatal("shortcuts page advertises a key this build does not bind")
+	// ⌘R is installed by the application menu's "重新加载工作区" item, whose key
+	// equivalent AppKit delivers before the window sees the key, so the page
+	// names it (as it names ⌘⇧L and ⌘⇧N) while shortcuts.go binds no window row
+	// for it. A key nothing installs stays absent, which shortcuts_test.go pins
+	// with ⌘⇧A.
+	if !tt.HasText("⌘R") {
+		t.Fatalf("shortcuts page lost the application menu's reload key: %v", tt.Texts())
 	}
 }
