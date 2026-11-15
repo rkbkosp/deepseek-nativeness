@@ -367,3 +367,23 @@ M1 + M2 + M4：先把“间距、token、气泡/代码块、运行态/尾部操�
 - **helper 协议**：活动组/统计/todo/错误详情扩展会影响 Remote 帧；需要独立评审、兼容旧客户端，不能和原生 UI 混在一个提交。
 - **动画性能**：运行计时/shimmer 必须遵守 paint-only 调度，不能引入每帧业务重建。
 - **验收偏差**：截图受主题、字号、Retina 缩放影响；固定 1280×820、默认字号 14、暗/亮两套，先量化再目测。
+
+---
+
+## 14. 实施状态（commit `3483889`）
+
+| 里程碑 | 状态 | 落地内容 / 残余 |
+|---|---|---|
+| M0 | ✅ | `qa/conversation-fix-baseline.md`、固定 fixture 测试、全量 Go/remote 测试 |
+| M1 | ✅ | 4/12/16 行距、顶部 16、助手 block gap 16、气泡 20/10/16 + 70.2% 上限 |
+| M2 | ✅ 大部分 | 语义 token、代码块 16/底色/banner/19 行高、标题 700/32-16、链接 500、列表/引用、发送按钮、输入卡 28 |
+| M3 | ✅ | 24px DisclosureRow、思考标题/图标/摘要/签名过滤、上下文角色标题、compact Markdown |
+| M4 | ✅ | 正文运行行（鲸鱼+用时）、尾部唯一操作条、hover 显隐、用户时钟顺序/日期格式、单轮 usage |
+| M5 | ✅ 大部分 | 工具标题/摘要/图标/错误色、bash TerminalBlock、command 卡、diff 卡、IN/OUT 卡、子调用递归 |
+| M6 | ✅ | 加载更早、位置保持、`adoptHistorySnapshot`、回到底部、轮次轨、底部渐隐 |
+| M7 | ✅ 大部分 | Hero/居中输入、队列贴附+附件标签、pending steering、发送色、头部 30px/32 间距、反馈对话框 |
+| M8 | ✅ 原生侧 | TurnTrigger 卡、轮/步+token+缓存统计、底部渐隐；helper 新增 `trigger` |
+| 残余（helper） | ⏳ | 活动组摘要、Todo 面板、Retry/TurnError/MaxTokens 详情、真实 tok/s/上下文百分比 |
+| 残余（MyGo 冻结） | ⏳ | 行内代码 chip、hr 32px、链接 hover 下划线、KaTeX、文字 shimmer |
+
+全量：`GOCACHE=/tmp/dsh-go-cache CGO_ENABLED=0 go test ./...` 通过；`npm test --prefix remote` 73 项通过。
