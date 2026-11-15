@@ -114,4 +114,17 @@ if [ -d "$bundle" ]; then
   mv "$bundle" "build/gui-checkpoints/retired-bundle-$$"
 fi
 mv "$app" "$bundle"
+case "${1:-}" in
+  --use-gui11-assets|--use-gui11-forced-assets)
+    # Preserve the exact common Go linker output before binding the local app
+    # identity/resources. Sign only this outer app; nested Node/wrtc stay intact.
+    preseal="build/gui-checkpoints/gui11-normal-preseal-native"
+    if [ "${1:-}" = "--use-gui11-forced-assets" ]; then
+      preseal="build/gui-checkpoints/gui11-forced-preseal-native"
+    fi
+    cp "$bundle/Contents/MacOS/native-dsh" "$preseal"
+    codesign --force --sign - --timestamp=none "$bundle"
+    codesign --verify --strict --verbose=2 "$bundle"
+    ;;
+esac
 printf '%s\n' "$bundle"

@@ -49,6 +49,8 @@ sh scripts/build-app.sh --use-gui11-forced-assets
 
 The outputs are `build/Native DSH Remote GUI11.app` and `build/Native DSH Remote Anchor QA GUI11.app`. Both use the same native application and chat-presentation helper; only the compatibility-page compile-time fallback gate and QA bundle identity differ. Earlier candidates and standalone native-editor proofs are preserved; the proofs are not imported into the normal application. These commands package existing reviewed resources and do not launch the app or establish GUI acceptance of the new chat rendering.
 
+Only these GUI11 targets also apply a local ad-hoc resource seal and verify it. The nested Node/wrtc signatures remain unchanged. Their pre-seal Go binaries are saved under `build/gui-checkpoints/gui11-*-preseal-native`; the final native signatures may differ because each seal binds its bundle identity and browser resources. This is not Developer ID signing or notarization.
+
 Visual parity is in progress. Original DSH SVG artwork and the sidebar/header/composer proportions are reused; exact typography, all transitions, and M1 CPU/memory comparisons remain acceptance work. Do not infer M1 performance from local synthetic tests.
 
 The source references `../deepseek-harness` and `../mygo` are read-only. No backend code, configuration, database schema, application installation, or installed plugin has been changed.
