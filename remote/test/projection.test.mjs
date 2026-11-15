@@ -12,7 +12,7 @@ const snapshot = (records = [], activeAttempt) => ({
   hasMore: false,
   assistantStream: { revision: 0, ...(activeAttempt ? { activeAttempt } : {}) },
 });
-test("ordered durable surfaces replace in-place without retaining superseded text", () => {
+test("model-surface replacement retains the original append-origin Chat reply", () => {
   const p = new SessionProjection("s");
   p.snapshot(
     snapshot([
@@ -32,12 +32,17 @@ test("ordered durable surfaces replace in-place without retaining superseded tex
   );
   assert.deepEqual(
     p.value().messages.map((m) => m.text),
-    ["hello", "new"],
+    ["hello", "old"],
   );
   p.event(
-    ev(3, "assistant/message", {
-      message: { content: [{ type: "text", text: "new" }] },
-    }).event,
+    ev(
+      3,
+      "assistant/message",
+      {
+        message: { content: [{ type: "text", text: "new" }] },
+      },
+      { op: "replace", startSeq: 2, endSeq: 2 },
+    ).event,
   );
   assert.equal(p.value().messages.length, 2);
 });

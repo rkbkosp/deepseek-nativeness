@@ -789,8 +789,10 @@ export class RemoteAdapter {
             opened = true;
             const value = this.snapshot();
             this.publish(scope, () => this.publisher.replace(value));
-            if (baselinePublished) this.emit("snapshot", value, scope);
-            else {
+            // Announce every new baseline on the notification conveyor before
+            // its deltas or the duplicate RPC completion can reach the UI.
+            this.emit("snapshot", value, scope);
+            if (!baselinePublished) {
               baselinePublished = true;
               ready.resolve(value);
             }
@@ -881,6 +883,7 @@ export class RemoteAdapter {
     projection.hasMore = !!value.hasMore;
     const snapshot = this.snapshot();
     this.publish(scope, () => this.publisher.replace(snapshot));
+    this.emit("snapshot", snapshot, scope);
     return snapshot;
   }
   async mutate(endpoint, request, operationId) {

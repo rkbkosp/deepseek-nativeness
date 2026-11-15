@@ -55,6 +55,8 @@ export class FixtureAdapter extends RemoteAdapter {
         "sessionState",
         "messageUpsert",
         "messageDelta",
+        "messageRemove",
+        "chatPresentationPatch",
         "sessionProjections",
       ]);
       for (const event of params.events) {
@@ -98,6 +100,8 @@ export class FixtureAdapter extends RemoteAdapter {
     }
     if (method === "fixtureStats") return this.fixtureUnaryStats();
     if (method === "fixtureStructuredStream") return this.structuredStream();
+    if (method === "fixtureChatPresentationStream")
+      return this.chatPresentationStream();
     return super.request(method, params);
   }
   fixtureUnaryStats() {
@@ -109,6 +113,121 @@ export class FixtureAdapter extends RemoteAdapter {
       activeOwners: this.owners.size,
       heldRegistrations: this.fixtureRegistrationWaiters.length,
     };
+  }
+  chatPresentationStream() {
+    const sessionId = "fixture-chat-presentation";
+    const projection = new SessionProjection(sessionId);
+    const event = (seq, type, data, surfaceOp) => ({
+      seq,
+      type,
+      time: 1700000000000 + seq,
+      data,
+      ...(surfaceOp ? { surfaceOp } : {}),
+    });
+    const text = (text) => ({ type: "text", text });
+    const assistant = (seq, step, content) =>
+      event(
+        seq,
+        "assistant/message",
+        {
+          turn: 1,
+          step,
+          message: {
+            id: `fixture-message-${seq}`,
+            role: "assistant",
+            source: { kind: "model", provider: "fixture", model: "fixture" },
+            content,
+          },
+          stream: [],
+        },
+        "append",
+      );
+    projection.snapshot({
+      cursor: 2,
+      records: [
+        event(0, "turn/start", { turn: 1 }),
+        event(1, "step/start", { turn: 1, step: 1 }),
+        event(
+          2,
+          "user/message",
+          {
+            id: "fixture-human",
+            role: "user",
+            source: { kind: "user" },
+            content: [text("fixture prompt")],
+          },
+          "append",
+        ),
+      ].map((event) => ({ event })),
+      assistantStream: { revision: 0 },
+    });
+    const publisher = new PresentationPublisher(this.emit),
+      checkpoints = [];
+    const baseline = projection.value();
+    publisher.replace(baseline);
+    this.emit("snapshot", baseline);
+    const checkpoint = (marker) => {
+      publisher.patch(projection.pullUpdates());
+      checkpoints.push({ marker, expected: projection.value() });
+      this.emit("fixtureCheckpoint", { marker, sessionId });
+    };
+    projection.frame({
+      type: "start",
+      revision: 1,
+      attemptId: "fixture-presentation-attempt",
+      turn: 1,
+      step: 1,
+      startedAfterSeq: 2,
+    });
+    projection.frame({
+      type: "chunk",
+      revision: 2,
+      attemptId: "fixture-presentation-attempt",
+      index: 0,
+      time: 1700000000003,
+      chunk: { type: "text-delta", index: 0, text: "Earlier live reply" },
+    });
+    checkpoint("live");
+    projection.event(assistant(3, 1, [text("Earlier committed reply")]));
+    checkpoint("staged");
+    projection.frame({
+      type: "end",
+      revision: 3,
+      attemptId: "fixture-presentation-attempt",
+      index: 1,
+      outcome: { kind: "committed", seq: 3, eventType: "assistant/message" },
+    });
+    checkpoint("retained");
+    projection.event(event(4, "step/end", { turn: 1, step: 1 }));
+    projection.event(event(5, "step/start", { turn: 1, step: 2 }));
+    checkpoint("latest-empty");
+    projection.event(
+      assistant(6, 2, [
+        text("Response A"),
+        { type: "reasoning", text: "Reasoning middle" },
+        {
+          type: "file",
+          attachment: {
+            attachmentId: "fixture-file",
+            name: "fixture.csv",
+            bytes: 4,
+          },
+        },
+        text("Response B"),
+      ]),
+    );
+    projection.event(event(7, "step/end", { turn: 1, step: 2 }));
+    projection.event(
+      event(8, "turn/end", { turn: 1, reason: { kind: "completed" } }),
+    );
+    checkpoint("structured-final");
+    const expected = projection.value();
+    this.emit("fixtureComplete", {
+      sessionId,
+      marker: "chat-presentation-v1",
+      dataSource: "fixture",
+    });
+    return { expected, checkpoints };
   }
   structuredStream() {
     const sessionId = "fixture-structured-session";

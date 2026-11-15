@@ -15,8 +15,13 @@ function mirrorOf(projection) {
   const initial = projection.value();
   let messages = structuredClone(initial.messages);
   const notes = [];
-  const publisher = new PresentationPublisher((method, params) => {
-    notes.push({ method, params });
+  const apply = (method, params) => {
+    if (method === "chatPresentationPatch") {
+      const changes = params.payloadChanges;
+      apply("messageRemove", { ids: changes.removes });
+      for (const row of changes.upserts) apply("messageUpsert", row);
+      for (const delta of changes.deltas ?? []) apply("messageDelta", delta);
+    }
     if (method === "messageRemove")
       messages = messages.filter((row) => !params.ids.includes(row.id));
     if (method === "messageUpsert") {
@@ -36,6 +41,10 @@ function mirrorOf(projection) {
         row.assistantBlocks[params.reasoningBlockIndex].text +=
           params.reasoningAppend;
     }
+  };
+  const publisher = new PresentationPublisher((method, params) => {
+    notes.push({ method, params });
+    apply(method, params);
   });
   publisher.replace(initial);
   return {
@@ -255,7 +264,24 @@ test("one thousand and ten thousand completed rows are never visited by one hund
       false,
     );
     assert.ok(
-      serialized.reduce((n, line) => n + Buffer.byteLength(line), 0) < 25000,
+      // Versioned scope/header adds a fixed per-frame cost; history stays absent.
+      serialized.reduce((n, line) => n + Buffer.byteLength(line), 0) < 50000,
+    );
+    const withoutFixedHeader = notes.map(({ method, params }) => {
+      const {
+        schemaVersion,
+        baselineSerial,
+        presentationEpoch,
+        presentationRevision,
+        ...body
+      } = params;
+      return JSON.stringify({ method, params: body });
+    });
+    assert.ok(
+      withoutFixedHeader.reduce(
+        (sum, line) => sum + Buffer.byteLength(line),
+        0,
+      ) < 25000,
     );
     assert.equal(publisher.messages.size, historyCount + 1);
   }
@@ -309,7 +335,7 @@ test("the real scheduled adapter path consumes dirty updates without constructin
   }
   assert.equal(historyReads, 0);
   assert.equal(
-    frames.filter((frame) => frame.method === "messageUpsert").length,
+    frames.filter((frame) => frame.method === "chatPresentationPatch").length,
     1,
   );
   assert.equal(
