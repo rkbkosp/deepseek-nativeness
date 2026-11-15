@@ -136,9 +136,34 @@ func (a *app) actionButton(c *ui.Context, label, tooltip, glyph string, size flo
 	}
 }
 
+// turnHasEnded reports whether the Turn's end is known. Copy, feedback and
+// branch chrome belongs to a finished Turn: while the agent is thinking or
+// running a command, the last settled reply is not yet the turn tail, so no
+// footer may appear there only to vanish when the next step starts.
+func (a *app) turnHasEnded(turn, latest int) bool {
+	if turn <= 0 {
+		return false
+	}
+	if p := a.current.ChatPresentation; p != nil {
+		i, ok := a.presentationIndex().turns[turn]
+		if !ok {
+			return true
+		}
+		switch p.Turns[i].Status {
+		case "open":
+			return false
+		case "partial":
+			// A window cut before turn/start leaves the in-flight Turn partial.
+			return !(a.current.Running && turn == latest)
+		}
+		return true
+	}
+	return !(a.current.Running && a.chatRowsCache != nil && turn == a.chatRowsCache.activeTurn)
+}
+
 func (a *app) tailActionsView(c *ui.Context, row chatRow, hovered bool, latest int) {
 	m := a.tailMessage(row)
-	if m == nil || m.Role != "assistant" || m.Streaming {
+	if m == nil || m.Role != "assistant" || m.Streaming || !a.turnHasEnded(row.Turn, latest) {
 		return
 	}
 	visible := hovered || row.Turn == latest
