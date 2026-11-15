@@ -1,0 +1,19 @@
+{"Time":"2026-11-15T01:16:18.688407+08:00","Action":"start","Package":"native-dsh/desktop"}
+{"Time":"2026-11-15T01:16:19.053487+08:00","Action":"run","Package":"native-dsh/desktop","Test":"TestRootStoppedProjectionAndUpsert"}
+{"Time":"2026-11-15T01:16:19.053655+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestRootStoppedProjectionAndUpsert","Output":"=== RUN   TestRootStoppedProjectionAndUpsert\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:16:19.055069+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestRootStoppedProjectionAndUpsert","Output":"    zz_root_message_display_test.go:21: empty interrupted reply disappeared: rows=0\n","OutputType":"error"}
+{"Time":"2026-11-15T01:16:19.055121+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestRootStoppedProjectionAndUpsert","Output":"--- FAIL: TestRootStoppedProjectionAndUpsert (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:16:19.05514+08:00","Action":"fail","Package":"native-dsh/desktop","Test":"TestRootStoppedProjectionAndUpsert","Elapsed":0}
+{"Time":"2026-11-15T01:16:19.055189+08:00","Action":"run","Package":"native-dsh/desktop","Test":"TestRootImageAdjacencyOccurrenceAndWrapping"}
+{"Time":"2026-11-15T01:16:19.055203+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestRootImageAdjacencyOccurrenceAndWrapping","Output":"=== RUN   TestRootImageAdjacencyOccurrenceAndWrapping\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:16:19.088296+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestRootImageAdjacencyOccurrenceAndWrapping","Output":"    zz_root_message_display_test.go:34: adjacent group geometry {X:0 Y:0 W:240 H:120}\n","OutputType":"error"}
+{"Time":"2026-11-15T01:16:19.088356+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestRootImageAdjacencyOccurrenceAndWrapping","Output":"--- FAIL: TestRootImageAdjacencyOccurrenceAndWrapping (0.03s)\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:16:19.08837+08:00","Action":"fail","Package":"native-dsh/desktop","Test":"TestRootImageAdjacencyOccurrenceAndWrapping","Elapsed":0.03}
+{"Time":"2026-11-15T01:16:19.088399+08:00","Action":"run","Package":"native-dsh/desktop","Test":"TestRootUnknownJSONKeepsDataAndStartsCollapsed"}
+{"Time":"2026-11-15T01:16:19.088405+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestRootUnknownJSONKeepsDataAndStartsCollapsed","Output":"=== RUN   TestRootUnknownJSONKeepsDataAndStartsCollapsed\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:16:19.088721+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestRootUnknownJSONKeepsDataAndStartsCollapsed","Output":"    zz_root_message_display_test.go:44: unknown content silently omitted\n","OutputType":"error"}
+{"Time":"2026-11-15T01:16:19.08873+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestRootUnknownJSONKeepsDataAndStartsCollapsed","Output":"--- FAIL: TestRootUnknownJSONKeepsDataAndStartsCollapsed (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:16:19.08874+08:00","Action":"fail","Package":"native-dsh/desktop","Test":"TestRootUnknownJSONKeepsDataAndStartsCollapsed","Elapsed":0}
+{"Time":"2026-11-15T01:16:19.088745+08:00","Action":"output","Package":"native-dsh/desktop","Output":"FAIL\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:16:19.090138+08:00","Action":"output","Package":"native-dsh/desktop","Output":"FAIL\tnative-dsh/desktop\t0.401s\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:16:19.090157+08:00","Action":"fail","Package":"native-dsh/desktop","Elapsed":0.402}

@@ -1,0 +1,263 @@
+{
+  "kind": "helper-source-author-verification",
+  "scope": "frontend-only, source-derived fixtures, no Host/network/model/clipboard or bundle build",
+  "schema": "remote/CHAT_PRESENTATION.md",
+  "sourceFiles": [
+    {
+      "path": "remote/README.md",
+      "bytes": 14533,
+      "sha256": "0b02e4db820df9db62f2380f4e87c2fea0ca844d3df85e6d470c764ce0f333cb"
+    },
+    {
+      "path": "remote/CHAT_PRESENTATION.md",
+      "bytes": 7661,
+      "sha256": "d7e6e322b12b766656f22fc6e18ea5a7da34e927189a453766d9e597abc377cb"
+    },
+    {
+      "path": "remote/chat-presentation.mjs",
+      "bytes": 16287,
+      "sha256": "b5ae040339f3c9e3ca6bca7e082f245b3be2dc152e2f272317cd1a2f71924a97"
+    },
+    {
+      "path": "remote/step-summary.mjs",
+      "bytes": 2325,
+      "sha256": "773f28204058c0e642ae16a94223c26d339fc20599af8bf7630972c6b2b23ba9"
+    },
+    {
+      "path": "remote/projection.mjs",
+      "bytes": 28888,
+      "sha256": "51eccc58817ea8c8e79a8efb03b6836deb06269b79ba5de04906f54164e4ccbf"
+    },
+    {
+      "path": "remote/updates.mjs",
+      "bytes": 12974,
+      "sha256": "4f64946c63c997cbb9893c671e54b5e680a175f2fb073ee0647eb6c8c2669f3b"
+    },
+    {
+      "path": "remote/client.mjs",
+      "bytes": 62769,
+      "sha256": "5accb684f5481f2756e53d6297f53ec950fdf3e03ae21b1cbd0d32050a181db2"
+    },
+    {
+      "path": "remote/fixture.mjs",
+      "bytes": 18610,
+      "sha256": "2ef948292a5cff1936921fd2acfef503809b95487ee869bea83d685629b2dc33"
+    },
+    {
+      "path": "remote/test/chat-presentation.test.mjs",
+      "bytes": 11637,
+      "sha256": "d6200bf4cde5086a9eab61236b4e3c69e959a3f412e04bcff5d6f2412f8ca4bb"
+    },
+    {
+      "path": "remote/test/chat-source-oracle.mjs",
+      "bytes": 8731,
+      "sha256": "c8966357f7d6e5295b8fbc8cc086e4a555132936fdba4bc75ce79f3c6e92ea5c"
+    },
+    {
+      "path": "remote/test/chat-presentation-bench.mjs",
+      "bytes": 7191,
+      "sha256": "5c056ff2d00c709efd331530881e52964901a0059aa368c46035fb2c89fe352b"
+    },
+    {
+      "path": "remote/test/step-summary.test.mjs",
+      "bytes": 1201,
+      "sha256": "d16a5d6dd1e63c9a25de513ac54c5b727dcaa2aafb5c1167c9e8df4d90c04995"
+    },
+    {
+      "path": "remote/test/dirty-publisher.test.mjs",
+      "bytes": 10133,
+      "sha256": "d673d3eafe04a6c3a2e499a5879583aae1a94a2040468485457161857d1e6d50"
+    },
+    {
+      "path": "remote/test/projection.test.mjs",
+      "bytes": 3889,
+      "sha256": "4da1f62fe0a896f79b12ba3b4c9a69bf8b87cdaeb64c0b97980c70ebc72f179c"
+    }
+  ],
+  "tests": {
+    "remoteAndOriginal": 73,
+    "passed": 73,
+    "originalRuntimeClosureInputs": 39,
+    "originalClosureBytes": 237968,
+    "legacyIndependentQA": {
+      "total": 25,
+      "passed": 24,
+      "knownConflict": "qa/projection-acceptance expects model-surface replacement to replace append-origin Chat text; pinned original assistantDefinition only accepts append. Independent QA file untouched."
+    },
+    "originalOracleGroups": 4
+  },
+  "benchmark": {
+    "kind": "single-local-M4-Node-fixture",
+    "limits": "One synchronous sample; heap peak increase not cumulative allocation/RSS; no M1 or App performance claim; bytes omit stdio top-level account/Host scope.",
+    "rows": [
+      {
+        "completedMessages": 1000,
+        "historyShape": "many-completed-turns",
+        "operations": 100,
+        "mode": "chunks",
+        "elapsedMs": 2.2282500000000027,
+        "heapPeakIncreaseBytes": 1255616,
+        "historicalEventOrMessageIterations": 0,
+        "historicalTailRowLookups": 0,
+        "activeStepMetadataReads": 1,
+        "metadataPatches": 1,
+        "turnUpserts": 1,
+        "stepUpserts": 1,
+        "suffixes": 99,
+        "methodParamsBytes": 28795,
+        "withoutPresentationHeaderBytes": 19695
+      },
+      {
+        "completedMessages": 1000,
+        "historyShape": "many-completed-turns",
+        "operations": 100,
+        "mode": "boundaries",
+        "elapsedMs": 6.362375,
+        "heapPeakIncreaseBytes": 5498928,
+        "historicalEventOrMessageIterations": 0,
+        "historicalTailRowLookups": 1,
+        "activeStepMetadataReads": 3876,
+        "metadataPatches": 200,
+        "turnUpserts": 101,
+        "stepUpserts": 200,
+        "suffixes": 0,
+        "methodParamsBytes": 322259,
+        "withoutPresentationHeaderBytes": 266870
+      },
+      {
+        "completedMessages": 1000,
+        "historyShape": "one-long-active-turn",
+        "operations": 100,
+        "mode": "chunks",
+        "elapsedMs": 1.0464580000000012,
+        "heapPeakIncreaseBytes": 1365680,
+        "historicalEventOrMessageIterations": 0,
+        "historicalTailRowLookups": 0,
+        "activeStepMetadataReads": 6,
+        "metadataPatches": 1,
+        "turnUpserts": 0,
+        "stepUpserts": 1,
+        "suffixes": 99,
+        "methodParamsBytes": 28444,
+        "withoutPresentationHeaderBytes": 19344
+      },
+      {
+        "completedMessages": 1000,
+        "historyShape": "one-long-active-turn",
+        "operations": 100,
+        "mode": "boundaries",
+        "elapsedMs": 7.255791000000016,
+        "heapPeakIncreaseBytes": 227328,
+        "historicalEventOrMessageIterations": 0,
+        "historicalTailRowLookups": 1,
+        "activeStepMetadataReads": 5414,
+        "metadataPatches": 200,
+        "turnUpserts": 100,
+        "stepUpserts": 200,
+        "suffixes": 0,
+        "methodParamsBytes": 325453,
+        "withoutPresentationHeaderBytes": 270064
+      },
+      {
+        "completedMessages": 10000,
+        "historyShape": "many-completed-turns",
+        "operations": 100,
+        "mode": "chunks",
+        "elapsedMs": 1.1049170000000004,
+        "heapPeakIncreaseBytes": 1355568,
+        "historicalEventOrMessageIterations": 0,
+        "historicalTailRowLookups": 0,
+        "activeStepMetadataReads": 1,
+        "metadataPatches": 1,
+        "turnUpserts": 1,
+        "stepUpserts": 1,
+        "suffixes": 99,
+        "methodParamsBytes": 28799,
+        "withoutPresentationHeaderBytes": 19699
+      },
+      {
+        "completedMessages": 10000,
+        "historyShape": "many-completed-turns",
+        "operations": 100,
+        "mode": "boundaries",
+        "elapsedMs": 8.253416000000016,
+        "heapPeakIncreaseBytes": 5122456,
+        "historicalEventOrMessageIterations": 0,
+        "historicalTailRowLookups": 1,
+        "activeStepMetadataReads": 3876,
+        "metadataPatches": 200,
+        "turnUpserts": 101,
+        "stepUpserts": 200,
+        "suffixes": 0,
+        "methodParamsBytes": 323960,
+        "withoutPresentationHeaderBytes": 268571
+      },
+      {
+        "completedMessages": 10000,
+        "historyShape": "one-long-active-turn",
+        "operations": 100,
+        "mode": "chunks",
+        "elapsedMs": 1.0440830000000005,
+        "heapPeakIncreaseBytes": 1338088,
+        "historicalEventOrMessageIterations": 0,
+        "historicalTailRowLookups": 0,
+        "activeStepMetadataReads": 7,
+        "metadataPatches": 1,
+        "turnUpserts": 0,
+        "stepUpserts": 1,
+        "suffixes": 99,
+        "methodParamsBytes": 28449,
+        "withoutPresentationHeaderBytes": 19349
+      },
+      {
+        "completedMessages": 10000,
+        "historyShape": "one-long-active-turn",
+        "operations": 100,
+        "mode": "boundaries",
+        "elapsedMs": 6.562667000000033,
+        "heapPeakIncreaseBytes": 5203760,
+        "historicalEventOrMessageIterations": 0,
+        "historicalTailRowLookups": 1,
+        "activeStepMetadataReads": 7936,
+        "metadataPatches": 200,
+        "turnUpserts": 100,
+        "stepUpserts": 200,
+        "suffixes": 0,
+        "methodParamsBytes": 328951,
+        "withoutPresentationHeaderBytes": 273562
+      }
+    ]
+  },
+  "commands": [
+    "node --test remote/test/*.test.mjs",
+    "node qa/_chat-process-audit/build.mjs",
+    "node --test remote/test/chat-source-oracle.mjs",
+    "node --expose-gc remote/test/chat-presentation-bench.mjs"
+  ],
+  "frozenArtifact": {
+    "path": "remote/dist-export-next/bridge.bundle.mjs",
+    "sha256": "33b66739e16f742975bf698240be3ff4f0264d8f4e461f7be1bc8a1363fbdb13"
+  },
+  "pending": [
+    "independent current-source classifier/ref regression and queue/Go acceptance",
+    "source commit only after independent checks; no GUI bundle changes",
+    "M1 whole-App CPU/RSS measurement remains unperformed"
+  ],
+  "notes": [
+    "ordinary 99 established text suffixes have zero metadata patches and historical body/event traversal",
+    "new visibility/eligibility can atomically update one Step/Turn, without historical serialization",
+    "100 boundaries publish 200 Step upserts, not a growing full active-turn node list",
+    "benchmark peak heap increase is not allocation volume/RSS; a synchronous GC can lower net peak relative to pre-sample heap",
+    "raw timelineTurnUpserts same atomic frame, dirty Turn boundaries only",
+    "strict real Host start has startedAfterSeq; older local fixtures without it retain a readable legacy settlement path; not a live protocol claim"
+  ],
+  "fixesAfterPriorCheckpoint": {
+    "priorManifestSha256": "4b9cbdae215636a489351a053d6380c1e7e9e148393808dac4dd0ad5f15fee00",
+    "changes": [
+      "closed live tool-only assistant has exact synthetic interrupted body/ref/stopped status, but no final-answer qualification; empty attempt still has none",
+      "live assistant tool blocks keep identity-only args; preparing Tool rows retain streamed arguments; canonical block-end exposes canonical assistant arguments and later deltas do not overwrite them",
+      "block-start uses the original empty classifier: empty text/reasoning, blank tool identity, opaque other:null for unfinished image/file; block-end switches to canonical classifier"
+    ],
+    "evidence": "actual ClientAssistantStream plus freshly compiled pinned original assembler; source-derived, no live Host capture"
+  }
+}

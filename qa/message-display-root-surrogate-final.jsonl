@@ -1,0 +1,16 @@
+{"Time":"2026-11-15T01:40:31.751381+08:00","Action":"start","Package":"native-dsh/desktop"}
+{"Time":"2026-11-15T01:40:32.101215+08:00","Action":"run","Package":"native-dsh/desktop","Test":"TestRootStoppedProjectionAndUpsert"}
+{"Time":"2026-11-15T01:40:32.101292+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestRootStoppedProjectionAndUpsert","Output":"=== RUN   TestRootStoppedProjectionAndUpsert\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:40:32.126733+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestRootStoppedProjectionAndUpsert","Output":"--- PASS: TestRootStoppedProjectionAndUpsert (0.03s)\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:40:32.126775+08:00","Action":"pass","Package":"native-dsh/desktop","Test":"TestRootStoppedProjectionAndUpsert","Elapsed":0.03}
+{"Time":"2026-11-15T01:40:32.126804+08:00","Action":"run","Package":"native-dsh/desktop","Test":"TestRootImageAdjacencyOccurrenceAndWrapping"}
+{"Time":"2026-11-15T01:40:32.12681+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestRootImageAdjacencyOccurrenceAndWrapping","Output":"=== RUN   TestRootImageAdjacencyOccurrenceAndWrapping\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:40:32.130795+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestRootImageAdjacencyOccurrenceAndWrapping","Output":"--- PASS: TestRootImageAdjacencyOccurrenceAndWrapping (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:40:32.130808+08:00","Action":"pass","Package":"native-dsh/desktop","Test":"TestRootImageAdjacencyOccurrenceAndWrapping","Elapsed":0}
+{"Time":"2026-11-15T01:40:32.130814+08:00","Action":"run","Package":"native-dsh/desktop","Test":"TestRootUnknownJSONKeepsDataAndStartsCollapsed"}
+{"Time":"2026-11-15T01:40:32.130819+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestRootUnknownJSONKeepsDataAndStartsCollapsed","Output":"=== RUN   TestRootUnknownJSONKeepsDataAndStartsCollapsed\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:40:32.141452+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestRootUnknownJSONKeepsDataAndStartsCollapsed","Output":"--- PASS: TestRootUnknownJSONKeepsDataAndStartsCollapsed (0.01s)\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:40:32.141483+08:00","Action":"pass","Package":"native-dsh/desktop","Test":"TestRootUnknownJSONKeepsDataAndStartsCollapsed","Elapsed":0.01}
+{"Time":"2026-11-15T01:40:32.141509+08:00","Action":"output","Package":"native-dsh/desktop","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:40:32.142782+08:00","Action":"output","Package":"native-dsh/desktop","Output":"ok  \tnative-dsh/desktop\t0.391s\n"}
+{"Time":"2026-11-15T01:40:32.142799+08:00","Action":"pass","Package":"native-dsh/desktop","Elapsed":0.391}

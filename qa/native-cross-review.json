@@ -1,0 +1,106 @@
+{
+  "checkedAt": "2026-11-14T14:34:38.265Z",
+  "reviewer": "acceptance_audit",
+  "status": "INDEPENDENT SOURCE/FIXTURE REVIEW: TWO CORRECTNESS/PARITY ISSUES; ONE NONBLOCKING COST",
+  "applicationCodeEdited": false,
+  "sourceHashes": {
+    "conversation_rows.go": "6046b37d3653cdffd35e66e37f67deb7dfd010f2dc3e60590fbfbb7efe4061ec",
+    "conversation.go": "564c97c9aa0e0f07497dfe4a566dd4b7d465ee9c4763cb6b0e8f7f07a12d01f0",
+    "conversation_width.go": "2daceb60e36028c0e079f9c98c82c115e5f87d81b1937b80322dad4a469d4af9",
+    "incremental.go": "ea15f537c914f5ee0d1d533ffa5910c27d0899a7e5559e7e790ae3f8e8f1e2c3",
+    "session_actions.go": "786e952d9c0d45ab27e9afa20363abdf86b061ef5ebdbc55af1ecadd90dd79b4",
+    "connection.go": "3858bfd9e3dfef6efa0ad99e9e2604472861ca9c3caaf7e3a82222c7176e76a4",
+    "image_thumbnail_darwin.go": "a644eada7dbfeb88f7e6b122f9fdc1fd4b07099138c0628bb48c414d378854d9",
+    "message_images.go": "53910f45d6df6b50542e426ce9b1281863caade652f1bbc722eaadefddb70ad8"
+  },
+  "fixture": "qa/native-cross-review.gotest",
+  "overlay": "qa/native-cross-overlay.json",
+  "commands": [
+    {
+      "command": "CGO_ENABLED=0 go test -overlay qa/native-cross-overlay.json . -run TestQANativeSharedAxisActualGeometry -bench BenchmarkQANativeGatheredHistory -benchtime=200ms -count=1 -v",
+      "result": "diagnostic ran; actual layout mismatch observed, not acceptance pass"
+    },
+    {
+      "command": "CGO_ENABLED=0 go test -overlay qa/native-cross-overlay.json . -run TestQANativeCatalogLateUIReceipt -count=1 -v",
+      "result": "diagnostic confirmed stale callback overwrites fresh account/generation catalog"
+    }
+  ],
+  "findings": [
+    {
+      "id": "shared-width-axis-flex-ratio",
+      "severity": "P1-parity",
+      "sources": [
+        "conversation.go:111",
+        "conversation_width.go:7"
+      ],
+      "trigger": "1280x820 with 280 sidebar and 576 right pane: remaining chat column 424",
+      "expected": "Original scroll padding32 gives transcript360; composer392; exact 32px axis difference",
+      "observed": "Actual a.view, copy-message axis node ancestors: content X348 W288, parent X312 W360, main column X280 W424. Grow1/Grow8/Grow1 consumes only 80% when MaxWidth is not binding.",
+      "reproduction": "TestQANativeSharedAxisActualGeometry",
+      "action": "Native must change actual transcript flex structure; helper-only arithmetic test cannot close this.",
+      "status": "sent-to-native; independent retest pending"
+    },
+    {
+      "id": "catalog-callback-account-generation",
+      "severity": "P1-correctness",
+      "sources": [
+        "connection.go:254",
+        "connection.go:275",
+        "session_actions.go:304"
+      ],
+      "trigger": "Catalog read already replied and its Go update callback is queued; same Host is reconnected or adopted by another account before callback runs",
+      "observed": "Test uses actual remote/bridge.mjs --fixture; queued fetchSessions callback replaces fresh-generation marker after generation/account change because callback checks only HostID.",
+      "action": "Capture and revalidate AccountScope+HostID+remoteGeneration before applying rows, before chained read, and before completion callback.",
+      "reproduction": "TestQANativeCatalogLateUIReceiptCrossesConnectionGeneration",
+      "status": "sent-to-native; independent retest pending"
+    },
+    {
+      "id": "gathered-history-still-linear",
+      "severity": "P2-nonblocking-performance",
+      "sources": [
+        "conversation_rows.go:42"
+      ],
+      "trigger": "Completed process groups containing skipped tool-only assistant carriers produce non-contiguous gathered projections.",
+      "observed": "Cache-hit path copies every gathered historical message on every chatRows invocation even when only newest unrelated message changes.",
+      "benchmark": {
+        "machine": "Apple M4 darwin arm64",
+        "history1000NsPerOp": 9913,
+        "history10000NsPerOp": 110791,
+        "bytesPerOp": 0,
+        "allocsPerOp": 0,
+        "includesToolCarrierGaps": true
+      },
+      "action": "Record residual linear path; later track dirty gathered row/index or avoid copies. Existing all-contiguous O(1) measurements do not cover this workload.",
+      "status": "recorded-not-blocking-current-slice"
+    }
+  ],
+  "reviewedWithoutNewFinding": [
+    {
+      "area": "Generic mutation scope and nested JSON capture",
+      "evidence": "Deep JSON copy with UseNumber before async send; captured Host/account/generation acceptance; stable unknown ledger. Existing fixture preserves nested caller data and request identity.",
+      "limit": "Not a live write test. JSON wire numeric limitations downstream are separate from the Go copy test."
+    },
+    {
+      "area": "Metadata receiver",
+      "evidence": "messageUpsert authoritative position move, reindex; block index/kind validation occurs before applying messageDelta; non-text attachments retained.",
+      "limit": "Does not qualify all original renderers or visual metadata presentation."
+    },
+    {
+      "area": "New session target/global main navigation",
+      "evidence": "Native source prefers current/selected workspace then recent, reuses only matching nonarchived blank; navigationGeneration fences create-result reveal; global main navigation advances generation.",
+      "limit": "Native target fallback deliberately tolerates membership lag; no live create/reuse/archive was exercised."
+    },
+    {
+      "area": "ImageIO resource ownership",
+      "evidence": "CFData/dictionary/number/source/CGImage/colorspace/context get deferred releases; pinned RGBA outlives CGContext; output bounds checked before bounded RGBA allocation.",
+      "limit": "Native ImageIO transient decode allocations and copied compressed buffers are outside Go allocation measurement. Two workers are per history-image scope, not a global app concurrency cap. History cache8MiB tracks RGBA bytes and entry count, excludes GPU/transfer/native transient bytes; this is not peak RSS proof. History owner was WIP at initial review, final lifecycle re-review waits ready."
+    }
+  ],
+  "boundaries": {
+    "liveHostWrites": false,
+    "backendChanges": false,
+    "independentComposerAcceptance": false,
+    "fullVisualParity": false,
+    "m1Performance": false
+  }
+}

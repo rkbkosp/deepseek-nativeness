@@ -1,0 +1,50 @@
+{
+  "createdAt": "2026-11-14T17:36:13.328Z",
+  "base": "e7c90e4e6958adbeafaae3d8ad4eda316dff66a7",
+  "scope": "Three native message rendering fixes; source only. Existing apps/helper/compat assets remain frozen. No new RPC or Host write.",
+  "files": {
+    "conversation.go": {
+      "bytes": 13336,
+      "sha256": "6be96812f2eb0ac4604b4d3413a309d43188681fc80eaee8c8337d42fb581069"
+    },
+    "conversation_rows.go": {
+      "bytes": 4170,
+      "sha256": "0a245f337016be5d511b69b58299750d6ef3e33bcc288eb7a23db8f815ddb492"
+    },
+    "message_images.go": {
+      "bytes": 10889,
+      "sha256": "b6cc96dff6a9fb8de10493fdffdd688dca328e17099ffd961f210197880083c1"
+    },
+    "assistant_json.go": {
+      "bytes": 7452,
+      "sha256": "ff523619cdd2504b4a69fe7e3d126ffec8fe24bb88f5c57d68eb5c6a642ed5bb"
+    },
+    "assistant_json_test.go": {
+      "bytes": 4220,
+      "sha256": "5589c9c0cf340d4172c909b67f1fec0549e189f5f31862e051b75fdd184cca82"
+    },
+    "assistant_render_test.go": {
+      "bytes": 1318,
+      "sha256": "4c23f545203bcbce03b8d663a97fb650e0b11162e2a3b0126e41b1720faa2a7e"
+    }
+  },
+  "supersedes": "qa/checkpoints/_message-display-final-20261115/manifest.json (kept unchanged for before-surrogate correction evidence)",
+  "behavior": [
+    "Interrupted assistant remains visible even empty, once-only tag11px/18px, not folded into process as a non-final candidate.",
+    "Adjacent images group under first block index; 2+tiles64x64/gap10/wrap. Repeated references share bounded bitmap cache but retain occurrence identity and selected index.",
+    "Unknown/file raw payload starts collapsed, no file read. Element-local lazy formatting caches bounded display, clears on close. UTF16 cap20000, preserves existing lone-surrogate escapes; terminal split surrogate uses native replacement glyph.",
+    "Original JsonBlock content max200 +padding16 +border1 maps to217 native border-box; original radii20 image/16 JSON and local component aliases."
+  ],
+  "checks": {
+    "authorUTF16AndActualNodeOracle": "passed (5 actual Node parse/stringify cases + CJK/emoji caps, controls/HTML/order, closed/open cached0allocation, max217 outer)",
+    "originalThreeCounterexamples": "passed, originally independent before implementation; now author regression",
+    "rootThreeNewViewAndUpsertGates": "passed; root independently authored",
+    "fullGoVetRace": "passed: go test ./...; go vet ./...; go test -race targeted unknown/stopped/history-image/metadata"
+  },
+  "unverified": [
+    "GUI composed message views",
+    "macOS15.8 WebKit",
+    "M1 full-app CPU/memory",
+    "Reasoning block order, image-preview route and large-image IPC remain separate frontend gaps"
+  ]
+}

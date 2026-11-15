@@ -1,0 +1,68 @@
+{
+  "kind": "post-commit-source-provenance-only",
+  "helperSourceCommit": "2bad88851dc0289fa20752ebccdcc4cd06bdaa44",
+  "goSourceCommit": "a02343981f0525d5724cd11294049b4f068bef94",
+  "buildFlagsCommit": "7051bfc6b1f2c40d1c6baa75d1ccd284da974a44",
+  "commitFiles": [
+    "remote/build.mjs",
+    "remote/package-runtime.mjs"
+  ],
+  "flags": [
+    {
+      "path": "remote/build.mjs",
+      "sha256": "ea1e67d98c4c8d705666ca0b1fd73ab559afaf4e89de11292838e68b6ee17a00",
+      "committedBlobMatches": true,
+      "currentSourceMatches": true
+    },
+    {
+      "path": "remote/package-runtime.mjs",
+      "sha256": "b4fc13d0bf5006332855c1acbf0f4e32ad8bb098e464be67c0fa004e95ad611a",
+      "committedBlobMatches": true,
+      "currentSourceMatches": true
+    }
+  ],
+  "gitIndexEmptyAtCheckpoint": true,
+  "f11b14SourcesUnchanged": true,
+  "f11bManifest": {
+    "path": "qa/checkpoints/_chat-presentation-helper-classifier-final/manifest.json",
+    "sha256": "f11b6b03f24ee18a61be92bf1decce5db975667a54325b58058e44e4cab17079"
+  },
+  "frozenManifest": {
+    "path": "qa/checkpoints/_helper-chat-runtime-build/runtime-manifest.json",
+    "sha256": "a5f707cdf13e3a694d731ba3da6d9c2747b5899dd06a481a3ac1f4f5a4d2eb75"
+  },
+  "frozenReport": {
+    "path": "qa/helper-chat-runtime-review.json",
+    "sha256": "826fbc13fd6a85024c6ffd3da72ade785429b5987022ddec1cc543ab6c87f0ea"
+  },
+  "runtime": {
+    "root": "build/runtime-chat-process-next",
+    "resources": "build/runtime-chat-process-next/remote",
+    "node": "build/runtime-chat-process-next/node",
+    "packages": 31,
+    "files": 3405,
+    "totalBytes": 186337606,
+    "treeSha256": "68d0877a91feb9ce52ba800dcacfc99e1785799c20c208977025ecfacb498710"
+  },
+  "helper": {
+    "path": "remote/dist-chat-process-next/bridge.bundle.mjs",
+    "bytes": 1478318,
+    "sha256": "672402cd739d55c810a24a427bf9be7703f5c3e7f529f42906b890b6851c0dd0",
+    "old": {
+      "bytes": 1445079,
+      "sha256": "33b66739e16f742975bf698240be3ff4f0264d8f4e461f7be1bc8a1363fbdb13"
+    },
+    "byteIncrease": 33239
+  },
+  "resourceDirectory": "build/runtime-chat-process-next/remote",
+  "nodeBinary": "build/runtime-chat-process-next/node",
+  "dependencyParity": {
+    "path": "qa/checkpoints/_helper-chat-runtime-build/dependency-parity.json",
+    "sha256": "b3d3a97b40cf76fe596a24489683b07b5c0ea9d82a5c4c3b52462c20128f18a3"
+  },
+  "notes": [
+    "The frozen pre-commit report pending buildFlagsCommit is resolved by this additive record; that report and manifest were not rewritten.",
+    "No rebuild, App creation, GUI, Host connection or peer creation was performed after commit.",
+    "Runtime on-disk bytes/tree hash are not memory/RSS measurements; macOS15.8/M1 runtime acceptance remains separate."
+  ]
+}

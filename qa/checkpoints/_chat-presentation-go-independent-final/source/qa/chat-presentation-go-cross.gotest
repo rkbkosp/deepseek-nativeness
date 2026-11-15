@@ -1,0 +1,267 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"github.com/egoist/mygo/ui"
+	"native-dsh/desktop/internal/bridge"
+	"os/exec"
+	"reflect"
+	"strings"
+	"testing"
+	"unsafe"
+)
+
+func qaCrossApp(t *testing.T) *app {
+	t.Helper()
+	a := newApp(true)
+	t.Cleanup(a.cancel)
+	a.sessionID = "cross"
+	a.current = snapshot{SessionID: a.sessionID}
+	a.uiPrefs.FoldedReplies = "all"
+	a.hostID = "qa-host"
+	a.accountScope = "qa-account"
+	a.remoteGeneration = 1
+	return a
+}
+func qaCrossBase(t *testing.T, a *app, n int, open bool) {
+	t.Helper()
+	status := "closed"
+	if open {
+		status = "open"
+	}
+	answer, last := float64(n*2), n
+	s := snapshot{SessionID: a.sessionID, Running: open, ChatPresentation: &chatPresentation{BaselineSerial: 1, PresentationEpoch: "chat:1", SchemaVersion: 1, Turns: []chatTurn{{Turn: 1, Status: status, StartLoaded: true, FoldEligible: true, LatestStep: &last, Spec: &chatProcessSpec{Turn: 1, ControlAnchorSeq: 1, ProcessStartSeq: 1, AnswerAnchorSeq: &answer, AnswerStep: &last}}}}}
+	for i := 0; i < n; i++ {
+		id := fmt.Sprintf("m%d", i)
+		s.Messages = append(s.Messages, message{ID: id, Seq: int64((i + 1) * 2), Role: "assistant", Kind: "assistant", Turn: 1, Step: i + 1, Text: fmt.Sprintf("Cross body %d", i), AssistantBlocks: []assistantBlock{{Kind: "text", Text: fmt.Sprintf("Cross body %d", i)}}})
+		s.ChatPresentation.Steps = append(s.ChatPresentation.Steps, chatStep{NodeKey: fmt.Sprintf("step:%d", i), Turn: 1, Step: i + 1, PayloadID: id, Status: "settled", AnchorSeq: float64((i + 1) * 2), HasReply: true})
+	}
+	if !a.replaceSnapshot(s) {
+		t.Fatal(a.error)
+	}
+}
+func qaCrossKeys(a *app) []string {
+	var out []string
+	for _, r := range a.chatRows() {
+		for _, p := range r.Parts {
+			out = append(out, p.NodeKey+"/"+p.Part)
+		}
+	}
+	return out
+}
+func TestCrossGoActualFoldRetainedInputAndReleaseOrder(t *testing.T) {
+	raw, err := exec.Command("node", "qa/_chat-presentation-go-cross/oracle.mjs").Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var data struct {
+		Stages []struct {
+			Name          string
+			Notifications []struct {
+				Method string
+				Params json.RawMessage
+			}
+			Expected []string
+			Snapshot snapshot
+		}
+	}
+	if json.Unmarshal(raw, &data) != nil {
+		t.Fatal("bad actual source output")
+	}
+	a := qaCrossApp(t)
+	a.sessionID = "go-cross"
+	a.current.SessionID = a.sessionID
+	var key string
+	for _, stage := range data.Stages {
+		for _, n := range stage.Notifications {
+			a.notification(bridge.Notification{Method: n.Method, Params: n.Params, Scope: &bridge.NotificationScope{HostID: a.hostID, Generation: a.remoteGeneration, AccountScope: a.accountScope}})
+			if a.error != "" {
+				t.Fatal(stage.Name, n.Method, a.error)
+			}
+		}
+		if got := qaCrossKeys(a); !reflect.DeepEqual(got, stage.Expected) {
+			t.Fatalf("%s source anchor order: got%v expected%v", stage.Name, got, stage.Expected)
+		}
+		for _, r := range a.chatRows() {
+			for _, p := range r.Parts {
+				if p.Part == "response" {
+					if key != "" && key != p.key() {
+						t.Fatal("retained/released node part identity changed")
+					}
+					key = p.key()
+				}
+			}
+		}
+		tt := ui.NewTester(a.view, 1280, 820)
+		tt.Frame()
+		if stage.Name == "retained" || stage.Name == "released" {
+			if !tt.HasText("Settled visible reply") {
+				t.Fatal("actual view lost settled body")
+			}
+			m := a.chatPartMessage(chatPartRef{PayloadID: "event:4"})
+			if m == nil || m.Seq != 4 || string(m.SourceMessageID) != `"committed-assistant"` {
+				t.Fatal("layout changed durable business identity")
+			}
+		}
+	}
+}
+func TestCrossGoControllerFoldAndPartsAreIndependentOfMembership(t *testing.T) {
+	a := qaCrossApp(t)
+	qaCrossBase(t, a, 3, false)
+	for i := range a.current.Messages {
+		m := &a.current.Messages[i]
+		m.AssistantBlocks = append([]assistantBlock{{Kind: "reasoning", Text: "Reason " + m.ID}}, m.AssistantBlocks...)
+		a.current.ChatPresentation.Steps[i].HasReasoning = true
+	}
+	a.invalidateChatRows()
+	var controller chatRow
+	keys := map[string]bool{}
+	controls := 0
+	for _, r := range a.chatRows() {
+		if r.Control {
+			controls++
+			controller = r
+		}
+		for _, p := range r.Parts {
+			keys[p.key()] = true
+			if r.Process && r.FoldKey != controller.FoldKey && controller.FoldKey != "" {
+				t.Fatal("fragment has independent fold key")
+			}
+		}
+	}
+	if controls != 1 || !controller.CanCollapse {
+		t.Fatal("must have exactly1 expandable turn controller")
+	}
+	a.toggleTurnProcess(controller)
+	a.chatRows()
+	for _, r := range a.chatRowsCache.visible {
+		if r.Process && r.FoldKey != controller.FoldKey {
+			t.Fatal("other fold owner")
+		}
+	}
+	before := qaCrossKeys(a)
+	a.uiPrefs.FoldedReplies = "final"
+	a.chatRows()
+	after := qaCrossKeys(a)
+	if !reflect.DeepEqual(before, after) {
+		t.Fatal("part key/order changed when process membership changed", before, after)
+	}
+	for _, r := range a.chatRows() {
+		for _, p := range r.Parts {
+			if !keys[p.key()] {
+				t.Fatal("membership minted new part identity")
+			}
+		}
+	}
+	pure := qaCrossApp(t)
+	qaCrossBase(t, pure, 1, false)
+	controls = 0
+	for _, r := range pure.chatRows() {
+		if r.Control {
+			controls++
+			if r.CanCollapse {
+				t.Fatal("pure final invented process")
+			}
+		}
+	}
+	if controls != 1 {
+		t.Fatal("pure final lost controller")
+	}
+}
+func TestCrossGoRejectedAtomicFrameAndLateBaselineLeaveArenaUntouched(t *testing.T) {
+	a := qaCrossApp(t)
+	qaCrossBase(t, a, 2, false)
+	old := a.current
+	fresh := old
+	cp := *old.ChatPresentation
+	cp.BaselineSerial = 2
+	cp.PresentationEpoch = "chat:2"
+	fresh.ChatPresentation = &cp
+	fresh.Messages = append([]message(nil), old.Messages...)
+	fresh.Messages[1].Text = "Fresh baseline"
+	if !a.replaceSnapshot(fresh) {
+		t.Fatal(a.error)
+	}
+	revision := a.current.ChatPresentation.PresentationRevision
+	delta := fmt.Sprintf(`{"sessionId":"cross","baselineSerial":2,"presentationEpoch":"chat:2","presentationRevision":%d,"messageId":"m1","textAppend":" suffix","textBlockIndex":0,"streaming":true}`, revision)
+	if err := a.applyIncremental("messageDelta", []byte(delta)); err != nil {
+		t.Fatal(err)
+	}
+	if a.replaceSnapshot(old) || a.replaceSnapshot(fresh) {
+		t.Fatal("late/duplicate baseline adopted")
+	}
+	before, _ := json.Marshal(a.current)
+	arena, block := &a.current.Messages[0], &a.current.Messages[0].AssistantBlocks[0]
+	bad := fmt.Sprintf(`{"sessionId":"cross","schemaVersion":1,"baselineSerial":2,"presentationEpoch":"chat:2","baseRevision":%d,"presentationRevision":%d,"timelineTurnUpserts":[{"turn":1,"status":"invalid-would-mutate"}],"turnUpserts":[{"turn":1,"status":"closed"}],"stepUpserts":[{"nodeKey":"missing","turn":1,"step":3,"payloadId":"absent","anchorSeq":8}],"payloadChanges":{"removes":["m0"],"deltas":[{"messageId":"m1","textAppend":"BAD","textBlockIndex":999}]}}`, revision, revision+1)
+	if a.applyIncremental("chatPresentationPatch", []byte(bad)) == nil {
+		t.Fatal("bad transaction admitted")
+	}
+	after, _ := json.Marshal(a.current)
+	if string(before) != string(after) || arena != &a.current.Messages[0] || block != &a.current.Messages[0].AssistantBlocks[0] {
+		t.Fatal("atomic failure changed arena/timeline/body")
+	}
+	if !strings.HasSuffix(a.current.Messages[1].Text, " suffix") {
+		t.Fatal("late baseline rewound suffix")
+	}
+}
+func TestCrossGoForeignTurnBarrierSurvivesMetadataRegroup(t *testing.T) {
+	a := qaCrossApp(t)
+	qaCrossBase(t, a, 2, false)
+	old := a.current.Messages
+	a.current.Messages = []message{{ID: "left", Role: "user", Turn: 0, Seq: 0, Text: "left"}, old[0], {ID: "barrier", Role: "user", Turn: 2, Seq: 3, Text: "barrier"}, old[1]}
+	a.reindexMessages()
+	a.invalidateChatRows()
+	want := []string{"left/", "step:0/response", "barrier/", "step:1/response"}
+	for _, mode := range []string{"all", "final"} {
+		a.uiPrefs.FoldedReplies = mode
+		if got := qaCrossKeys(a); !reflect.DeepEqual(got, want) {
+			t.Fatal(mode, "crossed foreign input barrier", got)
+		}
+		for _, r := range a.chatRows() {
+			if len(r.Parts) > 1 {
+				t.Fatal("unvirtualized aggregate process fragments")
+			}
+		}
+	}
+}
+func TestCrossGoLongOpenActualViewAndSuffixKeepHistoricalBodyReferences(t *testing.T) {
+	for _, n := range []int{1000, 10000} {
+		t.Run(fmt.Sprint(n), func(t *testing.T) {
+			a := qaCrossApp(t)
+			qaCrossBase(t, a, n, true)
+			built := map[string]bool{}
+			calls := 0
+			a.testChatPartBuild = func(node, part string) { calls++; built[node+"/"+part] = true }
+			tt := ui.NewTester(a.view, 1280, 820)
+			bootstrapCalls, bootstrapUnique := calls, len(built)
+			calls = 0
+			clear(built)
+			tt.Frame()
+			coldCalls, coldUnique := calls, len(built)
+			calls = 0
+			clear(built)
+			tt.Frame()
+			warmCalls, warmUnique := calls, len(built)
+			first, last := a.list.Visible()
+			if bootstrapCalls > 512 || bootstrapUnique > 64 || coldCalls > 256 || warmCalls > 256 || coldUnique > 32 || warmUnique > 32 || len(built) >= n || last < first {
+				t.Fatalf("nonviewport work cold=%d/%d warm=%d/%d visible=%d..%d", coldCalls, coldUnique, warmCalls, warmUnique, first, last)
+			}
+			t.Logf("history=%d bootstrapCalls=%d bootstrapUnique=%d coldFrameCalls=%d coldFrameUnique=%d warmFrameCalls=%d warmFrameUnique=%d actualVisible=%d..%d", n, bootstrapCalls, bootstrapUnique, coldCalls, coldUnique, warmCalls, warmUnique, first, last)
+			a.chatRows()
+			cache := a.chatRowsCache
+			arena, blocks := &a.current.Messages[0], &a.current.Messages[0].AssistantBlocks[0]
+			textPtr := unsafe.StringData(a.current.Messages[0].Text)
+			for i := 0; i < 100; i++ {
+				raw := fmt.Sprintf(`{"sessionId":"cross","baselineSerial":1,"presentationEpoch":"chat:1","presentationRevision":0,"messageId":"m%d","textAppend":"!","textBlockIndex":0,"streaming":true}`, n-1)
+				if err := a.applyIncremental("messageDelta", []byte(raw)); err != nil {
+					t.Fatal(err)
+				}
+				a.chatRows()
+				if a.chatRowsCache != cache || arena != &a.current.Messages[0] || blocks != &a.current.Messages[0].AssistantBlocks[0] || textPtr != unsafe.StringData(a.current.Messages[0].Text) {
+					t.Fatal("suffix rebuilt historical cache/arena/body")
+				}
+			}
+		})
+	}
+}

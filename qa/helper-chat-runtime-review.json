@@ -1,0 +1,225 @@
+{
+  "kind": "isolated-helper-runtime-build-author-review",
+  "helperSourceCommit": "2bad88851dc0289fa20752ebccdcc4cd06bdaa44",
+  "f11bManifestSha256": "f11b6b03f24ee18a61be92bf1decce5db975667a54325b58058e44e4cab17079",
+  "allF11b14SourceHashesMatched": true,
+  "matchingRuntimeSources": [
+    "remote/chat-presentation.mjs",
+    "remote/step-summary.mjs",
+    "remote/projection.mjs",
+    "remote/updates.mjs",
+    "remote/client.mjs",
+    "remote/fixture.mjs"
+  ],
+  "buildFlagsCommit": "pending-index-window",
+  "buildFlagFiles": [
+    {
+      "path": "remote/build.mjs",
+      "sha256": "ea1e67d98c4c8d705666ca0b1fd73ab559afaf4e89de11292838e68b6ee17a00"
+    },
+    {
+      "path": "remote/package-runtime.mjs",
+      "sha256": "b4fc13d0bf5006332855c1acbf0f4e32ad8bb098e464be67c0fa004e95ad611a"
+    }
+  ],
+  "commands": [
+    "node remote/build.mjs --out-chat-process-next",
+    "node remote/package-runtime.mjs build/runtime-chat-process-next/remote --source-chat-process-next",
+    "node qa/helper-chat-runtime-check.mjs"
+  ],
+  "closure": {
+    "oldUpstream": 215,
+    "newUpstream": 215,
+    "upstreamInputsSameAfterCwdNormalization": true,
+    "oldClient": 38,
+    "newClient": 40,
+    "added": [
+      "remote/step-summary.mjs",
+      "remote/chat-presentation.mjs"
+    ],
+    "removed": [],
+    "upstreamCanonicalMinifiedSha256": "b6d4e240e19fe5b02513c0c07eff62a61dbc25807b01136e79e90f9331d82d20",
+    "newDependencies": false,
+    "reactDomWkOrOriginalAssemblerAdded": false,
+    "newPeer": false,
+    "notes": "Old build cwd was native-dsh parent and new cwd desktop. Generated source-path comments differ; exact normalized closure and minified upstream code match."
+  },
+  "helper": {
+    "path": "remote/dist-chat-process-next/bridge.bundle.mjs",
+    "bytes": 1478318,
+    "sha256": "672402cd739d55c810a24a427bf9be7703f5c3e7f529f42906b890b6851c0dd0",
+    "old": {
+      "bytes": 1445079,
+      "sha256": "33b66739e16f742975bf698240be3ff4f0264d8f4e461f7be1bc8a1363fbdb13"
+    },
+    "byteIncrease": 33239
+  },
+  "runtime": {
+    "root": "build/runtime-chat-process-next",
+    "resources": "build/runtime-chat-process-next/remote",
+    "node": "build/runtime-chat-process-next/node",
+    "packages": 31,
+    "files": 3405,
+    "totalBytes": 186337606,
+    "treeSha256": "68d0877a91feb9ce52ba800dcacfc99e1785799c20c208977025ecfacb498710"
+  },
+  "binaries": [
+    {
+      "path": "build/runtime-chat-process-next/node",
+      "bytes": 121306800,
+      "sha256": "27db838bb204ef7c21df2931f5656e4c8fb32e6e947f363a402b49714d32b5b1",
+      "file": {
+        "command": [
+          "file",
+          "build/runtime-chat-process-next/node"
+        ],
+        "status": 0,
+        "stdout": "build/runtime-chat-process-next/node: Mach-O 64-bit executable arm64\n",
+        "stderr": ""
+      },
+      "loadCommands": {
+        "command": [
+          "vtool",
+          "-show-build",
+          "build/runtime-chat-process-next/node"
+        ],
+        "status": 0,
+        "stdout": "build/runtime-chat-process-next/node:\nLoad command 11\n      cmd LC_BUILD_VERSION\n  cmdsize 32\n platform MACOS\n    minos 13.5\n      sdk 15.0\n   ntools 1\n     tool LD\n  version 1115.7.3\n",
+        "stderr": ""
+      },
+      "verify": {
+        "command": [
+          "codesign",
+          "--verify",
+          "--strict",
+          "--verbose=2",
+          "build/runtime-chat-process-next/node"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": "build/runtime-chat-process-next/node: valid on disk\nbuild/runtime-chat-process-next/node: satisfies its Designated Requirement\n"
+      },
+      "signature": {
+        "command": [
+          "codesign",
+          "-dvv",
+          "build/runtime-chat-process-next/node"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": "Executable=/Volumes/SuperDisk/native-dsh/desktop/build/runtime-chat-process-next/node\nIdentifier=node\nFormat=Mach-O thin (arm64)\nCodeDirectory v=20500 size=940560 flags=0x10000(runtime) hashes=29382+7 location=embedded\nSignature size=8985\nAuthority=Developer ID Application: Node.js Foundation (HX7739G8FX)\nAuthority=Developer ID Certification Authority\nAuthority=Apple Root CA\nTimestamp=Aug 3, 2026 at 15:57:06\nInfo.plist=not bound\nTeamIdentifier=HX7739G8FX\nRuntime Version=15.0.0\nSealed Resources=none\nInternal requirements count=1 size=164\nTotal signatures=1\nChosen signature=1\n"
+      }
+    },
+    {
+      "path": "build/runtime-chat-process-next/remote/node_modules/@roamhq/wrtc-darwin-arm64/wrtc.node",
+      "bytes": 25055816,
+      "sha256": "844f7e2ed329c652b9f07f26c8aa46930d72f6c8220dba2e63038bbe2e73cdf5",
+      "file": {
+        "command": [
+          "file",
+          "build/runtime-chat-process-next/remote/node_modules/@roamhq/wrtc-darwin-arm64/wrtc.node"
+        ],
+        "status": 0,
+        "stdout": "build/runtime-chat-process-next/remote/node_modules/@roamhq/wrtc-darwin-arm64/wrtc.node: Mach-O 64-bit dynamically linked shared library arm64\n",
+        "stderr": ""
+      },
+      "loadCommands": {
+        "command": [
+          "vtool",
+          "-show-build",
+          "build/runtime-chat-process-next/remote/node_modules/@roamhq/wrtc-darwin-arm64/wrtc.node"
+        ],
+        "status": 0,
+        "stdout": "build/runtime-chat-process-next/remote/node_modules/@roamhq/wrtc-darwin-arm64/wrtc.node:\nLoad command 9\n      cmd LC_BUILD_VERSION\n  cmdsize 32\n platform MACOS\n    minos 11.0\n      sdk 11.3\n   ntools 1\n     tool LD\n  version 951.9\n",
+        "stderr": ""
+      },
+      "verify": {
+        "command": [
+          "codesign",
+          "--verify",
+          "--strict",
+          "--verbose=2",
+          "build/runtime-chat-process-next/remote/node_modules/@roamhq/wrtc-darwin-arm64/wrtc.node"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": "build/runtime-chat-process-next/remote/node_modules/@roamhq/wrtc-darwin-arm64/wrtc.node: valid on disk\nbuild/runtime-chat-process-next/remote/node_modules/@roamhq/wrtc-darwin-arm64/wrtc.node: satisfies its Designated Requirement\n"
+      },
+      "signature": {
+        "command": [
+          "codesign",
+          "-dvv",
+          "build/runtime-chat-process-next/remote/node_modules/@roamhq/wrtc-darwin-arm64/wrtc.node"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": "Executable=/Volumes/SuperDisk/native-dsh/desktop/build/runtime-chat-process-next/remote/node_modules/@roamhq/wrtc-darwin-arm64/wrtc.node\nIdentifier=wrtc.node\nFormat=Mach-O thin (arm64)\nCodeDirectory v=20400 size=194338 flags=0x20002(adhoc,linker-signed) hashes=6070+0 location=embedded\nSignature=adhoc\nInfo.plist=not bound\nTeamIdentifier=not set\nSealed Resources=none\nInternal requirements=none\n"
+      }
+    }
+  ],
+  "fixture": {
+    "kind": "exact-bundled-runtime-local-fixture",
+    "hostOrNetwork": false,
+    "newPeer": false,
+    "sourceMatchesBundle": true,
+    "checkpoints": [
+      {
+        "marker": "live",
+        "baselineSerial": 1,
+        "presentationRevision": 1
+      },
+      {
+        "marker": "staged",
+        "baselineSerial": 1,
+        "presentationRevision": 1
+      },
+      {
+        "marker": "retained",
+        "baselineSerial": 1,
+        "presentationRevision": 2
+      },
+      {
+        "marker": "latest-empty",
+        "baselineSerial": 1,
+        "presentationRevision": 3
+      },
+      {
+        "marker": "structured-final",
+        "baselineSerial": 1,
+        "presentationRevision": 4
+      }
+    ],
+    "notificationCount": 21,
+    "methods": [
+      "snapshot",
+      "chatPresentationPatch",
+      "fixtureCheckpoint",
+      "trajectoryUpsert",
+      "sessionState",
+      "fixtureComplete"
+    ],
+    "loaded": {
+      "node": "v24.19.0",
+      "platform": "darwin",
+      "architecture": "arm64",
+      "rtcLoaded": true,
+      "peerConstructed": false
+    },
+    "exitCode": 0
+  },
+  "preservation": {
+    "files": 7212,
+    "allHashesAndSymlinksMatched": true,
+    "canonicalListSha256": "6098d6e7155d1c861264e7d97a5d426c4134869124663e145157015c33a89e48"
+  },
+  "platform": {
+    "userRequiredMinimum": "15.8",
+    "declaredMinimumSource": "scripts/build-app.sh LSMinimumSystemVersion=15.8",
+    "nodeBinaryMinimum": "13.5",
+    "wrtcBinaryMinimum": "11.0",
+    "architecture": "arm64",
+    "actualMacOS15_8": false,
+    "M1Tested": false,
+    "limits": "Load commands/vendor signatures and local fixture only. No App built/launched/re-signed/notarized; no real account, Host connection, model or peer. Existing Node entitlements unchanged."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "scope": "Old source extracted from immutable commit for corrected-sessionId independent stopped regression",
+  "files": [
+    {
+      "path": "conversation.go",
+      "sourceCommit": "68c296531147fad995fa165f397d61075b7abf31",
+      "sha256": "593d197bd7b101be42cbc25153edd183fc794792b7738cf6a88c94a5bb21b510"
+    },
+    {
+      "path": "conversation_rows.go",
+      "sourceCommit": "68c296531147fad995fa165f397d61075b7abf31",
+      "sha256": "6046b37d3653cdffd35e66e37f67deb7dfd010f2dc3e60590fbfbb7efe4061ec"
+    }
+  ]
+}

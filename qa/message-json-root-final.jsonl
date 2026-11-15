@@ -1,0 +1,24 @@
+{"Time":"2026-11-15T01:40:31.739824+08:00","Action":"start","Package":"native-dsh/desktop"}
+{"Time":"2026-11-15T01:40:32.092397+08:00","Action":"run","Package":"native-dsh/desktop","Test":"TestUnknownJSONMatchesActualNodeStringifyOracle"}
+{"Time":"2026-11-15T01:40:32.09284+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestUnknownJSONMatchesActualNodeStringifyOracle","Output":"=== RUN   TestUnknownJSONMatchesActualNodeStringifyOracle\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:40:32.15162+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestUnknownJSONMatchesActualNodeStringifyOracle","Output":"--- PASS: TestUnknownJSONMatchesActualNodeStringifyOracle (0.06s)\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:40:32.151653+08:00","Action":"pass","Package":"native-dsh/desktop","Test":"TestUnknownJSONMatchesActualNodeStringifyOracle","Elapsed":0.06}
+{"Time":"2026-11-15T01:40:32.151673+08:00","Action":"run","Package":"native-dsh/desktop","Test":"TestUnknownJSONMatchesOriginalUTF16LimitAndKeepsSource"}
+{"Time":"2026-11-15T01:40:32.15168+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestUnknownJSONMatchesOriginalUTF16LimitAndKeepsSource","Output":"=== RUN   TestUnknownJSONMatchesOriginalUTF16LimitAndKeepsSource\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:40:32.153896+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestUnknownJSONMatchesOriginalUTF16LimitAndKeepsSource","Output":"--- PASS: TestUnknownJSONMatchesOriginalUTF16LimitAndKeepsSource (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:40:32.153914+08:00","Action":"pass","Package":"native-dsh/desktop","Test":"TestUnknownJSONMatchesOriginalUTF16LimitAndKeepsSource","Elapsed":0}
+{"Time":"2026-11-15T01:40:32.153921+08:00","Action":"run","Package":"native-dsh/desktop","Test":"TestUnknownJSONFormattingPreservesStructureStringsAndOrder"}
+{"Time":"2026-11-15T01:40:32.153927+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestUnknownJSONFormattingPreservesStructureStringsAndOrder","Output":"=== RUN   TestUnknownJSONFormattingPreservesStructureStringsAndOrder\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:40:32.15397+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestUnknownJSONFormattingPreservesStructureStringsAndOrder","Output":"--- PASS: TestUnknownJSONFormattingPreservesStructureStringsAndOrder (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:40:32.153977+08:00","Action":"pass","Package":"native-dsh/desktop","Test":"TestUnknownJSONFormattingPreservesStructureStringsAndOrder","Elapsed":0}
+{"Time":"2026-11-15T01:40:32.153983+08:00","Action":"run","Package":"native-dsh/desktop","Test":"TestUnknownJSONClosedAndUnchangedOpenFramesDoNotFormatAgain"}
+{"Time":"2026-11-15T01:40:32.153988+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestUnknownJSONClosedAndUnchangedOpenFramesDoNotFormatAgain","Output":"=== RUN   TestUnknownJSONClosedAndUnchangedOpenFramesDoNotFormatAgain\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:40:32.163909+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestUnknownJSONClosedAndUnchangedOpenFramesDoNotFormatAgain","Output":"--- PASS: TestUnknownJSONClosedAndUnchangedOpenFramesDoNotFormatAgain (0.01s)\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:40:32.163927+08:00","Action":"pass","Package":"native-dsh/desktop","Test":"TestUnknownJSONClosedAndUnchangedOpenFramesDoNotFormatAgain","Elapsed":0.01}
+{"Time":"2026-11-15T01:40:32.163935+08:00","Action":"run","Package":"native-dsh/desktop","Test":"TestUnknownJSONHasBoundedScrollableBody"}
+{"Time":"2026-11-15T01:40:32.163939+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestUnknownJSONHasBoundedScrollableBody","Output":"=== RUN   TestUnknownJSONHasBoundedScrollableBody\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:40:32.206534+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestUnknownJSONHasBoundedScrollableBody","Output":"--- PASS: TestUnknownJSONHasBoundedScrollableBody (0.04s)\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:40:32.20657+08:00","Action":"pass","Package":"native-dsh/desktop","Test":"TestUnknownJSONHasBoundedScrollableBody","Elapsed":0.04}
+{"Time":"2026-11-15T01:40:32.206593+08:00","Action":"output","Package":"native-dsh/desktop","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:40:32.207815+08:00","Action":"output","Package":"native-dsh/desktop","Output":"ok  \tnative-dsh/desktop\t0.468s\n"}
+{"Time":"2026-11-15T01:40:32.207833+08:00","Action":"pass","Package":"native-dsh/desktop","Elapsed":0.468}

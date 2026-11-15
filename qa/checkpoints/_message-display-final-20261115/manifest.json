@@ -1,0 +1,61 @@
+{
+  "createdAt": "2026-11-14T17:27:23.347Z",
+  "base": "e7c90e4e6958adbeafaae3d8ad4eda316dff66a7",
+  "scope": "Three native message rendering fixes only. Source snapshot, no assets/apps/helper rebuilt. No Host writes/file reads.",
+  "files": {
+    "conversation.go": {
+      "bytes": 13336,
+      "sha256": "6be96812f2eb0ac4604b4d3413a309d43188681fc80eaee8c8337d42fb581069"
+    },
+    "conversation_rows.go": {
+      "bytes": 4170,
+      "sha256": "0a245f337016be5d511b69b58299750d6ef3e33bcc288eb7a23db8f815ddb492"
+    },
+    "message_images.go": {
+      "bytes": 10730,
+      "sha256": "e609e6d93401d3354d101cbd656ac520ce50505fd27291187d3989a7ceaaf027"
+    },
+    "assistant_json.go": {
+      "bytes": 4627,
+      "sha256": "7744ff8c0913a803dabc8fdccf575fda0fab583018a07abb35b95e0f1492c264"
+    },
+    "assistant_json_test.go": {
+      "bytes": 2999,
+      "sha256": "7f5fd332ba89098d3e1318f0891812d8729b4402e529893d16c77ae44e8b87b2"
+    },
+    "assistant_render_test.go": {
+      "bytes": 1318,
+      "sha256": "4c23f545203bcbce03b8d663a97fb650e0b11162e2a3b0126e41b1720faa2a7e"
+    }
+  },
+  "checks": [
+    {
+      "command": "go test -run 'TestUnknownJSON|TestInterruptedAssistant|TestChatRows' -count=1 .",
+      "passed": true
+    },
+    {
+      "command": "go test -overlay=qa/remote-frontend-gap-overlay.json -run '^TestRemoteUIKnownGap' -count=1 .",
+      "passed": true,
+      "provenance": "Independently authored before implementation; now author regression after ownership reassignment"
+    },
+    {
+      "command": "CGO_ENABLED=0 go test -tags mygo_noinspector -overlay=qa/message-display-root-overlay.json -run '^TestRoot(Stopped|ImageAdjacency|UnknownJSON)' -count=1 -v .",
+      "passed": true,
+      "provenance": "Root independently authored fixture; root corrected absent fixture sessionId without changing production gate"
+    },
+    {
+      "command": "go test ./... && go vet ./...",
+      "passed": true
+    },
+    {
+      "command": "go test -race -run 'TestUnknownJSON|TestInterruptedAssistant|TestHistoryImage|TestSingleImageFit|TestAssistantBlockDelta' -count=1 .",
+      "passed": true
+    }
+  ],
+  "sourceLimits": [
+    "Unknown display keeps20000 UTF16 units (lone trailing surrogate uses native replacement glyph), max200px scroll; full raw message data untouched.",
+    "Payload already normalized by helper JSON.stringify; pretty token formatter preserves object order and canonical numeric wire tokens.",
+    "Known reasoning ordering remains separate; original image preview route and large-image IPC staging remain unimplemented.",
+    "No actual WK15.8/M1/full app performance or live Host mutation acceptance implied."
+  ]
+}

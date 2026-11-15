@@ -1,0 +1,84 @@
+{
+  "kind": "source-only-frozen-classifier-checkpoint",
+  "files": [
+    {
+      "path": "remote/README.md",
+      "bytes": 14533,
+      "sha256": "0b02e4db820df9db62f2380f4e87c2fea0ca844d3df85e6d470c764ce0f333cb"
+    },
+    {
+      "path": "remote/CHAT_PRESENTATION.md",
+      "bytes": 7661,
+      "sha256": "d7e6e322b12b766656f22fc6e18ea5a7da34e927189a453766d9e597abc377cb"
+    },
+    {
+      "path": "remote/chat-presentation.mjs",
+      "bytes": 16287,
+      "sha256": "b5ae040339f3c9e3ca6bca7e082f245b3be2dc152e2f272317cd1a2f71924a97"
+    },
+    {
+      "path": "remote/step-summary.mjs",
+      "bytes": 2325,
+      "sha256": "773f28204058c0e642ae16a94223c26d339fc20599af8bf7630972c6b2b23ba9"
+    },
+    {
+      "path": "remote/projection.mjs",
+      "bytes": 28888,
+      "sha256": "51eccc58817ea8c8e79a8efb03b6836deb06269b79ba5de04906f54164e4ccbf"
+    },
+    {
+      "path": "remote/updates.mjs",
+      "bytes": 12974,
+      "sha256": "4f64946c63c997cbb9893c671e54b5e680a175f2fb073ee0647eb6c8c2669f3b"
+    },
+    {
+      "path": "remote/client.mjs",
+      "bytes": 62769,
+      "sha256": "5accb684f5481f2756e53d6297f53ec950fdf3e03ae21b1cbd0d32050a181db2"
+    },
+    {
+      "path": "remote/fixture.mjs",
+      "bytes": 18610,
+      "sha256": "2ef948292a5cff1936921fd2acfef503809b95487ee869bea83d685629b2dc33"
+    },
+    {
+      "path": "remote/test/chat-presentation.test.mjs",
+      "bytes": 11637,
+      "sha256": "d6200bf4cde5086a9eab61236b4e3c69e959a3f412e04bcff5d6f2412f8ca4bb"
+    },
+    {
+      "path": "remote/test/chat-source-oracle.mjs",
+      "bytes": 8731,
+      "sha256": "c8966357f7d6e5295b8fbc8cc086e4a555132936fdba4bc75ce79f3c6e92ea5c"
+    },
+    {
+      "path": "remote/test/chat-presentation-bench.mjs",
+      "bytes": 7191,
+      "sha256": "5c056ff2d00c709efd331530881e52964901a0059aa368c46035fb2c89fe352b"
+    },
+    {
+      "path": "remote/test/step-summary.test.mjs",
+      "bytes": 1201,
+      "sha256": "d16a5d6dd1e63c9a25de513ac54c5b727dcaa2aafb5c1167c9e8df4d90c04995"
+    },
+    {
+      "path": "remote/test/dirty-publisher.test.mjs",
+      "bytes": 10133,
+      "sha256": "d673d3eafe04a6c3a2e499a5879583aae1a94a2040468485457161857d1e6d50"
+    },
+    {
+      "path": "remote/test/projection.test.mjs",
+      "bytes": 3889,
+      "sha256": "4da1f62fe0a896f79b12ba3b4c9a69bf8b87cdaeb64c0b97980c70ebc72f179c"
+    }
+  ],
+  "report": {
+    "path": "qa/chat-presentation-helper-classifier-review.json",
+    "sha256": "39c6827d2335c52bba5558d752fc159d0485794550942560a034167c42291313"
+  },
+  "priorManifest": "qa/checkpoints/_chat-presentation-helper-next/manifest.json",
+  "artifactsUnchanged": {
+    "path": "remote/dist-export-next/bridge.bundle.mjs",
+    "sha256": "33b66739e16f742975bf698240be3ff4f0264d8f4e461f7be1bc8a1363fbdb13"
+  }
+}

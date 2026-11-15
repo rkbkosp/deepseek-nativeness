@@ -1,0 +1,75 @@
+{
+  "createdAt": "2026-11-14T17:15:31.878Z",
+  "head": "68c296531147fad995fa165f397d61075b7abf31",
+  "provenance": "Independent tests authored before root reassigned renderer implementation. Subsequent renderer runs are author regressions; native_client and root independently accept.",
+  "inventory": {
+    "qa/remote-frontend-gap-counterexamples.gotest": {
+      "bytes": 2344,
+      "sha256": "c4595b2b72a2d2681144812af74a2e14720fa82dc0d77016d77472c561ea25b2"
+    },
+    "qa/remote-frontend-gap-counterexamples.jsonl": {
+      "bytes": 4149,
+      "sha256": "471f96f2b5b0e04a6d239d24496e27469246f86af0b9cecf16f3fb7364f2f3d6"
+    },
+    "qa/anchor-cross-source.test.mjs": {
+      "bytes": 9333,
+      "sha256": "d9cd009ebc345c331b198b0bfc964d8b7f31fb100c3657c3d07b37117e2ab5a8"
+    },
+    "qa/anchor-cross-independent-results.log": {
+      "bytes": 5356,
+      "sha256": "9fd2685113df312f3c26d65bcbe5688d8bb52eb91f6360521751fb537812876c"
+    },
+    "conversation.go": {
+      "bytes": 12274,
+      "sha256": "593d197bd7b101be42cbc25153edd183fc794792b7738cf6a88c94a5bb21b510"
+    },
+    "conversation_rows.go": {
+      "bytes": 4134,
+      "sha256": "6046b37d3653cdffd35e66e37f67deb7dfd010f2dc3e60590fbfbb7efe4061ec"
+    },
+    "message_images.go": {
+      "bytes": 10677,
+      "sha256": "53910f45d6df6b50542e426ce9b1281863caade652f1bbc722eaadefddb70ad8"
+    },
+    "model.go": {
+      "bytes": 7184,
+      "sha256": "6aee10f38610c563353d6f3049c7b4d2c1e6149a41ef0434c33605c7502cea0f"
+    },
+    "composer.go": {
+      "bytes": 11272,
+      "sha256": "f41df9aab147c0d74c5187969415d3580226345e0f13a0418fe30e1f88c8c3ae"
+    },
+    "session_actions.go": {
+      "bytes": 11402,
+      "sha256": "6a4cc85fd87a1c5602b62f23195bd78bb01a20326073bdcc8b5771ce8ffd1260"
+    },
+    "remote/client.mjs": {
+      "bytes": 62574,
+      "sha256": "6aa9592cc7e71e4142a5bde66a902e11e3f52e30c914865746b5d4f477052a0f"
+    },
+    "remote/operations.mjs": {
+      "bytes": 13773,
+      "sha256": "c207fbee5f30ac267eeb3bd5ad694a748cd653c5bbfb7459798de9ea9e3bccd8"
+    },
+    "../deepseek-harness/packages/client/ui-chat/src/client/chat/AssistantMarkdown.tsx": {
+      "bytes": 7497,
+      "sha256": "07f1fde40b63cfa4723bd049692d2e8ed705a3223ff67cfe6584e65f11a46e51"
+    },
+    "../deepseek-harness/packages/client/ui-chat/src/client/chat/AssistantMarkdown.module.css": {
+      "bytes": 3761,
+      "sha256": "9af7645e8ce615e9e8acdc0be78653684a94520b3b01388773eac2f72980747a"
+    },
+    "../deepseek-harness/packages/client/ui-primitives/src/markdown/JsonBlock.tsx": {
+      "bytes": 1369,
+      "sha256": "5546bb5eedec61b901370412cc7e8179580227515ba78e645b4ca34aa4e36198"
+    },
+    "../deepseek-harness/packages/client/ui-primitives/src/markdown/JsonBlock.module.css": {
+      "bytes": 698,
+      "sha256": "b5b5c66d105295872cc1dba4f0163ef8066edea6c2c5c3f5adbced0d40d26666"
+    },
+    "../deepseek-harness/packages/client/ui-attachment/src/MessageImage.tsx": {
+      "bytes": 8517,
+      "sha256": "8c18e33246e05fdd209128b8b30f264529b619a14827c4d3a510781ce1f0c7cb"
+    }
+  }
+}

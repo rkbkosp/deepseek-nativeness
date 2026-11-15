@@ -1,0 +1,3 @@
+package main
+import("encoding/json";"testing")
+func TestUnknownJSONExistingLoneSurrogateMatchesJSStringify(t *testing.T){raw:=json.RawMessage(`{"text":"\ud800X\udc00"}`);want:="{\n  \"text\": \"\\ud800X\\udc00\"\n}";if got:=formatUnknownJSON(raw);got!=want{t.Fatalf("got %q want %q",got,want)}}

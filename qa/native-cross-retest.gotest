@@ -1,0 +1,40 @@
+package main
+import("testing";"reflect";"encoding/json";"fmt";"github.com/egoist/mygo/ui";"native-dsh/desktop/internal/bridge")
+func qaCrossAncestors(t *testing.T, tt *ui.Tester,label string) []ui.Rect {
+ t.Helper();rt:=reflect.ValueOf(tt).Elem().FieldByName("rt").Elem();c:=rt.FieldByName("c");chunks:=c.FieldByName("chunks");used:=int(c.FieldByName("used").Int());seen:=0
+ for i:=0;i<chunks.Len()&&seen<used;i++{chunk:=chunks.Index(i);for j:=0;j<chunk.Len()&&seen<used;j++{n:=chunk.Index(j);seen++;if n.FieldByName("label").String()!=label{continue};var out []ui.Rect;for k:=0;k<6;k++{p:=n.FieldByName("parent");if p.IsNil(){break};n=p.Elem();out=append(out,ui.Rect{X:float32(n.FieldByName("x").Float()),Y:float32(n.FieldByName("y").Float()),W:float32(n.FieldByName("w").Float()),H:float32(n.FieldByName("h").Float())})};return out}}
+ t.Fatalf("node missing %s",label);return nil
+}
+func TestQARepairedNativeSharedWidthUsesActualTranscriptAndComposer(t *testing.T){
+ a:=newApp(true);defer a.cancel();a.sidebarShown=1;a.rightPaneOpen=true;a.current.Messages=[]message{{ID:"axis",Role:"assistant",Text:"Synthetic geometry only"}}
+ tt:=ui.NewTester(a.view,1280,820);tt.Frame();tt.Frame();chat:=qaCrossAncestors(t,tt,"复制消息 axis");input:=qaCrossAncestors(t,tt,"消息输入框")
+ if chat[1].X!=312||chat[1].W!=360{t.Fatalf("actual transcript axis %+v",chat)}
+ t.Logf("actual chat column424 transcriptX%.0f/W%.0f; input ancestors %+v",chat[1].X,chat[1].W,input)
+ found:=false;for _,r:=range input{if r.W==392&&r.X==296{found=true}};if !found{t.Fatal("composer does not retain exact axis+32 width")}
+}
+func TestQARepairedLateCatalogCallbackFencesHostAccountGenerationAndClient(t *testing.T){
+ for _,change:=range []string{"host","account","generation","client"}{t.Run(change,func(t *testing.T){
+ f:=newHistoryImageFixture(t);a:=f.a;a.accountScope="original-account";a.fetchSessions();var callback func();select{case callback=<-f.updates:case<-f.ctx.Done():t.Fatal(f.ctx.Err())}
+ switch change{case"host":a.hostID="new-host";case"account":a.accountScope="new-account";case"generation":a.remoteGeneration++;case"client":a.client=nil}
+ a.sessions=[]session{{ID:"fresh-generation"}};a.error="fresh-error";callback()
+ if len(a.sessions)!=1||a.sessions[0].ID!="fresh-generation"||a.error!="fresh-error"{t.Fatalf("stale %s callback changed fresh state: %+v %q",change,a.sessions,a.error)}
+ if a.pendingRequests!=0||a.busy{t.Fatal("retired callback did not settle request accounting")}
+ })}
+}
+func TestQATopLevelNotificationsDelayedUntilAfterScopeSwitch(t *testing.T){
+ f:=newHistoryImageFixture(t);a:=f.a;oldHost,oldGen:=a.hostID,a.remoteGeneration;old:=map[string]any{"hostId":oldHost,"generation":oldGen,"accountScope":"old-account"};fresh:=map[string]any{"hostId":oldHost,"generation":oldGen+1,"accountScope":"new-account"}
+ var events []any
+ for _,s:=range []struct{scope map[string]any;id string}{{old,"stale"},{fresh,"fresh"}}{for _,method:=range []string{"sessions","workspaces","snapshot","messageDelta","sessionState","messageUpsert","sessionProjections"}{var params any;switch method{case"sessions","workspaces":params=[]any{map[string]any{"id":s.id}};case"snapshot":params=map[string]any{"sessionId":"s","messages":[]any{map[string]any{"id":"m","text":s.id}}};case"messageDelta":params=map[string]any{"sessionId":"s","messageId":"m","textAppend":"!"};case"sessionState":params=map[string]any{"sessionId":"s","running":true,"cursor":7};case"messageUpsert":params=map[string]any{"sessionId":"s","index":0,"message":map[string]any{"id":"another","text":s.id}};case"sessionProjections":params=map[string]any{"sessionId":"s","projections":map[string]any{"values":map[string]any{"permissions":map[string]any{"currentValue":s.id}}}}};events=append(events,map[string]any{"method":method,"scope":s.scope,"params":params})}}
+ f.call(t,"fixtureEmitNotifications",map[string]any{"events":events,"marker":"independent-scope"});var queue []bridge.Notification
+ collect:for{select{case ev:=<-f.client.Events:if ev.Method=="fixtureComplete"{var m struct{Marker string};_=json.Unmarshal(ev.Params,&m);if m.Marker=="independent-scope"{break collect}};if ev.Scope!=nil&&(ev.Scope.AccountScope=="old-account"||ev.Scope.AccountScope=="new-account"){queue=append(queue,ev)};case<-f.ctx.Done():t.Fatal(f.ctx.Err())}}
+ if len(queue)!=14{t.Fatalf("fixture queue frames %d",len(queue))}
+ a.accountScope="new-account";a.remoteGeneration=oldGen+1;a.sessionID="s";a.current=snapshot{SessionID:"s",Messages:[]message{{ID:"m",Text:"kept"}}};a.sessions=[]session{{ID:"kept"}};a.workspaces=[]workspace{{ID:"kept"}};a.error="kept-error"
+ for i,ev:=range queue{a.notification(ev);if i<7&&(a.sessions[0].ID!="kept"||a.workspaces[0].ID!="kept"||a.current.Messages[0].Text!="kept"||a.current.Running||len(a.current.Pending)>0||len(a.current.Projections)>0||a.error!="kept-error"){t.Fatalf("old queued %s crossed scope",ev.Method)}}
+ if a.sessions[0].ID!="fresh"||a.workspaces[0].ID!="fresh"||a.current.Messages[1].Text!="fresh!"||!a.current.Running||len(a.current.Projections)==0{t.Fatal("fresh scope notification was incorrectly lost",fmt.Sprint(a.current))}
+}
+func TestQADirectPendingNotificationAlsoFencesAccountAndGeneration(t *testing.T){
+ f:=newHistoryImageFixture(t);a:=f.a;a.sessionID="s";a.accountScope="current-account";a.remoteGeneration=20;a.current.Pending=[]interaction{{ID:"kept"}}
+ data:=json.RawMessage(`{"sessionId":"s","items":[{"id":"new"}]}`)
+ for _,scope:=range []bridge.NotificationScope{{HostID:a.hostID,Generation:19,AccountScope:"current-account"},{HostID:a.hostID,Generation:20,AccountScope:"previous-account"},{HostID:"previous-host",Generation:20,AccountScope:"current-account"}}{a.notification(bridge.Notification{Method:"pending",Scope:&scope,Params:data});if len(a.current.Pending)!=1||a.current.Pending[0].ID!="kept"{t.Fatal("stale direct pending crossed scope")}}
+ fresh:=bridge.NotificationScope{HostID:a.hostID,Generation:20,AccountScope:"current-account"};a.notification(bridge.Notification{Method:"pending",Scope:&fresh,Params:data});if len(a.current.Pending)!=1||a.current.Pending[0].ID!="new"{t.Fatal("valid pending lost")}
+}

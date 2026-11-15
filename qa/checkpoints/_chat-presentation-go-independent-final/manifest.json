@@ -1,0 +1,115 @@
+{
+  "sourceManifest": "qa/checkpoints/_chat-presentation-native-final/manifest.json",
+  "sourceManifestSha256": "c927d33eb43c51174964df470a232e8a4b88720423fac30ca19eeed1ff2168a3",
+  "helperManifestSha256": "f11b6b03f24ee18a61be92bf1decce5db975667a54325b58058e44e4cab17079",
+  "files": [
+    {
+      "path": "app.go",
+      "sha256": "ec9da7b2514b17b1b937f8a38be660d7341b7f0aa7cc868fe07751e02df2d278"
+    },
+    {
+      "path": "assistant_content.go",
+      "sha256": "402f128d3db3aad6ec77e52ff234796ea135a7c4ba20e7373887d933011e6bbe"
+    },
+    {
+      "path": "chat_layout.go",
+      "sha256": "99da5283764bb86e4d9cdb02909890d2ce413e1f974415e617f7d706c3f726ce"
+    },
+    {
+      "path": "chat_message_delta.go",
+      "sha256": "3fcecea842c1b4ebe0a61629f060f5ce781e2c2183c90e8ac69c33b6f50d7796"
+    },
+    {
+      "path": "chat_presentation.go",
+      "sha256": "e96f2042d95953ca363dec5742424b5b0a9b568bf0697c4fb67d98cf49bac0b9"
+    },
+    {
+      "path": "chat_presentation_index.go",
+      "sha256": "f4549749f8c108af6f7ffa4f6561770fca63e1f10ca967d8736f39dc52fd9690"
+    },
+    {
+      "path": "chat_presentation_rows.go",
+      "sha256": "ffefd5d9022cddc296dc9c995d5b1505c0004f090b63b3ded7d0c1586b1072be"
+    },
+    {
+      "path": "chat_presentation_test.go",
+      "sha256": "bef86fd6868c43020759b17352d28369d8c6711b57e9a213d3cc28bae11edab2"
+    },
+    {
+      "path": "chat_presentation_wire_test.go",
+      "sha256": "24938fb4043a0234d0726097a4c2bab486630b614d511dad6aa93753fc88239e"
+    },
+    {
+      "path": "chat_virtualization_test.go",
+      "sha256": "e718b30f22cb74f1886e272e4137ea4851faa0fd0305d1b5b0685100e6c21d58"
+    },
+    {
+      "path": "connection.go",
+      "sha256": "558faeccb474e53147e706762ae1ffeeae0af3468b5b34362c2451568a19378e"
+    },
+    {
+      "path": "conversation.go",
+      "sha256": "fa861173f81fa2ed5833d06773c2238a2d8f74b65a09ea6a9a8ef222d66808e9"
+    },
+    {
+      "path": "conversation_rows.go",
+      "sha256": "ad8ceeabdb2406e81b472575f005f5c7dd7003f01297f18ad250e0d8d11fe934"
+    },
+    {
+      "path": "indicator.go",
+      "sha256": "f276a3e0fc5519e7c1a6ddb9a0a61e9204468e6812f7cfb56c057cbaf17ecedb"
+    },
+    {
+      "path": "incremental.go",
+      "sha256": "5f65324f18660b13a28d55eb040635253f0e08142782eeff3c54f08e3684c30a"
+    },
+    {
+      "path": "message_json.go",
+      "sha256": "6b8abdc0802715f4cf693e6f6c61f5a78e8bf0566db1ca5933629c719575d4fe"
+    },
+    {
+      "path": "model.go",
+      "sha256": "7e796b593367fd5cfdd0ca14b98f7c7ad3de2c77958980ff9e5bee1f0ebe77ab"
+    },
+    {
+      "path": "remote_integration_test.go",
+      "sha256": "454da8d909a00eb5150054ac33c8d4c799733a5da73bb4da1d0ad0172c59a37a"
+    },
+    {
+      "path": "structured_publisher_test.go",
+      "sha256": "bac25cfbdb4d16a5734a5ed4eeb10f1cc480c1ab6e20d54f512df27228a793b8"
+    },
+    {
+      "path": "turn_controller.go",
+      "sha256": "c9b9a4e37dedfd1455608ab6644a147d38048f089453c939a8f0f4b21c285476"
+    },
+    {
+      "path": "turn_controller_test.go",
+      "sha256": "3995d65d39ca674b171dfe5fefe8abcf75bf72c6dbe10d1092575b6314bed885"
+    },
+    {
+      "path": "internal/fixtures/chat-process-wire.mjs",
+      "sha256": "d4176336e26fed0993e9f8530ec39ef92d041ddde0b8ae8cbcd74e9f7a79a413"
+    },
+    {
+      "path": "internal/fixtures/chat-retained-wire.mjs",
+      "sha256": "96f63fbd89da7d013b9b92ebce1792b16bb87f5bf9e31bbab1a1463e1ef10f2d"
+    },
+    {
+      "path": "qa/chat-presentation-go-cross.gotest",
+      "sha256": "49878b1d5c14cae2326cd99e628035486ce1ee607c913ce12c30898be059f709"
+    },
+    {
+      "path": "qa/chat-presentation-go-cross-overlay.json",
+      "sha256": "ed94bf33cdd4f1aee4027da4742e85c8ab80330158afeb175c6141d028679096"
+    },
+    {
+      "path": "qa/_chat-presentation-go-cross/oracle.mjs",
+      "sha256": "b5d758e6190bb8cd4dd43a0cb3be75d62844c7b7996cd42b0fb8b98ab2da3c21"
+    },
+    {
+      "path": "qa/_chat-presentation-go-cross/write-review.mjs",
+      "sha256": "aaddc33fc91c143f27e503e8c6c2eb760e8c53edf20f11cbb4882115a8447294"
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "checkedAt": "2026-11-14T14:57:30.017Z",
+  "reviewer": "acceptance_audit",
+  "status": "INDEPENDENT LOCAL REGRESSION PASSED; PACKAGED GUI AND PERFORMANCE NOT ACCEPTED",
+  "minimumPlatformTarget": "macOS 15.8+",
+  "applicationSourceChangesByReviewer": false,
+  "sourceHashes": {
+    "connection.go": "cbb9fea4ba8077a91ccf083159013620f243c5217111bddbc79a03d86edb5f4e",
+    "preferences.go": "afeb2476aca261fda09f0aa294062cdd110d77ef6557a18e704e5beed5c986cd",
+    "notification_scope.go": "981879c33a64111bb59fcdc466f9304d94874f9f95a301d44059123d7a336a8c",
+    "conversation.go": "564c97c9aa0e0f07497dfe4a566dd4b7d465ee9c4763cb6b0e8f7f07a12d01f0",
+    "conversation_width.go": "2daceb60e36028c0e079f9c98c82c115e5f87d81b1937b80322dad4a469d4af9",
+    "conversation_rows.go": "6046b37d3653cdffd35e66e37f67deb7dfd010f2dc3e60590fbfbb7efe4061ec",
+    "incremental.go": "ea15f537c914f5ee0d1d533ffa5910c27d0899a7e5559e7e790ae3f8e8f1e2c3",
+    "session_actions.go": "6a4cc85fd87a1c5602b62f23195bd78bb01a20326073bdcc8b5771ce8ffd1260",
+    "internal/bridge/client.go": "b58eb6170ad12bda1273f78ed82266b43680f58c68ec1260364f52aed0f1d4c3",
+    "message_images.go": "53910f45d6df6b50542e426ce9b1281863caade652f1bbc722eaadefddb70ad8",
+    "image_thumbnail.go": "2a75c5bb1f0dca440225f5d41e25d79e9e0ec1b8a11848a5d244781526a124b9",
+    "image_thumbnail_darwin.go": "a644eada7dbfeb88f7e6b122f9fdc1fd4b07099138c0628bb48c414d378854d9",
+    "image_thumbnail_other.go": "4d10ee22318c864bcd97af132cbfb81799b77e49080cf11c0a32a2d94dcf9088",
+    "remote/client.mjs": "cdd89f4a958197a5e688988f09cec257629a808a68f02af9aaeb34ad728a394c",
+    "remote/bridge.mjs": "e8fc4e4b3b63a79db01fcc8d50653a1fae75837a9f2d834b8e128c0b90681e06",
+    "remote/fixture.mjs": "4044fcf213eb9ab0f70270f6d7518a216aed655097b00cf25c1f21a7a5b12718",
+    "qa/native-cross-review.gotest": "e6ebaf962889ba632dacabe6d3e5cc7d92f13471713024a77e614aed727043e2",
+    "qa/native-cross-retest.gotest": "bd74c374aefecec01d3fb9aa9ebb8f0c7c9abdaaed566d287c4182358c76c5d7",
+    "qa/native-status-retest.gotest": "69671f77472171bca2305015a286ae929f6fac4e98f6f321134a6925791e2226",
+    "qa/status-producer-boundary.test.mjs": "356d1b8c20d74ac3c463cd6b6084ee64eb49575fab957642d8ac858c29f9f423",
+    "qa/status-producer-real-refresh.test.mjs": "dba33bae97e28cfbea444188dbcdf4344e7e82964e9d55e99ad964a6e843413c",
+    "qa/status-producer-wire-fixture.mjs": "7063a24c866bcbac1736fa194dbc8bf9a37e54b8fcd77975541c0240cc6b5bfd"
+  },
+  "preservedFailures": [
+    "qa/native-cross-review.json",
+    "qa/native-cross-review.gotest",
+    "qa/status-producer-boundary.test.mjs"
+  ],
+  "commands": [
+    {
+      "command": "CGO_ENABLED=0 go test -overlay qa/native-cross-retest-overlay.json . -run 'TestQA(Repaired|TopLevel|DirectPending)' -count=1 -v",
+      "exitCode": 0,
+      "groups": 4,
+      "subtests": 4
+    },
+    {
+      "command": "node --test qa/status-producer-real-refresh.test.mjs",
+      "exitCode": 0,
+      "groups": 1
+    },
+    {
+      "command": "CGO_ENABLED=0 go test -overlay qa/native-status-retest-overlay.json . -run TestQARealLoginRPC -count=1 -v",
+      "exitCode": 0,
+      "groups": 1
+    },
+    {
+      "command": "CGO_ENABLED=0 go test . -run 'TestHistoryImage|TestSingleImage|TestNativeImage|TestImageThumbnail' -count=1 -v",
+      "exitCode": 0,
+      "groups": 5
+    },
+    {
+      "command": "CGO_ENABLED=0 go test . -run 'TestNativeThumbnail|TestImageIODownsamples' -count=1 -v",
+      "exitCode": 0,
+      "groups": 3
+    },
+    {
+      "command": "node qa/verify-freeze.mjs",
+      "exitCode": 0,
+      "checks": 8
+    }
+  ],
+  "checks": [
+    {
+      "id": "actual-transcript-composer-width",
+      "status": "passed-local-real-a.view-geometry",
+      "originalFailure": "Transcript actual288 inside424 column due Grow1/8/1 flex ratio.",
+      "observed": "1280 window,280sidebar,576right =>424main; transcriptX312/W360, composerX296/W392; difference32 exactly. Finite actual layout, not helper arithmetic only."
+    },
+    {
+      "id": "queued-catalog-callback",
+      "status": "passed-real-helper-local-fixture",
+      "originalFailure": "Queued old account/generation catalog replaced fresh marker.",
+      "observed": "Host, account, generation and client changes tested independently after actual helper reply enters Go UI queue. Old callback writes neither rows nor error, and settles busy/pending request accounting."
+    },
+    {
+      "id": "queued-presentation-notifications",
+      "status": "passed-real-pipe-local-fixture",
+      "observed": "14 top-level frames from actual remote/bridge fixture collected before scope transition. Seven old-scope frames ignored; seven fresh accepted. Families: sessions/workspaces/snapshot/messageDelta/sessionState/messageUpsert/sessionProjections.",
+      "pending": "Separate direct Go notification construction checks old Host, old account and old generation are refused; matching pending is accepted. No fixture protocol expansion."
+    },
+    {
+      "id": "status-principal-epoch-producer",
+      "status": "passed-real-refresh-local-fixture",
+      "originalFailure": "Normal password login produced old-account disconnected status and new-account authorized status with gen8, while login RPC omitted generation.",
+      "observed": "Actual RemoteAdapter.request(login),disconnect,refreshIdentityScope with mock credential store and mock server authorize produce old status gen8,new status gen9,loginRPC generation9. Same-principal real refresh keeps epoch unchanged.",
+      "mockBoundary": "Only authorization/list server transport and credential store are mocked. Actual refreshIdentityScope is not replaced. No network/credential file access."
+    },
+    {
+      "id": "status-rpc-first-queue-order",
+      "status": "passed-actual-Go-login-callback-and-pipe",
+      "observed": "Actual a.login RPC callback first adopts new account+epoch9. Old status gen8 delivered afterward through bridge parser and Go UI callback is ignored without changing marker. Fresh gen9 status accepted. Fresh status arriving before RPC also legally changes principal; account mismatch is not categorically rejected."
+    },
+    {
+      "id": "history-image-owner-and-bounded-thumbnail",
+      "status": "independently-reran-author-tests-and-source-review",
+      "observed": "Five true-helper owner/read/visibility/cancel/late-registration/cache/crop groups and three real Native ImageIO bounds/orientation/12MP groups passed. CF/CG objects released with defer; RGBA pinned until context release.",
+      "limits": "Cache8MiB is retained RGBA budget, not app RSS/native peak/GPU budget. Active2 is per scope, not global. 12MP check only bounds Go decoder allocations under2MiB, output160px; does not measure ImageIO native peak."
+    }
+  ],
+  "nonblockingRemaining": [
+    "gathered historical rows still copy linearly on cache-hit path; original M4 benchmark retained in first report",
+    "Packaged GUI7 must be independently examined by root",
+    "Minimum macOS15.8 runtime and MacBookAirM1 performance are not qualified",
+    "No live Host mutation has been performed; source/helper/mock tests do not imply live prompt/queue/settings/terminal correctness acceptance"
+  ]
+}

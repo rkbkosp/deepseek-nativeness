@@ -1,0 +1,22 @@
+{
+  "createdAt": "2026-11-14T17:17:59.907Z",
+  "scope": "Stopped tag only; source snapshot, no new app/helper/compat assets",
+  "files": {
+    "conversation.go": {
+      "bytes": 12771,
+      "sha256": "43616a2c9bb21625f267edbda7a2b5f5524c5233b413f09dd4f31f699a27a266"
+    },
+    "conversation_rows.go": {
+      "bytes": 4170,
+      "sha256": "0a245f337016be5d511b69b58299750d6ef3e33bcc288eb7a23db8f815ddb492"
+    },
+    "assistant_render_test.go": {
+      "bytes": 1318,
+      "sha256": "4c23f545203bcbce03b8d663a97fb650e0b11162e2a3b0126e41b1720faa2a7e"
+    }
+  },
+  "checks": [
+    "go test -run TestInterruptedAssistant|TestChatRows -count=1 . passed",
+    "go test -overlay=qa/remote-frontend-gap-overlay.json -run ^TestRemoteUIKnownGapInterrupted -count=1 . passed"
+  ]
+}

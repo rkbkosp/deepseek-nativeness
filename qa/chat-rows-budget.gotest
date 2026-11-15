@@ -1,0 +1,42 @@
+package main
+
+import (
+ "fmt"
+ "testing"
+)
+
+var qaChatRowsSink []chatRow
+
+// Independent pure-client cost check. No UI, Remote connection or model call.
+// Alternating process/answer rows in a long turn exercises repeated suffix
+// scans in next-input folding, rather than merely measuring short histories.
+func BenchmarkQAChatRowsHistory(b *testing.B) {
+ for _, count := range []int{1000, 10000} {
+  for _, collapse := range []string{"completion", "next-input"} {
+   b.Run(fmt.Sprintf("history_%d/%s",count,collapse),func(b *testing.B){
+    a:=&app{uiPrefs:defaultViewPreferences()}
+    a.uiPrefs.StepsCollapse=collapse
+    a.current.Messages=make([]message,count)
+    for i:=range a.current.Messages {
+     m:=message{ID:fmt.Sprint(i),Turn:1}
+     if i%2==0 {m.Kind="context"} else {m.Kind="assistant";m.Role="assistant";m.Text="Synthetic completed response"}
+     a.current.Messages[i]=m
+    }
+    a.current.Running=true
+    b.ReportAllocs()
+    b.ResetTimer()
+    for i:=0;i<b.N;i++ {
+     // A real business update changes the last message, defeating any future
+     // whole-snapshot cache while historical rows remain unchanged.
+     a.current.Messages[count-1].Text=fmt.Sprint("Synthetic delta ",i)
+     qaChatRowsSink=a.chatRows()
+    }
+    b.StopTimer()
+    last:=qaChatRowsSink[len(qaChatRowsSink)-1]
+    if got:=last.Messages[len(last.Messages)-1].Text;got!=a.current.Messages[count-1].Text {
+     b.Fatalf("cached rows lost current streamed text: %q",got)
+    }
+   })
+  }
+ }
+}

@@ -1,0 +1,7 @@
+{
+  "Replace": {
+    "/Volumes/SuperDisk/native-dsh/desktop/zz_root_message_display_test.go": "/Volumes/SuperDisk/native-dsh/desktop/qa/message-display-root.gotest",
+    "/Volumes/SuperDisk/native-dsh/desktop/conversation.go": "/Volumes/SuperDisk/native-dsh/desktop/qa/checkpoints/root-stopped-before/conversation.go.snapshot",
+    "/Volumes/SuperDisk/native-dsh/desktop/conversation_rows.go": "/Volumes/SuperDisk/native-dsh/desktop/qa/checkpoints/root-stopped-before/conversation_rows.go.snapshot"
+  }
+}

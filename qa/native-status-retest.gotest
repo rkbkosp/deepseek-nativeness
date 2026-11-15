@@ -1,0 +1,16 @@
+package main
+import("testing";"context";"encoding/json";"os/exec";"path/filepath";"time";"native-dsh/desktop/internal/bridge")
+func TestQARealLoginRPCThenQueuedOldStatusThenFreshStatus(t *testing.T){
+ ctx,cancel:=context.WithTimeout(context.Background(),10*time.Second);defer cancel();node,_:=exec.LookPath("node");path,_:=filepath.Abs("qa/status-producer-wire-fixture.mjs");client,err:=bridge.Start(ctx,node,path);if err!=nil{t.Fatal(err)};defer client.Close()
+ a:=newApp(false);defer a.cancel();a.ctx=ctx;a.client=client;a.server="fixture://local";a.configuredServer=a.server;a.account="new@example.invalid";a.password="fixture-only";updates:=make(chan func(),16);a.testDispatch=func(fn func()){updates<-fn}
+ call:=func(method string)json.RawMessage{t.Helper();v,e:=client.Call(ctx,method,map[string]any{});if e!=nil{t.Fatal(e)};return v}
+ if err:=a.acceptStatus(call("fixture.initial"));err!=nil{t.Fatal(err)};oldScope,oldGen:=a.accountScope,a.remoteGeneration;a.login()
+ for a.pendingRequests>0{select{case fn:=<-updates:fn();case<-ctx.Done():t.Fatal(ctx.Err())}}
+ newScope,newGen:=a.accountScope,a.remoteGeneration;if oldScope==newScope||newGen<=oldGen||!a.authorized{t.Fatal("login RPC failed to adopt fresh authority",oldGen,newGen)}
+ applyPipeStatus:=func(method string){t.Helper();call(method);var ev bridge.Notification;select{case ev=<-client.Events:case<-ctx.Done():t.Fatal(ctx.Err())};if ev.Method!="status"{t.Fatal(ev.Method)};a.update(func(){a.notification(ev)});select{case fn:=<-updates:fn();case<-ctx.Done():t.Fatal(ctx.Err())}}
+ a.status="rpc-fresh-marker";applyPipeStatus("fixture.flushOld");if a.accountScope!=newScope||a.remoteGeneration!=newGen||a.status!="rpc-fresh-marker"{t.Fatal("old queued status undid fresh login RPC")}
+ applyPipeStatus("fixture.flushFresh");if a.accountScope!=newScope||a.remoteGeneration!=newGen||!a.authorized{t.Fatal("fresh status lost")}
+ // A fresh higher-epoch principal status must also work when it arrives first.
+ a.accountScope=oldScope;a.remoteGeneration=oldGen;applyPipeStatus("fixture.flushFresh");if a.accountScope!=newScope||a.remoteGeneration!=newGen{t.Fatal("legal account transition was overblocked")}
+ t.Logf("real login RPC authority adopted first; late old status dropped; fresh status accepted, epoch %d -> %d",oldGen,newGen)
+}

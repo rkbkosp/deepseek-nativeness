@@ -1,0 +1,50 @@
+package main
+
+import (
+	"encoding/json"
+	"github.com/egoist/mygo/ui"
+	"strings"
+	"testing"
+)
+
+func gapApp(t *testing.T, m message) (*app, *ui.Tester) {
+	t.Helper()
+	a := newApp(true)
+	t.Cleanup(a.cancel)
+	a.current.Running = false
+	a.current.Messages = []message{m}
+	tt := ui.NewTester(a.view, 1280, 820)
+	tt.Frame()
+	return a, tt
+}
+func TestRemoteUIKnownGapUnknownAssistantBlockHasVisibleFallback(t *testing.T) {
+	_, tt := gapApp(t, message{ID: "event:1", Role: "assistant", Kind: "assistant", SourceMessageID: json.RawMessage(`"committed-id"`), AssistantBlocks: []assistantBlock{{Kind: "other", Block: json.RawMessage(`{"type":"file","attachment":{"attachmentId":"fixture-id","name":"fixture-result.csv","bytes":4}}`)}}})
+	for _, text := range tt.Texts() {
+		if strings.Contains(text, "fixture-result.csv") || strings.Contains(text, "未知内容") || strings.Contains(text, "未知块") {
+			return
+		}
+	}
+	t.Fatal("KNOWN_FRONTEND_GAP: original AssistantMarkdown renders JsonBlock for other; native drops this entire committed structured block")
+}
+func TestRemoteUIKnownGapConsecutiveImagesShareOriginalGallery(t *testing.T) {
+	ref := func(id, name string) json.RawMessage {
+		b, _ := json.Marshal(imageAttachment{AttachmentID: id, Name: name, MediaType: "image/png", Width: 600, Height: 300, Bytes: 4})
+		return b
+	}
+	_, tt := gapApp(t, message{ID: "event:2", Role: "assistant", Kind: "assistant", AssistantBlocks: []assistantBlock{{Kind: "image", Attachment: ref("fixture-one", "one.png")}, {Kind: "image", Attachment: ref("fixture-two", "two.png")}}})
+	for _, label := range []string{"打开图片 one.png", "打开图片 two.png"} {
+		box, ok := tt.Find(label)
+		if !ok {
+			t.Fatal("fixture image not visible")
+		}
+		if box.W != 64 || box.H != 64 {
+			t.Fatalf("KNOWN_FRONTEND_GAP: adjacent original image group uses64x64 tiles; native %s uses %+v", label, box)
+		}
+	}
+}
+func TestRemoteUIKnownGapInterruptedAssistantShowsStoppedMarker(t *testing.T) {
+	_, tt := gapApp(t, message{ID: "event:3", Role: "assistant", Kind: "assistant", Text: "fixture partial reply", Interrupted: true, AssistantBlocks: []assistantBlock{{Kind: "text", Text: "fixture partial reply"}}})
+	if !tt.HasText("已停止") && !tt.HasText("已中断") {
+		t.Fatal("KNOWN_FRONTEND_GAP: interrupted=true survives DTO but native shows no original stopped marker")
+	}
+}

@@ -1,0 +1,79 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"strings"
+	"testing"
+	"unicode/utf16"
+
+	"github.com/egoist/mygo/ui"
+)
+
+func TestUnknownJSONMatchesOriginalUTF16LimitAndKeepsSource(t *testing.T) {
+	for _, text := range []string{strings.Repeat("中", 20001), strings.Repeat("😀", 10001), strings.Repeat("中", 19987) + "😀tail"} {
+		raw, _ := json.Marshal(map[string]string{"text": text})
+		before := string(raw)
+		full := "{\n  \"text\": \"" + text + "\"\n}"
+		units := utf16.Encode([]rune(full))
+		want := full
+		if len(units) > unknownJSONMaxChars {
+			want = string(utf16.Decode(units[:unknownJSONMaxChars])) + fmt.Sprintf("\n… 已截断，共 %d 字符", len(units))
+		}
+		if got := formatUnknownJSON(raw); got != want {
+			t.Fatalf("UTF16 cap differs: got %d UTF16 units, want %d", len(utf16.Encode([]rune(got))), len(utf16.Encode([]rune(want))))
+		}
+		if string(raw) != before {
+			t.Fatal("formatter changed the original raw payload")
+		}
+	}
+}
+
+func TestUnknownJSONFormattingPreservesStructureStringsAndOrder(t *testing.T) {
+	raw := json.RawMessage(`{"z":[{},[],{"literal":"\u4e2d\u6587😀<>&\n\t\"\\"}],"a":true,"n":null,"number":1e+21}`)
+	want := "{\n  \"z\": [\n    {},\n    [],\n    {\n      \"literal\": \"中文😀<>&\\n\\t\\\"\\\\\"\n    }\n  ],\n  \"a\": true,\n  \"n\": null,\n  \"number\": 1e+21\n}"
+	if got := formatUnknownJSON(raw); got != want {
+		t.Fatalf("format differs:\n%s\nwant:\n%s", got, want)
+	}
+}
+
+func TestUnknownJSONClosedAndUnchangedOpenFramesDoNotFormatAgain(t *testing.T) {
+	raw := json.RawMessage(`{"large":"` + strings.Repeat("中😀", 250000) + `"}`)
+	state := &unknownJSONState{}
+	if n := testing.AllocsPerRun(100, func() { _ = state.display(raw) }); n != 0 || state.body != "" || state.source != nil {
+		t.Fatal("closed block formatted or retained its raw body", n)
+	}
+	state.Open = true
+	body := state.display(raw)
+	if n := testing.AllocsPerRun(100, func() {
+		if state.display(raw) != body {
+			t.Fatal("unchanged body rebuilt")
+		}
+	}); n != 0 {
+		t.Fatal("unchanged open block allocates per frame", n)
+	}
+	state.Open = false
+	state.display(raw)
+	if state.source != nil || state.body != "" {
+		t.Fatal("closing a JSON block retained its payload/display")
+	}
+}
+
+func TestUnknownJSONHasBoundedScrollableBody(t *testing.T) {
+	a := newApp(true)
+	defer a.cancel()
+	raw := json.RawMessage(`{"lines":[` + strings.TrimSuffix(strings.Repeat(`"`+strings.Repeat("long", 40)+`",`, 150), ",") + `]}`)
+	tt := ui.NewTester(func(c *ui.Context) { a.unknownAssistantBlock(c, raw) }, 320, 700)
+	tt.Frame()
+	closed := strings.Join(tt.Texts(), "\n")
+	if !strings.Contains(closed, "未知内容块") || strings.Contains(closed, "longlong") {
+		t.Fatal("unknown body was formatted/built before opening", tt.Texts())
+	}
+	if err := tt.Click("未知内容块"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if box, ok := tt.Find("未知内容块 JSON"); !ok || box.H > 200 || box.H <= 0 || box.W > 320 {
+		t.Fatal("JSON body escaped its finite scroll viewport", box, ok)
+	}
+}

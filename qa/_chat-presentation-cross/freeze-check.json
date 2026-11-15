@@ -1,0 +1,50 @@
+{
+  "checkedAt": "2026-11-15T01:51:23.614Z",
+  "pass": true,
+  "checks": [
+    {
+      "kind": "repository",
+      "path": "/Volumes/SuperDisk/native-dsh/deepseek-harness",
+      "pass": true,
+      "headMatches": true,
+      "clean": true
+    },
+    {
+      "kind": "repository",
+      "path": "/Volumes/SuperDisk/native-dsh/mygo",
+      "pass": true,
+      "headMatches": true,
+      "clean": true
+    },
+    {
+      "kind": "profile-file",
+      "path": "/Users/rkbkosp/.dsh/profiles/desktop/package.json",
+      "pass": true
+    },
+    {
+      "kind": "profile-file",
+      "path": "/Users/rkbkosp/.dsh/profiles/desktop/cordis.yml",
+      "pass": true
+    },
+    {
+      "kind": "profile-file",
+      "path": "/Users/rkbkosp/.dsh/profiles/desktop/cordis.patch.yml",
+      "pass": true
+    },
+    {
+      "kind": "profile-file",
+      "path": "/Users/rkbkosp/.dsh/profiles/desktop/pnpm-lock.yaml",
+      "pass": true
+    },
+    {
+      "kind": "installed-desktop-archive",
+      "path": "/Applications/DeepSeek Harness.app/Contents/Resources/app.asar",
+      "pass": true
+    },
+    {
+      "kind": "installed-remote-code",
+      "path": "/Users/rkbkosp/.dsh/profiles/desktop/node_modules/ds-harness-remote/dist/index.js",
+      "pass": true
+    }
+  ]
+}

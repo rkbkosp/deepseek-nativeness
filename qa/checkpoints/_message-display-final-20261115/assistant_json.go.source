@@ -1,0 +1,199 @@
+package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"strings"
+	"unicode/utf8"
+
+	"github.com/egoist/mygo/ui"
+)
+
+const unknownJSONMaxChars = 20_000
+
+type unknownJSONState struct {
+	Open   bool
+	source *byte
+	size   int
+	body   string
+}
+
+// The payload is immutable message-arena data. Cache only the bounded display
+// on this visible element, never a second full formatted copy of its history.
+func (s *unknownJSONState) display(raw json.RawMessage) string {
+	if !s.Open {
+		s.source, s.size, s.body = nil, 0, ""
+		return ""
+	}
+	var source *byte
+	if len(raw) > 0 {
+		source = &raw[0]
+	}
+	if s.body == "" || s.source != source || s.size != len(raw) {
+		s.body = formatUnknownJSON(raw)
+		s.source, s.size = source, len(raw)
+	}
+	return s.body
+}
+
+func (a *app) unknownAssistantBlock(c *ui.Context, raw json.RawMessage) {
+	root := ui.Column(c).MinWidth(0).Shrink(0).Margin(4, 0)
+	s := ui.Local(root, "unknown-json", func() unknownJSONState { return unknownJSONState{} })
+	root.Children(func() {
+		arrow := "▸"
+		if s.Open {
+			arrow = "▾"
+		}
+		if ui.ButtonBase(c).AlignSelf(ui.Start).Padding(2, 6).Radius(8).Label("未知内容块").Children(func() {
+			ui.Text(c, arrow+" 未知内容块").FontSize(12).FixedLineHeight(18).TextColor(a.theme.TextMuted)
+		}).Clicked() {
+			s.Open = !s.Open
+		}
+		body := s.display(raw) // Closed blocks do not parse or format their payload.
+		if !s.Open {
+			return
+		}
+		ui.ScrollBoth(c).MaxHeight(200).MinWidth(0).Shrink(0).Focusable().Label("未知内容块 JSON").Margin(4, 0, 0).Padding(8).Radius(12).Border(.5, a.theme.Border).Background(a.colors.Subtle).Children(func() {
+			font := a.uiPrefs.CodeFontFamily
+			if font == "" {
+				font = "SF Mono, Menlo"
+			}
+			ui.Text(c, body).Font(font).FontSize(11).FixedLineHeight(16).NoWrap().Selectable()
+		})
+	})
+}
+
+// JSON arriving from the helper has already been JSON.stringify-normalized.
+// Token formatting preserves object order and canonical numeric wire tokens,
+// decodes strings, and adds the original two-space indentation. Unlike a full
+// MarshalIndent, the writer retains at most the original 20,000 UTF-16 units.
+func formatUnknownJSON(raw json.RawMessage) string {
+	if len(raw) == 0 {
+		return "undefined"
+	}
+	out := &jsonDisplayWriter{}
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.UseNumber()
+	if err := writeJSONDisplay(decoder, out, 0); err != nil {
+		out = &jsonDisplayWriter{}
+		out.write(string(raw))
+	}
+	body := out.prefix.String()
+	if out.total > unknownJSONMaxChars {
+		body += fmt.Sprintf("\n… 已截断，共 %d 字符", out.total)
+	}
+	return body
+}
+
+type jsonDisplayWriter struct {
+	prefix strings.Builder
+	total  int
+}
+
+func (w *jsonDisplayWriter) write(text string) {
+	for _, r := range text {
+		units := 1
+		if r > 0xffff {
+			units = 2
+		}
+		remaining := unknownJSONMaxChars - w.total
+		if remaining >= units {
+			w.prefix.WriteRune(r)
+		} else if remaining == 1 {
+			// JS slice can end on a lone high surrogate. Native text renders
+			// that final UTF-16 unit as the same replacement glyph.
+			w.prefix.WriteRune(utf8.RuneError)
+		}
+		w.total += units
+	}
+}
+
+func (w *jsonDisplayWriter) indent(depth int) {
+	for i := 0; i < depth; i++ {
+		w.write("  ")
+	}
+}
+
+func (w *jsonDisplayWriter) quote(text string) {
+	w.write("\"")
+	for _, r := range text {
+		switch r {
+		case '"', '\\':
+			w.write("\\" + string(r))
+		case '\b':
+			w.write(`\b`)
+		case '\f':
+			w.write(`\f`)
+		case '\n':
+			w.write(`\n`)
+		case '\r':
+			w.write(`\r`)
+		case '\t':
+			w.write(`\t`)
+		default:
+			if r < 0x20 {
+				w.write(fmt.Sprintf(`\u%04x`, r))
+			} else {
+				w.write(string(r))
+			}
+		}
+	}
+	w.write("\"")
+}
+
+func writeJSONDisplay(d *json.Decoder, w *jsonDisplayWriter, depth int) error {
+	token, err := d.Token()
+	if err != nil {
+		return err
+	}
+	switch value := token.(type) {
+	case json.Delim:
+		w.write(string(value))
+		first := true
+		for d.More() {
+			if !first {
+				w.write(",")
+			}
+			w.write("\n")
+			w.indent(depth + 1)
+			if value == '{' {
+				key, err := d.Token()
+				if err != nil {
+					return err
+				}
+				name, ok := key.(string)
+				if !ok {
+					return fmt.Errorf("invalid JSON object key")
+				}
+				w.quote(name)
+				w.write(": ")
+			}
+			if err := writeJSONDisplay(d, w, depth+1); err != nil {
+				return err
+			}
+			first = false
+		}
+		end, err := d.Token()
+		if err != nil {
+			return err
+		}
+		if !first {
+			w.write("\n")
+			w.indent(depth)
+		}
+		w.write(fmt.Sprint(end))
+	case string:
+		w.quote(value)
+	case json.Number:
+		w.write(string(value))
+	case bool:
+		w.write(fmt.Sprint(value))
+	case nil:
+		w.write("null")
+	default:
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}

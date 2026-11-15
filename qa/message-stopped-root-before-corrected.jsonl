@@ -1,0 +1,9 @@
+{"Time":"2026-11-15T01:18:27.681094+08:00","Action":"start","Package":"native-dsh/desktop"}
+{"Time":"2026-11-15T01:18:28.052727+08:00","Action":"run","Package":"native-dsh/desktop","Test":"TestRootStoppedProjectionAndUpsert"}
+{"Time":"2026-11-15T01:18:28.053499+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestRootStoppedProjectionAndUpsert","Output":"=== RUN   TestRootStoppedProjectionAndUpsert\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:18:28.05401+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestRootStoppedProjectionAndUpsert","Output":"    zz_root_message_display_test.go:43: empty interrupted reply disappeared: rows=0\n","OutputType":"error"}
+{"Time":"2026-11-15T01:18:28.054136+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestRootStoppedProjectionAndUpsert","Output":"--- FAIL: TestRootStoppedProjectionAndUpsert (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:18:28.05418+08:00","Action":"fail","Package":"native-dsh/desktop","Test":"TestRootStoppedProjectionAndUpsert","Elapsed":0}
+{"Time":"2026-11-15T01:18:28.05424+08:00","Action":"output","Package":"native-dsh/desktop","Output":"FAIL\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:18:28.055332+08:00","Action":"output","Package":"native-dsh/desktop","Output":"FAIL\tnative-dsh/desktop\t0.373s\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:18:28.055349+08:00","Action":"fail","Package":"native-dsh/desktop","Elapsed":0.374}

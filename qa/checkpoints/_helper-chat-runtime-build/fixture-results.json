@@ -1,0 +1,50 @@
+{
+  "kind": "exact-bundled-runtime-local-fixture",
+  "hostOrNetwork": false,
+  "newPeer": false,
+  "sourceMatchesBundle": true,
+  "checkpoints": [
+    {
+      "marker": "live",
+      "baselineSerial": 1,
+      "presentationRevision": 1
+    },
+    {
+      "marker": "staged",
+      "baselineSerial": 1,
+      "presentationRevision": 1
+    },
+    {
+      "marker": "retained",
+      "baselineSerial": 1,
+      "presentationRevision": 2
+    },
+    {
+      "marker": "latest-empty",
+      "baselineSerial": 1,
+      "presentationRevision": 3
+    },
+    {
+      "marker": "structured-final",
+      "baselineSerial": 1,
+      "presentationRevision": 4
+    }
+  ],
+  "notificationCount": 21,
+  "methods": [
+    "snapshot",
+    "chatPresentationPatch",
+    "fixtureCheckpoint",
+    "trajectoryUpsert",
+    "sessionState",
+    "fixtureComplete"
+  ],
+  "loaded": {
+    "node": "v24.19.0",
+    "platform": "darwin",
+    "architecture": "arm64",
+    "rtcLoaded": true,
+    "peerConstructed": false
+  },
+  "exitCode": 0
+}

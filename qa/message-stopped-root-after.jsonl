@@ -1,0 +1,8 @@
+{"Time":"2026-11-15T01:18:28.342273+08:00","Action":"start","Package":"native-dsh/desktop"}
+{"Time":"2026-11-15T01:18:28.539724+08:00","Action":"run","Package":"native-dsh/desktop","Test":"TestRootStoppedProjectionAndUpsert"}
+{"Time":"2026-11-15T01:18:28.539837+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestRootStoppedProjectionAndUpsert","Output":"=== RUN   TestRootStoppedProjectionAndUpsert\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:18:28.560072+08:00","Action":"output","Package":"native-dsh/desktop","Test":"TestRootStoppedProjectionAndUpsert","Output":"--- PASS: TestRootStoppedProjectionAndUpsert (0.02s)\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:18:28.560114+08:00","Action":"pass","Package":"native-dsh/desktop","Test":"TestRootStoppedProjectionAndUpsert","Elapsed":0.02}
+{"Time":"2026-11-15T01:18:28.560137+08:00","Action":"output","Package":"native-dsh/desktop","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-11-15T01:18:28.561483+08:00","Action":"output","Package":"native-dsh/desktop","Output":"ok  \tnative-dsh/desktop\t0.219s\n"}
+{"Time":"2026-11-15T01:18:28.561512+08:00","Action":"pass","Package":"native-dsh/desktop","Elapsed":0.219}

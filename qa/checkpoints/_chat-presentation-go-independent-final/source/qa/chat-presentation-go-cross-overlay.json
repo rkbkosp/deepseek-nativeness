@@ -1,0 +1,5 @@
+{
+  "Replace": {
+    "/Volumes/SuperDisk/native-dsh/desktop/qa_chat_presentation_go_cross_test.go": "/Volumes/SuperDisk/native-dsh/desktop/qa/chat-presentation-go-cross.gotest"
+  }
+}

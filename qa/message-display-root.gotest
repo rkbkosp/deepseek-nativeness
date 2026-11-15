@@ -1,0 +1,146 @@
+package main
+
+import (
+	"encoding/json"
+	"github.com/egoist/mygo/ui"
+	"strings"
+	"testing"
+)
+
+func rootMessageScene(t *testing.T, m message, width float32) (*app, *ui.Tester) {
+	t.Helper()
+	a := newApp(true)
+	t.Cleanup(a.cancel)
+	tt := ui.NewTester(func(c *ui.Context) { ui.Column(c).Fill().Children(func() { a.messageView(c, m) }) }, int(width), 700)
+	tt.Frame()
+	return a, tt
+}
+func rootStoppedCount(tt *ui.Tester) int {
+	n := 0
+	for _, s := range tt.Texts() {
+		if s == "已停止" {
+			n++
+		}
+	}
+	return n
+}
+func TestRootStoppedProjectionAndUpsert(t *testing.T) {
+	a := newApp(true)
+	defer a.cancel()
+	a.current.Messages = []message{{ID: "stopped-root", Role: "assistant", Kind: "assistant"}}
+	a.reindexMessages()
+	if len(a.chatRows()) != 0 {
+		t.Fatal("empty ordinary message unexpectedly visible")
+	}
+	stopped := a.current.Messages[0]
+	stopped.Interrupted = true
+	b, _ := json.Marshal(map[string]any{"sessionId": a.sessionID, "index": 0, "message": stopped})
+	if e := a.applyIncremental("messageUpsert", b); e != nil {
+		t.Fatal(e)
+	}
+	rows := a.chatRows()
+	if len(rows) != 1 {
+		t.Fatalf("empty interrupted reply disappeared: rows=%d", len(rows))
+	}
+	_, tt := rootMessageScene(t, stopped, 320)
+	if n := rootStoppedCount(tt); n != 1 {
+		t.Fatalf("stopped markers=%d, want1", n)
+	}
+	stopped.Interrupted = false
+	b, _ = json.Marshal(map[string]any{"sessionId": a.sessionID, "index": 0, "message": stopped})
+	if e := a.applyIncremental("messageUpsert", b); e != nil {
+		t.Fatal(e)
+	}
+	if len(a.chatRows()) != 0 {
+		t.Fatal("stale stopped row survived replacement")
+	}
+	for _, interrupted := range []bool{false, true} {
+		m := message{ID: "root-prose", Role: "assistant", Text: "fixture reply", Reasoning: "fixture reasoning", Interrupted: interrupted, AssistantBlocks: []assistantBlock{{Kind: "text", Text: "fixture reply"}}}
+		_, tt := rootMessageScene(t, m, 320)
+		want := 0
+		if interrupted {
+			want = 1
+		}
+		if n := rootStoppedCount(tt); n != want {
+			t.Fatalf("interrupted=%v markers=%d want=%d", interrupted, n, want)
+		}
+	}
+}
+func TestRootImageAdjacencyOccurrenceAndWrapping(t *testing.T) {
+	ref := func(id, name string) json.RawMessage {
+		b, _ := json.Marshal(imageAttachment{AttachmentID: id, Name: name, MediaType: "image/png", Width: 600, Height: 300, Bytes: 4})
+		return b
+	}
+	dup := ref("same-reference", "dup.png")
+	single := ref("last-reference", "single.png")
+	m := message{ID: "root-images", Role: "assistant", Kind: "assistant", Text: "separator", AssistantBlocks: []assistantBlock{{Kind: "image", Attachment: dup}, {Kind: "image", Attachment: dup}, {Kind: "text", Text: "separator"}, {Kind: "image", Attachment: single}}}
+	for _, width := range []float32{320, 130} {
+		_, tt := rootMessageScene(t, m, width)
+		var ds []ui.Rect
+		var last ui.Rect
+		for _, e := range tt.AccessAll() {
+			if e.Role != ui.RoleButton {
+				continue
+			}
+			switch e.Name {
+			case "打开图片 dup.png":
+				ds = append(ds, e.Bounds)
+			case "打开图片 single.png":
+				last = e.Bounds
+			}
+		}
+		if len(ds) != 2 {
+			t.Fatalf("width=%v duplicate reference lost distinct occurrences: %v", width, ds)
+		}
+		for _, r := range ds {
+			if r.W != 64 || r.H != 64 {
+				t.Fatalf("adjacent group geometry %+v", r)
+			}
+		}
+		if width == 320 && (ds[0].Y != ds[1].Y || ds[1].X-ds[0].X != 74) {
+			t.Fatalf("gallery gap/row wrong: %v", ds)
+		}
+		if width == 130 && ds[1].Y-ds[0].Y < 74 {
+			t.Fatalf("narrow gallery failed to wrap: %v", ds)
+		}
+		if width == 320 && (last.W != 240 || last.H != 120) {
+			t.Fatalf("text-separated image merged into previous gallery: %+v", last)
+		}
+	}
+}
+func TestRootUnknownJSONKeepsDataAndStartsCollapsed(t *testing.T) {
+	raw := json.RawMessage(`{"type":"file","attachment":{"attachmentId":"fixture-id","name":"root-file.csv"},"text":"中文😀<>&","nested":{"literal":"root-tail-marker"}}`)
+	original := string(raw)
+	m := message{ID: "root-unknown", Role: "assistant", Kind: "assistant", AssistantBlocks: []assistantBlock{{Kind: "other", Block: raw}}}
+	_, tt := rootMessageScene(t, m, 320)
+	joined := strings.Join(tt.Texts(), "\n")
+	if !strings.Contains(joined, "未知内容块") {
+		t.Fatal("unknown content silently omitted")
+	}
+	if strings.Contains(joined, "root-tail-marker") {
+		t.Fatal("unknown JSON opened by default")
+	}
+	var name string
+	for _, e := range tt.AccessAll() {
+		if e.Role == ui.RoleButton && strings.Contains(e.Name, "未知内容块") {
+			name = e.Name
+			break
+		}
+	}
+	if name == "" {
+		t.Fatal("unknown content has no accessible expand action")
+	}
+	if err := tt.Click(name); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	joined = strings.Join(tt.Texts(), "\n")
+	for _, s := range []string{"root-file.csv", "root-tail-marker", "中文😀"} {
+		if !strings.Contains(joined, s) {
+			t.Fatalf("expanded JSON missing %q", s)
+		}
+	}
+	if string(m.AssistantBlocks[0].Block) != original {
+		t.Fatal("render mutated original raw block")
+	}
+}

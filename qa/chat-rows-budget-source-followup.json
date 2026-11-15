@@ -1,0 +1,52 @@
+{
+  "checkedAt": "2026-11-14T13:35:34.340Z",
+  "reviewer": "root",
+  "status": "source-only-independent-local-benchmark-passed-not-packaged",
+  "machine": "Apple M4 darwin arm64",
+  "baseline": "qa/chat-rows-budget-baseline.json",
+  "sources": {
+    "conversation_rows.go": "e586975b4cf73bd6d42281f35803d1b82a6894c724ef4b4f3c6c542892569532",
+    "incremental.go": "832d2f55caef1fac37eaae410d1087da14e088aa2431120ef776f9232c6c909e"
+  },
+  "checks": [
+    "Independent original history benchmark rerun with final text visibility assertion; actual final streamed value remains visible through cached row arena",
+    "Author semantic tests independently rerun: real messageDelta updates text/streaming without historical regroup, semantic upsert rebuilds, skipped tool-carrier gathered groups refresh, navigation clears arena",
+    "Root source review: structural/trajectory updates invalidate; empty-to-visible assistant transition invalidates; fold prefs/running included in cache key"
+  ],
+  "rows": [
+    {
+      "history": 1000,
+      "fold": "completion",
+      "nsPerOp": 43.04,
+      "bytesPerOp": 32,
+      "allocsPerOp": 2
+    },
+    {
+      "history": 1000,
+      "fold": "next-input",
+      "nsPerOp": 41.64,
+      "bytesPerOp": 32,
+      "allocsPerOp": 2
+    },
+    {
+      "history": 10000,
+      "fold": "completion",
+      "nsPerOp": 42.97,
+      "bytesPerOp": 32,
+      "allocsPerOp": 2
+    },
+    {
+      "history": 10000,
+      "fold": "next-input",
+      "nsPerOp": 43.43,
+      "bytesPerOp": 32,
+      "allocsPerOp": 2
+    }
+  ],
+  "limits": [
+    "Cached grouping computation only; does not measure native layout/paint",
+    "No network or remote model work",
+    "Not M1 or whole-app CPU/memory",
+    "GUI6 kept frozen and does not contain this optimization"
+  ]
+}

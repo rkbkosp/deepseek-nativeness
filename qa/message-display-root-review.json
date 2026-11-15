@@ -1,0 +1,46 @@
+{
+  "checkedAt": "2026-11-14T17:41:33.911Z",
+  "reviewer": "root",
+  "status": "three-display-source-subchecks-passed-gui-pending",
+  "sourceOnly": true,
+  "guiAccepted": false,
+  "scope": "Independent real MyGo Tester + actual Go incremental upsert; no Host, private clipboard or M1 measurement",
+  "independentTests": "qa/message-display-root.gotest",
+  "overlay": "qa/message-display-root-overlay.json",
+  "stopped": {
+    "baselineCommit": "68c296531147fad995fa165f397d61075b7abf31",
+    "baselineOverlay": "qa/message-stopped-before-overlay.json",
+    "baselineResult": "qa/message-stopped-root-before-corrected.jsonl",
+    "baseline": "failed empty interrupted row visibility",
+    "fixedResult": "qa/message-stopped-root-after.jsonl",
+    "fixed": "passed empty interrupted row plus removal, partial interrupted exactly one tag and noninterrupted no tag",
+    "authorCheckpoint": "qa/checkpoints/_stopped-renderer-20261115/manifest.json"
+  },
+  "fixtureCorrection": "First stopped baseline accidentally omitted sessionId, and applyIncremental correctly ignored it. That initial failure is not evidence. Corrected payloads include active sessionId; immutable old source overlay then failed and new source passed.",
+  "remaining": [
+    "New package hashes and actual GUI review",
+    "Original reasoning order, original image preview route and large-image staging still frontend gaps",
+    "macOS15.8 and M1 actual full-client CPU/footprint"
+  ],
+  "sourceManifest": "qa/checkpoints/_message-display-surrogate-final-20261115/manifest.json",
+  "sourceManifestSHA256": "cdb970aeedc852ad0b71a3467870f31cc37e5a8d4404077bb8d355cade18cd69",
+  "exactFilesMatched": 6,
+  "independentFinal": {
+    "log": "qa/message-display-root-surrogate-final.jsonl",
+    "groups": 3,
+    "passed": 3,
+    "scope": "Empty stopped upsert/removal, one tag only, duplicate attachment occurrences with gallery wrap and separated single image, actual unknown collapse/expand and immutable raw source"
+  },
+  "supersededSourceManifest": "qa/checkpoints/_message-display-final-20261115/manifest.json",
+  "formatterRegression": {
+    "log": "qa/message-json-root-final.jsonl",
+    "groups": 5,
+    "passed": 5,
+    "scope": "Author meaningful regressions independently rerun, including actual Node JSON.stringify5-case oracle, UTF16 cap, source unchanged, closed/cached zero allocations and content200/outer217 height"
+  },
+  "intermediateBuildAttempt": "One run during native_client demo main-file edit failed missing installStructuredMessageFixture. Not a renderer regression; full source then became compilable and the same final-source checks passed.",
+  "sourceCorrections": [
+    "Preserved isolated surrogate escapes to match actual Node JSON output",
+    "Original radius20 image and radius16 JSON body; original content-box200 implies native border-box outer217"
+  ]
+}

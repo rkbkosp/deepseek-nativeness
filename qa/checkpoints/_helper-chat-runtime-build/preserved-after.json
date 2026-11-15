@@ -1,0 +1,14 @@
+{
+  "files": 7212,
+  "allMatched": true,
+  "oldListSha256": "6098d6e7155d1c861264e7d97a5d426c4134869124663e145157015c33a89e48",
+  "newListSha256": "6098d6e7155d1c861264e7d97a5d426c4134869124663e145157015c33a89e48",
+  "roots": [
+    "remote/dist",
+    "remote/dist-export-next",
+    "remote/dist-next",
+    "remote/dist-perf-next",
+    "build/Native DSH Remote GUI10.app",
+    "build/Native DSH Remote Anchor QA GUI10.app"
+  ]
+}

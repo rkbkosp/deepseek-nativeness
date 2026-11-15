@@ -1,0 +1,162 @@
+{
+  "../deepseek-harness/packages/client/ui-conversation/src/client/contract/conversation.ts": {
+    "bytes": 13661,
+    "sha256": "a1f0f369969c082cc92a5ce782515bd50be58aade701f3a25600bd84e8e22cf7"
+  },
+  "compat/node_modules/zustand/esm/vanilla.mjs": {
+    "bytes": 1690,
+    "sha256": "6eea342dd71d7f242f499c34e2e5224a352f9f2d6142805d959deb9082feb074"
+  },
+  "compat/node_modules/zustand/esm/middleware.mjs": {
+    "bytes": 18897,
+    "sha256": "4180bb568d264705d321b9868fb6a445b6d8df7a8e2bb686774b8e22eb775ee1"
+  },
+  "compat/node_modules/zustand/esm/shallow.mjs": {
+    "bytes": 1281,
+    "sha256": "cdd99918df745a2a6fc202ba69d99211593982eb7f8c834a30f6c105fe88f7de"
+  },
+  "compat/node_modules/immer/dist/immer.mjs": {
+    "bytes": 36195,
+    "sha256": "251bf957417907396d567c1f85ada354075cc9b10f57b25d973de334ad2fc49a"
+  },
+  "../deepseek-harness/packages/client/store/src/index.ts": {
+    "bytes": 10268,
+    "sha256": "6969ed123830868c44d90b664cd40d81d4f6a8fd18245a695fdc3cca38c9da08"
+  },
+  "../deepseek-harness/packages/util/values/src/partial-json.ts": {
+    "bytes": 24369,
+    "sha256": "d06228f26e0c670dc18615082b5be283f72a1562220c977c3c5d54edc0b5971e"
+  },
+  "../deepseek-harness/packages/util/values/src/index.ts": {
+    "bytes": 11623,
+    "sha256": "28a44a8df506ff9481de968135b8b20c240d7771f331bdc9e8cd634d04758858"
+  },
+  "../deepseek-harness/packages/client/ui-conversation/src/client/conversation/group-store.ts": {
+    "bytes": 9158,
+    "sha256": "5fcccc47703f466d90a7b1b4e2aa0f8a2cefa783e481673176c47f11c6e73104"
+  },
+  "../deepseek-harness/packages/client/ui-conversation/src/client/conversation/location-index.ts": {
+    "bytes": 25657,
+    "sha256": "cac8f87d70a67aa9ffcfa39fed3ee042c26286e593fe912c5af51a95e176e3da"
+  },
+  "../deepseek-harness/packages/client/ui-conversation/src/client/conversation/assembler.ts": {
+    "bytes": 45791,
+    "sha256": "e3c586365098f2e6c465d7aab07f8dba28102ae2f91dbda850092af1352bd3ec"
+  },
+  "../deepseek-harness/packages/client/ui-chat/src/client/conversation-nodes/common.ts": {
+    "bytes": 2926,
+    "sha256": "c5bbb87bcd7ac1d25d467a45447c09d2f34f49ac7c98c4d5dfbc0779c47c0509"
+  },
+  "../deepseek-harness/packages/client/ui-chat/src/client/conversation-nodes/event-projection.ts": {
+    "bytes": 6721,
+    "sha256": "9b112628ca6b6678504d373a8a017a9cc3c6f89189abd3fa1d38fe035b796a6c"
+  },
+  "../deepseek-harness/packages/client/ui-chat/src/client/conversation-nodes/assistant.ts": {
+    "bytes": 13967,
+    "sha256": "7dbf13220a118ccd74955b14e69460ce03972468c27fe4b15b5eef1b7f4c6929"
+  },
+  "../deepseek-harness/packages/client/ui-chat/src/client/contract/assistant-content.ts": {
+    "bytes": 610,
+    "sha256": "a736c22b643545b1acd072e850add94bdf628c25c13e5fb1dd1046fffaa18c85"
+  },
+  "../deepseek-harness/packages/client/ui-chat/src/client/contract/turn-process.ts": {
+    "bytes": 2461,
+    "sha256": "dce44841b376607f143df8c990b4f9e54579655a2d6adc8fead2fe7112efe7ef"
+  },
+  "../deepseek-harness/packages/client/ui-chat/src/client/conversation-nodes/turn-process.ts": {
+    "bytes": 14408,
+    "sha256": "c332215c684270d660cb365032c5cbcb5ca03984422c0c133eba5283dc35736e"
+  },
+  "../deepseek-harness/packages/client/ui-chat/src/client/contract/chat-nodes.ts": {
+    "bytes": 5069,
+    "sha256": "d8149515bae80a6114e95f2908aecdcaaa52588bf95829c6ba3606bedb5ba581"
+  },
+  "../deepseek-harness/packages/client/ui-chat/src/client/contract/chat-visibility.ts": {
+    "bytes": 790,
+    "sha256": "0a1463fe610b3659c857013eaf046adf774a5615b834e03cedacba754eed5459"
+  },
+  "../deepseek-harness/packages/client/ui-chat/src/client/contract/group-tree.ts": {
+    "bytes": 1872,
+    "sha256": "adac187552b1459eaeb5bf9ae02fcae1b4e2a7e7e4f023a59fc1ebcd22865f33"
+  },
+  "../deepseek-harness/packages/client/ui-chat/src/client/conversation-nodes/group-tree-segments.ts": {
+    "bytes": 3710,
+    "sha256": "a401ff8f27ef5d38b39f1ed58624028f66d8d93a369e785bb8e9a32a9e7a8304"
+  },
+  "../deepseek-harness/packages/client/ui-chat/src/client/conversation-nodes/turn-navigation.ts": {
+    "bytes": 3835,
+    "sha256": "89ff69fda6f8b048c83119978a26a62a49033c9f8ea7727f4656e328423c7008"
+  },
+  "../deepseek-harness/packages/client/ui-chat/src/client/conversation-nodes/turn-process-presentation.ts": {
+    "bytes": 5540,
+    "sha256": "9f635b0741ba1ac72f860c1b9b303fd313638ffb9f19d108224f17070a379bae"
+  },
+  "../deepseek-harness/packages/client/ui-chat/src/client/conversation-nodes/chat-snapshot-builder.ts": {
+    "bytes": 48349,
+    "sha256": "e3b6173efc12ce5b147d8fdf9f2cd3309f28ef002d7bac4d29480905b64dbb2d"
+  },
+  "../deepseek-harness/packages/util/brand/src/index.ts": {
+    "bytes": 1520,
+    "sha256": "f9d6da858d7308117227dcc2306ce7246b7309b2ae22d413d289cbae51e83e98"
+  },
+  "../deepseek-harness/packages/client/ui-chat/src/client/reasoning-text.ts": {
+    "bytes": 909,
+    "sha256": "e65bed4c7627f02ed2f1db4595cbeca24d767c4c23da517d1bb262995a1bdb17"
+  },
+  "../deepseek-harness/packages/client/ui-chat/src/client/conversation-nodes/process-activity.ts": {
+    "bytes": 7278,
+    "sha256": "df3da0bbabbf230913f303efd7c971a149ad73e9be7deb2667d093067cdae26b"
+  },
+  "../deepseek-harness/packages/client/ui-chat/src/client/conversation-nodes/process-groups.ts": {
+    "bytes": 13405,
+    "sha256": "53e9f137db840f90b2d1a419ff39687234e35ae7d8a68a5a17795db93e82cd95"
+  },
+  "../deepseek-harness/packages/core/session/src/types.ts": {
+    "bytes": 25367,
+    "sha256": "1274e57822035991afd549ed9659a5dd4d66645d77171921d9b2601371911d2c"
+  },
+  "../deepseek-harness/packages/core/session/src/known-event-types.ts": {
+    "bytes": 2809,
+    "sha256": "6583955525dd8b6869be2c476821f66c837519b7001ba134ab2fb2ecb57ecba9"
+  },
+  "../deepseek-harness/packages/core/session/src/surface.ts": {
+    "bytes": 32085,
+    "sha256": "b549e49ed9c0df3607b7e61391cc2d8eaba59ba2410930c83527b9091a8495e5"
+  },
+  "../deepseek-harness/packages/client/ui-chat/src/client/conversation-nodes/message.ts": {
+    "bytes": 7954,
+    "sha256": "f9cca67f45a373da7f5946eef9ea6cb2379d298364c67b2b94b14f57f4e762b1"
+  },
+  "../deepseek-harness/packages/client/ui-chat/src/client/conversation-nodes/tool.ts": {
+    "bytes": 15385,
+    "sha256": "c84a92259d7a9d34c43e1ab36724ecc4f6aed8eec41a668eaed998b1cf19e893"
+  },
+  "../deepseek-harness/packages/util/crypto/src/index.ts": {
+    "bytes": 1683,
+    "sha256": "6d314b677a163808a732c53fc509eebea1f8b8cc34b67031644dcfa4a97e28f0"
+  },
+  "../deepseek-harness/packages/llm/llm/src/message.ts": {
+    "bytes": 11242,
+    "sha256": "83ea9eef8b4d81abee748b2a58acff83dc6860b7d19415e6decd0a10a99ef04f"
+  },
+  "../deepseek-harness/packages/llm/llm/src/assembler.ts": {
+    "bytes": 7998,
+    "sha256": "669ccb9e8aec1e704dcdea62d0940e4086f1fbb5b51b4a27eeddc86236ae7dff"
+  },
+  "../deepseek-harness/packages/llm/llm/src/assistant-stream.ts": {
+    "bytes": 21335,
+    "sha256": "1aab3423320f205d7f4f3c26888a50e1f04102962513d51ee4c74874eb02cc18"
+  },
+  "../deepseek-harness/packages/api/session-controller/src/client/sessions/assistant-stream.ts": {
+    "bytes": 8899,
+    "sha256": "4433f1b5256c886ee2a80469a2fff77c6b45826e2ef43af79835c93d8a1c4a63"
+  },
+  "qa/_chat-process-audit/original.ts": {
+    "bytes": 4143,
+    "sha256": "8d3ecee54c72aebc1ceec8f62ab5e7235855b202573bb9ada21bf610ad0866e8"
+  },
+  "qa/_chat-presentation-cross/original.ts": {
+    "bytes": 316,
+    "sha256": "3133b582a666878af4d181d3a5d85d2060369ad6ac6f9c03bd1886e27f3c8989"
+  }
+}

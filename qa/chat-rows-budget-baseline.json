@@ -1,0 +1,45 @@
+{
+  "checkedAt": "2026-11-14T13:04:21.356Z",
+  "reviewer": "root",
+  "machine": "Apple M4 darwin arm64",
+  "scope": "Synthetic pure Go chatRows computation, no UI/Remote/model call; not whole-app CPU or M1 result",
+  "sourceSha256": "00ac32e8f98c896ea464a834c9e10b0ebbb536591c650d57171efb900a26220f",
+  "command": "CGO_ENABLED=0 go test -overlay=qa/chat-rows-budget-overlay.json . -run ^$ -bench ^BenchmarkQAChatRowsHistory$ -benchtime=100ms -count=1 -benchmem",
+  "fixture": "qa/chat-rows-budget.gotest",
+  "rows": [
+    {
+      "history": 1000,
+      "fold": "completion",
+      "nsPerOp": 56053,
+      "bytesPerOp": 362244,
+      "allocsPerOp": 1513
+    },
+    {
+      "history": 1000,
+      "fold": "next-input",
+      "nsPerOp": 174263,
+      "bytesPerOp": 362239,
+      "allocsPerOp": 1513
+    },
+    {
+      "history": 10000,
+      "fold": "completion",
+      "nsPerOp": 644577,
+      "bytesPerOp": 5026877,
+      "allocsPerOp": 15023
+    },
+    {
+      "history": 10000,
+      "fold": "next-input",
+      "nsPerOp": 20425333,
+      "bytesPerOp": 5026656,
+      "allocsPerOp": 15022
+    }
+  ],
+  "finding": "Worst-case next-input row grouping alone exceeds one 60Hz frame budget at 10k history and reallocates about5MB per business update; optimization required before declaring long-history performance",
+  "limits": [
+    "Short benchtime captures order of magnitude, not statistically stable app benchmark",
+    "No actual layout/paint/network/process footprint included",
+    "Not an M1 comparison"
+  ]
+}

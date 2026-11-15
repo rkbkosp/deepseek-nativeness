@@ -1,0 +1,18 @@
+package main
+import("testing";"fmt";"reflect";"github.com/egoist/mygo/ui")
+func TestQANativeSharedAxisActualGeometry(t *testing.T){
+ a:=newApp(true);defer a.cancel();a.sidebarShown=1;a.rightPaneOpen=true;a.current.Messages=[]message{{ID:"axis",Role:"assistant",Text:"Synthetic axis geometry only"}}
+ tt:=ui.NewTester(a.view,1280,820);tt.Frame();tt.Frame()
+ rt:=reflect.ValueOf(tt).Elem().FieldByName("rt").Elem();c:=rt.FieldByName("c");chunks:=c.FieldByName("chunks");used:=int(c.FieldByName("used").Int());seen:=0
+ for i:=0;i<chunks.Len()&&seen<used;i++{chunk:=chunks.Index(i);for j:=0;j<chunk.Len()&&seen<used;j++{n:=chunk.Index(j);seen++;if n.FieldByName("label").String()!="复制消息 axis"{continue};for k:=0;k<5;k++{p:=n.FieldByName("parent");if p.IsNil(){break};n=p.Elem();t.Logf("ancestor%d x=%.2f w=%.2f",k,n.FieldByName("x").Float(),n.FieldByName("w").Float())}}}
+}
+var qaCrossRows []chatRow
+func BenchmarkQANativeGatheredHistory(b *testing.B){for _,count:=range []int{1000,10000}{b.Run(fmt.Sprint(count),func(b *testing.B){a:=&app{uiPrefs:defaultViewPreferences()};for i:=0;i<count;i++{a.current.Messages=append(a.current.Messages,message{ID:fmt.Sprint(i),Kind:"context",Turn:i/3});if i%2==1 {a.current.Messages=append(a.current.Messages,message{ID:fmt.Sprint("skip",i),Role:"assistant",AssistantBlocks:[]assistantBlock{{Kind:"tool-call"}}})}};a.chatRows();b.ReportAllocs();b.ResetTimer();for i:=0;i<b.N;i++{qaCrossRows=a.chatRows()}})}}
+func TestQANativeCatalogLateUIReceiptCrossesConnectionGeneration(t *testing.T){
+ f:=newHistoryImageFixture(t);a:=f.a;a.accountScope="old-account";a.fetchSessions()
+ var callback func();select{case callback=<-f.updates:case<-f.ctx.Done():t.Fatal(f.ctx.Err())}
+ a.remoteGeneration++;a.accountScope="new-account";a.sessions=[]session{{ID:"fresh-generation"}}
+ callback()
+ if len(a.sessions)==1&&a.sessions[0].ID=="fresh-generation"{t.Fatal("risk no longer reproduced; old catalog now correctly fenced")}
+ t.Logf("REPRODUCED: previous account/generation queued catalog overwrote fresh catalog, rows=%d",len(a.sessions))
+}
