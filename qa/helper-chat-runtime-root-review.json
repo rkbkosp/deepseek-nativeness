@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-11-15T02:05:31.469Z",
+  "reviewer": "root",
+  "status": "isolated-runtime-and-old-GUI10-artifacts-verified-no-launch",
+  "manifest": "qa/checkpoints/_helper-chat-runtime-build/runtime-manifest.json",
+  "manifestSha256": "a5f707cdf13e3a694d731ba3da6d9c2747b5899dd06a481a3ac1f4f5a4d2eb75",
+  "files": 3405,
+  "bytes": 186337606,
+  "allHashesAndInventoryMatch": true,
+  "oldBundles": [
+    {
+      "manifest": "build/gui-checkpoints/gui10-normal-manifest.json",
+      "files": 3599,
+      "allHashMatch": true
+    },
+    {
+      "manifest": "build/gui-checkpoints/gui10-forced-manifest.json",
+      "files": 3599,
+      "allHashMatch": true
+    }
+  ],
+  "qualification": "Disk bytes are not runtime memory. Helper source f11b separately reviewed. Final app and Go integration not yet accepted."
+}

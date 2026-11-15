@@ -26,11 +26,14 @@ test('canonical block-end content supersedes the streamed partial block', () => 
   assert.equal(projection.value().messages.at(-1).text, 'complete');
 });
 
-test('surface replacement uses the replaced position rather than appending by sequence', () => {
+test('model surface replacement does not replace append-origin assistant chat', () => {
   const projection = new SessionProjection('session');
   projection.snapshot(baseline([user(1, 'first'), assistant(2, 'old'), user(3, 'last')]));
   projection.event(assistant(4, 'new', { op: 'replace', startSeq: 2, endSeq: 2 }));
-  assert.deepEqual(projection.value().messages.map(message => message.text), ['first', 'new', 'last']);
+  // Pinned assistantDefinition.match (assistant.ts:307-312) consumes only
+  // append-origin assistant/message. Model-context replacement is a different
+  // surface; the real assembler oracle independently retains the old chat row.
+  assert.deepEqual(projection.value().messages.map(message => message.text), ['first', 'old', 'last']);
 });
 
 test('a committed no-surface attempt retires transient presentation', () => {

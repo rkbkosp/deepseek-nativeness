@@ -1,0 +1,29 @@
+{
+  "checkedAt": "2026-11-15T02:16:01.493Z",
+  "reviewer": "root",
+  "status": "source-slice-passed-fixture-gates-app-package-pending",
+  "goSourceCommit": "a02343981f0525d5724cd11294049b4f068bef94",
+  "nativeSourceManifest": "qa/checkpoints/_chat-presentation-native-final/manifest.json",
+  "nativeSourceManifestSha256": "c927d33eb43c51174964df470a232e8a4b88720423fac30ca19eeed1ff2168a3",
+  "nativeCurrentFilesVerified": 23,
+  "helperSourceManifest": "qa/checkpoints/_chat-presentation-helper-classifier-final/manifest.json",
+  "helperSourceManifestSha256": "f11b6b03f24ee18a61be92bf1decce5db975667a54325b58058e44e4cab17079",
+  "rootOwnCommand": "CGO_ENABLED=0 go test -overlay=qa/root-chat-process-view-overlay.json -run ^TestRoot(ChatSourceOracleActualView|InterruptedUnicodeMatchesOriginalTerminalTag)$ -count=1 -v .",
+  "rootOwnSubcases": 9,
+  "rootOwnPassed": 9,
+  "rootOwnSeconds": 1.016,
+  "unicodeQualification": "Original AssistantMarkdown uses raw block-kind predicate for terminal marker ownership, distinct from JS-trimmed reply membership. Source-equivalent BOM marker0 and NEL marker1 accepted; earlier root expectation of exactly1 for both corrected before source acceptance.",
+  "helperIndependentReview": "qa/chat-presentation-cross-review.json",
+  "runtimeRootReview": "qa/helper-chat-runtime-root-review.json",
+  "goIndependentReview": "qa/chat-presentation-go-cross-review.json",
+  "limits": [
+    "Synthetic source-derived local fixtures, not live model/Host execution.",
+    "GUI11 has not been built/launched. Independent NSTextView Proof3 passes observed theme scenes but is not production-integrated.",
+    "M1, macOS15.8 runtime, real active stream and complete original UI/operation parity remain unaccepted.",
+    "Long single-active-turn metadata rebuilding is still costlier than many-completed-turn shape; see native budget, do not generalize best case."
+  ],
+  "goIndependentReviewSha256": "ddca55e9dd49c6c64be5f5da4d2c9137a1583060588a12f6dee54dc28804169a",
+  "goIndependentGroupsPassed": 5,
+  "independentNativeManifest": "qa/checkpoints/_chat-presentation-go-independent-final/manifest.json",
+  "independentNativeManifestSha256": "2e48402f7fabaefba943877f6f0855790f1c07b7c5b0a16edd664d794a2dcfe8"
+}

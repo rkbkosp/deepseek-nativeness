@@ -1,0 +1,12 @@
+{
+  "checkedAt": "2026-11-15T01:53:03.783Z",
+  "reviewer": "root",
+  "manifest": "qa/checkpoints/_chat-presentation-helper-classifier-final/manifest.json",
+  "manifestSha256": "f11b6b03f24ee18a61be92bf1decce5db975667a54325b58058e44e4cab17079",
+  "sourceFiles": 14,
+  "allHashMatch": true,
+  "status": "source-slice-fixture-review-passed-no-new-app-acceptance",
+  "artifactScope": "Existing GUI10 helper remains33b; no new runtime bundle built or deployed by this verification.",
+  "independentReview": "qa/chat-presentation-cross-review.json",
+  "independentReviewSha256": "cc6b1f739f5de1ea6834f48367455e918f7ac9c662c51ec497e0d2ab45f7fb75"
+}

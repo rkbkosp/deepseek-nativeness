@@ -1,0 +1,39 @@
+{
+  "checkedAt": "2026-11-15T01:51:35.434Z",
+  "reviewer": "root",
+  "status": "independent-qa-expectation-corrected-to-pinned-chat-source",
+  "legacySha256": "ff1b7cb8e0ee796429c12c870b46ec8f77e5f001f348bd02e8eacb2e8b46ba15",
+  "currentSha256": "f0d314194f020c908bd75c4ec9c66a516ba8c5b39d760c227a28aff81f997d2e",
+  "testFile": "qa/projection-acceptance.test.mjs",
+  "reference": {
+    "file": "../deepseek-harness/packages/client/ui-chat/src/client/conversation-nodes/assistant.ts",
+    "sha256": "7dbf13220a118ccd74955b14e69460ce03972468c27fe4b15b5eef1b7f4c6929",
+    "matchLines": "307-312"
+  },
+  "before": [
+    "first",
+    "new",
+    "last"
+  ],
+  "after": [
+    "first",
+    "old",
+    "last"
+  ],
+  "reason": "Original assistant chat definition consumes assistant/message only with append surface origin. Model-context surface replacement does not replace the retained chat row. Root independently read the source and a separate reviewer executed the real pinned assembler oracle.",
+  "independentOracle": "qa/chat-presentation-cross.test.mjs",
+  "historicalEvidence": [
+    "qa/_chat-presentation-cross/initial-source-check.json",
+    "qa/_chat-presentation-cross/legacy-qa-unchanged.tap"
+  ],
+  "runtimeChangeByRoot": false,
+  "pending": [],
+  "executed": {
+    "command": "node --test qa/projection-acceptance.test.mjs",
+    "tests": 6,
+    "pass": 6,
+    "fail": 0,
+    "exitCode": 0,
+    "durationMs": 74.377
+  }
+}
