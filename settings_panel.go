@@ -341,7 +341,7 @@ func (a *app) generalSettings(c *ui.Context, host *settingsHostState) {
 			a.loadHostGeneralSettings(host)
 		}
 	}
-	a.settingRow(c, "更新渠道", "Native DSH Remote", func() {
+	a.settingRow(c, "更新渠道", productName, func() {
 		ui.Text(c, "本地开发版本").FontSize(12).TextColor(a.theme.TextMuted)
 	})
 }

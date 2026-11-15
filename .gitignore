@@ -27,3 +27,6 @@
 /remote/installed_reference/
 /remote/checkpoints/
 .DS_Store
+
+# The reused official app icon must be committed despite the QA capture rule.
+!assets/app-icon.png

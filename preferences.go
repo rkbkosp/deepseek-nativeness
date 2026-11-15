@@ -7,6 +7,9 @@ import (
 	"strings"
 )
 
+// preferencePath keeps the original client-state directory on purpose: the
+// product was renamed (productName), but an existing install must keep its
+// stored server, selections and appearance. Moving this path is a migration.
 func preferencePath() string {
 	root, err := os.UserConfigDir()
 	if err != nil {
