@@ -76,7 +76,13 @@ func (a *app) sidebarView(c *ui.Context) {
 				}
 			}
 			ui.ButtonBase(c).Label("视图选项").Tooltip("视图选项").Children(func() { icon(c, "flat-list-outline", 16).TextColor(a.theme.TextMuted) }).Menu(a.sidebarViewMenu)
-			ui.ButtonBase(c).Label("添加工作区").Disabled(true).Tooltip("当前 Remote 工作区由主机管理").Children(func() { icon(c, "plus-outline", 16).TextColor(a.theme.TextMuted) })
+			addTip := "在主机上新建工作区"
+			if reason := a.operationCaps["createWorkspace"].Reason; reason != "" {
+				addTip = reason
+			}
+			if ui.ButtonBase(c).Label("添加工作区").Disabled(!a.can("createWorkspace")).Tooltip(addTip).Children(func() { icon(c, "plus-outline", 16).TextColor(a.theme.TextMuted) }).Clicked() {
+				a.openWorkspaceCreate()
+			}
 		})
 		if a.searchOpen {
 			ui.TextInput(c, &a.search).Placeholder("搜索会话").Label("搜索会话输入框").AutoFocus()

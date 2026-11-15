@@ -361,6 +361,16 @@ export class FixtureAdapter extends RemoteAdapter {
     this.identity = { deviceId: "fixture-client" };
     this.authenticated = true;
     this.fixtureAttachmentReads = new Map();
+    this.fixtureWorkspaces = [
+      {
+        workspaceId: WORKSPACE,
+        title: "协议夹具",
+        path: "/fixture",
+        sessionIds: [SESSION],
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      },
+    ];
     this.fixtureAttachmentStarted = 0;
     this.fixtureAttachmentAborted = 0;
     this.fixtureRegistrationWaiters = [];
@@ -407,6 +417,7 @@ export class FixtureAdapter extends RemoteAdapter {
       },
     };
     this.interactionReady = true;
+    const fixture = this;
     this.gateway = {
       invoke: async ({ namespace, method, args, signal }) => {
         if (namespace === "session" && method === "attachment") {
@@ -498,6 +509,29 @@ export class FixtureAdapter extends RemoteAdapter {
         }
         if (namespace === "session" && method === "page")
           return { records: history().records, hasMore: false };
+        if (namespace === "directoryPicker" && method === "list") {
+          const requested =
+            typeof args?.path === "string" && args.path.trim()
+              ? args.path.trim()
+              : "/fixture";
+          if (requested !== "/fixture" && requested !== "/fixture/work")
+            throw Object.assign(Error("fixture directory unreadable"), {
+              code: "directory-picker/unreadable",
+            });
+          return {
+            path: requested,
+            home: "/fixture",
+            crumbs: [
+              { name: "/", path: "/", hidden: false },
+              { name: "fixture", path: "/fixture", hidden: false },
+            ],
+            entries:
+              requested === "/fixture"
+                ? [{ name: "work", path: "/fixture/work", hidden: false }]
+                : [],
+            truncated: false,
+          };
+        }
         throw Object.assign(new Error("Unknown fixture unary endpoint"), {
           code: "METHOD_NOT_FOUND",
         });
@@ -511,14 +545,9 @@ export class FixtureAdapter extends RemoteAdapter {
           yield {
             type: "baseline",
             value: {
-              items: [
-                {
-                  workspaceId: WORKSPACE,
-                  title: "协议夹具",
-                  path: "/fixture",
-                  sessionIds: [SESSION],
-                },
-              ],
+              items: fixture.fixtureWorkspaces.map((w) => ({ ...w })),
+              archivedSessionIds: [],
+              pinnedSessionIds: [],
             },
           };
           return;
@@ -542,6 +571,27 @@ export class FixtureAdapter extends RemoteAdapter {
           if (payload.args?.request?.sessionId !== SESSION)
             throw Error("Wrong fixture mutation session");
           return { ok: true, value: { fixture: true } };
+        }
+        if (endpoint === "workspace/create") {
+          const path = payload.args?.request?.path;
+          if (typeof path !== "string" || !path.trim())
+            throw Object.assign(Error("缺少 path"), {
+              code: "INVALID_ARGUMENT",
+            });
+          const existing = this.fixtureWorkspaces.find(
+            (w) => w.path === path,
+          );
+          if (existing) return { ok: true, value: { workspace: existing, created: false } };
+          const workspace = {
+            workspaceId: "fixture-workspace-created",
+            title: path.split("/").filter(Boolean).at(-1) ?? path,
+            path,
+            sessionIds: [],
+            createdAt: "2026-01-02T00:00:00.000Z",
+            updatedAt: "2026-01-02T00:00:00.000Z",
+          };
+          this.fixtureWorkspaces.push(workspace);
+          return { ok: true, value: { workspace, created: true } };
         }
         if (endpoint === "$events/result") return { ok: true, value: {} };
         throw Object.assign(new Error("Unknown fixture dispatch endpoint"), {

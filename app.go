@@ -103,6 +103,7 @@ type app struct {
 	metrics                                                  renderStats
 	answers                                                  map[string]map[string]*questionDraft
 	pendingRequests                                          int
+	workspaceCreate                                          *workspaceCreateState
 	configuredServer                                         string
 	authorized                                               bool
 	pendingSend                                              *sendIntent
@@ -237,6 +238,7 @@ func (a *app) view(c *ui.Context) {
 		a.settingsView(c)
 	}
 	a.mutationReviewView(c)
+	a.workspaceCreateView(c)
 	if a.compat != nil && a.compatPlacement == "imagePreview" {
 		a.imagePreviewView(c)
 	}

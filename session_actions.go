@@ -36,20 +36,35 @@ func (a *app) fetchCapabilities() {
 }
 func (a *app) can(name string) bool { return a.connected && !a.busy && a.operationCaps[name].Supported }
 
+var errRemoteNotConnected = errors.New("Remote 未连接")
+
 type mutationIntent struct {
 	ID      string
 	Unknown bool
 }
 
 func (a *app) mutate(method string, params map[string]any, accept func(json.RawMessage) error) {
+	a.mutateWithFailure(method, params, accept, nil)
+}
+
+// mutateWithFailure reports a rejected or uncertain write to its caller so a
+// transient form (for example the new Workspace sheet) can release its own
+// "submitting" state instead of staying disabled.
+func (a *app) mutateWithFailure(method string, params map[string]any, accept func(json.RawMessage) error, failed func(error)) {
 	if a.client == nil || !a.connected {
 		a.error = "Remote 未连接，操作未发送。"
+		if failed != nil {
+			failed(errRemoteNotConnected)
+		}
 		return
 	}
 	host, generation, account := a.hostID, a.remoteGeneration, a.accountScope
 	serialized, err := json.Marshal(params)
 	if err != nil {
 		a.error = err.Error()
+		if failed != nil {
+			failed(err)
+		}
 		return
 	}
 	// Own the complete JSON value before any asynchronous write. UseNumber
@@ -59,6 +74,9 @@ func (a *app) mutate(method string, params map[string]any, accept func(json.RawM
 	decoder.UseNumber()
 	if err := decoder.Decode(&captured); err != nil {
 		a.error = err.Error()
+		if failed != nil {
+			failed(err)
+		}
 		return
 	}
 	params = captured
@@ -68,6 +86,9 @@ func (a *app) mutate(method string, params map[string]any, accept func(json.RawM
 	}
 	if previous := a.mutations[key]; previous != nil && previous.Unknown {
 		a.error = "上一操作结果未确认，请先核对远程状态，勿重复操作。请求：" + previous.ID
+		if failed != nil {
+			failed(errors.New("上一操作结果未确认"))
+		}
 		return
 	}
 	id := rand.Text()
@@ -105,6 +126,9 @@ func (a *app) mutate(method string, params map[string]any, accept func(json.RawM
 		var remote *bridge.RemoteError
 		if errors.As(err, &remote) && remote.Rejected() {
 			delete(a.mutations, key)
+		}
+		if failed != nil {
+			failed(err)
 		}
 	})
 }

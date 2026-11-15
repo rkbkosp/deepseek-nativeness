@@ -296,19 +296,29 @@ func (a *app) connect(id string) {
 	})
 }
 
-func (a *app) fetchWorkspaces() {
+// refreshWorkspaces re-reads the Host registry. The helper answers
+// selectWorkspace from the rows it saw in this call, so a registry change (a
+// new Workspace, for example) must be read again before it can be selected.
+func (a *app) refreshWorkspaces(after func()) {
 	host, scope, generation := a.hostID, a.accountScope, a.remoteGeneration
 	a.scopedRead("workspaces", map[string]any{"hostId": a.hostID}, func(raw json.RawMessage) error {
 		if host != a.hostID || scope != a.accountScope || generation != a.remoteGeneration {
 			return nil
 		}
 		rows, err := decodeRows[workspace](raw, "workspaces", "items")
-		a.workspaces = rows
-		if err == nil {
-			a.fetchSessions()
+		if err != nil {
+			return err
 		}
-		return err
+		a.workspaces = rows
+		if after != nil {
+			after()
+		}
+		return nil
 	})
+}
+
+func (a *app) fetchWorkspaces() {
+	a.refreshWorkspaces(func() { a.fetchSessions() })
 }
 
 func (a *app) selectWorkspace(id string) {
