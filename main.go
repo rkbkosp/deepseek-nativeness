@@ -29,6 +29,7 @@ func main() {
 	localNative := flag.Bool("local-native", false, "start the bundled local dsh runtime and drive the native UI over /api/remote.mux")
 	captureAfter := flag.Duration("capture-after", 0, "delay before --capture (QA only)")
 	recoveryProbe := flag.String("recovery-probe", "", "SIGKILL the local Host once and write local recovery evidence (QA only)")
+	uiState := flag.String("ui-state", "", "open one reviewable surface on the first connected frame (QA only; see qa_ui_state.go)")
 	theme := flag.String("theme", "", "client appearance: system, light, dark")
 	windowDiagnostics := flag.String("window-diagnostics", "", "write this client's own window visibility and bounds after startup")
 	document := flag.String("demo-document", "", "explicit demo only: long/table/images/structured native render regression")
@@ -110,6 +111,9 @@ func main() {
 				_ = a.client.Close()
 			}
 		})
+		if *uiState != "" {
+			go a.applyQAUIStateWhenReady(*uiState)
+		}
 		if *localRuntime {
 			a.startLocalRuntime()
 		} else if !a.demo {
