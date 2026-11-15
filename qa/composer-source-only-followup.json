@@ -1,0 +1,42 @@
+{
+  "checkedAt": "2026-11-14T12:47:44.425Z",
+  "status": "SOURCE ONLY; APP AND GUI RETEST PENDING",
+  "originalEvidence": [
+    "deepseek-harness/packages/client/ui-permission-presets/src/client/locales.ts:45",
+    "deepseek-harness/packages/client/ui-permission-presets/src/client/presentation.ts",
+    "deepseek-harness/packages/client/ui-model-selection/src/client/ModelSelect.tsx:458",
+    "/tmp/native-dsh-parity/06-original-permission.ax.txt",
+    "/tmp/native-dsh-parity/07-original-model.ax.txt",
+    "/tmp/native-dsh-parity/61-native-core5-model-popover.ax.txt"
+  ],
+  "sourceHashes": {
+    "composer_state.go": "20b9a3a549fd425f011b5f606c2a143bbfbc086b5ff5cc28421eb07292ae8e70",
+    "composer_test.go": "7a64dbed7088f72fe11c39661df2da18ccc255410b733d96f1575af70fb1bb1d",
+    "qa/composer-wire-fixture.mjs": "bf3c42ebfb165b91cdd5d682d8f43469ad3c5a7c7ca2409b2bf371a7dde63fc2",
+    "compat/src/models.tsx": "0fce3886e0221fb80f03aed85fb7ad816faacc2daeb9f7ad01c3e049ee4635bf"
+  },
+  "nativePermission": {
+    "author": "acceptance_audit",
+    "sourceDisplay": "仅可查看",
+    "wireValue": "read-only",
+    "customNames": "Preserved; only conventional enum/default English product names are localized",
+    "check": {
+      "command": "CGO_ENABLED=0 go test . -run ^TestComposerProjectionBaselineLabelsAndOutOfOrderProtection$ -count=1",
+      "exitCode": 0
+    }
+  },
+  "wkModelMenu": {
+    "author": "remote_wire",
+    "review": "Independently identified and source-reviewed third-argument fallback loss",
+    "cause": "Models renderSlot(name,props) returned null for conversation.input.model.label and discarded original ModelSelect renderSlot options.fallback",
+    "minimalSourceFix": "renderSlot(name,props,options), default options?.fallback ?? null",
+    "fixture": "Remote author SSR check pending at this record; not counted as independent live visual acceptance"
+  },
+  "boundaries": {
+    "appBundleChangedByThisTask": false,
+    "hostMutations": false,
+    "modelSelected": false,
+    "permissionChanged": false,
+    "guiParityAccepted": false
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "checkedAt": "2026-11-14T13:22:20.094Z",
+  "status": "AUTHOR SOURCE/HEADLESS/FIXTURE PASSED; NEW PACKAGED GUI PENDING",
+  "authors": "acceptance_audit authored composer/settings/files; these are self checks, root owns independent actual GUI",
+  "sourceHashes": {
+    "composer.go": "831a42cbe7a52ca8eb0764cf0f31e2e55947d1c6d5ea95d8231bab380161395c",
+    "composer_toolbar.go": "8ea8a82e11c41ad104d53799a5d89d811412bbf635babf4e001a2dc3453ec8bb",
+    "composer_state.go": "9dbbbbebfa6088bfa2688f8cd09bab14e7af8b607e512dba45c01ab902e2187e",
+    "composer_responsive_test.go": "20003f65ec4cbaa1293603beeb9c58d6b00a16a1c905b586fec32ea208ac58cc",
+    "settings_panel.go": "bb1e618390126c86d464204307068f3b80dbbbc9b3b03cb65c676a829e89aca4",
+    "right_pane.go": "e7988730df2ada0d7d6694bb2113de9d53af000bfd7f93eeb7e677aff6b2d00c",
+    "qa/parity-acceptance.gotest": "4658b77d33f565c8d744debc2eed13abcd38632c7c36632999446931a13d20aa"
+  },
+  "responsive": {
+    "source": [
+      "InputBar.module.css row/tools/modes/trailing and 560px spacing",
+      "PermissionSelect.module.css 460px glyph-only rule preserving custom-name text",
+      "control-row-layout.ts expanded demand measurement and model glyph",
+      "ConversationRoot.module.css full available card width, 16px side clearance, clamp680..920 +32 max"
+    ],
+    "checks": [
+      "1280px with 280px sidebar and ~576px right pane: unclipped native geometry inside 424px chat",
+      "Long model/custom permission/active Plan inside narrow column",
+      "900px window narrow 215px chat: group wrapping without overlap or clipping",
+      "Pane close restores expanded model, resize remeasures, stable UI schedules no continuous rebuild"
+    ],
+    "method": "Real frozen MyGo headless engine; read-only retained arena x/y/w/h inspection, not clipped Tester.Find bounds",
+    "commands": [
+      "CGO_ENABLED=0 go test . -run ^TestComposer(Narrow|Expands) -count=1 -v"
+    ],
+    "groupsPassed": 2,
+    "subcases": 3,
+    "notQualified": "Native platform compositor and actual screenshot parity require root GUI; no M1 CPU/memory measurement"
+  },
+  "settingsContent": {
+    "routes": {
+      "models": "model-settings",
+      "plugins": "plugins",
+      "agent-presets": "agent-presets"
+    },
+    "entry": "openSettingsSection shared by native rail and sidebar; requested section is captured before owner registration",
+    "layout": "Native modal rail/header/close retained; WK only right Grow1/MinHeight0 content, no enclosing Scroll",
+    "close": "Escape/close clears requested scope and retires pending owner through actual Node RemoteAdapter fixture",
+    "checksPassed": 2,
+    "limits": [
+      "Headless checks qualify native frame, not actual WK platform compositing",
+      "Single compatibility surface: opening Settings leaves earlier main WK page; closing returns native chat without hidden route restore",
+      "Global plugins route in modal remains a partial substitute until original builtin-settings content is selected"
+    ]
+  },
+  "rightPane": {
+    "terminal": "Start card opens original terminal inventory/guide via openCompatAt(terminal,right); does not call createTerminal",
+    "moreTools": "Menu routes only to implemented file/terminal/browser entry points, captured Host/session/generation guard",
+    "notQualified": "No live shell created/attached or typed; exact source Dockkit/pane parity remains open"
+  },
+  "regression": {
+    "goPackages": 3,
+    "goVet": "passed",
+    "qaOverlay": {
+      "passed": 14,
+      "independentCore": 7,
+      "authorOwnedSettingsFiles": 7
+    }
+  },
+  "guiEvidenceBoundary": {
+    "latestRootReview": "qa/parity-gui-round5.1.json",
+    "rootConfirmed": [
+      "scope reload",
+      "native model/permission captions",
+      "automatic completed-session restore",
+      "trajectory read-only search/fold/return"
+    ],
+    "newResponsiveAndSettingsContent": "Not packaged GUI verified yet"
+  },
+  "hostWrites": [],
+  "appBundleModifiedByThisAgent": false
+}

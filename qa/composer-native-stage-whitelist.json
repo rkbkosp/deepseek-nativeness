@@ -1,0 +1,192 @@
+{
+  "createdAt": "2026-11-15T03:38:15.038Z",
+  "requiresRootConfirmation": true,
+  "files": [
+    {
+      "path": "composer_native/.gitignore",
+      "sha256": "c8c8f6a3398afb1b5060f94675305af0e29e35ef0cb14a99f733c35e608cd747",
+      "bytes": 16
+    },
+    {
+      "path": "composer_native/ComposerEditor.swift",
+      "sha256": "394762b5d799381adda6ce419d3edc24e5f04e77b6b657a8d5ca888574988fa2",
+      "bytes": 28024
+    },
+    {
+      "path": "composer_native/HotActivation.swift",
+      "sha256": "1346673e68d4f174e6f0b7d4b2d2e263f6079931ff575f405376919642b848f0",
+      "bytes": 6829
+    },
+    {
+      "path": "composer_native/ReferenceGlyphs.swift",
+      "sha256": "027819f71ad9cc2fba67c335f4c5261ff2d010e549695ff7327b6c9322824388",
+      "bytes": 5076
+    },
+    {
+      "path": "composer_native/SemanticDocument.swift",
+      "sha256": "ec63ee5b4991b7bc175d355235dfaf9e57983f6c9de02edf5222a9dca13cb05f",
+      "bytes": 3733
+    },
+    {
+      "path": "composer_native/backing.go",
+      "sha256": "6e7f196736637733b1800c537facb5fbe7742647c7e32f81499c2887bfd02ef1",
+      "bytes": 721
+    },
+    {
+      "path": "composer_native/backing_test.go",
+      "sha256": "789148b2094d290ec5f556fb296a4a49a59d0aa61c239d6c681914b509c2d47b",
+      "bytes": 975
+    },
+    {
+      "path": "composer_native/document_store.go",
+      "sha256": "2bc99b72fe614fe410d628620bee7b72deed44f911f55c84159a8f7da82e1045",
+      "bytes": 15441
+    },
+    {
+      "path": "composer_native/document_store_prepare_test.go",
+      "sha256": "9001f2f14bed8d9a14347ef4910dbe4f35667009d86f3aac7fa1ef708616880b",
+      "bytes": 13259
+    },
+    {
+      "path": "composer_native/document_store_test.go",
+      "sha256": "406afcb0dc7a3124f4bae0dfcb9e87c19596fed18fcc98866f0ead138569e2d4",
+      "bytes": 10690
+    },
+    {
+      "path": "composer_native/editor.go",
+      "sha256": "2747ffcb5e44f5e914f8973dbe4b9a421ca869da713b67e7918c5ffcef4d3f29",
+      "bytes": 6862
+    },
+    {
+      "path": "composer_native/editor_darwin.go",
+      "sha256": "7fcbfea7f82ccc58efc726282447613364393a1cd304c59cd750d313db6ce1da",
+      "bytes": 7614
+    },
+    {
+      "path": "composer_native/editor_other.go",
+      "sha256": "64cc28da3dc1a149f927325ca877170e712651a0dbb69b01f0da5adb779989fd",
+      "bytes": 515
+    },
+    {
+      "path": "composer_native/editor_test.go",
+      "sha256": "65562efa93d0ed823e82ac7fa2b2f0afee074b3963f89fc0d85046246db1a668",
+      "bytes": 2099
+    },
+    {
+      "path": "composer_native/hot_activation.go",
+      "sha256": "fcf8f13d61a94edd11edb6d8ab260990500b5147ec0f86e85ad4121a26b47f2b",
+      "bytes": 4638
+    },
+    {
+      "path": "composer_native/hot_activation_darwin.go",
+      "sha256": "caf254cf5a8668e402635449b9dace622f684a164957eec19051ee1412358c2d",
+      "bytes": 3532
+    },
+    {
+      "path": "composer_native/hot_activation_darwin_test.go",
+      "sha256": "0699ea1eae02cc0c64a68aea0ad46aab7accca02a5eda94c001a09365dbe03e6",
+      "bytes": 5592
+    },
+    {
+      "path": "composer_native/hot_activation_other.go",
+      "sha256": "6c9750d9da805a495f80dd694d3c79a602c64c5ce5a21c29069234af27ee7c6d",
+      "bytes": 225
+    },
+    {
+      "path": "composer_native/hot_activation_test.go",
+      "sha256": "67671b2b612b66cf180ae4deb6998597bc38778d70bc58cf085a56051a390bfa",
+      "bytes": 3460
+    },
+    {
+      "path": "composer_native/queue_fence_test.go",
+      "sha256": "e6bbd50a5d43065ac165ea6f7d9c25046517042df9e1cff8d6fe41d4ca03572c",
+      "bytes": 2788
+    },
+    {
+      "path": "composer_native/receiver_darwin_test.go",
+      "sha256": "a7af93c8355e00e4e008e625e19b1c988e2253cde8f147c9ae88289b76e8a26e",
+      "bytes": 3687
+    },
+    {
+      "path": "composer_native/semantic.go",
+      "sha256": "5655d9d7a2cbbe0b08d8886eb576f17ca5b1b59c25e688b84795a87ae36bb974",
+      "bytes": 3631
+    },
+    {
+      "path": "qa/checkpoints/go.mod",
+      "sha256": "cbff829d233d23f45d208559155e21d4272f1c04496e35b60e62fa8cf0ab040d",
+      "bytes": 293
+    },
+    {
+      "path": "qa/checkpoints/native-editor-hot-activation-final/manifest.json",
+      "sha256": "99a7b8ad2825ac4eff2722b4a0e99077738780dd552abd23f062116ea9f83f03",
+      "bytes": 2262
+    },
+    {
+      "path": "qa/native-editor-semantic-next/main.swift",
+      "sha256": "d6024f6dba3687f53ae8919fc6a6ed4b7bad9eaf57ca769bd789d5b41eedcfca",
+      "bytes": 16112
+    },
+    {
+      "path": "qa/native-editor-semantic-next/run.sh",
+      "sha256": "4b194fd9bf1628ead1f4b7af9014166c7d3aa2ee2f30929e9c98ad70e24dcd89",
+      "bytes": 343
+    },
+    {
+      "path": "qa/native-editor-hot-next/main.swift",
+      "sha256": "03d7f69c3beb66499860221f35ef2fc1fb2dd9573fae8c92c64c18f1e2f7160f",
+      "bytes": 12314
+    },
+    {
+      "path": "qa/native-editor-hot-next/run.sh",
+      "sha256": "b5bfed242034f6367d952850ad3a26712aa0d76dac45ba60ebafba031ef86b18",
+      "bytes": 333
+    },
+    {
+      "path": "qa/native-editor-hot-activation-review.json",
+      "sha256": "e4fa9ffe0067ed13ee2b33022fe51964d4da8837cdbc050d42e651c43a9690aa",
+      "bytes": 7372
+    },
+    {
+      "path": "qa/native-hot-activation-cross/main.swift",
+      "sha256": "754e885bab778fa7fc2f791d159db94bae9b751f2306ced1f23f08a02b41ba2c",
+      "bytes": 7971
+    },
+    {
+      "path": "qa/native-hot-activation-cross/receiver.gotest",
+      "sha256": "56cc3cda0edde6e0dc3a9f12aa82e6ae8b43a4214b9626e6d1ca90be287987aa",
+      "bytes": 10106
+    },
+    {
+      "path": "qa/native-hot-activation-cross/run.mjs",
+      "sha256": "399d496fb5132d2cd74e0c28426151e36696df1b70aba0c034705335a0b8f782",
+      "bytes": 4911
+    },
+    {
+      "path": "qa/native-hot-activation-cross/review.json",
+      "sha256": "14cb09e35bfd9623800af43136c895944f9bd4a6cdb401966ceb308a56220871",
+      "bytes": 9896
+    },
+    {
+      "path": "qa/native-store-preflight-source-review.json",
+      "sha256": "4bbeafe49791b0c4517a0d52b04e4d8e817e0bade1aff82fe18579cc60d5cd2a",
+      "bytes": 8008
+    },
+    {
+      "path": "qa/native-editor-stage0-root-review.json",
+      "sha256": "3625e1a9286c6fbf5b6bdfe95c3257c17ceee8d3e8c8e24554f327467193e96f",
+      "bytes": 2746
+    },
+    {
+      "path": "qa/composer-native-closure-final.json",
+      "sha256": "01b2eb4b82d85448fd1494e430ae311269e2336c749a7110635c9ed578242faf",
+      "bytes": 9027
+    }
+  ],
+  "sourceSetSha256": "c1f27eb6ba5c54186ca53fb5179a2af77ce01fa1021a7ee6268cbfd6da639b0e",
+  "totalFiles": 36,
+  "totalBytes": 221101,
+  "checkpointPolicy": "Only qa/checkpoints/go.mod plus the small existing hot manifest; no checkpoint copies/results staged.",
+  "overlayPolicy": "native-hot cross/run.mjs regenerates build/overlay.json for its actual checkout path; generated build overlay is not staged.",
+  "commitYet": false
+}

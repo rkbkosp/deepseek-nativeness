@@ -1,0 +1,54 @@
+{
+  "checkedAt": "2026-11-14T14:27:42.448Z",
+  "reviewer": "root",
+  "status": "independent-source-review-and-fixtures-passed-GUI-pending",
+  "authorRecord": "qa/composer-component-results.json",
+  "verifiedInputSourceHashes": {
+    "composer.go": "f41df9aab147c0d74c5187969415d3580226345e0f13a0418fe30e1f88c8c3ae",
+    "composer_state.go": "b2d87cdb1b2a3235f20130fb9920db46a50edfe4d906d0f235c7371b80068b3b",
+    "composer_queue.go": "ebb2c67e239d1e21636482a98cd6fe4f2ad3f7856fdc02182357da65b86527dc",
+    "composer_toolbar.go": "77c8d88820718207199d0c0f77350a043a7f3ebc992fd6d451f60d4b73dd9926",
+    "composer_attachments.go": "c679b7e599ae2c6171b4bdca552a062e4f4a1a3b994949075de76ed5cc97e438",
+    "composer_attachment_view.go": "6ca136f1a99372facb978d6cc2e43f22cc1e9aacc9c3986996f2fb6e0b463ac8",
+    "composer_thumbnail_cache.go": "349ed96faf7d442231aa4ee3de290b0b3a19d91b196fab2496230308d344ca2f",
+    "composer_imageio.go": "acfc8f0ca96482fd0ad31270b141a148000bd970e00cdf5200a46750e4b537f6",
+    "composer_input_slice_test.go": "fa74102323f1be6276208cb0fed372b2547687fbba7aadf9cadaf515dd412607",
+    "composer_responsive_test.go": "20003f65ec4cbaa1293603beeb9c58d6b00a16a1c905b586fec32ea208ac58cc",
+    "composer_test.go": "7a64dbed7088f72fe11c39661df2da18ccc255410b733d96f1575af70fb1bb1d",
+    "qa/composer-wire-fixture.mjs": "a32bf0db9596a35aa6c34ae97657bd9e8f3ae4ffcec2843c26a74b3c74360770"
+  },
+  "sourceHashVerification": "All12 match author frozen record",
+  "checks": [
+    {
+      "command": "CGO_ENABLED=0 go test . -run ^TestComposer -count=1 -v",
+      "groupsPassed": 24,
+      "scope": "Headless real MyGo tester and actual Go→Node RemoteAdapter with fake Host; not native OS UI or live writes"
+    },
+    {
+      "command": "CGO_ENABLED=0 go test . -run ^TestNativeThumbnailBoundsAndPixelOrientation|TestNativeThumbnailRejectsUnboundedCallers|TestImageIODownsamplesTwelveMegapixelsBeforeAllocatingGoRGBA$ -count=1 -v",
+      "groupsPassed": 3,
+      "scope": "Actual local ImageIO invocation, correct pixel orientation, strict1..480 output bound,12MP JPEG-to160 bounded Go heap"
+    }
+  ],
+  "reviewed": [
+    "No complete Go raster decode for composer thumbnail path; ImageIO output only becomes native Bitmap",
+    "24 image/reference/permission/queue/scope/IME scenarios include exact helper carrier, image-only and text+image, unknown receipt retention, late old receipt preserves new draft/attachment",
+    "Decoded thumbnails are lazy and bounded separately from preserved compressed draft payload",
+    "ImageIO native peak/RSS is explicitly not proven by Go MemStats gate"
+  ],
+  "bounds": {
+    "composerThumbnailReservationBytes": 8388608,
+    "railDecodePixelSide": 160,
+    "previewDecodePixelSide": 480,
+    "declaredWorkersPerScope": 2,
+    "transportRequestBytes": 1048576
+  },
+  "remaining": [
+    "Actual GUI image picker/rail/preview and local-draft references/permission picker require packaged checks",
+    "System Pinyin candidate UI and real OS clipboard/drop unverified",
+    "M1/macOS15.8 real launch/full-app performance unverified",
+    "Historical image owner/unary cancellation tests still native work in progress",
+    "Large-image transport and complete gallery remain explicit front-end gaps"
+  ],
+  "remoteHostMutations": []
+}

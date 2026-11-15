@@ -1,0 +1,477 @@
+{
+  "checkedAt": "2026-11-15T03:27:25.391Z",
+  "kind": "read-only untracked package closure inventory, hot source still WIP",
+  "commitAuthorizedNow": false,
+  "stagedByThisReview": false,
+  "sourceModifiedByThisReview": false,
+  "packageCount": 22,
+  "counts": {
+    "metadata": 1,
+    "swift-source": 4,
+    "go-source": 9,
+    "go-test": 8
+  },
+  "git": {
+    "root": "/Volumes/SuperDisk/native-dsh/desktop",
+    "trackedCount": 0,
+    "tracked": [],
+    "untrackedCount": 22,
+    "untracked": [
+      "composer_native/.gitignore",
+      "composer_native/ComposerEditor.swift",
+      "composer_native/HotActivation.swift",
+      "composer_native/ReferenceGlyphs.swift",
+      "composer_native/SemanticDocument.swift",
+      "composer_native/backing.go",
+      "composer_native/backing_test.go",
+      "composer_native/document_store.go",
+      "composer_native/document_store_prepare_test.go",
+      "composer_native/document_store_test.go",
+      "composer_native/editor.go",
+      "composer_native/editor_darwin.go",
+      "composer_native/editor_other.go",
+      "composer_native/editor_test.go",
+      "composer_native/hot_activation.go",
+      "composer_native/hot_activation_darwin.go",
+      "composer_native/hot_activation_darwin_test.go",
+      "composer_native/hot_activation_other.go",
+      "composer_native/hot_activation_test.go",
+      "composer_native/queue_fence_test.go",
+      "composer_native/receiver_darwin_test.go",
+      "composer_native/semantic.go"
+    ],
+    "alreadyTrackedModuleFiles": [
+      "go.mod",
+      "go.sum"
+    ],
+    "warning": "Partial Store-only commit is not buildable in a clean checkout: Snapshot/Run/NormalizeRuns/ProjectRuns/SemanticDigest and platform Editor dependencies remain in the same untracked package. Wait root joint approval then select the complete file list once."
+  },
+  "entries": [
+    {
+      "path": "composer_native/.gitignore",
+      "bytes": 16,
+      "observedSha256": "c8c8f6a3398afb1b5060f94675305af0e29e35ef0cb14a99f733c35e608cd747",
+      "kind": "metadata",
+      "purpose": "Exclude generated build and dylib artifacts.",
+      "provenance": "Proof3/source semantic baseline",
+      "status": "exact accepted baseline source retained",
+      "proof3": {
+        "sha256": "c8c8f6a3398afb1b5060f94675305af0e29e35ef0cb14a99f733c35e608cd747",
+        "matches": true
+      },
+      "semanticF8": {
+        "sha256": "c8c8f6a3398afb1b5060f94675305af0e29e35ef0cb14a99f733c35e608cd747",
+        "matches": true
+      },
+      "storePreflight": null
+    },
+    {
+      "path": "composer_native/ComposerEditor.swift",
+      "bytes": 28024,
+      "observedSha256": "394762b5d799381adda6ce419d3edc24e5f04e77b6b657a8d5ca888574988fa2",
+      "kind": "swift-source",
+      "purpose": "AppKit text surface, input/undo/scope/callback ABI; hot activation integration modifies this baseline.",
+      "provenance": "Proof3 baseline plus hot-activation delta",
+      "status": "hot WIP: hash is observed only; await final author+root independent review",
+      "proof3": {
+        "sha256": "c5cba826a9dc281f0819d9521a74a659156428d6d21ac5a52cd8c47ddbf2c36b",
+        "matches": false
+      },
+      "semanticF8": {
+        "sha256": "e6fb900e6f85cd0546bd2e0acdb7645e392722bf01f8fbe254d18c1a5dc949a4",
+        "matches": false
+      },
+      "storePreflight": null
+    },
+    {
+      "path": "composer_native/HotActivation.swift",
+      "bytes": 6829,
+      "observedSha256": "1346673e68d4f174e6f0b7d4b2d2e263f6079931ff575f405376919642b848f0",
+      "kind": "swift-source",
+      "purpose": "Bounded header/invalid serialization and retained-document activation; new hot slice.",
+      "provenance": "new hot-activation slice",
+      "status": "hot WIP: not commit-approved yet",
+      "proof3": null,
+      "semanticF8": null,
+      "storePreflight": null
+    },
+    {
+      "path": "composer_native/ReferenceGlyphs.swift",
+      "bytes": 5076,
+      "observedSha256": "027819f71ad9cc2fba67c335f4c5261ff2d010e549695ff7327b6c9322824388",
+      "kind": "swift-source",
+      "purpose": "Built-in reference vector glyphs, no external asset dependency.",
+      "provenance": "Proof3/source semantic baseline",
+      "status": "exact accepted baseline source retained",
+      "proof3": {
+        "sha256": "027819f71ad9cc2fba67c335f4c5261ff2d010e549695ff7327b6c9322824388",
+        "matches": true
+      },
+      "semanticF8": {
+        "sha256": "027819f71ad9cc2fba67c335f4c5261ff2d010e549695ff7327b6c9322824388",
+        "matches": true
+      },
+      "storePreflight": null
+    },
+    {
+      "path": "composer_native/SemanticDocument.swift",
+      "bytes": 3733,
+      "observedSha256": "ec63ee5b4991b7bc175d355235dfaf9e57983f6c9de02edf5222a9dca13cb05f",
+      "kind": "swift-source",
+      "purpose": "Semantic run normalization, digest, prefix removal, document/Undo ownership.",
+      "provenance": "Proof3/source semantic baseline",
+      "status": "exact accepted baseline source retained",
+      "proof3": {
+        "sha256": "ec63ee5b4991b7bc175d355235dfaf9e57983f6c9de02edf5222a9dca13cb05f",
+        "matches": true
+      },
+      "semanticF8": {
+        "sha256": "ec63ee5b4991b7bc175d355235dfaf9e57983f6c9de02edf5222a9dca13cb05f",
+        "matches": true
+      },
+      "storePreflight": null
+    },
+    {
+      "path": "composer_native/backing.go",
+      "bytes": 721,
+      "observedSha256": "6e7f196736637733b1800c537facb5fbe7742647c7e32f81499c2887bfd02ef1",
+      "kind": "go-source",
+      "purpose": "Opaque native backing compositing over captured Go host color.",
+      "provenance": "Proof3/source semantic baseline",
+      "status": "exact accepted baseline source retained",
+      "proof3": {
+        "sha256": "6e7f196736637733b1800c537facb5fbe7742647c7e32f81499c2887bfd02ef1",
+        "matches": true
+      },
+      "semanticF8": null,
+      "storePreflight": null
+    },
+    {
+      "path": "composer_native/backing_test.go",
+      "bytes": 975,
+      "observedSha256": "789148b2094d290ec5f556fb296a4a49a59d0aa61c239d6c681914b509c2d47b",
+      "kind": "go-test",
+      "purpose": "Local compositing invariants.",
+      "provenance": "Proof3/source semantic baseline",
+      "status": "exact accepted baseline source retained",
+      "proof3": {
+        "sha256": "789148b2094d290ec5f556fb296a4a49a59d0aa61c239d6c681914b509c2d47b",
+        "matches": true
+      },
+      "semanticF8": null,
+      "storePreflight": null
+    },
+    {
+      "path": "composer_native/document_store.go",
+      "bytes": 15441,
+      "observedSha256": "2bc99b72fe614fe410d628620bee7b72deed44f911f55c84159a8f7da82e1045",
+      "kind": "go-source",
+      "purpose": "Semantic draft/capture/fence/retire plus read-only accepted preparation and CAS commit.",
+      "provenance": "Store preflight stage0",
+      "status": "matches frozen Store source; root independent3 public API checks passed",
+      "proof3": {
+        "sha256": "527f8363b1e2ec0326d6bfffca9d0cb9f02484968fd9469d8bd25505cc383971",
+        "matches": false
+      },
+      "semanticF8": {
+        "sha256": "527f8363b1e2ec0326d6bfffca9d0cb9f02484968fd9469d8bd25505cc383971",
+        "matches": false
+      },
+      "storePreflight": {
+        "sha256": "2bc99b72fe614fe410d628620bee7b72deed44f911f55c84159a8f7da82e1045",
+        "matches": true
+      }
+    },
+    {
+      "path": "composer_native/document_store_prepare_test.go",
+      "bytes": 13259,
+      "observedSha256": "9001f2f14bed8d9a14347ef4910dbe4f35667009d86f3aac7fa1ef708616880b",
+      "kind": "go-test",
+      "purpose": "Store preflight, replay, binding/ABA, alias and deferred-receipt tests.",
+      "provenance": "Store preflight stage0",
+      "status": "matches frozen Store source; root independent3 public API checks passed",
+      "proof3": null,
+      "semanticF8": null,
+      "storePreflight": {
+        "sha256": "9001f2f14bed8d9a14347ef4910dbe4f35667009d86f3aac7fa1ef708616880b",
+        "matches": true
+      }
+    },
+    {
+      "path": "composer_native/document_store_test.go",
+      "bytes": 10690,
+      "observedSha256": "406afcb0dc7a3124f4bae0dfcb9e87c19596fed18fcc98866f0ead138569e2d4",
+      "kind": "go-test",
+      "purpose": "Semantic draft/receipt/retention/digest baseline tests; actual Swift digest optional env gate.",
+      "provenance": "Proof3/source semantic baseline",
+      "status": "exact accepted baseline source retained",
+      "proof3": {
+        "sha256": "406afcb0dc7a3124f4bae0dfcb9e87c19596fed18fcc98866f0ead138569e2d4",
+        "matches": true
+      },
+      "semanticF8": {
+        "sha256": "406afcb0dc7a3124f4bae0dfcb9e87c19596fed18fcc98866f0ead138569e2d4",
+        "matches": true
+      },
+      "storePreflight": null
+    },
+    {
+      "path": "composer_native/editor.go",
+      "bytes": 6744,
+      "observedSha256": "690ab33549a75dfac85529310b790d40aaf0a7fbd2fabd61f83f795878829a9c",
+      "kind": "go-source",
+      "purpose": "Public snapshot/run/command/UTF16 validation; hot adds bounded-activation protocol fields if needed.",
+      "provenance": "Proof3/source semantic baseline",
+      "status": "exact accepted baseline source retained",
+      "proof3": {
+        "sha256": "690ab33549a75dfac85529310b790d40aaf0a7fbd2fabd61f83f795878829a9c",
+        "matches": true
+      },
+      "semanticF8": {
+        "sha256": "690ab33549a75dfac85529310b790d40aaf0a7fbd2fabd61f83f795878829a9c",
+        "matches": true
+      },
+      "storePreflight": null
+    },
+    {
+      "path": "composer_native/editor_darwin.go",
+      "bytes": 7614,
+      "observedSha256": "7fcbfea7f82ccc58efc726282447613364393a1cd304c59cd750d313db6ce1da",
+      "kind": "go-source",
+      "purpose": "Purego AppKit ABI loader and monotonic scoped invalid-frame receiver; hot source changes binding/ack handling.",
+      "provenance": "Proof3 baseline plus hot-activation delta",
+      "status": "hot WIP: hash is observed only; await final author+root independent review",
+      "proof3": {
+        "sha256": "4d3b711e193daa5a8f2372bd19066e3528346e156cc17ff87f4cd236313cb3f3",
+        "matches": false
+      },
+      "semanticF8": {
+        "sha256": "4d3b711e193daa5a8f2372bd19066e3528346e156cc17ff87f4cd236313cb3f3",
+        "matches": false
+      },
+      "storePreflight": null
+    },
+    {
+      "path": "composer_native/editor_other.go",
+      "bytes": 515,
+      "observedSha256": "64cc28da3dc1a149f927325ca877170e712651a0dbb69b01f0da5adb779989fd",
+      "kind": "go-source",
+      "purpose": "Explicit unsupported-platform editor implementation.",
+      "provenance": "Proof3/source semantic baseline",
+      "status": "exact accepted baseline source retained",
+      "proof3": {
+        "sha256": "64cc28da3dc1a149f927325ca877170e712651a0dbb69b01f0da5adb779989fd",
+        "matches": true
+      },
+      "semanticF8": {
+        "sha256": "64cc28da3dc1a149f927325ca877170e712651a0dbb69b01f0da5adb779989fd",
+        "matches": true
+      },
+      "storePreflight": null
+    },
+    {
+      "path": "composer_native/editor_test.go",
+      "bytes": 2099,
+      "observedSha256": "65562efa93d0ed823e82ac7fa2b2f0afee074b3963f89fc0d85046246db1a668",
+      "kind": "go-test",
+      "purpose": "Coordinate and snapshot admission tests.",
+      "provenance": "Proof3/source semantic baseline",
+      "status": "exact accepted baseline source retained",
+      "proof3": {
+        "sha256": "65562efa93d0ed823e82ac7fa2b2f0afee074b3963f89fc0d85046246db1a668",
+        "matches": true
+      },
+      "semanticF8": {
+        "sha256": "65562efa93d0ed823e82ac7fa2b2f0afee074b3963f89fc0d85046246db1a668",
+        "matches": true
+      },
+      "storePreflight": null
+    },
+    {
+      "path": "composer_native/hot_activation.go",
+      "bytes": 4638,
+      "observedSha256": "fcf8f13d61a94edd11edb6d8ab260990500b5147ec0f86e85ad4121a26b47f2b",
+      "kind": "go-source",
+      "purpose": "Portable bounded activation request/ack validation and known rejection semantics.",
+      "provenance": "new hot-activation slice",
+      "status": "hot WIP: not commit-approved yet",
+      "proof3": null,
+      "semanticF8": null,
+      "storePreflight": null
+    },
+    {
+      "path": "composer_native/hot_activation_darwin.go",
+      "bytes": 3532,
+      "observedSha256": "caf254cf5a8668e402635449b9dace622f684a164957eec19051ee1412358c2d",
+      "kind": "go-source",
+      "purpose": "Existing native binding CAS and bounded hot acknowledgement adoption.",
+      "provenance": "new hot-activation slice",
+      "status": "hot WIP: not commit-approved yet",
+      "proof3": null,
+      "semanticF8": null,
+      "storePreflight": null
+    },
+    {
+      "path": "composer_native/hot_activation_darwin_test.go",
+      "bytes": 5592,
+      "observedSha256": "0699ea1eae02cc0c64a68aea0ad46aab7accca02a5eda94c001a09365dbe03e6",
+      "kind": "go-test",
+      "purpose": "Darwin receiver/replay/invalid activation tests.",
+      "provenance": "new hot-activation slice",
+      "status": "hot WIP: not commit-approved yet",
+      "proof3": null,
+      "semanticF8": null,
+      "storePreflight": null
+    },
+    {
+      "path": "composer_native/hot_activation_other.go",
+      "bytes": 225,
+      "observedSha256": "6c9750d9da805a495f80dd694d3c79a602c64c5ce5a21c29069234af27ee7c6d",
+      "kind": "go-source",
+      "purpose": "Unsupported-platform hot activation stub.",
+      "provenance": "new hot-activation slice",
+      "status": "hot WIP: not commit-approved yet",
+      "proof3": null,
+      "semanticF8": null,
+      "storePreflight": null
+    },
+    {
+      "path": "composer_native/hot_activation_test.go",
+      "bytes": 3203,
+      "observedSha256": "c1c021831ee3cae8b03de143a45e0077fccd2b9aff39f8a8458d20e9fa310a66",
+      "kind": "go-test",
+      "purpose": "Portable hot activation protocol tests.",
+      "provenance": "new hot-activation slice",
+      "status": "hot WIP: not commit-approved yet",
+      "proof3": null,
+      "semanticF8": null,
+      "storePreflight": null
+    },
+    {
+      "path": "composer_native/queue_fence_test.go",
+      "bytes": 2788,
+      "observedSha256": "e6bbd50a5d43065ac165ea6f7d9c25046517042df9e1cff8d6fe41d4ca03572c",
+      "kind": "go-test",
+      "purpose": "Actual Darwin Editor producer -> reordered Go Store queue regression.",
+      "provenance": "Proof3/source semantic baseline",
+      "status": "exact accepted baseline source retained",
+      "proof3": {
+        "sha256": "e6bbd50a5d43065ac165ea6f7d9c25046517042df9e1cff8d6fe41d4ca03572c",
+        "matches": true
+      },
+      "semanticF8": {
+        "sha256": "e6bbd50a5d43065ac165ea6f7d9c25046517042df9e1cff8d6fe41d4ca03572c",
+        "matches": true
+      },
+      "storePreflight": null
+    },
+    {
+      "path": "composer_native/receiver_darwin_test.go",
+      "bytes": 3687,
+      "observedSha256": "a7af93c8355e00e4e008e625e19b1c988e2253cde8f147c9ae88289b76e8a26e",
+      "kind": "go-test",
+      "purpose": "Darwin invalid receiver scope/revision/fence recovery tests.",
+      "provenance": "Proof3/source semantic baseline",
+      "status": "exact accepted baseline source retained",
+      "proof3": {
+        "sha256": "a7af93c8355e00e4e008e625e19b1c988e2253cde8f147c9ae88289b76e8a26e",
+        "matches": true
+      },
+      "semanticF8": {
+        "sha256": "a7af93c8355e00e4e008e625e19b1c988e2253cde8f147c9ae88289b76e8a26e",
+        "matches": true
+      },
+      "storePreflight": null
+    },
+    {
+      "path": "composer_native/semantic.go",
+      "bytes": 3631,
+      "observedSha256": "5655d9d7a2cbbe0b08d8886eb576f17ca5b1b59c25e688b84795a87ae36bb974",
+      "kind": "go-source",
+      "purpose": "Pure-Go run normalization, SHA256 semantic digest and exact accepted prefix removal.",
+      "provenance": "Proof3/source semantic baseline",
+      "status": "exact accepted baseline source retained",
+      "proof3": {
+        "sha256": "5655d9d7a2cbbe0b08d8886eb576f17ca5b1b59c25e688b84795a87ae36bb974",
+        "matches": true
+      },
+      "semanticF8": {
+        "sha256": "5655d9d7a2cbbe0b08d8886eb576f17ca5b1b59c25e688b84795a87ae36bb974",
+        "matches": true
+      },
+      "storePreflight": null
+    }
+  ],
+  "excluded": {
+    "ignoredGeneratedArtifacts": [
+      "composer_native/build/libNativeComposer.dylib"
+    ],
+    "patterns": [
+      "composer_native/build/**",
+      "composer_native/**/*.dylib",
+      "qa/**",
+      "**/temp/**",
+      "all App/Proof bundles and manifests"
+    ],
+    "policy": "Only .gitignore plus explicit .go/.swift source and tests belong to this package commit. Never git add -f the ignored build output or broadly stage the workspace."
+  },
+  "sourceAcceptanceRecords": {
+    "semantic": {
+      "manifest": "qa/checkpoints/native-editor-semantic-stage3-queue-fix/manifest.json",
+      "sha256": "f8e450e8fb1e1e70aa6156321572d1d06b4d0f096df7324fccda3599539b5192",
+      "review": "qa/native-semantic-cross-final-review.json",
+      "scope": "Independent source/AppKit semantic gates, not main-composer integration."
+    },
+    "proof3": {
+      "manifest": "qa/native-editor-themed-next3/build/manifest.json",
+      "sha256": "854c02cf325367e1b1aa0906e89f08ea1aca58f4dde7bb2b36cddad430de819b",
+      "review": "qa/native-editor-theme3-gui-review.json",
+      "scope": "Actual limited theme/chip/focus fixture subchecks on fixed independent proof. Production default remains old input."
+    },
+    "store": {
+      "manifest": "qa/checkpoints/native-store-preflight-final/manifest.json",
+      "sha256": "6aa2702633b6dd66e115a68854ff68fe5a57d4afd08958f14a2c0db70c214ba8",
+      "author": "qa/native-store-preflight-source-review.json",
+      "root": "qa/native-store-preflight-root-review.json",
+      "rootCommit": "f9b676b3c2c71503381cc20624784975b75985e8",
+      "scope": "Local Store primitive only; late-receipt native body/undo reconciliation pending."
+    },
+    "hot": {
+      "status": "author + independent review in progress; no final source acceptance/hash yet",
+      "requiredBeforeCommit": "Final author source manifest and root/independent hot ack, replay, lazy attribute fixing/cold-restore counterexample results."
+    }
+  },
+  "dependencies": {
+    "module": "go.mod/go.sum already tracked; Go1.27.3",
+    "localReplace": "github.com/egoist/mygo => ../mygo; clean checkout test environment must provide pinned read-only sibling MyGo ec96dbe0c47717f42d8484a36b4f2e4eaf32e8f0, not silently fetch an unrelated framework.",
+    "directDarwinGo": [
+      "github.com/ebitengine/purego",
+      "github.com/egoist/mygo",
+      "github.com/egoist/mygo/native"
+    ],
+    "swift": [
+      "All4 component .swift files compiled together after hot READY; AppKit/Foundation/CryptoKit/CoreFoundation system modules.",
+      "No QA Probe.swift/test harness, generated dylib, copied private Host data, external reference image asset or node_modules belongs to component closure."
+    ],
+    "normalApplicationImport": "Current normal app does not import composer_native. Adding source package alone cannot enable it or cause dylib load; loading occurs only via explicit New(path).",
+    "goTests": "No shipped dylib needed for pure-Go contract tests. TestGoDigestMatchesActualSwiftSnapshots explicitly skips unless NATIVE_EDITOR_SWIFT_RESULTS points to independently produced exact-source AppKit results."
+  },
+  "prospectiveGates": {
+    "now": "Do not compile moving hot WIP or stage/commit yet. Only prepare this inventory.",
+    "afterReady": [
+      "Verify every selected source hash against final joint manifest, no unexplained extra/unclassified source.",
+      "CGO_ENABLED=0 go test -count=1 -mod=readonly ./composer_native",
+      "CGO_ENABLED=0 go vet -mod=readonly ./composer_native",
+      "Run root public Store overlay plus independent hot protocol/actual AppKit gate using final exact Swift source; optional Swift digest gate must not be called passed while skipped.",
+      "Compile source-only dylib into a NEW QA build directory with swiftc -swift-version5 -target arm64-apple-macos15.8 and component .swift files only. No App/Proof rebuild or GUI here.",
+      "After one root-approved complete package commit, verify clean exported checkout of that commit has all selected files; provide pinned ../mygo explicitly; repeat -mod=readonly Go test/vet with no untracked source fallback."
+    ],
+    "nonDarwin": "Product target is macOS15.8+. !darwin runtime stubs are persisted. Existing queue_fence_test.go uses private Darwin Editor fields without a Darwin build tag, so do not claim cross-platform go test from stub presence; separate portability cleanup if required, not a blocker for macOS-only target.",
+    "selection": "Use explicit approved file whitelist only after hot final hashes/root joint acceptance. Confirm git staged names match selected package closure and permitted report files; no App/Proof/build/old manifest staged. Do not partialcommit while package baseline untracked."
+  },
+  "pendingEndToEnd": [
+    "Existing accepted Store request vs retained native prefix needs departure baseline and native CAS/cut-undo reconciliation on hot activation; never revive sent text or delete a newly retyped occurrence.",
+    "Main production adapter, real clipboard PNG/drop, dynamic height, physical IME, overlapping WK/native focus, two-window public NativeView release remain separate gates.",
+    "No M1Air/native RSS/GPU/full app performance or macOS15.8 device qualification inferred from package compile."
+  ]
+}

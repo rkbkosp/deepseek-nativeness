@@ -1,0 +1,120 @@
+{
+  "checkedAt": "2026-11-14T14:23:42.800Z",
+  "status": "AUTHOR SELF-TEST PASSED; INDEPENDENT GUI PARITY PENDING",
+  "authorship": "acceptance_audit implemented this component; these checks are not independent acceptance",
+  "sourceHashes": {
+    "composer.go": "f41df9aab147c0d74c5187969415d3580226345e0f13a0418fe30e1f88c8c3ae",
+    "composer_state.go": "b2d87cdb1b2a3235f20130fb9920db46a50edfe4d906d0f235c7371b80068b3b",
+    "composer_queue.go": "ebb2c67e239d1e21636482a98cd6fe4f2ad3f7856fdc02182357da65b86527dc",
+    "composer_toolbar.go": "77c8d88820718207199d0c0f77350a043a7f3ebc992fd6d451f60d4b73dd9926",
+    "composer_attachments.go": "c679b7e599ae2c6171b4bdca552a062e4f4a1a3b994949075de76ed5cc97e438",
+    "composer_attachment_view.go": "6ca136f1a99372facb978d6cc2e43f22cc1e9aacc9c3986996f2fb6e0b463ac8",
+    "composer_thumbnail_cache.go": "349ed96faf7d442231aa4ee3de290b0b3a19d91b196fab2496230308d344ca2f",
+    "composer_imageio.go": "acfc8f0ca96482fd0ad31270b141a148000bd970e00cdf5200a46750e4b537f6",
+    "composer_input_slice_test.go": "fa74102323f1be6276208cb0fed372b2547687fbba7aadf9cadaf515dd412607",
+    "composer_responsive_test.go": "20003f65ec4cbaa1293603beeb9c58d6b00a16a1c905b586fec32ea208ac58cc",
+    "composer_test.go": "7a64dbed7088f72fe11c39661df2da18ccc255410b733d96f1575af70fb1bb1d",
+    "qa/composer-wire-fixture.mjs": "a32bf0db9596a35aa6c34ae97657bd9e8f3ae4ffcec2843c26a74b3c74360770"
+  },
+  "commands": [
+    {
+      "command": "CGO_ENABLED=0 go test ./...",
+      "exitCode": 0,
+      "packagesPassed": 3
+    },
+    {
+      "command": "CGO_ENABLED=0 go test . -run ^TestComposer -count=1 -v",
+      "exitCode": 0,
+      "testGroups": 24,
+      "extraSubtests": {
+        "busyPolicy": 5,
+        "completionCaretUndoRedo": 3
+      }
+    },
+    {
+      "command": "go vet ./...",
+      "exitCode": 0
+    }
+  ],
+  "coverage": [
+    "Framework marked-text Compose -> candidate Enter/CmdEnter dispatch nothing and do not leak window shortcut; Type commits actual editor composition; ShiftEnter newline; subsequent Enter sends; repeat does not send",
+    "Idle Enter/CmdEnter queue; busy Enter preference and CmdEnter opposite; scoped Go -> actual RemoteAdapter -> mock Host prompt envelopes",
+    "Sequenced authoritative projection values, current model/catalog/default reasoning, permission names; stale asOfSeq cannot overwrite newer values; missing Next/inbox values clear old state",
+    "Quoted Unicode file/directory mentions, unsafe quote/control rejection, text after caret preserved, keyboard completion caret and independent Undo/Redo step",
+    "Unknown command receipt preserves draft/stable intent and cannot redispatch with another key",
+    "Permission risk choices do not write before confirmation; ordinary /permission selection uses actual command writer",
+    "Queue edit and accelerated empty-draft sequential steering use session/updateQueue with original item identity",
+    "Accepted typed slash clears only captured AccountScope/HostID/SessionID/draftKey and still-equal text; another Host/account same-text draft survives",
+    "Unfulfilled client effects /export /model /file bare /feedback bare /permission do not dispatch or consume drafts; permission parameter picker is a separately implemented branch; valid Host argument forms are distinct"
+  ],
+  "authorImplementation": [
+    "Native original-source card spacing and default normal-weight calibration",
+    "Authoritative model/permission labels; agentPreset roster label and projected Plan chip",
+    "On-demand original model-menu WK popover bound to composer and owner lifecycle",
+    "Host slash text completion; quoted @file/path completion; native queue edit/remove/steer controls",
+    "Full-access and Auto risk acknowledgment before permission command"
+  ],
+  "remaining": [
+    "Independent actual .app composer/model popover screenshots and interactions await root",
+    "System macOS Pinyin candidate UI has not been tested; framework composition fixture is not OS IME acceptance",
+    "Permission parameter picker is implemented and fixture-qualified. Other rich slash claim-chip/parameter branches and client-only Model/Feedback effects remain incomplete; native model/permission controls are separate",
+    "Generic staged-file attachment receipt remains unavailable through frozen Remote; picture-only inline carrier implemented with strict current Host limits and 1MiB local frame bound. Rich claim-chip/reference selection presentation remains incomplete",
+    "Usage/context statistics footer reserves source height but does not invent readings",
+    "Full shortcut/focus/selection/a11y and exact visual parity remain open",
+    "All Host mutations here are mocked fixtures; no live prompt/cancel/approval/queue/settings/model/permission/file/terminal write occurred",
+    "No M1 memory/CPU acceptance or real running stream qualification is implied"
+  ],
+  "boundarySources": {
+    "file": "deepseek-harness/packages/client/ui-conversation/src/client/apply.ts:312",
+    "model": "deepseek-harness/packages/client/ui-model-selection/src/client/index.ts:130",
+    "feedback": "deepseek-harness/packages/client/ui-message-feedback/src/client/index.ts:133",
+    "export": "deepseek-harness/packages/session-query/session-log-export/src/index.ts:81",
+    "plan": "deepseek-harness/packages/plan/plan-mode/src/index.ts:237",
+    "submission": "deepseek-harness/packages/client/ui-conversation/src/client/input/submission-policy.ts",
+    "mentions": "deepseek-harness/packages/context/file-reference/src/grammar.ts"
+  },
+  "inputSlice": {
+    "status": "AUTHOR FIXTURE PASSED; LIVE WRITES AND INDEPENDENT GUI NOT PERFORMED",
+    "cut": [
+      "Canonical Host @session mention candidates; scoped file completion",
+      "Six-field authoritative Host image limits; image-only and text+inline images through actual RemoteAdapter",
+      "Native image picker, framework PNG clipboard paste, local file drop, rail/remove/lightbox",
+      "Visible-only 160px ImageIO thumbnails, two workers, 8MiB reservation LRU, session-exit epoch retirement; one 480px lightbox",
+      "Native permission command parameter picker with accepted-only captured draft settlement",
+      "Projected queue edit/remove/steer and accelerated policy"
+    ],
+    "crossLayerTests": [
+      "TestComposerInlineImagesCrossActualRemoteAdapterAndRetainUnknownDraft",
+      "TestComposerLateImageReceiptKeepsNewTextAndFreshAttachmentThroughActualHelper",
+      "TestComposerSessionReferencesUseHostMentionAndDoNotQueryInsideQuotedPath",
+      "TestComposerPermissionParameterPickerExecutesAndConsumesOnlyAcceptedDraft",
+      "TestComposerQueueButtonsEditRemoveAndSteerThroughActualBridge"
+    ],
+    "memoryLimit": "8MiB is conservative retained CPU+GPU/upload reservation, not measured RSS. ImageIO 12MP downsample test is native author evidence, not M1 or native peak-memory qualification.",
+    "transportLimitBytes": 1048576,
+    "ordinaryFiles": "Frozen Remote lacks same-session staged file receipt carrier; never substitute workspace path",
+    "osTarget": "macOS >=15.8, target is user-selected and not minimum-version test proof"
+  },
+  "gui5SourceRepair": {
+    "status": "OBSERVED GUI FAILURE; SOURCE FIX ONLY; ROOT GUI RETEST REQUIRED",
+    "observedBuild": "9244",
+    "evidence": [
+      "/tmp/native-dsh-parity/60-native-core5-chat.png",
+      "/tmp/native-dsh-parity/60-native-core5-chat.ax.txt"
+    ],
+    "findings": [
+      "Initial scoped reads raced helper openSession and left a persistent stale-context footer",
+      "Native model trigger incorrectly appended provider group Magpie and omitted provider-default effort caption"
+    ],
+    "sourceRepairs": [
+      "Rendering now creates readless scope; successful openSession or explicit refresh starts catalog/projection reads",
+      "Reload readGeneration discards old callbacks even for the same Host/session and clears previous read errors",
+      "Model trigger follows original ModelSelect: model.name only, provider-default Default, named/raw retained efforts"
+    ],
+    "regressions": [
+      "TestComposerRenderingNewNavigationTargetDoesNotReadBeforePeerOpen",
+      "TestComposerFreshReloadRejectsLateStaleReadError",
+      "TestComposerModelTriggerDoesNotAppendProviderAndKeepsDefaultEffort"
+    ]
+  }
+}
