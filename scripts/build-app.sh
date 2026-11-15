@@ -40,9 +40,21 @@ if [ "${1:-}" = "--use-gui9-forced-assets" ]; then
   bundle_name="Native DSH Remote Anchor QA GUI9"
   bundle_id="cn.rkbkosp.native-dsh.remote.anchor-qa"
 fi
+if [ "${1:-}" = "--use-gui10-assets" ]; then
+  assets="dist-anchor-reflow-next"
+  remote_assets="dist-export-next"
+  bundle="build/Native DSH Remote GUI10.app"
+fi
+if [ "${1:-}" = "--use-gui10-forced-assets" ]; then
+  assets="dist-anchor-reflow-forced-test"
+  remote_assets="dist-export-next"
+  bundle="build/Native DSH Remote Anchor QA GUI10.app"
+  bundle_name="Native DSH Remote Anchor QA GUI10"
+  bundle_id="cn.rkbkosp.native-dsh.remote.anchor-qa"
+fi
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources/remote"
 case "${1:-}" in
-  --use-built-assets|--use-next-assets|--use-perf-assets|--use-layout-assets|--use-forced-layout-assets|--use-gui9-assets|--use-gui9-forced-assets) ;;
+  --use-built-assets|--use-next-assets|--use-perf-assets|--use-layout-assets|--use-forced-layout-assets|--use-gui9-assets|--use-gui9-forced-assets|--use-gui10-assets|--use-gui10-forced-assets) ;;
   *) npm run --prefix remote build; npm run --prefix compat build ;;
 esac
 CGO_ENABLED=0 go build -buildvcs=false -trimpath -tags mygo_noinspector -ldflags '-s -w -X github.com/egoist/mygo.production=1' -o "$app/Contents/MacOS/native-dsh" .
