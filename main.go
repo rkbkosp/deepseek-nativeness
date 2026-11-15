@@ -14,6 +14,9 @@ import (
 )
 
 func main() {
+	if !mygo.App.RequestSingleInstanceLock() {
+		return
+	}
 	demo := flag.Bool("demo", false, "show clearly labeled local UI replay; never connects")
 	helper := flag.String("helper", "", "path to client-only Remote helper; bundled helper by default")
 	capture := flag.String("capture", "", "capture native UI PNG after startup")
@@ -22,6 +25,8 @@ func main() {
 	phase := flag.Duration("animation-time", -1, "freeze running indicator at elapsed duration (QA only)")
 	running := flag.Int("demo-running", 2, "running session count in explicit demo (QA only)")
 	hideSidebar := flag.Bool("hide-sidebar", false, "start with sidebar collapsed (QA only)")
+	localRuntime := flag.Bool("local", false, "start the bundled local dsh runtime and show the served web client")
+	captureAfter := flag.Duration("capture-after", 0, "delay before --capture (QA only)")
 	theme := flag.String("theme", "", "client appearance: system, light, dark")
 	windowDiagnostics := flag.String("window-diagnostics", "", "write this client's own window visibility and bounds after startup")
 	document := flag.String("demo-document", "", "explicit demo only: long/table/images/structured native render regression")
@@ -53,7 +58,7 @@ func main() {
 			id := fmt.Sprintf("demo-%d", i)
 			title := fmt.Sprintf("远程会话 %d · 界面回放", i+1)
 			if i == 0 {
-				title = "Native DSH Remote · 界面回放"
+				title = productName + " · 界面回放"
 				a.sessionID = id
 				a.current.SessionID = id
 			}
@@ -62,17 +67,23 @@ func main() {
 		a.current.Running = *running > 0
 		a.applyDemoDocument(*document)
 	}
-	mygo.App.SetName("Native DSH Remote")
+	mygo.App.SetName(productName)
 	// Set the app's AppKit appearance before its first window/material exists.
 	// Rendering tokens alone do not change native vibrancy or title controls.
 	mygo.Theme.SetSource(nativeAppearanceSource(a.uiPrefs.Theme))
 	mygo.App.WhenReady(func() {
 		a.effectiveDark = mygo.Theme.IsDark()
 		mygo.Theme.OnUpdated(func() { a.update(func() { a.effectiveDark = mygo.Theme.IsDark() }) })
-		a.win = mygo.NewWindow(mygo.WindowOptions{Title: "Native DSH Remote", Width: 1280, Height: 820, MinWidth: 780, MinHeight: 560, TitleBarStyle: mygo.TitleBarHiddenInset, Transparent: true, Vibrancy: mygo.VibrancySidebar, BackgroundColor: "#00000000", Content: ui.View(a.view)})
+		// The bundle supplies the same .icns to Finder; this covers launches
+		// that are not a packaged .app (go run, QA binaries).
+		if err := mygo.App.Dock.SetIcon(appIconPNG); err != nil {
+			log.Printf("app icon: %v", err)
+		}
+		a.win = mygo.NewWindow(mygo.WindowOptions{Title: productName, Width: 1280, Height: 820, MinWidth: 780, MinHeight: 560, TitleBarStyle: mygo.TitleBarHiddenInset, Transparent: true, Vibrancy: mygo.VibrancySidebar, BackgroundColor: "#00000000", Content: ui.View(a.view)})
 		// Show after assigning the handle. This supported call avoids depending
 		// on the deferred first-show callback or a later capture/getter.
 		a.win.Show()
+		a.installShell(*exitAfter > 0)
 		mygo.App.Focus()
 		a.win.Focus()
 		a.win.OnFocus(func() { a.win.Invalidate() })
@@ -86,7 +97,9 @@ func main() {
 				_ = a.client.Close()
 			}
 		})
-		if !a.demo {
+		if *localRuntime {
+			a.startLocalRuntime()
+		} else if !a.demo {
 			a.startBridge(nodeExecutable(), []string{resolveHelper(*helper)})
 		}
 		if *windowDiagnostics != "" {
@@ -112,8 +125,12 @@ func main() {
 			}()
 		}
 		if *capture != "" {
+			delay := time.Second
+			if *captureAfter > 0 {
+				delay = *captureAfter
+			}
 			go func() {
-				time.Sleep(time.Second)
+				time.Sleep(delay)
 				data, err := a.win.CapturePage()
 				if err == nil {
 					err = os.MkdirAll(filepath.Dir(*capture), 0755)

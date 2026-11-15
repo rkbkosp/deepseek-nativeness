@@ -78,6 +78,7 @@ type app struct {
 	ctx                                                      context.Context
 	cancel                                                   context.CancelFunc
 	theme                                                    *ui.Theme
+	localRuntime                                             *localRuntime
 	epoch                                                    time.Time
 	runningSince                                             time.Time
 	historyLoading                                           bool
@@ -160,6 +161,10 @@ func (a *app) view(c *ui.Context) {
 	a.builds++
 	a.metrics.Builds++
 	a.applyAppearance(c)
+	if a.localRuntime != nil {
+		a.localView(c)
+		return
+	}
 	if a.fontCalibration {
 		a.fontCalibrationView(c)
 		return

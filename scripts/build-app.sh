@@ -1,8 +1,27 @@
 #!/bin/sh
 set -eu
 cd "$(dirname "$0")/.."
-bundle="build/Native DSH Remote.app"
-bundle_name="Native DSH Remote"
+# Flags that compose with the asset selection below.
+with_runtime=0
+sign_identity=""
+sign_requested=0
+remaining_args=""
+for argument in "$@"; do
+  case "$argument" in
+    --with-runtime) with_runtime=1 ;;
+    --sign) sign_requested=1 ;;
+    --sign=*) sign_requested=1; sign_identity="${argument#--sign=}" ;;
+    *) remaining_args="$remaining_args $argument" ;;
+  esac
+done
+# shellcheck disable=SC2086
+set -- $remaining_args
+if [ $# -eq 0 ]; then set --; fi
+
+bundle="build/DeepSeek Nativeness.app"
+bundle_name="DeepSeek Nativeness"
+# The bundle identifier is the app's stable identity: renaming the product must
+# not make macOS treat a rebuilt app as a different one.
 bundle_id="cn.rkbkosp.native-dsh.remote"
 # Build a fresh tree so old chunks/dependencies cannot survive a candidate.
 app="build/.native-dsh-stage-$$"
@@ -94,6 +113,8 @@ cp "remote/$remote_assets/bridge.bundle.mjs" "$app/Contents/Resources/remote/bri
 cp "remote/$remote_assets/build-meta.json" "$app/Contents/Resources/remote/source-manifest.json"
 mkdir -p "$app/Contents/Resources/compat"
 cp -R "compat/$assets/." "$app/Contents/Resources/compat/"
+# The original DeepSeek Harness app icon, reused verbatim (see assets/NOTICE.md).
+cp assets/app-icon.icns "$app/Contents/Resources/icon.icns"
 cat > "$app/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -102,6 +123,7 @@ cat > "$app/Contents/Info.plist" <<PLIST
 <key>CFBundleIdentifier</key><string>$bundle_id</string>
 <key>CFBundleName</key><string>$bundle_name</string>
 <key>CFBundleDisplayName</key><string>$bundle_name</string>
+<key>CFBundleIconFile</key><string>icon.icns</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleShortVersionString</key><string>0.1.0</string>
 <key>CFBundleVersion</key><string>1</string>
@@ -114,6 +136,13 @@ if [ -d "$bundle" ]; then
   mv "$bundle" "build/gui-checkpoints/retired-bundle-$$"
 fi
 mv "$app" "$bundle"
+if [ "$with_runtime" -eq 1 ]; then
+  if [ "$sign_requested" -eq 1 ]; then
+    sh scripts/package-runtime.sh "$bundle" --sign ${sign_identity:+"$sign_identity"}
+  else
+    sh scripts/package-runtime.sh "$bundle"
+  fi
+fi
 case "${1:-}" in
   --use-gui11-assets|--use-gui11-forced-assets)
     # Preserve the exact common Go linker output before binding the local app
