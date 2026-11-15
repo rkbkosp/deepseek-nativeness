@@ -41,6 +41,7 @@ func (a *app) header(c *ui.Context) {
 					if s.ID == a.sessionID {
 						title = s.Title
 					}
+
 				}
 				if title == productName && a.subagentTitles != nil {
 					if subagentTitle := a.subagentTitles[a.sessionID]; subagentTitle != "" {
@@ -148,7 +149,7 @@ func (a *app) conversation(c *ui.Context) {
 			a.heroView(c)
 		case conversationLoading:
 			ui.Column(c).Grow(1).Center().Gap(10).Padding(30).Children(func() {
-				stateIndicator(c, true, a.epoch, a.theme.TextMuted, &a.metrics)
+				stateIndicator(c, true, a.epoch, a.theme.TextMuted, &a.metrics, indicatorBacking{Color: a.theme.Background})
 				ui.Text(c, "正在载入会话…").TextColor(a.theme.TextMuted)
 			})
 		default:

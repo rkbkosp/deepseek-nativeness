@@ -79,6 +79,7 @@ func main() {
 		if err := mygo.App.Dock.SetIcon(appIconPNG); err != nil {
 			log.Printf("app icon: %v", err)
 		}
+		a.metrics.indicators = newIndicatorViewPool()
 		a.win = mygo.NewWindow(mygo.WindowOptions{Title: productName, Width: 1280, Height: 820, MinWidth: 780, MinHeight: 560, TitleBarStyle: mygo.TitleBarHiddenInset, Transparent: true, Vibrancy: mygo.VibrancySidebar, BackgroundColor: "#00000000", Content: ui.View(a.view)})
 		// Show after assigning the handle. This supported call avoids depending
 		// on the deferred first-show callback or a later capture/getter.
@@ -88,6 +89,7 @@ func main() {
 		a.win.Focus()
 		a.win.OnFocus(func() { a.win.Invalidate() })
 		a.win.OnClosed(func() {
+			a.metrics.indicators.Close()
 			a.releaseComposerImages()
 			a.resetMessageImages()
 			a.closeCompat()

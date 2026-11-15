@@ -84,7 +84,7 @@ type app struct {
 	historyLoading                                           bool
 	historyError                                             string
 	feedbackOpen                                             bool
-	feedbackRating, feedbackMessage, feedbackNote             string
+	feedbackRating, feedbackMessage, feedbackNote            string
 	subagentTitles                                           map[string]string
 	demo                                                     bool
 	connectionOpen                                           bool

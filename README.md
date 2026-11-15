@@ -4,7 +4,7 @@ A macOS client prototype using MyGo native UI and an on-demand WKWebView. The ex
 
 ## Run
 
-Requirements: macOS 15.8 or newer, Go 1.27.3+, Node 24.9+, and the adjacent frozen `../mygo` checkout. The supported OS range follows the user's requirement; no 13.x or 14.x adaptation is planned. Compatibility JavaScript targets Safari 17.4. Actual GUI evidence is from this M4 Mac only; macOS 15.8 and the M1 MacBook Air remain untested. The Remote helper's locked dependencies and upstream browser-independent client code are described in [remote/README.md](remote/README.md).
+Requirements: macOS 15.8 or newer, Go 1.27.3+, Node 24.9+, the Xcode command line tools (Swift for the packaged indicator), and the adjacent frozen `../mygo` checkout. The supported OS range follows the user's requirement; no 13.x or 14.x adaptation is planned. Compatibility JavaScript targets Safari 17.4. Actual GUI evidence is from this M4 Mac only; macOS 15.8 and the M1 MacBook Air remain untested. The Remote helper's locked dependencies and upstream browser-independent client code are described in [remote/README.md](remote/README.md).
 
 ```sh
 cd /Volumes/SuperDisk/native-dsh/desktop
@@ -28,7 +28,7 @@ go run . --demo --demo-running 20 --metrics /tmp/native-dsh-metrics.json --exit-
 go run . --demo --demo-running 1 --animation-time 375ms --capture /tmp/native-dsh-phase.png --exit-after 3s
 ```
 
-`--demo` is visibly labeled and never starts the Remote helper. `--demo-running 0` exercises the settled path; `--hide-sidebar` collapses the sidebar. `--animation-time` freezes the indicator for deterministic visual inspection only. The default indicator retains the 1.5-second spin and cubic-bezier breathing arc and requests paint frames from `Painter`, so the business view is not rebuilt at every animation frame. The user's system Reduce Motion preference remains honored; it is not forced on.
+`--demo` is visibly labeled and never starts the Remote helper. `--demo-running 0` exercises the settled path; `--hide-sidebar` collapses the sidebar. `--animation-time` freezes the indicator for deterministic visual inspection only. The packaged indicator retains the 1.5-second spin and cubic-bezier breathing arc but runs in Core Animation through the existing `ui.NativeView` seam, so idle animation does not request Metal frames or rebuild the business view. A window-owned pool reuses native views; removing a row stops its animation, and closing the window releases the pool. Plain `go run`, a missing native library, fixed-time captures, and non-macOS builds use the original paint-only renderer. `NATIVE_DSH_INDICATORS=paint` explicitly selects that fallback for comparative measurements. No change to the frozen MyGo checkout or its declared `replace` is needed. The user's system Reduce Motion preference remains honored; it is not forced on.
 
 ## Verification boundaries
 
@@ -51,7 +51,9 @@ The outputs are `build/Native DSH Remote GUI11.app` and `build/Native DSH Remote
 
 Only these GUI11 targets also apply a local ad-hoc resource seal and verify it. The nested Node/wrtc signatures remain unchanged. Their pre-seal Go binaries are saved under `build/gui-checkpoints/gui11-*-preseal-native`; the final native signatures may differ because each seal binds its bundle identity and browser resources. This is not Developer ID signing or notarization.
 
-The separately authorized Developer ID stage is `node scripts/sign-gui11.mjs`. It copies the reviewed normal GUI11 app to a fresh `build/signed-gui11/Native DSH Remote.app`, signs wrtc → Node → outer app individually, and runs only a local helper fixture. Its Node entitlement list preserves the actual vendor grants while removing `get-task-allow`; Go/wrtc receive no exception entitlements. It records all code/data-section and non-signature resource comparisons under `build/signed-gui11-audit`. The Go code is still the `1feddef` build; the report separately records the signing-script commit. The script neither submits to Apple nor starts a GUI or publishes anything. Notarization requires the separate reviewed-app stage.
+The indicator library is compiled into `Contents/Frameworks/libNativeDSHIndicators.dylib` and locally signed before the app is sealed. `sh scripts/check-native-indicators.sh` checks its native ABI, animation period, resize, stop, and resume without launching a window or contacting Remote.
+
+The separately authorized Developer ID stage is `node scripts/sign-gui11.mjs`. It copies the reviewed normal GUI11 app to a fresh `build/signed-gui11/Native DSH Remote.app`, signs wrtc and the optional indicator library → Node → outer app individually, and runs only a local helper fixture. Its Node entitlement list preserves the actual vendor grants while removing `get-task-allow`; Go/wrtc receive no exception entitlements. It records all code/data-section and non-signature resource comparisons under `build/signed-gui11-audit`. The Go code is still the `1feddef` build; the report separately records the signing-script commit. The script neither submits to Apple nor starts a GUI or publishes anything. Notarization requires the separate reviewed-app stage.
 
 Visual parity is in progress. Original DSH SVG artwork and the sidebar/header/composer proportions are reused; exact typography, all transitions, and M1 CPU/memory comparisons remain acceptance work. Do not infer M1 performance from local synthetic tests.
 
