@@ -64,3 +64,45 @@ func TestTodoPanelUsesProjectedList(t *testing.T) {
 		t.Fatalf("todo panel missing: %v", tt.Texts())
 	}
 }
+
+func TestHeaderShowsModeSubagentsAndBackgroundJobs(t *testing.T) {
+	a := newApp(true)
+	t.Cleanup(a.cancel)
+	a.sessionID = "s"
+	preset := "ptc"
+	a.composer = &composerState{sessionID: "s", values: composerProjectionValues{
+		AgentPreset:     &preset,
+		SubagentCatalog: []subagentEntry{{ID: "child", Label: "worker", Mode: "continuable"}},
+	}}
+	a.current = snapshot{SessionID: "s", Messages: []message{
+		{ID: "u", Role: "user", Text: "go", Turn: 1},
+		{ID: "job", Role: "tool", Kind: "tool", Turn: 1, Tool: &toolNode{Name: "bash", Phase: "settled", ArgsRaw: `{"command":"sleep 10","run_in_background":true}`}},
+	}}
+	tt := ui.NewTester(a.view, 1280, 820)
+	tt.Frame()
+	if !tt.HasText("PTC 模式") || !tt.HasText("worker") {
+		// "worker" is inside the closed menu, so only the count is visible.
+		if !tt.HasText("PTC 模式") {
+			t.Fatalf("mode label missing: %v", tt.Texts())
+		}
+	}
+	if !tt.HasText("1") {
+		t.Fatalf("subagent/job counts missing: %v", tt.Texts())
+	}
+}
+
+func TestRetryRowUsesProjectedAttempt(t *testing.T) {
+	a := newApp(true)
+	t.Cleanup(a.cancel)
+	a.sessionID = "s"
+	a.uiPrefs.StepsDetail = "verbose"
+	a.current = snapshot{SessionID: "s", Messages: []message{
+		{ID: "u", Role: "user", Text: "go", Turn: 1},
+		{ID: "retry", Role: "context", Kind: "model-retry", Turn: 1, Retry: json.RawMessage(`{"retry":2,"delayMs":1500,"mode":"normal","failure":{"message":"network"}}`)},
+	}}
+	tt := ui.NewTester(a.view, 1280, 820)
+	tt.Frame()
+	if !tt.HasText("模型重试") || !tt.HasText("第 2 次 · 等待 2 秒") {
+		t.Fatalf("retry row missing: %v", tt.Texts())
+	}
+}

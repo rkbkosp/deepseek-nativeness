@@ -15,7 +15,7 @@ func TestHeaderPresetUsesRecordedValueAndRosterMetadata(t *testing.T) {
 	}
 	id := "standard"
 	a.composer.values.AgentPreset = &id
-	if name, hint, ok := a.headerPresetText(); !ok || name != "standard" || hint != presetHeaderHint {
+	if name, hint, ok := a.headerPresetText(); !ok || name != "标准模式" || hint != presetHeaderBuiltins[id][1] {
 		t.Fatal(name, hint, ok)
 	}
 	desc := "ignored shipped metadata"

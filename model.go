@@ -20,15 +20,16 @@ type workspace struct {
 	SessionIDs []string `json:"sessionIds"`
 }
 type session struct {
-	Cwd         string  `json:"cwd"`
-	ID          string  `json:"id"`
-	Title       string  `json:"title"`
-	Running     bool    `json:"running"`
-	WorkspaceID string  `json:"workspaceId"`
-	UpdatedAt   float64 `json:"updatedAt"`
-	Pinned      bool    `json:"pinned"`
-	Archived    bool    `json:"archived"`
-	Blank       bool    `json:"blank"`
+	Cwd         string          `json:"cwd"`
+	ID          string          `json:"id"`
+	Title       string          `json:"title"`
+	Running     bool            `json:"running"`
+	WorkspaceID string          `json:"workspaceId"`
+	UpdatedAt   float64         `json:"updatedAt"`
+	Pinned      bool            `json:"pinned"`
+	Archived    bool            `json:"archived"`
+	Blank       bool            `json:"blank"`
+	Preset      json.RawMessage `json:"preset,omitempty"`
 }
 
 func (s session) updated() time.Time { return time.UnixMilli(int64(s.UpdatedAt)) }
@@ -43,6 +44,7 @@ type message struct {
 	Collapsed        bool             `json:"collapsed"`
 	Command          json.RawMessage  `json:"command,omitempty"`
 	Trigger          string           `json:"trigger,omitempty"`
+	Retry            json.RawMessage  `json:"retry,omitempty"`
 	CallID           string           `json:"callId,omitempty"`
 	ToolName         string           `json:"toolName,omitempty"`
 	ToolStatus       string           `json:"toolStatus,omitempty"`
@@ -172,7 +174,7 @@ func decodeRows[T any](raw json.RawMessage, keys ...string) ([]T, error) {
 
 func demoData() ([]workspace, []session, snapshot) {
 	return []workspace{{ID: "demo-workspace", Name: "远程工作区", Path: "~/Projects"}}, []session{
-		{ID: "demo-current", Title: "Native DSH Remote · 界面回放", Running: true, WorkspaceID: "demo-workspace"},
+		{ID: "demo-current", Title: productName + " · 界面回放", Running: true, WorkspaceID: "demo-workspace"},
 		{ID: "demo-history", Title: "会话历史与文件预览", WorkspaceID: "demo-workspace"},
 		{ID: "demo-animation", Title: "侧栏动效与性能验证", Running: true, WorkspaceID: "demo-workspace"},
 	}, snapshot{SessionID: "demo-current", Running: true, Messages: []message{

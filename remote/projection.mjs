@@ -252,7 +252,7 @@ export class SessionProjection {
         this.reindexFrom(start);
       }
     }
-    let role, kind, blocks, source, context, tool, command, trigger;
+    let role, kind, blocks, source, context, tool, command, trigger, retry;
     if (event.type === "user/message") {
       source = data.source;
       blocks = data.content;
@@ -274,6 +274,12 @@ export class SessionProjection {
         };
         trigger = triggerKind(source);
       }
+    }
+    if (event.type === "llm/retry") {
+      role = "context";
+      kind = "model-retry";
+      retry = data;
+      blocks = [];
     }
     if (event.type === "developer/message") {
       role = "context";
@@ -417,6 +423,7 @@ export class SessionProjection {
           : {}),
         ...(command ? { command, collapsed: true } : {}),
         ...(trigger ? { trigger } : {}),
+        ...(retry ? { retry } : {}),
         ...(["context", "tool", "attempt"].includes(kind) && turn !== undefined
           ? { groupId: `process:${turn}:${step ?? 0}` }
           : {}),

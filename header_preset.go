@@ -1,19 +1,35 @@
 package main
 
-import "github.com/egoist/mygo/ui"
+import (
+	"encoding/json"
+
+	"github.com/egoist/mygo/ui"
+)
 
 const presetHeaderHint = "本任务的 Agent 预设，在任务开始时确定"
 
 // Mirrors AgentPresetLabel, not the new-session hero's AgentPresetSeat:
 // a recorded composition is passive chrome and is never a switch control.
 func (a *app) headerPresetText() (name, description string, present bool) {
-	s := a.composer
-	if !a.composerCurrent(s) || s.values.AgentPreset == nil {
+	id := ""
+	var presets []composerPreset
+	if s := a.composer; a.composerCurrent(s) && s.values.AgentPreset != nil {
+		id = *s.values.AgentPreset
+		presets = s.presets
+	} else {
+		for _, session := range a.sessions {
+			if session.ID != a.sessionID || len(session.Preset) == 0 || string(session.Preset) == "null" {
+				continue
+			}
+			_ = json.Unmarshal(session.Preset, &id)
+			break
+		}
+	}
+	if id == "" {
 		return "", "", false
 	}
-	id := *s.values.AgentPreset
 	name, description = id, presetHeaderHint
-	for _, option := range s.presets {
+	for _, option := range presets {
 		if option.ID != id {
 			continue
 		}
@@ -26,7 +42,10 @@ func (a *app) headerPresetText() (name, description string, present bool) {
 		if option.Description != nil && (option.Name != nil || !shipped) {
 			description = *option.Description
 		}
-		break
+		return name, description, true
+	}
+	if builtin, shipped := presetHeaderBuiltins[id]; shipped {
+		name, description = builtin[0], builtin[1]
 	}
 	return name, description, true
 }

@@ -42,9 +42,17 @@ func (a *app) header(c *ui.Context) {
 						title = s.Title
 					}
 				}
+				if title == "Native DSH Remote" && a.subagentTitles != nil {
+					if subagentTitle := a.subagentTitles[a.sessionID]; subagentTitle != "" {
+						title = subagentTitle
+					}
+				}
 				ui.Row(c).Grow(1).MinWidth(0).Gap(8).AlignItems(ui.Center).Children(func() {
 					ui.Text(c, title).FontWeight(500).SingleLine().Ellipsis("…").MaxWidth(220).MinWidth(0).Shrink(1).Label("会话标题")
 					a.headerPresetView(c)
+					a.headerSubagentView(c)
+					a.headerJobsView(c)
+					a.headerTerminalView(c)
 				})
 				a.sessionMoreMenu(c)
 				if ui.ButtonBase(c).Label("切换右侧栏").Padding(4).Children(func() { icon(c, "compare-split-outline", 16).TextColor(a.theme.TextMuted) }).Clicked() {
@@ -409,6 +417,8 @@ func (a *app) messagePartViewTerminal(c *ui.Context, m message, part, nodeKey st
 	}
 	m.ID = nodeKey
 	switch {
+	case m.Kind == "model-retry":
+		a.retryView(c, &m, nodeKey)
 	case m.Trigger != "":
 		a.turnTriggerView(c, &m, nodeKey)
 	case m.Context != nil || m.Kind == "context" || m.Kind == "compaction":

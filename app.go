@@ -85,6 +85,7 @@ type app struct {
 	historyError                                             string
 	feedbackOpen                                             bool
 	feedbackRating, feedbackMessage, feedbackNote             string
+	subagentTitles                                           map[string]string
 	demo                                                     bool
 	connectionOpen                                           bool
 	status, detail, error                                    string
@@ -129,7 +130,7 @@ func newApp(demo bool) *app {
 	t.Radius = 10
 	t.FontSize = 14
 	t.Font = "system-ui, PingFang SC"
-	a := &app{ctx: ctx, cancel: cancel, theme: t, epoch: time.Now(), demo: demo, status: "尚未连接", sidebar: true, server: "https://dsh.rkbkosp.cn", webURL: "https://dsh.rkbkosp.cn/app", uiPrefs: defaultViewPreferences(), watermarks: map[string]int{}, flowOpen: map[string]*bool{}, currentTab: "chat", settingsSection: "general"}
+	a := &app{ctx: ctx, cancel: cancel, theme: t, epoch: time.Now(), demo: demo, status: "尚未连接", sidebar: true, server: "https://dsh.rkbkosp.cn", webURL: "https://dsh.rkbkosp.cn/app", uiPrefs: defaultViewPreferences(), watermarks: map[string]int{}, flowOpen: map[string]*bool{}, currentTab: "chat", settingsSection: "general", subagentTitles: map[string]string{}}
 	a.loadPreferences()
 	a.md.Reveal = &markdown.Reveal{Unit: markdown.AtOnce, Fade: -1}
 	a.md.Block = a.markdownBlock

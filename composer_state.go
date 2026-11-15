@@ -90,6 +90,13 @@ type composerCommand struct {
 	Input        json.RawMessage `json:"input"`
 	Unavailable  string          `json:"clientUnavailableReason"`
 }
+type subagentEntry struct {
+	ID        string  `json:"id"`
+	Label     string  `json:"label"`
+	Mode      string  `json:"mode"`
+	CreatedAt float64 `json:"createdAt"`
+}
+
 type composerQueueItem struct {
 	ID      string `json:"id"`
 	Content []struct {
@@ -112,6 +119,7 @@ type composerProjectionValues struct {
 	} `json:"permissions"`
 	Inbox           map[string][]composerQueueItem `json:"inbox"`
 	Todos           *[]todoItem                    `json:"todos"`
+	SubagentCatalog []subagentEntry                `json:"subagentCatalog"`
 	ContextPressure *struct {
 		PressureTokens  *int64 `json:"pressureTokens"`
 		ProjectedTokens *int64 `json:"projectedTokens"`
@@ -305,6 +313,20 @@ func (a *app) acceptComposerProjections(raw json.RawMessage) error {
 		case "agentPreset":
 			if err := json.Unmarshal(v, &s.values.AgentPreset); err != nil {
 				return err
+			}
+		case "subagentCatalog":
+			if err := json.Unmarshal(v, &s.values.SubagentCatalog); err != nil {
+				return err
+			}
+			if a.subagentTitles == nil {
+				a.subagentTitles = map[string]string{}
+			}
+			for _, entry := range s.values.SubagentCatalog {
+				label := entry.Label
+				if label == "" {
+					label = entry.ID
+				}
+				a.subagentTitles[entry.ID] = label
 			}
 		case "contextPressure":
 			if err := json.Unmarshal(v, &s.values.ContextPressure); err != nil {
