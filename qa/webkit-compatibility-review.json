@@ -1,0 +1,40 @@
+{
+  "checkedAt": "2026-11-14T15:22:05.716Z",
+  "reviewer": "root",
+  "candidate": "GUI7",
+  "status": "target-compatibility-gap-open-not-an-observed-M4-GUI-failure",
+  "userTarget": "macOS15.8+",
+  "buildTarget": "safari17.4",
+  "sources": [
+    "deepseek-harness/packages/client/ui-primitives/src/Menu.tsx",
+    "deepseek-harness/packages/client/ui-primitives/src/Menu.module.css",
+    "deepseek-harness/packages/client/ui-primitives/src/MenuSurface.module.css",
+    "compat/src/shell.css"
+  ],
+  "primarySupportEvidence": [
+    {
+      "url": "https://webkit.org/blog/17333/webkit-features-in-safari-26-0/",
+      "claim": "WebKit lists CSS Anchor Positioning as a new Safari26 feature."
+    },
+    {
+      "url": "https://webkit.org/blog/17330/webkit-features-in-safari-18-6/",
+      "claim": "Safari18.6 was available on macOS Sequoia15.6; OS major alone is not a sufficient browser-feature contract."
+    }
+  ],
+  "findings": [
+    "Original portal/submenu/menu-backing CSS relies on anchor(), anchor-size(), position-anchor and position-try fallbacks.",
+    "Reviewed original main Menu source sets named anchors but has no CSS.supports-based main portal-position fallback.",
+    "Native model-menu shell explicitly overrides main placement with absolute geometry; this does not qualify every original portal or nested menu.",
+    "corner-shape:round has existing border-radius fallback; field-sizing content in schedule CSS has documented scroll/size fallback, unlike anchor-dependent portal position."
+  ],
+  "conclusion": "On a WebKit engine without CSS anchor support, original menu geometry is not yet qualified. Current M4/macOS27.2.1 GUI success and esbuild target do not establish macOS15.8 compatibility. macOS15.8 itself does not identify a single installed WebKit feature version.",
+  "requiredNext": [
+    "Feature-detect required anchor functions/properties and install a bounded local fallback only when unavailable",
+    "Keep anchor/point/nested placement, edge-flipping, keyboard focus and close semantics; remove observers/listeners on close",
+    "Test forced no-anchor branch with real geometry and current live read-only menus; label that evidence separately from actual15.8"
+  ],
+  "backendChanges": false,
+  "actual15_8Test": false,
+  "assigned": "native_client",
+  "skillQualification": "Read modern-web-guidance. Its generated support table conflicted with current browser data; primary WebKit source is authoritative for Safari introduction. No skill upgrade or package publication performed."
+}

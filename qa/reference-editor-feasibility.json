@@ -1,0 +1,70 @@
+{
+  "checkedAt": "2026-11-14T15:17:44.589Z",
+  "status": "SOURCE FEASIBILITY REVIEW; APPLICATION EDITOR NOT REPLACED",
+  "target": "macOS15.8+",
+  "gui7Preserved": true,
+  "sourceHashes": {
+    "../deepseek-harness/packages/client/ui-conversation/src/client/input/editor/chip-node.tsx": "db1396ab22a7ab37132f472b2b4ebfa029fb131cb3e9dc23fb0737f0e5a6d9fe",
+    "../deepseek-harness/packages/client/ui-conversation/src/client/input/editor/command-chip-node.tsx": "59d6e4c2ccdcb16729701ae40ed71b505057b599cbc4d73747078ab2ce771d93",
+    "../deepseek-harness/packages/client/ui-conversation/src/client/input/editor/command-chip-selection.ts": "07489aef381a0971582149fafbcb63e8b8753e0268ffde30e2a926427c0475e2",
+    "../deepseek-harness/packages/client/ui-conversation/src/client/input/editor/projection.ts": "cde75a11bf22854810224b23c7089a725d5302ef894d3b5057cfdee998c66682",
+    "../deepseek-harness/packages/client/ui-conversation/src/client/input/editor/runtime.ts": "d1090790d7001424a20f8bb371301595d68c48a2093b42c20f6c5de2d9a8ab1c",
+    "../deepseek-harness/packages/client/ui-reference/src/client/index.ts": "c450a2f2a3f9b6e8054c85fbb4ed3b1f575590750c570c2f7e1698aa149c9b34",
+    "../mygo/ui/richtext/text.go": "1fbae4cfafdec8e0b9ad325c8381a283126557c7b090109c95af09132a294075",
+    "../mygo/ui/richtext/clipboard.go": "88380146f09f58721b567f80802b979fcf00353a7949abe0e1238f2b0f12024e",
+    "../mygo/ui/richtext/view.go": "d7cbf6cf05b21d405514f84380f2cfebd1ef931502e96051a48ac4d04686bf8b",
+    "../mygo/ui/richtext/ime.go": "36fbdf3fe38974597ca6c80dd2339ea0118fcc19f71876a849c03cad0d427eb0",
+    "../mygo/ui/textinput.go": "27594382dcffb32d2aab5c16de118513be397d0428987394fb34b4a690f2c542",
+    "../mygo/ui/text_input_client.go": "ad5e3d2158bef9a6e0ba11a82dbc5ea67af98624c86337787844b21c39de2aab",
+    "../mygo/ui/webview.go": "4d7861d4631df4b9488fc8aa950dff80633009bd8eb647f5dc6c572b446eed55",
+    "../mygo/native/native.go": "5e6801b2b658285ea6491e88f3eefcccddd4a10409121ae785583270c0b1d34f"
+  },
+  "sourceSemantics": {
+    "references": "Atomic inline occurrence with stable identity; detect projection uses one U+FFFC, clipboard/persistence expands owner canonical mention, send serializes owner reference; plain string substitution is insufficient.",
+    "commands": "Claim belongs only to leading seat; moving before it releases to literal token. First backward/forward deletion adjacent selects the command chip without moving logical selection, second removes; ordinary references delete in one step.",
+    "history": "Reference occurrences and command claim restore with undo, paste/completion have explicit undo boundaries; committed clear cuts history.",
+    "copyPaste": "Reference clipboard is canonical mention, not the label and not U+FFFC. Pasted external U+FFFC is removed. File drill remains literal open text; settled file/session candidates become atomic references.",
+    "selection": "Display/detect/clipboard/model coordinates differ; source JS uses UTF16. Native rune/UTF8/UTF16 conversions must be explicit."
+  },
+  "publicMyGoCapabilities": {
+    "textArea": "TextRanges supports only color/weight; cannot substitute glyph/object width or atomic rich display while keeping native text geometry.",
+    "richtext": "Public Document+Attachment{Draw,Data} supports inline U+FFFC objects, shaped layout, one-unit deletion, caret/selection and undo-restored attachment metadata. ContentHeight/CaretRect available.",
+    "richtextGaps": [
+      "Default PlainText deletes all U+FFFC; app must override keyboard and Edit-menu copy/cut/paste to use canonical projection",
+      "Element.Composing reads stock TextArea editor only; richtext owns a separate private TextInputClient. Its public options expose OnKey without actual marked-state getter. CmdEnter can reach OnKey during composition. ObserveInput covers editEvent composition route but direct native TextInputClient callbacks remain unobservable through this public adapter.",
+      "Rich document metadata serialization loses app Data/Draw; restoring drafts must explicitly rebuild occurrences"
+    ],
+    "fullNativeCustom": "Public ui.TextInputClient + ShapeRichText provide primitives for a new app-owned rich editor with complete marked-state ownership, but rebuilding navigation, selection, history and accessibility is a larger project.",
+    "nativeSurface": "Public ui.NativeView accepts PlatformView.NativeView()uintptr and native.View exposes the same method. A narrow app-owned NSTextView input surface can therefore be hosted without modifying frozen MyGo or using a resident WK composer."
+  },
+  "spikes": {
+    "command": "CGO_ENABLED=0 go test -overlay qa/reference-editor-feasibility-overlay.json . -run 'TestQA(InlineAttachment|RichEditorPublic)' -count=1 -v",
+    "groups": 2,
+    "exitCode": 0,
+    "findings": [
+      "Real richtext attachment deletes atomically; CmdZ restores exact metadata pointer; default plain clipboard omits canonical mention",
+      "Real richtext marked text + CmdEnter reaches OnKey while Element.Composing is false. This is a capability diagnostic, not a proposal to ship this send guard."
+    ]
+  },
+  "recommendedSlice": {
+    "surface": "Narrow AppKit NSTextView embedded in existing native composer via ui.NativeView; existing native toolbar/queue/image rail stay native and all remote RPCs stay Go helper.",
+    "gate": "First local-only proof: inline attachment caret hit-testing, atomic deletion/undo, actual hasMarkedText CmdEnter suppression, clipboard canonical projection, finite nativeview bounds/lifecycle. If these fail, do not replace current GUI7 editor.",
+    "implementation": "Structured native draft document owns text/reference/command occurrences; Go mirrors canonical payload and maps detect caret for existing scoped completion services. Preserve original Host mention bytes and existing send receipts/attachments, with all writes fixture only.",
+    "cut": [
+      "File/session atomic reference chips with original icon/label/max240/ellipsis",
+      "Selection, copy/cut/paste, Unicode/IME, arrow/delete/undo/redo and session-switch restoration",
+      "Permission command chip leading seat/two-step delete and existing parameter branch; remaining claim types explicitly incomplete"
+    ],
+    "eta": "15min native API proof, then45–60min vertical slice if proof succeeds; full original command/quote editor parity is outside this first cut."
+  },
+  "applicationEditsThisReview": [
+    "composer_state.go: composerPreset.Description optional DTO field requested by native header owner only; no editor replacement yet"
+  ],
+  "boundaries": {
+    "backendWrites": false,
+    "livePrompt": false,
+    "webkitResidentComposer": false,
+    "frozenMyGoEdits": false,
+    "fullParityAccepted": false
+  }
+}

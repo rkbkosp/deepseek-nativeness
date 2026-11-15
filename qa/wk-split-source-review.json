@@ -1,0 +1,33 @@
+{
+  "checkedAt": "2026-11-14T13:15:24.347Z",
+  "reviewer": "root",
+  "status": "source-built-artifact-verified-GUI-pending",
+  "tests": {
+    "nativePageContract": true,
+    "routeBudget": true,
+    "typedRejectionBridge": true
+  },
+  "actualModelStaticUnionBytes": 272340,
+  "reportedModelStaticUnionBytes": 272340,
+  "files": [
+    "app.js",
+    "chunks/chunk-XGC6RPZ5.js",
+    "chunks/chunk-RBXE3B54.js",
+    "chunks/chunk-7SZRL6FY.js",
+    "chunks/chunk-Y6LJFB4R.js",
+    "routes/models.js",
+    "chunks/chunk-FETADQJR.js",
+    "chunks/chunk-QMGVCWVW.js",
+    "chunks/chunk-IP4MNVJU.js",
+    "chunks/chunk-LIDTZKCP.js",
+    "chunks/chunk-K4IQ2YLI.js",
+    "chunks/chunk-GLKVYBIM.js",
+    "chunks/chunk-XX4NTK6X.js",
+    "chunks/chunk-JW6ZUHCF.js"
+  ],
+  "limitations": [
+    "Browser runtime requests not traced yet",
+    "Not memory or M1 measurement",
+    "Canonical app still prior GUI5.1 assets until native packaging"
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "updatedAt": "2026-11-14T17:37:13.736Z",
+  "sourceInventory": "qa/checkpoints/_renderer-independent-before-20261115/manifest.json",
+  "evidenceBoundary": "Read-only source and headless actual a.view fixture, no live Host writes, private clipboard, M1 or macOS15.8 WK acceptance. GUI8 and LAN export reported by root separately.",
+  "priority": [
+    {
+      "rank": 1,
+      "id": "structured-assistant-daily-display",
+      "status": "Source fixes pass author Node UTF16 oracle/cache/viewport checks and root independently authored actual-view/upsert gates; native_client final cross-review pending.",
+      "scope": "Unknown/file payload has original collapsed JSON,20000 UTF16 display cap,200px content viewport (217 native outer),raw preserved; adjacent images group64px/gap10/wrap; interrupted tag remains visible including empty rows. Reasoning order separate.",
+      "api": "No new RPC. Preserve RawMessage and existing bounded cache/owner.",
+      "acceptance": "Before evidence remote-frontend-gap-counterexamples.jsonl; next author regression plus independent native/root review. UTF16 CJK/emoji boundaries and occurrence keys required.",
+      "candidate": "qa/checkpoints/_message-display-surrogate-final-20261115/manifest.json",
+      "remainingSemantics": "Original ChatNodeSeat classifies final answer by processSpec.answerStep/answerAnchorSeq, whereas native FoldedReplies=final still uses last textual assistant (plus this slice interrupted). Pure image/other final responses may fold into process; reasoned grouping/ordering needs a later source-grounded projection slice, not a claim of equivalence from these three fixes."
+    },
+    {
+      "rank": 2,
+      "id": "rich-editor-occurrence-projections",
+      "status": "Proof component not normal composer integration; actual candidate popup failed visibility and acceptance_audit fixes it",
+      "scope": "Preserve original detectText U+FFFC chips, clipboard expansion, and owner submit serialization as distinct projections. Existing plain text and canonical reference wrappers work.",
+      "api": "listSessionReferences Host canonical mention bytes; never fabricate from loaded catalog titles.",
+      "acceptance": "Actual popup plus IME/undo/selection, stale scope, existing PNG paste/drop/rail receipt behavior, normal composer adoption separately."
+    },
+    {
+      "rank": 3,
+      "id": "image-gallery-and-client-transport-budget",
+      "status": "Frontend gaps, not all backend limits",
+      "scope": "Original-image route is not packaged. History thumbnails already work within bounded cache; local8MiB ref cap and1MiB stdin cap limit images. Admission must precede big Go/base64 allocations. Frozen Remote transferred Harness carrier supports up to288MiB; no need to expand backend for bounded inline image staging.",
+      "api": "session/attachment is image ref only; ordinary staged file receipts and command attachments remain genuine unavailable surfaces.",
+      "acceptance": "App-private staged transfer with captured account/Host/gen/session/intent, same unknown payload and cleanup; no simple unlimited JSON frame increase. Actual15.8/M1 memory budget still needed."
+    },
+    {
+      "rank": 4,
+      "id": "closing-message-feedback",
+      "status": "Supported Remote wrapper, frontend buttons disabled",
+      "scope": "Only committed closing-message sourceMessageId; never event:N/UI row/seq/transient attempt. Original record/retract dialog behavior, lazy load, CAS conflict handling.",
+      "api": "messageFeedback/list {sessionId}; put {sessionId,messageId,rating,ifVersion,note?,category?}; delete {sessionId,messageId,ifVersion}; stable requestId+clientScope.",
+      "receipt": "Outer accepted only transport; value.ok false/version-conflict needs reconciliation. Unknown retains exact request/payload, no blind replay.",
+      "boundary": "Header session feedback form uses sessionFeedback/record absent allowlist; /feedback command only nonempty text cannot replace category/empty-capable form.",
+      "wireEnvelope": "{args:{request:{...businessFields}}}; helper requestId/clientScope never enter Host business request"
+    },
+    {
+      "rank": 5,
+      "id": "completed-turn-message-fork",
+      "status": "Session menu fork wired; message footer fork disabled",
+      "scope": "Original turn-tail action uses closing message and inclusive turn/end seq. Footer opens child after title follow-up; sidebar fork does not auto-open, uses allowMigration:false/increaseTitle client-side.",
+      "api": "session/fork args.request {sessionId,atSeq?,allowMigration?}, then separate rename where appropriate. Never use arbitrary assistant row index.",
+      "receipt": "Known child/workspace attach failed is partial with childId and original receipt identity; no repeat fork/new ID. Unknown preserves exact ID. Late footer completion must not navigate a new scope."
+    }
+  ],
+  "frozenBackendBoundaries": [
+    "schedule/create legacy Remote intercept vs current Host signature",
+    "plugin update interceptor gates updatable vs registry/git",
+    "arbitrary plugin module/resources/rawZIP in current deployment (allowed loopback ports0)",
+    "sessionFeedback/record absent Remote allowlist",
+    "ordinary composer staged file receipt and command image attachments"
+  ],
+  "resolvedDoNotReopen": [
+    "Full Markdown can use complete logical history and pinned original formatter; root real LAN56events complete proof passed. RawZIP is distinct.",
+    "Publisher/native metadata preserving assistantBlocks passed real GoNodeGo fixture; old queue claim ignoring all blocks is outdated."
+  ],
+  "anchor": {
+    "checkpoint": "68c296531147fad995fa165f397d61075b7abf31",
+    "authorTests": "Recompiled .test-build then11/11 source/component tests passed",
+    "independentPositive": "80 mount/unmount lifetimes with element listener accounting and queued/late callbacks; event burst coalescing passed",
+    "counterexample": "All4 active profiles fail same-size React position-only reflow (x100→220, no resize/scroll). Local commit/layout reschedule needed; no global observer or per-frame polling.",
+    "command": "node --test --test-name-pattern='KNOWN_GAP active anchor' qa/anchor-cross-source.test.mjs",
+    "status": "Fixed in e7c90e4; independent recompile19/19,833inputs+384newassets+7969oldresources hashes matched. No actual15.8 WK acceptance.",
+    "finalEvidence": "qa/anchor-reflow-independent-review.json"
+  },
+  "sourceRefs": [
+    "../deepseek-harness/packages/client/ui-chat/src/client/chat/AssistantMarkdown.tsx",
+    "../deepseek-harness/packages/client/ui-primitives/src/markdown/JsonBlock.tsx",
+    "../deepseek-harness/packages/client/ui-chat/src/client/chat/TurnTailNodeView.tsx",
+    "../deepseek-harness/packages/client/ui-message-feedback/src/client/surface.ts",
+    "../deepseek-harness/packages/client/ui-conversation/src/client/input/editor/projection.ts",
+    "remote/ACTIONS.md",
+    "remote_reference/packages/protocol/src/index.ts",
+    "../deepseek-harness/packages/client/ui-chat/src/client/chat/ChatNodeSeat.tsx"
+  ],
+  "sourceHashes": {
+    "../deepseek-harness/packages/client/ui-chat/src/client/chat/AssistantMarkdown.tsx": "07f1fde40b63cfa4723bd049692d2e8ed705a3223ff67cfe6584e65f11a46e51",
+    "../deepseek-harness/packages/client/ui-primitives/src/markdown/JsonBlock.tsx": "5546bb5eedec61b901370412cc7e8179580227515ba78e645b4ca34aa4e36198",
+    "../deepseek-harness/packages/client/ui-chat/src/client/chat/TurnTailNodeView.tsx": "835118e15bb4518d8865de9421425456e377bd623cd8bad2d88ac95ae038b94f",
+    "../deepseek-harness/packages/client/ui-message-feedback/src/client/surface.ts": "c120444d74f4e9cb58361ba06a1c71efaccc0633c96417c54dfca53a48544894",
+    "../deepseek-harness/packages/client/ui-conversation/src/client/input/editor/projection.ts": "cde75a11bf22854810224b23c7089a725d5302ef894d3b5057cfdee998c66682",
+    "remote/ACTIONS.md": "9890694b2f3d0a14b17a62556a333bcbf6693945e3ee27115a9ccb4c71062b93",
+    "remote_reference/packages/protocol/src/index.ts": "3e42cc741990a0fc55b873ee74d86315ef77e056dfdbd0b4cc6d8dd355f13d84",
+    "../deepseek-harness/packages/client/ui-chat/src/client/chat/ChatNodeSeat.tsx": "e3184a591fb0e2d71f6cf64031a36a4a6599edc90c15dd9ed55357d16e7ea754"
+  }
+}

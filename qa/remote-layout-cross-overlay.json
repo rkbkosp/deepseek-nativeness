@@ -1,0 +1,5 @@
+{
+  "Replace": {
+    "/Volumes/SuperDisk/native-dsh/desktop/zz_remote_layout_cross_test.go": "/Volumes/SuperDisk/native-dsh/desktop/qa/remote-layout-cross.gotest"
+  }
+}

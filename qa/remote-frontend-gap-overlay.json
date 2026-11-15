@@ -1,0 +1,5 @@
+{
+  "Replace": {
+    "/Volumes/SuperDisk/native-dsh/desktop/zz_remote_frontend_gap_test.go": "/Volumes/SuperDisk/native-dsh/desktop/qa/remote-frontend-gap-counterexamples.gotest"
+  }
+}

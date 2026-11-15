@@ -1,0 +1,181 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"github.com/egoist/mygo/ui"
+	"math"
+	"reflect"
+	"strings"
+	"testing"
+)
+
+type wireAuditNode struct {
+	Label             string
+	R                 ui.Rect
+	ContentW, ScrollX float64
+	Flags             uint64
+}
+
+func wireAuditNodes(tt *ui.Tester) []wireAuditNode {
+	rt := reflect.ValueOf(tt).Elem().FieldByName("rt").Elem()
+	c := rt.FieldByName("c")
+	chunks := c.FieldByName("chunks")
+	used := int(c.FieldByName("used").Int())
+	at := 0
+	var out []wireAuditNode
+	for i := 0; i < chunks.Len() && at < used; i++ {
+		chunk := chunks.Index(i)
+		for j := 0; j < chunk.Len() && at < used; j++ {
+			n := chunk.Index(j)
+			at++
+			label := n.FieldByName("label").String()
+			if label == "" {
+				continue
+			}
+			r := ui.Rect{X: float32(n.FieldByName("x").Float()), Y: float32(n.FieldByName("y").Float()), W: float32(n.FieldByName("w").Float()), H: float32(n.FieldByName("h").Float())}
+			sx := float64(0)
+			st := n.FieldByName("st")
+			if !st.IsNil() {
+				sx = st.Elem().FieldByName("scrollX").Float()
+			}
+			out = append(out, wireAuditNode{label, r, n.FieldByName("contentW").Float(), sx, n.FieldByName("flags").Uint()})
+		}
+	}
+	return out
+}
+func wireAuditNodeByLabel(tt *ui.Tester, label string) wireAuditNode {
+	for _, n := range wireAuditNodes(tt) {
+		if n.Label == label {
+			return n
+		}
+	}
+	return wireAuditNode{}
+}
+func wireAuditTable(cols int, prefix string) string {
+	heads, body := []string{}, []string{}
+	for i := 0; i < cols; i++ {
+		heads = append(heads, fmt.Sprintf("H%d", i))
+		body = append(body, fmt.Sprintf("COL%d-%s-END%d", i, strings.Repeat("路径Long/", 8), i))
+	}
+	source := "|" + strings.Join(heads, "|") + "|\n|" + strings.Repeat("---|", cols) + "\n|" + strings.Join(body, "|") + "|"
+	if prefix == "> " {
+		return prefix + strings.ReplaceAll(source, "\n", "\n"+prefix)
+	}
+	if prefix == "list" {
+		return "- intro\n\n  " + strings.ReplaceAll(source, "\n", "\n  ")
+	}
+	return source
+}
+func TestRemoteWireCrossNarrowTablesReachLastColumn(t *testing.T) {
+	for _, width := range []int{780, 900, 1000, 1100, 1280} {
+		for _, cols := range []int{2, 3, 4} {
+			for _, prefix := range []string{"", "> ", "list"} {
+				t.Run(fmt.Sprintf("w%d-c%d-%s", width, cols, prefix), func(t *testing.T) {
+					a, tt := tableParityApp(t, wireAuditTable(cols, prefix), width, true)
+					_ = a
+					composerUnclippedRects(t, tt)
+					cells := parityRoleRects(tt, ui.RoleCell)
+					n := wireAuditNodeByLabel(tt, "Markdown 表格横向滚动")
+					if len(cells) != cols {
+						t.Fatalf("missing columns %d/%d", len(cells), cols)
+					}
+					if n.R.W <= 0 || math.IsInf(float64(n.R.W), 0) || math.IsNaN(float64(n.R.W)) {
+						t.Fatalf("invalid viewport %+v", n)
+					}
+					before := cells[cols-1]
+					tt.Scroll(n.R.X+n.R.W/2, n.R.Y+min(n.R.H/2, 20), 1e7, 0)
+					tt.Frame()
+					n = wireAuditNodeByLabel(tt, "Markdown 表格横向滚动")
+					cells = parityRoleRects(tt, ui.RoleCell)
+					last := cells[cols-1]
+					b, _ := json.Marshal(map[string]any{"case": t.Name(), "viewport": n.R, "lastBefore": before, "lastAfter": last, "scrollX": n.ScrollX, "contentW": n.ContentW})
+					t.Log(string(b))
+					if last.X+last.W > n.R.X+n.R.W+1 {
+						t.Fatalf("last column remains outside viewport after maximal horizontal wheel: last%+v viewport%+v", last, n)
+					}
+				})
+			}
+		}
+	}
+}
+func TestRemoteWireCrossCodeViewportAndHorizontalReach(t *testing.T) {
+	for _, width := range []int{780, 900, 1000, 1100, 1280} {
+		t.Run(fmt.Sprint(width), func(t *testing.T) {
+			line := strings.Repeat("UnbrokenCodeName", 80) + "END"
+			_, tt := tableParityApp(t, "```go\n"+line+"\n```", width, true)
+			initial := wireAuditNodeByLabel(tt, "代码内容")
+			tt.Scroll(initial.R.X+initial.R.W/2, 200, 0, -1e7)
+			tt.Frame()
+			wrap := wireAuditNodeByLabel(tt, "代码内容")
+			controls := composerUnclippedRects(t, tt)
+			t.Logf("code controls width=%d card=%+v wrap=%+v copy=%+v", width, controls["代码块"], controls["自动换行"], controls["复制代码"])
+			if err := tt.Click("自动换行"); err != nil {
+				t.Fatal(err)
+			}
+			tt.Frame()
+			n := wireAuditNodeByLabel(tt, "代码内容")
+			if n.R.W != wrap.R.W || n.ContentW <= float64(n.R.W) {
+				t.Fatalf("nowrap not finite-scrollable: wrapped%+v nowrap%+v", wrap, n)
+			}
+			tt.Scroll(n.R.X+n.R.W/2, n.R.Y+min(n.R.H/2, 10), 1e7, 0)
+			tt.Frame()
+			n = wireAuditNodeByLabel(tt, "代码内容")
+			b, _ := json.Marshal(map[string]any{"case": t.Name(), "wrapped": wrap, "nowrapAfter": n})
+			t.Log(string(b))
+			if n.ScrollX < float64(n.ContentW)-float64(n.R.W)-1 {
+				t.Fatalf("code tail unreachable: %+v", n)
+			}
+			if err := tt.Click("复制代码"); err != nil {
+				t.Fatalf("copy action inaccessible: %v", err)
+			}
+		})
+	}
+}
+func TestRemoteWireCrossHeaderInteractiveControlsBelow380(t *testing.T) {
+	for _, width := range []int{780, 900, 1000, 1100, 1280} {
+		t.Run(fmt.Sprint(width), func(t *testing.T) {
+			a := newApp(true)
+			defer a.cancel()
+			a.rightPaneOpen = true
+			a.current.Running = true
+			tt := ui.NewTester(a.view, width, 820)
+			tt.Frame()
+			r := composerUnclippedRects(t, tt)
+			left := float32(280)
+			right := float32(width) - min(576, float32(width)*.45)
+			for _, label := range []string{"切换右侧栏", "会话更多操作"} {
+				box := r[label]
+				if box.X < left-1 || box.X+box.W > right+1 {
+					t.Errorf("%s escapes actual main column %g..%g: %+v", label, left, right, box)
+				}
+			}
+		})
+	}
+}
+
+func TestRemoteWireCrossWideTableKeyboardParity(t *testing.T) {
+	_, tt := tableParityApp(t, wireAuditTable(4, ""), 1280, true)
+	label := "Markdown 表格横向滚动"
+	before := wireAuditNodeByLabel(tt, label)
+	if before.Flags&2 == 0 {
+		t.Fatal("original wide table has tabIndex=0, but native wrapper lacks flagFocusable")
+	}
+	found := false
+	for i := 0; i < 100; i++ {
+		tt.Key(0, ui.KeyTab)
+		if tt.Focused(label) {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatal("wide table cannot be reached by Tab through the actual application")
+	}
+	tt.Key(0, ui.KeyRight)
+	tt.Frame()
+	after := wireAuditNodeByLabel(tt, label)
+	if after.ScrollX <= before.ScrollX {
+		t.Fatalf("focused wide table cannot scroll right by keyboard: before%+v after%+v", before, after)
+	}
+}

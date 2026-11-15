@@ -1,0 +1,1234 @@
+{
+  "scope": "Independent headless actual a.view geometry/interaction cross-audit; no application/helper/compat resources or Host state changed by this reviewer. This is not real WK/native-pixel acceptance or M1 measurement.",
+  "baselineCommit": "3295acb50facd15b56d1f2573acf7b101c1611dc",
+  "sourceHashes": {
+    "markdown_parity.go": "a8cac947f2c07983c4bbdf1fda9d195302bf094ab877b3f671addc09391f3ef6",
+    "markdown_actions.go": "d10e93cfc405fa59b7c642a0d9d3c632f23b33ef228e6518100c7541cd8227f6",
+    "header_preset.go": "25f2a767e55cfe9cc16c25617f6327551639f10a9cf21816e14402fa8fb46646",
+    "conversation_width.go": "4f76fc22ab0b2f97996af324b8ba7b33e9fe211c397111f236c36d0ac3374b3a",
+    "conversation.go": "a74f1861a171dce01048f1bcff506a84428390022afee5cc764012382f91b6e4",
+    "qa/remote-layout-cross.gotest": "1110551a2fe9a9522e6b8946bee71f6778851ef32836f63d6c43b051cabe0411"
+  },
+  "command": "go test -overlay=qa/remote-layout-cross-overlay.json -run '^TestRemoteWireCross' -count=1 -json .",
+  "pass": true,
+  "topLevelGroups": 4,
+  "passedTestRecords": 59,
+  "findings": [
+    {
+      "id": "table-cells",
+      "status": "pass",
+      "cases": 45,
+      "conditions": "window widths 780/900/1000/1100/1280, right pane open, 2/3/4 columns, unquoted/blockquote/list. Viewport 85..360 DIP (nested minimum 62.6), raw node finite check; every final column edge reaches the visible viewport after maximal horizontal scroll."
+    },
+    {
+      "id": "code-tail",
+      "status": "pass",
+      "cases": 5,
+      "conditions": "wrapped unbroken line with 80 repetitions plus an END marker, code viewport 85/151/206/261/360 DIP; scroll transcript to header before testing; nowrap content width8768.15 DIP reaches scrollX=contentW-viewportW, wrap toggle and copy remain usable."
+    },
+    {
+      "id": "header-actions",
+      "status": "pass",
+      "cases": 5,
+      "conditions": "running=true, right pane open, 780..1280 windows; both interactive header actions remain within actual main column."
+    },
+    {
+      "id": "wide-table-keyboard",
+      "status": "fixed-source-followup-pass",
+      "before": "3295acb wrapper flags8208 lacked focusable bit; independent TestRemoteWireCrossWideTableKeyboardParity failed, log remote-layout-keyboard-before.log.",
+      "after": "Native author added Focusable; same independent fixture passes actual a.view Tab focus and Right increasing scrollX, log remote-layout-keyboard-after.log."
+    },
+    {
+      "id": "initial-code-no-visible-area",
+      "status": "counterexample-excluded",
+      "reason": "Initial tail-follow of very tall wrapped content places code header above viewport; scrolling transcript upward makes it reachable. This is not horizontal clipping. Initial diagnostic retained in remote-layout-cross-initial-tail-follow.log."
+    },
+    {
+      "id": "header-label-background",
+      "status": "unresolved-not-a-confirmed-visual-defect",
+      "facts": "Original AgentPresetLabel CSS references --dsw-alias-fill-tsp-secondary; no definition found in original theme closure. Native span has no explicit background. The unresolvable var may compute transparent; do not invent a fill. Real computed style/pixel comparison remains pending."
+    }
+  ],
+  "originalSources": [
+    "../deepseek-harness/packages/client/ui-primitives/src/markdown/render.tsx",
+    "../deepseek-harness/packages/client/ui-primitives/src/markdown/MarkdownText.module.css",
+    "../deepseek-harness/packages/client/ui-chat/src/client/chat/AssistantMarkdown.module.css",
+    "../deepseek-harness/packages/client/ui-primitives/src/CodeCard.module.css",
+    "../deepseek-harness/packages/client/ui-agent-preset/src/client/AgentPresetLabel.tsx",
+    "../deepseek-harness/packages/client/ui-agent-preset/src/client/AgentPresetLabel.module.css"
+  ],
+  "details": [
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w780-c2-",
+      "contentW": 248,
+      "lastAfter": {
+        "X": 265,
+        "Y": 187.30006,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 428,
+        "Y": 187.30006,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 163,
+      "viewport": {
+        "X": 312,
+        "Y": 144.80006,
+        "W": 85,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w780-c2->_",
+      "contentW": 248,
+      "lastAfter": {
+        "X": 265,
+        "Y": 187.30006,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 442.9,
+        "Y": 187.30006,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 177.9000015258789,
+      "viewport": {
+        "X": 326.9,
+        "Y": 144.80006,
+        "W": 70.1,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w780-c2-list",
+      "contentW": 248,
+      "lastAfter": {
+        "X": 265,
+        "Y": 223.00006,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 450.4,
+        "Y": 223.00006,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 185.4000015258789,
+      "viewport": {
+        "X": 334.4,
+        "Y": 180.50006,
+        "W": 62.6,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w780-c3-",
+      "contentW": 380,
+      "lastAfter": {
+        "X": 265,
+        "Y": 187.30006,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 560,
+        "Y": 187.30006,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 295,
+      "viewport": {
+        "X": 312,
+        "Y": 144.80006,
+        "W": 85,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w780-c3->_",
+      "contentW": 380,
+      "lastAfter": {
+        "X": 265,
+        "Y": 187.30006,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 574.9,
+        "Y": 187.30006,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 309.9000015258789,
+      "viewport": {
+        "X": 326.9,
+        "Y": 144.80006,
+        "W": 70.1,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w780-c3-list",
+      "contentW": 380,
+      "lastAfter": {
+        "X": 265,
+        "Y": 223.00006,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 582.4,
+        "Y": 223.00006,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 317.4000015258789,
+      "viewport": {
+        "X": 334.4,
+        "Y": 180.50006,
+        "W": 62.6,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w780-c4-",
+      "contentW": 1048,
+      "lastAfter": {
+        "X": 131,
+        "Y": 187.30006,
+        "W": 266,
+        "H": 86
+      },
+      "lastBefore": {
+        "X": 1094,
+        "Y": 187.30006,
+        "W": 266,
+        "H": 86
+      },
+      "scrollX": 963,
+      "viewport": {
+        "X": 312,
+        "Y": 144.80006,
+        "W": 85,
+        "H": 129
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w780-c4->_",
+      "contentW": 512,
+      "lastAfter": {
+        "X": 265,
+        "Y": 187.30006,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 706.9,
+        "Y": 187.30006,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 441.9000015258789,
+      "viewport": {
+        "X": 326.9,
+        "Y": 144.80006,
+        "W": 70.1,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w780-c4-list",
+      "contentW": 1070.4000244140625,
+      "lastAfter": {
+        "X": 131,
+        "Y": 223.00006,
+        "W": 266,
+        "H": 86
+      },
+      "lastBefore": {
+        "X": 1116.4,
+        "Y": 223.00006,
+        "W": 266,
+        "H": 86
+      },
+      "scrollX": 985.4000244140625,
+      "viewport": {
+        "X": 312,
+        "Y": 180.50006,
+        "W": 85,
+        "H": 129
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w900-c2-",
+      "contentW": 248,
+      "lastAfter": {
+        "X": 331,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 428,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 97,
+      "viewport": {
+        "X": 312,
+        "Y": 129.40002,
+        "W": 151,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w900-c2->_",
+      "contentW": 248,
+      "lastAfter": {
+        "X": 331,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 442.9,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 111.89999389648438,
+      "viewport": {
+        "X": 326.9,
+        "Y": 129.40002,
+        "W": 136.1,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w900-c2-list",
+      "contentW": 248,
+      "lastAfter": {
+        "X": 331,
+        "Y": 207.60002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 450.4,
+        "Y": 207.60002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 119.39999389648438,
+      "viewport": {
+        "X": 334.4,
+        "Y": 165.10002,
+        "W": 128.6,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w900-c3-",
+      "contentW": 380,
+      "lastAfter": {
+        "X": 331,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 560,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 229,
+      "viewport": {
+        "X": 312,
+        "Y": 129.40002,
+        "W": 151,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w900-c3->_",
+      "contentW": 380,
+      "lastAfter": {
+        "X": 331,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 574.9,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 243.89999389648438,
+      "viewport": {
+        "X": 326.9,
+        "Y": 129.40002,
+        "W": 136.1,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w900-c3-list",
+      "contentW": 380,
+      "lastAfter": {
+        "X": 331,
+        "Y": 207.60002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 582.4,
+        "Y": 207.60002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 251.39999389648438,
+      "viewport": {
+        "X": 334.4,
+        "Y": 165.10002,
+        "W": 128.6,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w900-c4-",
+      "contentW": 1192,
+      "lastAfter": {
+        "X": 161,
+        "Y": 171.90002,
+        "W": 302,
+        "H": 86
+      },
+      "lastBefore": {
+        "X": 1202,
+        "Y": 171.90002,
+        "W": 302,
+        "H": 86
+      },
+      "scrollX": 1041,
+      "viewport": {
+        "X": 312,
+        "Y": 129.40002,
+        "W": 151,
+        "H": 129
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w900-c4->_",
+      "contentW": 512,
+      "lastAfter": {
+        "X": 331,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 706.9,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 375.8999938964844,
+      "viewport": {
+        "X": 326.9,
+        "Y": 129.40002,
+        "W": 136.1,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w900-c4-list",
+      "contentW": 1214.4000244140625,
+      "lastAfter": {
+        "X": 161,
+        "Y": 207.60002,
+        "W": 302,
+        "H": 86
+      },
+      "lastBefore": {
+        "X": 1224.4,
+        "Y": 207.60002,
+        "W": 302,
+        "H": 86
+      },
+      "scrollX": 1063.4000244140625,
+      "viewport": {
+        "X": 312,
+        "Y": 165.10002,
+        "W": 151,
+        "H": 129
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1000-c2-",
+      "contentW": 248,
+      "lastAfter": {
+        "X": 386,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 428,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 42,
+      "viewport": {
+        "X": 312,
+        "Y": 129.40002,
+        "W": 206,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1000-c2->_",
+      "contentW": 248,
+      "lastAfter": {
+        "X": 386,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 442.9,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 56.899993896484375,
+      "viewport": {
+        "X": 326.9,
+        "Y": 129.40002,
+        "W": 191.1,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1000-c2-list",
+      "contentW": 248,
+      "lastAfter": {
+        "X": 386,
+        "Y": 207.60002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 450.4,
+        "Y": 207.60002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 64.39999389648438,
+      "viewport": {
+        "X": 334.4,
+        "Y": 165.10002,
+        "W": 183.6,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1000-c3-",
+      "contentW": 380,
+      "lastAfter": {
+        "X": 386,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 560,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 174,
+      "viewport": {
+        "X": 312,
+        "Y": 129.40002,
+        "W": 206,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1000-c3->_",
+      "contentW": 380,
+      "lastAfter": {
+        "X": 386,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 574.9,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 188.89999389648438,
+      "viewport": {
+        "X": 326.9,
+        "Y": 129.40002,
+        "W": 191.1,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1000-c3-list",
+      "contentW": 380,
+      "lastAfter": {
+        "X": 386,
+        "Y": 207.60002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 582.4,
+        "Y": 207.60002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 196.39999389648438,
+      "viewport": {
+        "X": 334.4,
+        "Y": 165.10002,
+        "W": 183.6,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1000-c4-",
+      "contentW": 1312,
+      "lastAfter": {
+        "X": 186,
+        "Y": 171.90002,
+        "W": 332,
+        "H": 64
+      },
+      "lastBefore": {
+        "X": 1292,
+        "Y": 171.90002,
+        "W": 332,
+        "H": 64
+      },
+      "scrollX": 1106,
+      "viewport": {
+        "X": 312,
+        "Y": 129.40002,
+        "W": 206,
+        "H": 107
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1000-c4->_",
+      "contentW": 512,
+      "lastAfter": {
+        "X": 386,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 706.9,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 320.8999938964844,
+      "viewport": {
+        "X": 326.9,
+        "Y": 129.40002,
+        "W": 191.1,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1000-c4-list",
+      "contentW": 1334.4000244140625,
+      "lastAfter": {
+        "X": 186,
+        "Y": 207.60002,
+        "W": 332,
+        "H": 64
+      },
+      "lastBefore": {
+        "X": 1314.4,
+        "Y": 207.60002,
+        "W": 332,
+        "H": 64
+      },
+      "scrollX": 1128.4000244140625,
+      "viewport": {
+        "X": 312,
+        "Y": 165.10002,
+        "W": 206,
+        "H": 107
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1100-c2-",
+      "contentW": 261,
+      "lastAfter": {
+        "X": 434.5,
+        "Y": 171.90002,
+        "W": 138.5,
+        "H": 152
+      },
+      "lastBefore": {
+        "X": 434.5,
+        "Y": 171.90002,
+        "W": 138.5,
+        "H": 152
+      },
+      "scrollX": 0,
+      "viewport": {
+        "X": 312,
+        "Y": 129.40002,
+        "W": 261,
+        "H": 195
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1100-c2->_",
+      "contentW": 248,
+      "lastAfter": {
+        "X": 441,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 442.9,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 1.899993896484375,
+      "viewport": {
+        "X": 326.9,
+        "Y": 129.40002,
+        "W": 246.1,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1100-c2-list",
+      "contentW": 248,
+      "lastAfter": {
+        "X": 441,
+        "Y": 207.60002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 450.4,
+        "Y": 207.60002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 9.399993896484375,
+      "viewport": {
+        "X": 334.4,
+        "Y": 165.10002,
+        "W": 238.6,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1100-c3-",
+      "contentW": 380,
+      "lastAfter": {
+        "X": 441,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 560,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 119,
+      "viewport": {
+        "X": 312,
+        "Y": 129.40002,
+        "W": 261,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1100-c3->_",
+      "contentW": 380,
+      "lastAfter": {
+        "X": 441,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 574.9,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 133.89999389648438,
+      "viewport": {
+        "X": 326.9,
+        "Y": 129.40002,
+        "W": 246.1,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1100-c3-list",
+      "contentW": 380,
+      "lastAfter": {
+        "X": 441,
+        "Y": 207.60002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 582.4,
+        "Y": 207.60002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 141.39999389648438,
+      "viewport": {
+        "X": 334.4,
+        "Y": 165.10002,
+        "W": 238.6,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1100-c4-",
+      "contentW": 1392,
+      "lastAfter": {
+        "X": 221,
+        "Y": 171.90002,
+        "W": 352,
+        "H": 64
+      },
+      "lastBefore": {
+        "X": 1352,
+        "Y": 171.90002,
+        "W": 352,
+        "H": 64
+      },
+      "scrollX": 1131,
+      "viewport": {
+        "X": 312,
+        "Y": 129.40002,
+        "W": 261,
+        "H": 107
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1100-c4->_",
+      "contentW": 512,
+      "lastAfter": {
+        "X": 441,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 706.9,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 265.8999938964844,
+      "viewport": {
+        "X": 326.9,
+        "Y": 129.40002,
+        "W": 246.1,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1100-c4-list",
+      "contentW": 1414.4000244140625,
+      "lastAfter": {
+        "X": 221,
+        "Y": 207.60002,
+        "W": 352,
+        "H": 64
+      },
+      "lastBefore": {
+        "X": 1374.4,
+        "Y": 207.60002,
+        "W": 352,
+        "H": 64
+      },
+      "scrollX": 1153.4000244140625,
+      "viewport": {
+        "X": 312,
+        "Y": 165.10002,
+        "W": 261,
+        "H": 107
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1280-c2-",
+      "contentW": 360,
+      "lastAfter": {
+        "X": 484,
+        "Y": 171.90002,
+        "W": 188,
+        "H": 130
+      },
+      "lastBefore": {
+        "X": 484,
+        "Y": 171.90002,
+        "W": 188,
+        "H": 130
+      },
+      "scrollX": 0,
+      "viewport": {
+        "X": 312,
+        "Y": 129.40002,
+        "W": 360,
+        "H": 173
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1280-c2->_",
+      "contentW": 345.1000061035156,
+      "lastAfter": {
+        "X": 491.45,
+        "Y": 171.90002,
+        "W": 180.55,
+        "H": 130
+      },
+      "lastBefore": {
+        "X": 491.45,
+        "Y": 171.90002,
+        "W": 180.55,
+        "H": 130
+      },
+      "scrollX": 0,
+      "viewport": {
+        "X": 326.9,
+        "Y": 129.40002,
+        "W": 345.1,
+        "H": 173
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1280-c2-list",
+      "contentW": 337.6000061035156,
+      "lastAfter": {
+        "X": 495.2,
+        "Y": 207.60002,
+        "W": 176.8,
+        "H": 130
+      },
+      "lastBefore": {
+        "X": 495.2,
+        "Y": 207.60002,
+        "W": 176.8,
+        "H": 130
+      },
+      "scrollX": 0,
+      "viewport": {
+        "X": 334.4,
+        "Y": 165.10002,
+        "W": 337.6,
+        "H": 173
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1280-c3-",
+      "contentW": 380,
+      "lastAfter": {
+        "X": 540,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 560,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 20,
+      "viewport": {
+        "X": 312,
+        "Y": 129.40002,
+        "W": 360,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1280-c3->_",
+      "contentW": 380,
+      "lastAfter": {
+        "X": 540,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 574.9,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 34.899993896484375,
+      "viewport": {
+        "X": 326.9,
+        "Y": 129.40002,
+        "W": 345.1,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1280-c3-list",
+      "contentW": 380,
+      "lastAfter": {
+        "X": 540,
+        "Y": 207.60002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 582.4,
+        "Y": 207.60002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 42.399993896484375,
+      "viewport": {
+        "X": 334.4,
+        "Y": 165.10002,
+        "W": 337.6,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1280-c4-",
+      "contentW": 1392,
+      "lastAfter": {
+        "X": 320,
+        "Y": 171.90002,
+        "W": 352,
+        "H": 64
+      },
+      "lastBefore": {
+        "X": 1352,
+        "Y": 171.90002,
+        "W": 352,
+        "H": 64
+      },
+      "scrollX": 1032,
+      "viewport": {
+        "X": 312,
+        "Y": 129.40002,
+        "W": 360,
+        "H": 107
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1280-c4->_",
+      "contentW": 512,
+      "lastAfter": {
+        "X": 540,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "lastBefore": {
+        "X": 706.9,
+        "Y": 171.90002,
+        "W": 132,
+        "H": 174
+      },
+      "scrollX": 166.89999389648438,
+      "viewport": {
+        "X": 326.9,
+        "Y": 129.40002,
+        "W": 345.1,
+        "H": 217
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossNarrowTablesReachLastColumn/w1280-c4-list",
+      "contentW": 1414.4000244140625,
+      "lastAfter": {
+        "X": 320,
+        "Y": 207.60002,
+        "W": 352,
+        "H": 64
+      },
+      "lastBefore": {
+        "X": 1374.4,
+        "Y": 207.60002,
+        "W": 352,
+        "H": 64
+      },
+      "scrollX": 1054.4000244140625,
+      "viewport": {
+        "X": 312,
+        "Y": 165.10002,
+        "W": 360,
+        "H": 107
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossCodeViewportAndHorizontalReach/780",
+      "nowrapAfter": {
+        "Label": "代码内容",
+        "R": {
+          "X": 312,
+          "Y": 189.30006,
+          "W": 85,
+          "H": 40.9
+        },
+        "ContentW": 8768.1494140625,
+        "ScrollX": 8683.1494140625,
+        "Flags": 8208
+      },
+      "wrapped": {
+        "Label": "代码内容",
+        "R": {
+          "X": 312,
+          "Y": 189.30006,
+          "W": 85,
+          "H": 3321.0942
+        },
+        "ContentW": 0,
+        "ScrollX": 0,
+        "Flags": 0
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossCodeViewportAndHorizontalReach/900",
+      "nowrapAfter": {
+        "Label": "代码内容",
+        "R": {
+          "X": 312,
+          "Y": 173.90002,
+          "W": 151,
+          "H": 40.9
+        },
+        "ContentW": 8768.1494140625,
+        "ScrollX": 8617.1494140625,
+        "Flags": 8208
+      },
+      "wrapped": {
+        "Label": "代码内容",
+        "R": {
+          "X": 312,
+          "Y": 173.90002,
+          "W": 151,
+          "H": 1349.9011
+        },
+        "ContentW": 0,
+        "ScrollX": 0,
+        "Flags": 0
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossCodeViewportAndHorizontalReach/1000",
+      "nowrapAfter": {
+        "Label": "代码内容",
+        "R": {
+          "X": 312,
+          "Y": 173.90002,
+          "W": 206,
+          "H": 40.9
+        },
+        "ContentW": 8768.1494140625,
+        "ScrollX": 8562.1494140625,
+        "Flags": 8208
+      },
+      "wrapped": {
+        "Label": "代码内容",
+        "R": {
+          "X": 312,
+          "Y": 173.90002,
+          "W": 206,
+          "H": 887.9004
+        },
+        "ContentW": 0,
+        "ScrollX": 0,
+        "Flags": 0
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossCodeViewportAndHorizontalReach/1100",
+      "nowrapAfter": {
+        "Label": "代码内容",
+        "R": {
+          "X": 312,
+          "Y": 173.90002,
+          "W": 261,
+          "H": 40.9
+        },
+        "ContentW": 8768.1494140625,
+        "ScrollX": 8507.1494140625,
+        "Flags": 8208
+      },
+      "wrapped": {
+        "Label": "代码内容",
+        "R": {
+          "X": 312,
+          "Y": 173.90002,
+          "W": 261,
+          "H": 672.30005
+        },
+        "ContentW": 0,
+        "ScrollX": 0,
+        "Flags": 0
+      }
+    },
+    {
+      "case": "TestRemoteWireCrossCodeViewportAndHorizontalReach/1280",
+      "nowrapAfter": {
+        "Label": "代码内容",
+        "R": {
+          "X": 312,
+          "Y": 173.90002,
+          "W": 360,
+          "H": 40.9
+        },
+        "ContentW": 8768.1494140625,
+        "ScrollX": 8408.1494140625,
+        "Flags": 8208
+      },
+      "wrapped": {
+        "Label": "代码内容",
+        "R": {
+          "X": 312,
+          "Y": 173.90002,
+          "W": 360,
+          "H": 456.6999
+        },
+        "ContentW": 0,
+        "ScrollX": 0,
+        "Flags": 0
+      }
+    }
+  ],
+  "scenarioChecks": 56,
+  "subtests": 55
+}

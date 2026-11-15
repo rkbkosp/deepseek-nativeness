@@ -1,0 +1,17 @@
+package main
+import("testing";"github.com/egoist/mygo/ui";"github.com/egoist/mygo/ui/richtext")
+func TestQAInlineAttachmentAtomicDeleteUndoAndClipboardBoundary(t *testing.T){
+ canonical:="@[Fixture](dsh-session:ImZpeHR1cmUi)";meta:=&struct{ID string}{"stable-occurrence"};doc:=richtext.NewDocument(richtext.NewText("a"));doc.InsertAttachment(&richtext.Attachment{Name:canonical,Width:80,Height:18,Data:meta});doc.InsertText(" b")
+ tt:=ui.NewTester(func(c *ui.Context){richtext.EditorBase(c,doc,richtext.EditorOptions{Label:"reference feasibility",NoMarkdown:true}).Width(320).Height(96)},400,160)
+ if err:=tt.Click("reference feasibility");err!=nil{t.Fatal(err)};doc.SetSelection(2,2);tt.Frame();tt.Key(0,ui.KeyBackspace)
+ if doc.Text().String()!="a b"{t.Fatal("object was not atomically deleted",doc.Text().String())};tt.Key(ui.Cmd,ui.KeyZ)
+ if doc.Text().String()!="a\ufffc b"||doc.Text().AttributesAt(1).Attachment.Data!=meta{t.Fatal("undo lost atomic occurrence metadata")}
+ tt.Key(ui.Cmd,ui.KeyA);tt.Key(ui.Cmd,ui.KeyC)
+ if tt.Clipboard()!="a b"{t.Fatal("clipboard boundary changed",tt.Clipboard())};t.Log("public richtext provides atomic deletion/undo metadata, but default plain copy omits the reference; app must override copy/cut and paste")
+}
+func TestQARichEditorPublicComposingDoesNotReportItsMarkedState(t *testing.T){
+ doc:=richtext.NewDocument(richtext.NewText(""));var input ui.Element;sends:=0;observed:=false;composing:=false
+ tt:=ui.NewTester(func(c *ui.Context){input=richtext.EditorBase(c,doc,richtext.EditorOptions{Label:"composition feasibility",NoMarkdown:true,OnKey:func(k ui.Key,m ui.Modifiers)bool{if k==ui.KeyEnter&&m==ui.Cmd {if !composing{sends++};return true};return false}}).Width(320).Height(96);composing=input.Composing();input.ObserveInput(func(ev ui.InputEvent){if ev.Kind==ui.InputCompose{observed=ev.Text!=""}})},400,160)
+ if err:=tt.Click("composition feasibility");err!=nil{t.Fatal(err)};tt.Compose("pinyin",6);tt.Key(ui.Cmd,ui.KeyEnter)
+ if sends!=1||!observed{t.Fatal("expected source capability boundary not reproduced",sends,observed)};t.Log("diagnostic: Element.Composing is false for richtext's private TextInputClient; CmdEnter reaches OnKey while its marked text is active. ObserveInput catches Tester.Compose route only; direct native client callbacks require a separately proven guard.")
+}
