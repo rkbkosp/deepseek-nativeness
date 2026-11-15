@@ -8,10 +8,12 @@ import (
 	"fmt"
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
+	"log"
 	"native-dsh/desktop/internal/bridge"
 	"net/url"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"time"
 )
 
@@ -325,6 +327,7 @@ func (a *app) openCompatAt(page, placement string) {
 				e.PreventDefault()
 			}
 		})
+		a.probeCompatPage(page, owner)
 		v.Page().OnDidFailLoad(func(e *mygo.LoadError) {
 			if a.compatOwner == owner {
 				a.error = "兼容页面加载失败，请重新打开。"
@@ -368,6 +371,12 @@ func (a *app) compatView(c *ui.Context) {
 	}
 }
 func (a *app) closeCompat() {
+	// A QA probe needs to know who closed the page it is about to inspect: a
+	// blank compatibility page and a page that was torn down look identical on
+	// screen.
+	if os.Getenv(compatProbeEnv) != "" && a.compatPage != "" {
+		log.Printf("compat probe: closing %s\n%s", a.compatPage, debug.Stack())
+	}
 	reload := a.compatPage == "models" || a.compatPage == "model-menu"
 	owner, pending := a.compatOwner, a.compatPendingOwner
 	a.compatOwner = ""
