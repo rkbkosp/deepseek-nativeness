@@ -16,18 +16,10 @@ func (a *app) header(c *ui.Context) {
 			left = 84
 		}
 	}
-	ui.Column(c).Height(76).Shrink(0).BorderWidth(0, 0, 1, 0).BorderColor(a.theme.Border).Children(func() {
-		ui.Row(c).Height(43).Padding(0, 20, 0, left).Gap(10).AlignItems(ui.Center).DragWindow().Children(func() {
-			title := "Native DSH Remote"
-			for _, s := range a.sessions {
-				if s.ID == a.sessionID {
-					title = s.Title
-				}
-			}
-			ui.Row(c).Grow(1).MinWidth(0).Gap(8).AlignItems(ui.Center).Children(func() {
-				ui.Text(c, title).FontWeight(500).SingleLine().Ellipsis("…").MinWidth(0).Shrink(1).Label("会话标题")
-				a.headerPresetView(c)
-			})
+	if placeholder := a.conversationPlaceholder(); placeholder == conversationEmpty || placeholder == conversationNoSession {
+		ui.Row(c).Height(40).Shrink(0).Padding(0, 28, 0, left).DragWindow().Children(func() {
+			ui.Spacer(c)
+			a.sessionMoreMenu(c)
 			if ui.ButtonBase(c).Label("切换右侧栏").Padding(4).Children(func() { icon(c, "compare-split-outline", 16).TextColor(a.theme.TextMuted) }).Clicked() {
 				a.rightPaneOpen = !a.rightPaneOpen
 				if !a.rightPaneOpen && a.compatPlacement == "right" {
@@ -37,31 +29,44 @@ func (a *app) header(c *ui.Context) {
 					a.closeWeb()
 				}
 			}
-			if a.current.Running {
-				stateIndicator(c, true, a.epoch, a.theme.TextMuted, &a.metrics)
-				ui.Text(c, "运行中").TextColor(a.theme.TextMuted).FontSize(12)
-			}
-			ui.ButtonBase(c).Label("会话更多操作").Padding(4).Children(func() { icon(c, "ellipsis-outline", 16).TextColor(a.theme.TextMuted) }).Menu(func(m *ui.Menu) {
-				if m.Item("复制会话为 Markdown").Disabled(a.demo || a.sessionID == "" || !a.can("exportSessionMarkdown") || a.markdownCopy != nil).Tooltip(a.operationCaps["exportSessionMarkdown"].Reason).Chosen() {
-					a.copySessionMarkdown()
+		})
+		return
+	}
+	ui.Column(c).Height(76).Shrink(0).BorderWidth(0, 0, .5, 0).BorderColor(a.theme.Border).Children(func() {
+		ui.Row(c).Height(40).Padding(0, 28, 0, left).AlignItems(ui.End).DragWindow().Children(func() {
+			inner := ui.Row(c).Grow(1).Height(30).MinWidth(0).Gap(10).AlignItems(ui.Center)
+			inner.Children(func() {
+				title := "Native DSH Remote"
+				for _, s := range a.sessions {
+					if s.ID == a.sessionID {
+						title = s.Title
+					}
 				}
-				if m.Item("复制已加载消息为 Markdown").Disabled(len(a.current.Messages) == 0).Chosen() {
-					c.WriteClipboard(a.loadedMarkdown())
+				ui.Row(c).Grow(1).MinWidth(0).Gap(8).AlignItems(ui.Center).Children(func() {
+					ui.Text(c, title).FontWeight(500).SingleLine().Ellipsis("…").MaxWidth(220).MinWidth(0).Shrink(1).Label("会话标题")
+					a.headerPresetView(c)
+				})
+				a.sessionMoreMenu(c)
+				if ui.ButtonBase(c).Label("切换右侧栏").Padding(4).Children(func() { icon(c, "compare-split-outline", 16).TextColor(a.theme.TextMuted) }).Clicked() {
+					a.rightPaneOpen = !a.rightPaneOpen
+					if !a.rightPaneOpen && a.compatPlacement == "right" {
+						a.closeCompat()
+					}
+					if !a.rightPaneOpen && a.webPlacement == "right" {
+						a.closeWeb()
+					}
 				}
-				m.Item("下载 Session 日志").Disabled(true).Tooltip("当前 Remote 未提供原始 Session 日志下载接口")
-				m.Separator()
-				m.Item("在应用中打开").Disabled(true)
-				m.Item("反馈").Disabled(true)
 			})
 		})
-		ui.Row(c).Height(33).Padding(0, 20).Gap(22).AlignItems(ui.Center).Children(func() {
+		ui.Row(c).Height(36).Padding(0, 28, 0, 20).Gap(32).AlignItems(ui.End).Children(func() {
 			for _, v := range []struct{ key, label string }{{"chat", "对话"}, {"trajectory", "轨迹"}} {
-				b := ui.ButtonBase(c.Key(v.key)).Label(v.label).Padding(6, 0).Children(func() { ui.Text(c, v.label).FontSize(13) })
+				b := ui.ButtonBase(c.Key(v.key)).Label(v.label).Height(35).Padding(10, 10, 9)
 				if a.currentTab == v.key {
-					b.TextColor(a.theme.Accent).BorderWidth(0, 0, 2, 0).BorderColor(a.theme.Accent)
+					b.TextColor(a.colors.Link).BorderWidth(0, 0, 2, 0).BorderColor(a.colors.Link)
 				} else {
-					b.TextColor(a.theme.TextMuted)
+					b.TextColor(a.colors.Tertiary)
 				}
+				b.Children(func() { ui.Text(c, v.label).FontSize(13).FixedLineHeight(16).FontWeight(500) })
 				if b.Clicked() {
 					if v.key == "trajectory" && a.currentTab != "trajectory" {
 						a.currentTab = v.key
@@ -74,8 +79,7 @@ func (a *app) header(c *ui.Context) {
 					}
 				}
 			}
-			ui.Spacer(c)
-			ui.ButtonBase(c).Label("更多视图").Children(func() { icon(c, "plus-outline", 14).TextColor(a.theme.TextMuted) }).Menu(func(m *ui.Menu) {
+			ui.ButtonBase(c).Label("更多会话视图").Size(22, 22).Padding(0).Children(func() { icon(c, "ellipsis-outline", 14).TextColor(a.colors.Secondary) }).Menu(func(m *ui.Menu) {
 				if m.Item("文件").Disabled(!a.can("listFiles")).Chosen() {
 					a.rightPaneOpen = true
 					s := a.currentRightPane()
@@ -89,11 +93,29 @@ func (a *app) header(c *ui.Context) {
 					a.openCompatAt("terminal", "right")
 				}
 			})
+			ui.Spacer(c)
 		})
 	})
 }
+
+func (a *app) sessionMoreMenu(c *ui.Context) {
+	ui.ButtonBase(c).Label("会话更多操作").Padding(4).Children(func() { icon(c, "ellipsis-outline", 15).TextColor(a.theme.TextMuted) }).Menu(func(m *ui.Menu) {
+		if m.Item("复制会话为 Markdown").Disabled(a.demo || a.sessionID == "" || !a.can("exportSessionMarkdown") || a.markdownCopy != nil).Tooltip(a.operationCaps["exportSessionMarkdown"].Reason).Chosen() {
+			a.copySessionMarkdown()
+		}
+		if m.Item("复制已加载消息为 Markdown").Disabled(len(a.current.Messages) == 0).Chosen() {
+			c.WriteClipboard(a.loadedMarkdown())
+		}
+		m.Item("下载 Session 日志").Disabled(true).Tooltip("当前 Remote 未提供原始 Session 日志下载接口")
+		m.Separator()
+		m.Item("在应用中打开").Disabled(true)
+		m.Item("反馈").Disabled(true)
+	})
+}
+
 func (a *app) conversation(c *ui.Context) {
 	placeholder := a.conversationPlaceholder()
+	inlineComposer := false
 	if a.currentTab == "trajectory" {
 		if a.compat != nil && a.compatPlacement == "trajectory" {
 			ui.WebView(c, a.compat).Grow(1).MinHeight(0)
@@ -114,48 +136,91 @@ func (a *app) conversation(c *ui.Context) {
 				}
 			})
 		case conversationNoSession:
-			ui.Column(c).Grow(1).Center().Gap(12).Padding(30).Children(func() {
-				ui.Text(c, "选择或新建会话").FontSize(25).FontWeight(500)
-				ui.Text(c, "左侧列出的是工作主机上已有的任务。").TextColor(a.theme.TextMuted)
-			})
+			inlineComposer = true
+			a.heroView(c)
 		case conversationLoading:
 			ui.Column(c).Grow(1).Center().Gap(10).Padding(30).Children(func() {
 				stateIndicator(c, true, a.epoch, a.theme.TextMuted, &a.metrics)
 				ui.Text(c, "正在载入会话…").TextColor(a.theme.TextMuted)
 			})
 		default:
-			ui.Column(c).Grow(1).Center().Gap(10).Padding(30).Children(func() {
-				ui.Text(c, "这个会话还没有消息").FontSize(20).FontWeight(500)
-				ui.Text(c, "在下方描述任务开始协作。").TextColor(a.theme.TextMuted)
-			})
+			inlineComposer = true
+			a.heroView(c)
 		}
 	} else {
 		rows := a.chatRows()
 		if a.chatRowsCache != nil && a.chatRowsCache.presented {
 			rows = a.chatRowsCache.visible
 		}
-		a.list.Key = func(i int) any { return rows[i].ID }
-		list := ui.List(c, &a.list, len(rows), func(i int) {
-			r := rows[i]
-			ui.Row(c).Justify(ui.Center).MinWidth(0).Children(func() {
-				ui.Column(c).Width(a.chatContentWidth(c)).Shrink(1).MinWidth(0).Font(a.messageFontFamily()).FontWeight(a.messageNormalWeight()).Gap(12).Children(func() {
-					if r.Control {
-						a.turnControllerView(c, r)
-					} else if r.Process {
-						a.processView(c, r)
-					} else if len(r.Parts) > 0 {
-						a.chatPartView(c, r.Parts[0])
-					} else {
-						a.messageView(c, r.Messages[0])
-					}
-				})
-			})
-		}).Grow(1).MinHeight(0).Padding(28, 32).Gap(24)
-		if a.qaListClip {
-			list.Clip()
+		rows = append([]chatRow(nil), rows...)
+		if a.current.Running {
+			rows = append(rows, chatRow{ID: "running", Running: true})
 		}
+		if a.composer != nil {
+			for _, item := range a.composer.values.Inbox["next-step"] {
+				text, _ := queueText(item)
+				if text == "" {
+					text = queueBlockLabel(item)
+				}
+				if text == "" {
+					continue
+				}
+				rows = append(rows, chatRow{ID: "steering:" + item.ID, Steering: true, User: true, Messages: []message{{ID: "steering:" + item.ID, Role: "user", Text: text}}})
+			}
+		}
+		if a.current.HasMore || a.historyLoading || a.historyError != "" {
+			rows = append([]chatRow{{ID: "history", History: true}}, rows...)
+		}
+		markTailRows(rows)
+		a.list.Key = func(i int) any { return rows[i].ID }
+		ui.Column(c).Grow(1).MinHeight(0).Children(func() {
+			list := ui.List(c, &a.list, len(rows), func(i int) {
+				r := rows[i]
+				var previous chatRow
+				if i > 0 {
+					previous = rows[i-1]
+				}
+				item := ui.Row(c).Justify(ui.Center).MinWidth(0).Margin(chatFlowGap(previous, r), 0, 0, 0)
+				item.Children(func() {
+					ui.Column(c).Width(a.chatContentWidth(c)).Shrink(1).MinWidth(0).Font(a.messageFontFamily()).FontWeight(a.messageNormalWeight()).Gap(chatRowColumnGap(r)).Children(func() {
+						if r.History {
+							a.historyRowView(c)
+							return
+						}
+						if r.Running {
+							a.runningView(c)
+							return
+						}
+						if r.Control {
+							a.turnControllerView(c, r)
+						} else if r.Process {
+							a.processView(c, r)
+						} else if len(r.Parts) > 0 {
+							a.chatPartView(c, r.Parts[0])
+						} else {
+							a.messageView(c, r.Messages[0])
+						}
+						if r.Tail {
+							a.tailActionsView(c, r, item.Hovered(), latestTurn(rows))
+						}
+					})
+				})
+			}).Grow(1).MinHeight(0).Padding(16, 32).Gap(0)
+			if a.qaListClip {
+				list.Clip()
+			}
+			ui.Box(c).Absolute().Left(0).Right(0).Bottom(0).Height(36).IgnoreInput(true).LinearGradient(ui.LinearGradient{
+				Angle: 180,
+				Stops: []ui.GradientStop{{Color: ui.Transparent}, {Color: a.theme.Background, At: 1}},
+			})
+			a.toBottomView(c)
+			a.turnRailView(c, rows)
+		})
 	}
-	a.composerView(c)
+	if !inlineComposer {
+		a.composerView(c)
+	}
+	a.feedbackView(c)
 }
 
 // conversationPlaceholder separates "no Remote connection", "no Session
@@ -191,6 +256,12 @@ func (a *app) conversationPlaceholder() conversationPlaceholder {
 type chatRow struct {
 	ID                string
 	Process           bool
+	Running           bool
+	History           bool
+	Steering          bool
+	User              bool
+	Response          bool
+	Tail              bool
 	Messages          []message
 	Turn              int
 	DefaultOpen       bool
@@ -329,45 +400,25 @@ func (a *app) messagePartViewTerminal(c *ui.Context, m message, part, nodeKey st
 	}
 	m.ID = nodeKey
 	switch {
+	case m.Trigger != "":
+		a.turnTriggerView(c, &m, nodeKey)
 	case m.Context != nil || m.Kind == "context" || m.Kind == "compaction":
-		label := "已注入上下文"
-		if m.Context != nil && m.Context.Producer.Label != "" {
-			label = m.Context.Producer.Label
-		}
-		if m.Kind == "compaction" {
-			label = "上下文压缩"
-		}
-		ui.Collapsible(c.Key(m.ID), label, a.foldState("context:"+m.ID, false), func() {
-			ui.Text(c, m.Text).FontSize(a.uiPrefs.FontSize).TextColor(a.theme.TextMuted).Wrap().Selectable()
-		})
+		a.contextView(c, m, m.ID)
+	case m.Role == "command" || m.Kind == "command":
+		a.commandView(c, &m, nodeKey)
 	case m.Tool != nil:
-		t := m.Tool
-		label := t.Name
-		if label == "" {
-			label = "工具调用"
-		}
-		if t.IsError {
-			label += " · 失败"
-		}
-		ui.Collapsible(c.Key(m.ID), label, a.foldState("tool:"+m.ID, false), func() {
-			ui.Column(c).Padding(10).Gap(8).Radius(8).Background(a.colors.Subtle).Children(func() {
-				if t.ArgsRaw != "" {
-					ui.Text(c, t.ArgsRaw).Font("SF Mono, Menlo").FontSize(12).Wrap().Selectable()
-				}
-				text := m.Text
-				ui.Text(c, text).FontSize(a.uiPrefs.FontSize).Wrap().Selectable()
-				a.messageImageGallery(c, m)
-			})
-		})
+		a.toolView(c, &m, nodeKey)
 	case m.Role == "user":
 		ui.Row(c).Children(func() {
 			ui.Spacer(c)
-			ui.Column(c).MaxWidth(a.chatContentWidth(c)).Gap(5).Children(func() {
-				a.messageImageGallery(c, m)
-				if m.Text != "" {
-					ui.Text(c, m.Text).FontSize(a.uiPrefs.FontSize).Selectable().Wrap().Padding(12, 18).Radius(16).Background(a.colors.Subtle)
-				}
-				a.messageActions(c, m, true)
+			ui.Column(c).MaxWidth(a.chatContentWidth(c) * .702).Gap(6).Children(func() {
+				ui.Column(c).Gap(8).Children(func() {
+					a.messageImageGallery(c, m)
+					if m.Text != "" {
+						ui.Text(c, m.Text).FontSize(a.uiPrefs.FontSize).FixedLineHeight(22).Selectable().Wrap().Padding(10, 16).Radius(20).Background(a.colors.Bubble)
+					}
+				})
+				a.actionStrip(c, m)
 			})
 		})
 	default:
@@ -383,9 +434,8 @@ func (a *app) messagePartViewTerminal(c *ui.Context, m message, part, nodeKey st
 			}
 		}
 		if assistantNonblank(reasoning) && !hasReasoningBlock && part != "response" {
-			ui.Collapsible(c.Key("reasoning:"+m.ID), "思考过程", a.foldState("reasoning:"+m.ID, false), func() {
-				ui.Text(c, reasoning).Wrap().Selectable().FontSize(a.uiPrefs.FontSize).TextColor(a.theme.TextMuted)
-			})
+			key := "reasoning:" + m.ID
+			a.reasoningView(c, key, reasoning, a.foldState(key, false), m.Streaming)
 		}
 		if len(m.AssistantBlocks) > 0 {
 			for i := 0; i < len(m.AssistantBlocks); i++ {
@@ -397,9 +447,7 @@ func (a *app) messagePartViewTerminal(c *ui.Context, m message, part, nodeKey st
 				case "reasoning":
 					if assistantNonblank(b.Text) {
 						key := fmt.Sprintf("%s:reasoning:%d", m.ID, i)
-						ui.Collapsible(c.Key(key), "思考过程", a.foldState(key, false), func() {
-							ui.Text(c, b.Text).Wrap().Selectable().FontSize(a.uiPrefs.FontSize).TextColor(a.theme.TextMuted)
-						})
+						a.reasoningView(c, key, b.Text, a.foldState(key, false), m.Streaming)
 					}
 				case "text":
 					if m.Streaming {
@@ -451,28 +499,7 @@ func (a *app) messagePartViewTerminal(c *ui.Context, m message, part, nodeKey st
 				ui.Text(c, "已停止").FontSize(11).FixedLineHeight(18).Height(18).Padding(0, 6).Radius(8).Background(background).TextColor(foreground)
 			})
 		}
-		if m.Text != "" && part != "reasoning" {
-			a.messageActions(c, m, false)
-		}
 	}
-}
-func (a *app) messageActions(c *ui.Context, m message, user bool) {
-	ui.Row(c.Key("actions:" + m.ID)).Height(24).Gap(8).AlignItems(ui.Center).Children(func() {
-		if user {
-			ui.Spacer(c)
-		}
-		if ui.ButtonBase(c).Label("复制消息 " + m.ID).Tooltip("复制").Padding(3).Children(func() { icon(c, "copy-outline", 14).TextColor(a.theme.TextMuted) }).Clicked() {
-			c.WriteClipboard(m.Text)
-		}
-		if !user {
-			ui.ButtonBase(c).Label("有帮助 " + m.ID).Disabled(true).Tooltip("当前客户端尚未接入消息反馈").Children(func() { icon(c, "like-outline", 14).TextColor(a.theme.TextMuted) })
-			ui.ButtonBase(c).Label("无帮助 " + m.ID).Disabled(true).Children(func() { icon(c, "dislike-outline", 14).TextColor(a.theme.TextMuted) })
-			ui.ButtonBase(c).Label("分叉消息 " + m.ID).Disabled(true).Children(func() { icon(c, "branch-outline", 14).TextColor(a.theme.TextMuted) })
-		}
-		if m.Time > 0 {
-			ui.Text(c, time.UnixMilli(int64(m.Time)).Format("1月2日 15:04")).FontSize(11).TextColor(a.theme.TextMuted)
-		}
-	})
 }
 func (a *app) pendingView(c *ui.Context, p interaction) {
 	ui.Column(c).Padding(12).Gap(8).Radius(12).Background(a.colors.Subtle).Border(1, a.theme.Border).Children(func() {

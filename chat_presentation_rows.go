@@ -276,7 +276,14 @@ func (a *app) buildPresentationTurnRows(turn int, ids []string, cache *chatRowsC
 			flush(r.key())
 			start := len(partsArena)
 			partsArena = append(partsArena, r)
-			rows = append(rows, chatRow{ID: r.key(), Turn: turn, Parts: partsArena[start : start+1]})
+			row := chatRow{ID: r.key(), Turn: turn, Parts: partsArena[start : start+1]}
+			if it.assistant && r.Part == "response" {
+				row.Response = true
+			}
+			if it.input {
+				row.User = true
+			}
+			rows = append(rows, row)
 		}
 	}
 	flush("tail")

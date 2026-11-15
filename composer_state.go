@@ -92,8 +92,9 @@ type composerCommand struct {
 type composerQueueItem struct {
 	ID      string `json:"id"`
 	Content []struct {
-		Type string `json:"type"`
-		Text string `json:"text"`
+		Type       string          `json:"type"`
+		Text       string          `json:"text"`
+		Attachment json.RawMessage `json:"attachment"`
 	} `json:"content"`
 	Source json.RawMessage `json:"source"`
 }
@@ -440,6 +441,43 @@ func queueText(row composerQueueItem) (string, bool) {
 	}
 	return strings.Join(parts, ""), true
 }
+func queueBlockLabel(row composerQueueItem) string {
+	parts := []string{}
+	for _, block := range row.Content {
+		switch block.Type {
+		case "text":
+			if text := strings.TrimSpace(block.Text); text != "" {
+				parts = append(parts, text)
+			}
+		case "image":
+			name := attachmentName(block.Attachment)
+			if name == "" {
+				name = "图片"
+			}
+			parts = append(parts, "[图片] "+name)
+		case "file":
+			name := attachmentName(block.Attachment)
+			if name == "" {
+				name = "附件"
+			}
+			parts = append(parts, "[文件] "+name)
+		default:
+			parts = append(parts, "["+block.Type+"]")
+		}
+	}
+	return strings.Join(parts, "  ")
+}
+
+func attachmentName(raw json.RawMessage) string {
+	var value struct {
+		Name string `json:"name"`
+	}
+	if json.Unmarshal(raw, &value) == nil {
+		return value.Name
+	}
+	return ""
+}
+
 func (a *app) composerCommand(line string, done func()) {
 	s := a.composer
 	if !a.composerCurrent(s) || !a.can("executeCommand") {

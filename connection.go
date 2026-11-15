@@ -453,6 +453,8 @@ func (a *app) openSessionWith(id string, failed func(error)) {
 	a.sessionID = id
 	a.current = snapshot{SessionID: id}
 	a.sessionOpening = id
+	a.historyLoading = false
+	a.historyError = ""
 	a.scopedRequest("openSession", map[string]any{"workspaceId": a.workspaceID, "sessionId": id}, func(raw json.RawMessage) error {
 		if a.sessionID != id || generation != a.navigationGeneration || host != a.hostID {
 			return nil

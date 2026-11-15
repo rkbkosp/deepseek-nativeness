@@ -79,6 +79,11 @@ type app struct {
 	cancel                                                   context.CancelFunc
 	theme                                                    *ui.Theme
 	epoch                                                    time.Time
+	runningSince                                             time.Time
+	historyLoading                                           bool
+	historyError                                             string
+	feedbackOpen                                             bool
+	feedbackRating, feedbackMessage, feedbackNote             string
 	demo                                                     bool
 	connectionOpen                                           bool
 	status, detail, error                                    string
@@ -92,6 +97,7 @@ type app struct {
 	draft, search, account, password, server, questionAnswer string
 	list, sessionList                                        ui.ListState
 	md                                                       markdown.Options
+	mdCompact                                                markdown.Options
 	mdCell                                                   markdown.Options
 	web                                                      *mygo.WebView
 	webPlacement, webTarget                                  string
@@ -190,8 +196,8 @@ func (a *app) view(c *ui.Context) {
 				ui.Text(c, "本地界面回放 · 未连接真实主机").FontSize(11).TextColor(ui.Hex("#9a6d1d")).Background(ui.Hex("#fff8e8")).Padding(5, 24).FillWidth()
 			}
 			if a.error != "" {
-				ui.Row(c).Padding(8, 24).Background(ui.Hex("#fff1f1")).Children(func() {
-					ui.Text(c, a.error).Grow(1).Wrap().TextColor(ui.Hex("#b53a3a"))
+				ui.Row(c).Padding(8, 24).Background(a.colors.Subtle).Children(func() {
+					ui.Text(c, a.error).Grow(1).Wrap().TextColor(a.theme.Danger)
 					if ui.ButtonBase(c).Label("关闭错误").Padding(4).Children(func() { ui.Text(c, "×") }).Clicked() {
 						a.error = ""
 					}

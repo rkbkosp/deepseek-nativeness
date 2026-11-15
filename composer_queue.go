@@ -12,11 +12,11 @@ func (a *app) composerQueueView(c *ui.Context, s *composerState) {
 	if len(rows) == 0 {
 		return
 	}
-	ui.Column(c).FillWidth().Margin(0, 6, -3).Padding(2, 0).Gap(0).Radius(16).Background(a.colors.Popup).Border(.5, a.theme.Border).Children(func() {
+	ui.Column(c).FillWidth().Margin(0, 8, -3).Padding(2, 0).Gap(0).Radius(16, 16, 0, 0).Background(a.colors.Popup).BorderWidth(.5, .5, 0, .5).BorderColor(a.theme.Border).Children(func() {
 		if len(rows) > 1 {
 			if ui.ButtonBase(c).Height(36).FillWidth().Padding(4, 12).Gap(10).Label("待发送队列").Children(func() {
 				icon(c, "queue-outline", 16)
-				ui.Text(c, fmt.Sprintf("%d 条待发送消息", len(rows))).FontSize(12).Grow(1)
+				ui.Text(c, fmt.Sprintf("%d 条待发送消息", len(rows))).FontSize(13).FontWeight(500).Grow(1)
 				glyph := "chevron-down-outline"
 				if s.queueExpanded {
 					glyph = "chevron-up-outline"
@@ -27,10 +27,14 @@ func (a *app) composerQueueView(c *ui.Context, s *composerState) {
 			}
 		}
 		if len(rows) == 1 || s.queueExpanded || s.editingID != "" {
-			ui.Scroll(c).MaxHeight(200).Children(func() {
+			ui.Scroll(c).MaxHeight(180).Children(func() {
 				ui.Column(c).FillWidth().Children(func() {
 					for _, row := range rows {
 						text, editable := queueText(row)
+						label := text
+						if !editable {
+							label = queueBlockLabel(row)
+						}
 						ui.Column(c.Key(row.ID)).FillWidth().Padding(8, 12).Gap(6).Children(func() {
 							if s.editingID == row.ID {
 								ui.TextArea(c, &s.editingText).Label("编辑待发送消息").Lines(1, 5).FillWidth().FontSize(13)
@@ -47,7 +51,7 @@ func (a *app) composerQueueView(c *ui.Context, s *composerState) {
 									if editable {
 										ui.Text(c, text).FontSize(13).MaxLines(2).Grow(1)
 									} else {
-										ui.Text(c, "包含附件的待发送消息").FontSize(13).Grow(1)
+										ui.Text(c, label).FontSize(13).Grow(1)
 									}
 									if ui.ButtonBase(c).Size(24, 24).Label("编辑待发送消息").Disabled(!editable || !a.can("updateQueue")).Children(func() { icon(c, "edit-outline", 14) }).Clicked() {
 										s.editingID = row.ID

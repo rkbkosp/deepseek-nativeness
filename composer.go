@@ -8,6 +8,10 @@ import (
 // The native card follows InputBar.module.css. The original model menu is
 // created on demand in an anchored WK view, leaving the transcript native.
 func (a *app) composerView(c *ui.Context) {
+	if len(a.current.Pending) > 0 {
+		a.pendingPanelView(c)
+		return
+	}
 	if !a.composerCurrent(a.composer) {
 		if a.composer != nil && a.composer.artifacts != nil {
 			a.composer.artifacts.releaseDecodedImages()
@@ -33,7 +37,7 @@ func (a *app) composerView(c *ui.Context) {
 				})
 			}
 			a.composerQueueView(c, s)
-			card := ui.Column(c).FillWidth().MinWidth(0).Padding(8, 0, 0).Gap(12).Radius(24).Border(.5, a.theme.Border).Background(a.colors.Composer)
+			card := ui.Column(c).FillWidth().MinWidth(0).Padding(8, 0, 0).Gap(12).Radius(28).InsetShadow(0, 0, 0, .5, a.theme.Border).Shadow(0, 8, 24, 0, ui.RGBA(0, 0, 0, .12)).Background(a.colors.Composer)
 			if a.connected && !a.busy && s.values.ImageLimits.available() && !a.composerArtifacts().Loading {
 				if paths := card.DroppedFiles(); len(paths) > 0 {
 					a.composerAddImageFiles(paths)
@@ -41,7 +45,7 @@ func (a *app) composerView(c *ui.Context) {
 			}
 			card.Children(func() {
 				a.composerAttachmentRail(c)
-				input := ui.TextAreaBase(c, &a.draft).Placeholder("发消息或创建任务, / 调用指令, @ 文件或对话").Font(a.messageFontFamily()).FontWeight(a.messageNormalWeight()).FontSize(a.uiPrefs.FontSize).FixedLineHeight(a.uiPrefs.FontSize+10).Lines(1, 14).MinHeight(36).Padding(4, 8, 0, 14).MarginEnd(4).Label("消息输入框")
+				input := ui.TextAreaBase(c, &a.draft).Placeholder(a.composerPlaceholder()).Font(a.messageFontFamily()).FontWeight(a.messageNormalWeight()).FontSize(a.uiPrefs.FontSize).FixedLineHeight(a.uiPrefs.FontSize+10).Lines(1, 14).MinHeight(36).Padding(4, 8, 0, 14).MarginEnd(4).Label("消息输入框")
 				if s.pendingPasteText != "" {
 					start, end := input.TextSelection()
 					input.ReplaceText(start, end, s.pendingPasteText)
@@ -102,13 +106,13 @@ func (a *app) composerView(c *ui.Context) {
 				a.composerCompletionView(c, s, input)
 				a.composerToolbar(c, s, input, caret)
 			})
-			// Reserve the original dock line; unavailable usage/context readings are
-			// not replaced with invented statistics or the connection status.
-			ui.Row(c).Height(22).Shrink(0).AlignSelf(ui.Center).Children(func() {
-				if s.error != "" {
+			if s.error != "" {
+				ui.Row(c).Height(22).Shrink(0).AlignSelf(ui.Center).Children(func() {
 					ui.Text(c, s.error).FontSize(11).TextColor(a.theme.TextMuted).SingleLine()
-				}
-			})
+				})
+			} else {
+				a.composerStatsView(c, false)
+			}
 		})
 	})
 	a.composerPermissionConfirmation(c, s)
@@ -313,4 +317,22 @@ func (a *app) composerCompletionView(c *ui.Context, s *composerState, input ui.E
 		s.dismissedToken = s.completionToken
 		s.completions = nil
 	}
+}
+
+// pendingPanelView takes over the composer seat while an approval or question
+// waits, matching the original conversation.composer overlay behavior.
+func (a *app) pendingPanelView(c *ui.Context) {
+	frame := ui.Row(c).Shrink(0).FillWidth().Justify(ui.Center).Padding(0, 16, 4)
+	cardMax := a.chatContentWidth(c) + 32
+	frame.Children(func() {
+		ui.Column(c).FillWidth().Shrink(1).MinWidth(0).MaxWidth(cardMax).Children(func() {
+			ui.Column(c).FillWidth().MinWidth(0).Padding(14, 16).Gap(12).Radius(28).
+				InsetShadow(0, 0, 0, .5, a.theme.Border).Shadow(0, 8, 24, 0, ui.RGBA(0, 0, 0, .12)).
+				Background(a.colors.Composer).Children(func() {
+				for _, pending := range a.current.Pending {
+					a.pendingView(c, pending)
+				}
+			})
+		})
+	})
 }

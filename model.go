@@ -42,6 +42,7 @@ type message struct {
 	Interrupted      bool             `json:"interrupted"`
 	Collapsed        bool             `json:"collapsed"`
 	Command          json.RawMessage  `json:"command,omitempty"`
+	Trigger          string           `json:"trigger,omitempty"`
 	CallID           string           `json:"callId,omitempty"`
 	ToolName         string           `json:"toolName,omitempty"`
 	ToolStatus       string           `json:"toolStatus,omitempty"`

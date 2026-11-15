@@ -486,3 +486,31 @@ func TestPresentationLaterToolOnlyDoesNotFallBackToEarlierText(t *testing.T) {
 		}
 	}
 }
+
+func TestHistorySnapshotAdoptionIsExplicitAndMonotonic(t *testing.T) {
+	a := presentationTestApp(t, `{"id":"latest","seq":5,"turn":1,"step":2,"role":"assistant","kind":"assistant","text":"answer"}`, "null")
+	old := a.current
+	older := message{ID: "older", Seq: 1, Role: "user", Kind: "user", Text: "older", Turn: 1}
+	merged := old
+	merged.Messages = append([]message{older}, old.Messages...)
+	p := *old.ChatPresentation
+	merged.ChatPresentation = &p
+	if a.replaceSnapshot(merged) {
+		t.Fatal("ordinary duplicate snapshot must not replace the arena")
+	}
+	adopted := a.adoptHistorySnapshot(merged)
+	if !adopted {
+		t.Fatalf("history adoption failed: err=%q currentSession=%q targetSession=%q baseline=%d/%d revision=%d/%d", a.error, a.current.SessionID, merged.SessionID, a.current.ChatPresentation.BaselineSerial, merged.ChatPresentation.BaselineSerial, a.current.ChatPresentation.PresentationRevision, merged.ChatPresentation.PresentationRevision)
+	}
+	if len(a.current.Messages) != 3 || a.current.Messages[0].ID != "older" {
+		t.Fatalf("history adoption arena=%v", a.current.Messages)
+	}
+	a.current.ChatPresentation.PresentationRevision = 1
+	stale := merged
+	stalePresentation := p
+	stalePresentation.PresentationRevision = 0
+	stale.ChatPresentation = &stalePresentation
+	if a.adoptHistorySnapshot(stale) {
+		t.Fatal("history adoption accepted a reworded revision")
+	}
+}

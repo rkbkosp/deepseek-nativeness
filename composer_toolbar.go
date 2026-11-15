@@ -143,7 +143,7 @@ func (a *app) composerToolbar(c *ui.Context, s *composerState, input ui.Element,
 			}
 			a.composerModelPopover(c, model)
 			if a.current.Running && !hasInput {
-				if ui.ButtonBase(c).Size(34, 34).Translate(0, -2).Shrink(0).Radius(17).Background(a.theme.Accent).Label("停止").Disabled(a.busy || !a.connected).Children(func() { icon(c, "stop-fill", 14).TextColor(ui.RGB(255, 255, 255)) }).Clicked() {
+				if ui.ButtonBase(c).Size(34, 34).Translate(0, -2).Shrink(0).Radius(17).Background(a.colors.SendFill).Label("停止").Disabled(a.busy || !a.connected).Children(func() { icon(c, "stop-fill", 14).TextColor(ui.RGB(255, 255, 255)) }).Clicked() {
 					a.mutate("cancel", map[string]any{"sessionId": a.sessionID}, nil)
 				}
 			} else {
@@ -155,7 +155,7 @@ func (a *app) composerToolbar(c *ui.Context, s *composerState, input ui.Element,
 						label = "加入队列"
 					}
 				}
-				if ui.ButtonBase(c).Size(34, 34).Translate(0, -2).Shrink(0).Radius(17).Background(a.theme.Accent).Label(label).Tooltip(label).Disabled(a.busy || !a.connected || !hasInput || artifacts.Loading || a.sessionID == "").Children(func() { icon(c, "send-outline", 16).TextColor(ui.RGB(255, 255, 255)) }).Clicked() {
+				if ui.ButtonBase(c).Size(34, 34).Translate(0, -2).Shrink(0).Radius(17).Background(a.colors.SendFill).Label(label).Tooltip(label).Disabled(a.busy || !a.connected || !hasInput || artifacts.Loading || a.sessionID == "").Children(func() { icon(c, "send-outline", 16).TextColor(ui.RGB(255, 255, 255)) }).Clicked() {
 					a.composerSubmit(false)
 				}
 			}

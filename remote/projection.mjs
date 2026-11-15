@@ -252,7 +252,7 @@ export class SessionProjection {
         this.reindexFrom(start);
       }
     }
-    let role, kind, blocks, source, context, tool, command;
+    let role, kind, blocks, source, context, tool, command, trigger;
     if (event.type === "user/message") {
       source = data.source;
       blocks = data.content;
@@ -272,6 +272,7 @@ export class SessionProjection {
           form: contextForm(source),
           defaultExpanded: false,
         };
+        trigger = triggerKind(source);
       }
     }
     if (event.type === "developer/message") {
@@ -415,6 +416,7 @@ export class SessionProjection {
             }
           : {}),
         ...(command ? { command, collapsed: true } : {}),
+        ...(trigger ? { trigger } : {}),
         ...(["context", "tool", "attempt"].includes(kind) && turn !== undefined
           ? { groupId: `process:${turn}:${step ?? 0}` }
           : {}),
@@ -823,6 +825,14 @@ function assistantText(blocks) {
   return blockText(
     (Array.isArray(blocks) ? blocks : []).filter((b) => b.type !== "tool-call"),
   );
+}
+const TRIGGER_KINDS = new Set([
+  "github", "webhook", "schedule", "job", "plugin", "retry",
+  "goal", "agent", "team", "subagent", "request",
+]);
+function triggerKind(source) {
+  const kind = source && typeof source === "object" ? source.kind : undefined;
+  return typeof kind === "string" && TRIGGER_KINDS.has(kind) ? kind : undefined;
 }
 function reasoningText(blocks) {
   return (Array.isArray(blocks) ? blocks : [])

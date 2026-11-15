@@ -1,0 +1,210 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"github.com/egoist/mygo/ui"
+	"strings"
+	"time"
+)
+
+// markTailRows flags the last visible Assistant response of each Turn. Action
+// chrome belongs there, once, rather than under every intermediate reply.
+func markTailRows(rows []chatRow) {
+	for i := range rows {
+		rows[i].Tail = false
+	}
+	last := map[int]int{}
+	for i := range rows {
+		r := &rows[i]
+		if r.Running || r.Process || r.Control || r.User || r.Turn == 0 {
+			continue
+		}
+		last[r.Turn] = i
+	}
+	for _, i := range last {
+		rows[i].Tail = true
+	}
+}
+
+func latestTurn(rows []chatRow) int {
+	latest := 0
+	for _, r := range rows {
+		if r.Running {
+			continue
+		}
+		if r.Turn > latest {
+			latest = r.Turn
+		}
+	}
+	return latest
+}
+
+func (a *app) tailMessage(row chatRow) *message {
+	if len(row.Parts) > 0 {
+		return a.chatPartMessage(row.Parts[0])
+	}
+	if len(row.Messages) > 0 {
+		return &row.Messages[0]
+	}
+	return nil
+}
+
+func assistantPlainText(m *message) string {
+	if m == nil {
+		return ""
+	}
+	if len(m.AssistantBlocks) == 0 {
+		return m.Text
+	}
+	var b strings.Builder
+	for _, block := range m.AssistantBlocks {
+		if block.Kind == "text" {
+			b.WriteString(block.Text)
+		}
+	}
+	if b.Len() == 0 {
+		return m.Text
+	}
+	return b.String()
+}
+
+func formatMessageClock(ms float64) string {
+	t := time.UnixMilli(int64(ms))
+	now := time.Now()
+	clock := t.Format("15:04")
+	if t.Year() == now.Year() && t.YearDay() == now.YearDay() {
+		return clock
+	}
+	if t.Year() == now.Year() {
+		return fmt.Sprintf("%d月%d日 %s", t.Month(), t.Day(), clock)
+	}
+	return fmt.Sprintf("%d年%d月%d日 %s", t.Year(), t.Month(), t.Day(), clock)
+}
+
+func (a *app) runningStartedAt() time.Time {
+	if p := a.current.ChatPresentation; p != nil {
+		var latest *float64
+		turn := -1
+		for i := range p.Turns {
+			candidate := &p.Turns[i]
+			if candidate.StartTime == nil || candidate.Turn < turn {
+				continue
+			}
+			turn = candidate.Turn
+			latest = candidate.StartTime
+		}
+		if latest != nil {
+			return time.UnixMilli(int64(*latest))
+		}
+	}
+	if !a.runningSince.IsZero() {
+		return a.runningSince
+	}
+	return time.Now()
+}
+
+func (a *app) runningView(c *ui.Context) {
+	start := a.runningStartedAt()
+	elapsed := time.Since(start)
+	if elapsed < 0 {
+		elapsed = 0
+	}
+	if a.metrics.FixedTime == nil {
+		if wait := time.Second - elapsed%time.Second; wait > 0 {
+			c.After(wait)
+		}
+	}
+	label := "深度求索中，用时 " + formatProcessDuration(float64(elapsed.Milliseconds())) + " ···"
+	ui.Row(c).FillWidth().Height(32).Padding(0, 0, 8).Gap(6).AlignItems(ui.Center).
+		BorderWidth(.5, 0, 0, 0).BorderColor(a.theme.Border).Children(func() {
+		icon(c, "whale-outline", 14).TextColor(a.colors.Link)
+		ui.Text(c, label).FontSize(12).FixedLineHeight(22).TextColor(a.colors.Link)
+	})
+}
+
+func (a *app) actionButton(c *ui.Context, label, tooltip, glyph string, size float32, enabled bool, action func()) {
+	b := ui.ButtonBase(c).Label(label).Tooltip(tooltip).Size(28, 28).Padding(5).Radius(8)
+	if !enabled {
+		b.Disabled(true)
+	}
+	b.Children(func() {
+		icon(c, glyph, size).TextColor(a.colors.Tertiary)
+	})
+	if enabled && b.Clicked() && action != nil {
+		action()
+	}
+}
+
+func (a *app) tailActionsView(c *ui.Context, row chatRow, hovered bool, latest int) {
+	m := a.tailMessage(row)
+	if m == nil || m.Role != "assistant" || m.Streaming {
+		return
+	}
+	visible := hovered || row.Turn == latest
+	opacity := float32(.0)
+	if visible {
+		opacity = 1
+	}
+	text := assistantPlainText(m)
+	ui.Row(c).Key("tail-actions:" + m.ID).Height(28).Gap(8).AlignItems(ui.Center).Opacity(opacity).Children(func() {
+		a.actionButton(c, "复制消息 "+m.ID, "复制", "copy-outline", 17, true, func() { c.WriteClipboard(text) })
+		feedbackID := feedbackMessageID(*m)
+		a.actionButton(c, "有帮助 "+m.ID, "喜欢这条回复", "like-outline", 17, feedbackID != "", func() {
+			a.openFeedback("positive", feedbackID)
+		})
+		a.actionButton(c, "无帮助 "+m.ID, "不喜欢这条回复", "dislike-outline", 17, feedbackID != "", func() {
+			a.openFeedback("negative", feedbackID)
+		})
+		forkEnabled := a.can("forkSession") && m.Seq > 0
+		a.actionButton(c, "分叉消息 "+m.ID, "在新对话中分支", "branch-outline", 17, forkEnabled, func() {
+			a.forkAtMessage(*m)
+		})
+		if a.uiPrefs.UsageDetail == "detailed" {
+			if usage, ok := parseMessageUsage(m.Usage); ok {
+				ui.Row(c).Gap(4).AlignItems(ui.Center).Children(func() {
+					icon(c, "data-outline", 14).TextColor(a.colors.Tertiary)
+					ui.Text(c, "用量 "+formatTokenCount(usage.total())+" tok").FontSize(12).TextColor(a.colors.Tertiary)
+				})
+			}
+		}
+		if m.Time > 0 {
+			ui.Text(c, formatMessageClock(m.Time)).FontSize(12).TextColor(a.colors.Tertiary)
+		}
+	})
+}
+
+func (a *app) forkAtMessage(m message) {
+	if m.Seq <= 0 || !a.can("forkSession") {
+		return
+	}
+	a.mutate("forkSession", map[string]any{"sessionId": a.sessionID, "atSeq": m.Seq}, func(json.RawMessage) error {
+		a.fetchWorkspaces()
+		a.fetchSessions()
+		return nil
+	})
+}
+
+// actionStrip is the user message's compact time/copy chrome.
+func (a *app) steeringView(c *ui.Context, row chatRow) {
+	if len(row.Messages) == 0 {
+		return
+	}
+	m := row.Messages[0]
+	ui.Row(c).Children(func() {
+		ui.Spacer(c)
+		ui.Column(c).MaxWidth(a.chatContentWidth(c) * .702).Gap(6).Children(func() {
+			ui.Text(c, m.Text).FontSize(a.uiPrefs.FontSize).FixedLineHeight(22).Wrap().Padding(10, 16).Radius(20).Background(a.colors.Bubble).Opacity(.92)
+		})
+	})
+}
+
+func (a *app) actionStrip(c *ui.Context, m message) {
+	ui.Row(c).Key("user-actions:" + m.ID).Height(28).Gap(8).AlignItems(ui.Center).Children(func() {
+		ui.Spacer(c)
+		if m.Time > 0 {
+			ui.Text(c, formatMessageClock(m.Time)).FontSize(13).TextColor(a.colors.Tertiary)
+		}
+		a.actionButton(c, "复制消息 "+m.ID, "复制", "copy-outline", 15, true, func() { c.WriteClipboard(m.Text) })
+	})
+}

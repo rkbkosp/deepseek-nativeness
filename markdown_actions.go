@@ -147,25 +147,25 @@ func (a *app) browserPaneView(c *ui.Context) {
 	}
 }
 func (a *app) markdownCodeBlock(c *ui.Context, b *markdown.CodeBlockView) {
-	box := ui.Column(c).FillWidth().MinWidth(0).Radius(12).Background(a.theme.Surface).Label("代码块")
+	box := ui.Column(c).FillWidth().MinWidth(0).Radius(16).Clip().Background(a.colors.CodeBlock).Label("代码块")
 	type state struct {
 		Wrap   bool
 		Copied time.Time
 	}
 	s := ui.Local(box, "markdown-code", func() state { return state{Wrap: true} })
 	box.Children(func() {
-		ui.Row(c).Padding(10, 18, 8, 22).Gap(4).AlignItems(ui.Center).Children(func() {
+		ui.Row(c).FillWidth().Background(a.colors.CodeBanner).Padding(9, 14).Gap(4).AlignItems(ui.Center).Children(func() {
 			label := b.Language
 			if !supportsCodeHint(label) {
 				label = "代码块"
 			}
-			ui.Text(c, label).FontSize(11).TextColor(a.theme.TextMuted)
+			ui.Text(c, label).FontSize(11).TextColor(a.theme.Text)
 			ui.Spacer(c)
 			wrapGlyph, wrapTitle := "wrap-fill", "自动换行"
 			if s.Wrap {
 				wrapGlyph, wrapTitle = "nowrap-fill", "取消自动换行"
 			}
-			if ui.ButtonBase(c).Size(24, 24).Padding(0).Radius(4).Label("自动换行").Tooltip(wrapTitle).Children(func() { icon(c, wrapGlyph, 14).TextColor(a.theme.TextMuted) }).Clicked() {
+			if ui.ButtonBase(c).Size(24, 24).Padding(0).Radius(4).Label("自动换行").Tooltip(wrapTitle).Children(func() { icon(c, wrapGlyph, 14).TextColor(a.colors.Secondary) }).Clicked() {
 				s.Wrap = !s.Wrap
 			}
 			copied := !s.Copied.IsZero() && c.Now().Sub(s.Copied) < 2*time.Second
@@ -178,7 +178,7 @@ func (a *app) markdownCodeBlock(c *ui.Context, b *markdown.CodeBlockView) {
 			if copied {
 				glyph = "check-outline"
 			}
-			if ui.ButtonBase(c).Size(24, 24).Padding(0).Radius(4).Label("复制代码").Tooltip(title).Children(func() { icon(c, glyph, 14).TextColor(a.theme.TextMuted) }).Clicked() {
+			if ui.ButtonBase(c).Size(24, 24).Padding(0).Radius(4).Label("复制代码").Tooltip(title).Children(func() { icon(c, glyph, 14).TextColor(a.colors.Secondary) }).Clicked() {
 				c.WriteClipboard(b.Code())
 				s.Copied = c.Now()
 			}
@@ -189,7 +189,7 @@ func (a *app) markdownCodeBlock(c *ui.Context, b *markdown.CodeBlockView) {
 		// The framework's selectable/highlighted body stays intact. Its outer
 		// flex item must be shrinkable, otherwise an unbroken line becomes the
 		// card's intrinsic minimum width even when wrap is enabled.
-		b.Body(c).FillWidth().MinWidth(0).Shrink(1).Margin(6-a.uiPrefs.FontSize*.25, 0, -2, 0).Label("代码内容")
+		b.Body(c).FillWidth().MinWidth(0).Shrink(1).Margin(16-a.uiPrefs.FontSize*.25, 0, 0, 0).Label("代码内容")
 		a.md.WrapCode = old
 		a.mdCell.WrapCode = oldCell
 	})

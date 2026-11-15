@@ -46,7 +46,7 @@ func (a *app) headerPresetView(c *ui.Context) {
 	if !present {
 		return
 	}
-	ui.Row(c).MaxWidth(180).MinWidth(0).Height(22).Shrink(0).Padding(0, 2, 0, 0).Gap(4).AlignItems(ui.Center).Radius(3).TextColor(a.theme.TextMuted).Tooltip(description).Label("任务模式").Children(func() {
+	ui.Row(c).MaxWidth(180).MinWidth(0).Height(22).Shrink(0).Padding(0, 2, 0, 0).Gap(4).AlignItems(ui.Center).Radius(4).Background(a.colors.Subtle).TextColor(a.colors.Tertiary).Tooltip(description).Label("任务模式").Children(func() {
 		icon(c, "agent-preset-outline", 14).Shrink(0)
 		ui.Text(c, name).FontSize(12).SingleLine().Ellipsis("…").MinWidth(0).Shrink(1)
 	})

@@ -6,7 +6,12 @@ import (
 	"github.com/egoist/mygo/ui/markdown"
 )
 
-type palette struct{ Sidebar, RowHover, Selected, Composer, Popup, Subtle ui.Color }
+type palette struct {
+	Sidebar, RowHover, Selected, Composer, Popup, Subtle ui.Color
+	Secondary, Tertiary, Caption, Bubble                 ui.Color
+	CodeBlock, CodeBanner, InlineCode                    ui.Color
+	Link, SendFill, HoverOverlay                         ui.Color
+}
 type viewPreferences struct {
 	Theme              string              `json:"theme"`
 	GroupBy            string              `json:"groupBy"`
@@ -60,54 +65,112 @@ func (a *app) applyAppearance(c *ui.Context) {
 			t.TextMuted = ui.Hex("#96979c")
 			t.Accent = ui.Hex("#8aaef0")
 			t.AccentHover = ui.Hex("#9dbcf3")
-			a.colors = palette{Sidebar: ui.Hex("#303033"), RowHover: ui.Hex("#3d3d40"), Selected: ui.Hex("#414144"), Composer: ui.Hex("#29292c"), Popup: ui.Hex("#29292f"), Subtle: ui.Hex("#232325")}
+			a.colors = palette{
+				Sidebar: ui.Hex("#303033"), RowHover: ui.Hex("#3d3d40"), Selected: ui.Hex("#414144"),
+				Composer: ui.Hex("#2c2c2e"), Popup: ui.Hex("#2c2c2e"), Subtle: ui.Hex("#232324"),
+				Secondary: ui.Hex("#cfd3d6"), Tertiary: ui.Hex("#adb2b8"), Caption: ui.Hex("#81858c"),
+				Bubble: ui.Hex("#2c2c2e"), CodeBlock: ui.Hex("#1b1b1c"), CodeBanner: ui.Hex("#2c2c2e"),
+				InlineCode: ui.Hex("#292929"), Link: ui.Hex("#7aaaff"), SendFill: ui.Hex("#7aaaff"),
+				HoverOverlay: ui.RGBA(255, 255, 255, 0.08),
+			}
 		} else {
 			t.Background = ui.Hex("#ffffff")
 			t.Text = ui.Hex("#141518")
 			t.TextMuted = ui.Hex("#878a90")
 			t.Accent = ui.Hex("#477be2")
 			t.AccentHover = ui.Hex("#386ed2")
-			a.colors = palette{Sidebar: ui.Hex("#e9eaee"), RowHover: ui.Hex("#dfe1e5"), Selected: ui.Hex("#dfe0e4"), Composer: ui.Hex("#ffffff"), Popup: ui.Hex("#f7f7f9"), Subtle: ui.Hex("#f3f5f8")}
+			a.colors = palette{
+				Sidebar: ui.Hex("#e9eaee"), RowHover: ui.Hex("#dfe1e5"), Selected: ui.Hex("#dfe0e4"),
+				Composer: ui.Hex("#ffffff"), Popup: ui.Hex("#f7f7f9"), Subtle: ui.Hex("#f3f5f8"),
+				Secondary: ui.Hex("#61666b"), Tertiary: ui.Hex("#81858c"), Caption: ui.Hex("#adb2b8"),
+				Bubble: ui.Hex("#edf3fe"), CodeBlock: ui.Hex("#f9fafb"), CodeBanner: ui.Hex("#f9fafb"),
+				InlineCode: ui.Hex("#fafafa"), Link: ui.Hex("#4176e6"), SendFill: ui.Hex("#4176e6"),
+				HoverOverlay: ui.RGBA(38, 49, 72, 0.06),
+			}
 		}
 		// DSH design-platform.css aliases, not screenshot sampled values.
 		if dark {
 			t.Background = ui.Hex("#151517")
 			t.Surface = ui.Hex("#2c2c2e")
 			t.Text = ui.Hex("#f9fafb")
-			t.TextMuted = ui.Hex("#979da6")
-			t.Accent = ui.Hex("#5686fe")
+			t.TextMuted = a.colors.Tertiary
+			t.Accent = a.colors.Link
+			t.AccentHover = ui.Hex("#9bbeff")
 			t.Border = ui.RGBA(255, 255, 255, 0.12)
-			a.colors.Composer = t.Surface
-			a.colors.Subtle = ui.Hex("#232324")
-			a.colors.Popup = ui.Hex("#2c2c2e")
+			t.Selection = ui.RGBA(122, 170, 255, 0.30)
 			a.colors.Selected = ui.Hex("#43454a")
+		} else {
+			t.Text = ui.Hex("#0f1115")
+			t.TextMuted = a.colors.Tertiary
+			t.Accent = a.colors.Link
+			t.AccentHover = ui.Hex("#386ed2")
+			t.Border = ui.RGBA(0, 0, 0, 0.10)
 		}
 		a.theme = t
 		a.contentFontSize = a.uiPrefs.FontSize
 		a.appearanceSignature = a.fontSignature()
 		md := markdown.DefaultTheme(t)
-		md.FontSize = a.uiPrefs.FontSize
+		size := a.uiPrefs.FontSize
+		codeSize := a.uiPrefs.CodeFontSize
+		md.FontSize = size
 		if a.uiPrefs.TextFontFamily != "" {
 			md.Font = a.uiPrefs.TextFontFamily
 		}
 		if a.uiPrefs.CodeFontFamily != "" {
 			md.CodeFont = a.uiPrefs.CodeFontFamily
 		}
-		md.CodeSize = a.uiPrefs.CodeFontSize / a.uiPrefs.FontSize
-		// CodeCard's content inset is 22 DIP, independent of the message font.
-		md.CodeBlockPadding = 22 / a.uiPrefs.FontSize
-		md.LineHeight = 1.7
-		md.BlockSpacing = .85
-		md.CodeBlockBackground = t.Surface
-		md.CodeBlockBorder = t.Border
+		md.CodeSize = codeSize / size
+		md.CodeLineHeight = 19 / codeSize
+		md.CodeBlockPadding = 16 / size
+		md.CodeBlockRadius = 16
+		md.LineHeight = (size + 10) / size
+		md.BlockSpacing = 16 / size
+		md.ListIndent = 18 / size
+		md.ItemSpacing = 6 / size
+		md.LinkWeight = 500
+		md.Link = a.colors.Link
+		md.CodeBackground = a.colors.InlineCode
+		md.CodeBlockBackground = a.colors.CodeBlock
+		md.CodeBlockBorder = ui.Transparent
+		md.QuoteBar = a.colors.Caption
+		md.QuoteBarWidth = 2
+		md.QuoteText = t.Text
+		md.Rule = t.Border
 		md.TableHeader = ui.Transparent
 		md.TableStripe = ui.Transparent
 		md.TableBorder = t.Border
-		for i, size := range []float32{21, 19, 18, 14, 14, 14} {
-			md.Headings[i].Size = size / 14
-			md.Headings[i].Weight = 600
+		md.TableCellPadding = [2]float32{16 / size, 10 / size}
+		base := [6]float32{21, 19, 18, 14, 14, 14}
+		for i := range md.Headings {
+			delta := base[i] - 14
+			md.Headings[i].Size = (size + delta) / size
+			if i < 3 {
+				md.Headings[i].Weight = 700
+				md.Headings[i].Top = 32 / size
+				md.Headings[i].Bottom = 16 / size
+			} else {
+				md.Headings[i].Weight = 600
+				md.Headings[i].Top = 16 / size
+				md.Headings[i].Bottom = 16 / size
+			}
 		}
 		a.md.Theme = md
+		compact := md
+		compact.FontSize = 13
+		compact.LineHeight = 20.0 / 13
+		compact.BlockSpacing = 4.0 / 13
+		compact.ItemSpacing = 2.0 / 13
+		compact.ListIndent = 18.0 / 13
+		compact.CodeSize = codeSize / 13
+		compact.CodeLineHeight = 18.0 / codeSize
+		compact.CodeBlockPadding = 12.0 / 13
+		for i := range compact.Headings {
+			compact.Headings[i].Size = 1
+			compact.Headings[i].Weight = 600
+			compact.Headings[i].Top = 8.0 / 13
+			compact.Headings[i].Bottom = 4.0 / 13
+		}
+		a.mdCompact.Theme = compact
 	}
 	c.SetTheme(a.theme)
 }

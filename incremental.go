@@ -3,16 +3,35 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 func (a *app) replaceSnapshot(s snapshot) bool {
+	return a.replaceSnapshotMode(s, false)
+}
+
+// adoptHistorySnapshot accepts the helper's merged history snapshot, whose
+// presentation baseline is unchanged but whose message arena now contains the
+// older page. Ordinary snapshots keep the stricter monotonic guard so a late
+// duplicate cannot rewind a same-revision streaming suffix.
+func (a *app) adoptHistorySnapshot(s snapshot) bool {
+	return a.replaceSnapshotMode(s, true)
+}
+
+func (a *app) replaceSnapshotMode(s snapshot, history bool) bool {
 	if before := a.current.ChatPresentation; before != nil && a.current.SessionID == s.SessionID {
 		if s.ChatPresentation == nil {
 			a.error = "远程对话结构缺少基线版本，请重新打开会话"
 			return false
 		}
-		if s.ChatPresentation.BaselineSerial <= before.BaselineSerial {
+		if s.ChatPresentation.BaselineSerial < before.BaselineSerial {
 			return false
+		}
+		if s.ChatPresentation.BaselineSerial == before.BaselineSerial {
+			if !history || s.ChatPresentation.PresentationEpoch != before.PresentationEpoch ||
+				s.ChatPresentation.PresentationRevision < before.PresentationRevision {
+				return false
+			}
 		}
 	}
 	if s.ChatPresentation != nil {
@@ -26,6 +45,12 @@ func (a *app) replaceSnapshot(s snapshot) bool {
 		}
 	}
 	a.invalidateChatRows()
+	if s.Running && !a.current.Running {
+		a.runningSince = time.Now()
+	}
+	if !s.Running {
+		a.runningSince = time.Time{}
+	}
 	a.current = s
 	a.sessionID = s.SessionID
 	if a.sessionOpening == s.SessionID {
@@ -203,6 +228,12 @@ func (a *app) applyIncremental(method string, raw json.RawMessage) error {
 		}
 		if err := json.Unmarshal(raw, &p); err != nil {
 			return err
+		}
+		if p.Running && !a.current.Running {
+			a.runningSince = time.Now()
+		}
+		if !p.Running {
+			a.runningSince = time.Time{}
 		}
 		a.current.Running = p.Running
 		a.current.Cursor = p.Cursor

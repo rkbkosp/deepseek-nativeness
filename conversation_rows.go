@@ -165,7 +165,12 @@ func (a *app) chatRows() []chatRow {
 			if process {
 				id = "process:" + id
 			}
-			next.rows = append(next.rows, chatRow{ID: id, Process: process, Messages: messages[index : index+1], Turn: m.Turn, DefaultOpen: process && open})
+			row := chatRow{ID: id, Process: process, Messages: messages[index : index+1], Turn: m.Turn, DefaultOpen: process && open}
+			if !process {
+				row.User = m.Role == "user"
+				row.Response = m.Role == "assistant"
+			}
+			next.rows = append(next.rows, row)
 			groupStart = index
 			group = nil
 		}
