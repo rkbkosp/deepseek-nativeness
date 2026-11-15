@@ -69,6 +69,17 @@ case "${1:-}" in
   --use-built-assets|--use-next-assets|--use-perf-assets|--use-layout-assets|--use-forced-layout-assets|--use-gui9-assets|--use-gui9-forced-assets|--use-gui10-assets|--use-gui10-forced-assets|--use-gui11-assets|--use-gui11-forced-assets) ;;
   *) npm run --prefix remote build; npm run --prefix compat build ;;
 esac
+# NativeView hosts the compositor animation; the frozen MyGo module is unchanged.
+mkdir -p "$app/Contents/Frameworks"
+case "$(go env GOARCH)" in
+  arm64) indicator_arch=arm64 ;;
+  amd64) indicator_arch=x86_64 ;;
+  *) echo Unsupported macOS indicator architecture >&2; exit 1 ;;
+esac
+swiftc -target "$indicator_arch-apple-macos15.8" -O -emit-library -module-name NativeDSHIndicators \
+  indicator_native/Indicator.swift -o "$app/Contents/Frameworks/libNativeDSHIndicators.dylib" \
+  -framework AppKit -framework QuartzCore
+codesign --force --sign - --timestamp=none "$app/Contents/Frameworks/libNativeDSHIndicators.dylib"
 CGO_ENABLED=0 go build -buildvcs=false -trimpath -tags mygo_noinspector -ldflags '-s -w -X github.com/egoist/mygo.production=1' -o "$app/Contents/MacOS/native-dsh" .
 if [ "$remote_assets" = "dist-chat-process-next" ]; then
   cp "build/runtime-chat-process-next/node" "$app/Contents/MacOS/node"

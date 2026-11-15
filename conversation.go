@@ -38,7 +38,7 @@ func (a *app) header(c *ui.Context) {
 				}
 			}
 			if a.current.Running {
-				stateIndicator(c, true, a.epoch, a.theme.TextMuted, &a.metrics)
+				stateIndicator(c, true, a.epoch, a.theme.TextMuted, &a.metrics, indicatorBacking{Color: a.theme.Background})
 				ui.Text(c, "运行中").TextColor(a.theme.TextMuted).FontSize(12)
 			}
 			ui.ButtonBase(c).Label("会话更多操作").Padding(4).Children(func() { icon(c, "ellipsis-outline", 16).TextColor(a.theme.TextMuted) }).Menu(func(m *ui.Menu) {
@@ -120,7 +120,7 @@ func (a *app) conversation(c *ui.Context) {
 			})
 		case conversationLoading:
 			ui.Column(c).Grow(1).Center().Gap(10).Padding(30).Children(func() {
-				stateIndicator(c, true, a.epoch, a.theme.TextMuted, &a.metrics)
+				stateIndicator(c, true, a.epoch, a.theme.TextMuted, &a.metrics, indicatorBacking{Color: a.theme.Background})
 				ui.Text(c, "正在载入会话…").TextColor(a.theme.TextMuted)
 			})
 		default:

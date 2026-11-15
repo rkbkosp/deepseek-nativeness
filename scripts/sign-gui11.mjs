@@ -11,6 +11,11 @@ const destination=resolve(process.argv[3]??join(root,"build/signed-gui11/Native 
 const audit=join(root,"build/signed-gui11-audit"),identity="152AB464732D868D81B7D7829E1C4FC9F803178E",team="8U6DAJ62JT";
 const nativeBuiltAt="1feddef",entitlements=join(root,"scripts/node-runtime-entitlements.plist");
 const components=["Contents/Resources/remote/node_modules/@roamhq/wrtc-darwin-arm64/wrtc.node","Contents/MacOS/node","Contents/MacOS/native-dsh"];
+// Older reviewed bundles have no native indicator library. Sign it explicitly
+// when present so hardened library validation keeps the same team identity.
+const indicatorLibrary="Contents/Frameworks/libNativeDSHIndicators.dylib";
+try { await lstat(join(source,indicatorLibrary)); components.push(indicatorLibrary); }
+catch(error) { if(error.code!=="ENOENT") throw error; }
 const sha=value=>createHash("sha256").update(value).digest("hex");
 const commands=[];
 function command(program,args,options={}){
@@ -68,7 +73,7 @@ try{
  await mkdir(resolve(destination,".."),{recursive:true});await cp(source,destination,{recursive:true,force:false,errorOnExist:true,verbatimSymlinks:true,preserveTimestamps:true});
  for(const name of components){const path=join(destination,name);assert.ok((await lstat(path)).isFile());assert.ok((await realpath(path)).startsWith((await realpath(destination))+"/"));}
  const base=["--force","--sign",identity,"--options","runtime","--timestamp"];
- command("codesign",[...base,join(destination,components[0])]);
+ for(const name of components.filter(name=>name!=="Contents/MacOS/node"&&name!=="Contents/MacOS/native-dsh")) command("codesign",[...base,join(destination,name)]);
  command("codesign",[...base,"--entitlements",entitlements,join(destination,components[1])]);
  command("codesign",[...base,destination]);
  command("codesign",["--verify","--deep","--strict","--verbose=2",destination]);

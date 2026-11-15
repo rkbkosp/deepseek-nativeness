@@ -135,7 +135,11 @@ func (a *app) sidebarView(c *ui.Context) {
 			ui.Text(c, "连接主机后显示远程工作区").FontSize(12).TextColor(a.theme.TextMuted).Padding(8).Wrap()
 		}
 		ui.Row(c).Padding(8).Gap(7).Children(func() {
-			stateIndicator(c, a.busy, a.epoch, a.theme.TextMuted, &a.metrics)
+			backing := indicatorBacking{Color: a.colors.Sidebar}
+			if c.Vibrancy() {
+				backing = a.indicatorSidebarBacking(c)
+			}
+			stateIndicator(c, a.busy, a.epoch, a.theme.TextMuted, &a.metrics, backing)
 			ui.Text(c, a.status).FontSize(12).TextColor(a.theme.TextMuted).Grow(1).SingleLine().Ellipsis("…")
 		})
 		if len(a.mutations) > 0 {
@@ -175,14 +179,20 @@ func (a *app) sessionRow(c *ui.Context, r sidebarRow) {
 	host := a.hostID
 	scope := a.accountScope
 	row := ui.Row(c.Key(r.Key)).Height(34).Padding(0, 12+float32(r.Depth)*12).Gap(7).Radius(8).AlignItems(ui.Center).Label("会话 " + s.Title)
+	backing := indicatorBacking{Color: a.colors.Sidebar}
+	if c.Vibrancy() {
+		backing = a.indicatorSidebarBacking(c)
+	}
 	if s.ID == a.sessionID {
+		backing = indicatorBacking{Color: a.colors.Selected}
 		row.Background(a.colors.Selected)
 	} else if row.Hovered() {
+		backing = indicatorBacking{Color: a.colors.RowHover}
 		row.Background(a.colors.RowHover)
 	}
 	row.Children(func() {
 		if s.Running {
-			stateIndicator(c, true, a.epoch, a.theme.TextMuted, &a.metrics)
+			stateIndicator(c, true, a.epoch, a.theme.TextMuted, &a.metrics, backing)
 		} else {
 			ui.Box(c).Size(14, 14).Shrink(0)
 		}

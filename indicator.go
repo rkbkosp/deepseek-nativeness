@@ -45,17 +45,29 @@ type renderStats struct {
 	AnimationFrames   uint64 `json:"animationFrames"`
 	lastPaint         time.Time
 	FixedTime         *time.Duration `json:"-"`
+	indicators        *indicatorViewPool
 }
 
-func stateIndicator(c *ui.Context, running bool, epoch time.Time, color ui.Color, stats *renderStats) {
+func stateIndicator(c *ui.Context, running bool, epoch time.Time, color ui.Color, stats *renderStats, background ...indicatorBacking) {
+	element := ui.Box(c).Size(14, 14)
+	reduce := c.Preferences().ReduceMotion
+	allowed := running && !reduce && (stats == nil || stats.FixedTime == nil)
+	backing := indicatorBacking{Color: c.Theme().Background}
+	if len(background) > 0 {
+		backing = background[0]
+	}
+	native := nativeStateIndicator(c, element, epoch, color, stats, allowed, backing)
 	if !running {
-		ui.Box(c).Size(14, 14).Draw(func(p *ui.Painter, r ui.Rect) {
+		element.Draw(func(p *ui.Painter, r ui.Rect) {
 			p.Fill(ui.Rect{X: r.X + 5, Y: r.Y + 5, W: 4, H: 4}, color.Alpha(.4), 2)
 		})
 		return
 	}
-	reduce := c.Preferences().ReduceMotion
-	ui.Box(c).Size(14, 14).Label("正在运行").Role(ui.RoleProgress).Draw(func(p *ui.Painter, r ui.Rect) {
+	element.Label("正在运行").Role(ui.RoleProgress)
+	if native {
+		return
+	}
+	element.Draw(func(p *ui.Painter, r ui.Rect) {
 		elapsed := p.Now().Sub(epoch)
 		if stats != nil {
 			stats.IndicatorPaints++
