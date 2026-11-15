@@ -21,20 +21,24 @@ import (
 // qaUIStates are the states a review run may request. They exist because each
 // one used to need a click that automation cannot make.
 var qaUIStates = map[string]string{
-	"none":              "connected transcript only",
-	"sidebar-collapsed": "sidebar hidden",
-	"settings":          "settings panel",
-	"settings-models":   "settings panel on the model section",
-	"settings-plugins":  "settings panel on the plugin section",
-	"search":            "search field open",
-	"right-pane":        "right pane open on its start surface",
-	"trajectory":        "trajectory tab",
-	"plugins":           "compatibility page: plugins",
-	"automation":        "compatibility page: automations",
-	"terminal":          "right pane terminal",
-	"workspace-create":  "new-workspace sheet",
-	"connection":        "host connection page (Remote or local facts)",
-	"plugins-race":      "plugins page opened in the same frame as a session switch (regression probe)",
+	"none":                  "connected transcript only",
+	"sidebar-collapsed":     "sidebar hidden",
+	"settings":              "settings panel",
+	"settings-models":       "settings panel on the model section",
+	"settings-plugins":      "settings panel on the plugin section",
+	"search":                "search field open",
+	"right-pane":            "right pane open on its start surface",
+	"trajectory":            "trajectory tab",
+	"plugins":               "compatibility page: plugins",
+	"automation":            "compatibility page: automations",
+	"terminal":              "right pane terminal",
+	"workspace-create":      "new-workspace sheet",
+	"connection":            "host connection page (Remote or local facts)",
+	"plugins-race":          "plugins page opened in the same frame as a session switch (regression probe)",
+	"settings-plugins-page": "settings panel on the plugin compatibility page",
+	"models":                "model compatibility page",
+	"agent-presets":         "agent preset compatibility page",
+	"plugin-settings":       "plugin settings compatibility page",
 }
 
 // qaUIStateNeedsSession reports whether a surface is only reachable with an
@@ -45,6 +49,9 @@ var qaUIStateNeedsSession = map[string]bool{
 	"terminal":   true,
 	"plugins":    true,
 	"automation": true,
+	// The model page reads a Session's selection and reports "请先选择会话。"
+	// without one, so a capture of it needs a Session open.
+	"models": true,
 }
 
 // applyQAUIStateWhenReady waits for the first connected frame, prepares the
@@ -122,6 +129,14 @@ func (a *app) applyQAUIState(state string) {
 		a.openCompatAt("trajectory", "trajectory")
 	case "plugins":
 		a.openCompat("plugins")
+	case "models":
+		a.openCompat("models")
+	case "agent-presets":
+		a.openCompat("agent-presets")
+	case "plugin-settings":
+		a.openCompat("plugin-settings")
+	case "settings-plugins-page":
+		a.openSettingsSection("plugins")
 	case "automation":
 		a.openCompat("automation")
 	case "terminal":
