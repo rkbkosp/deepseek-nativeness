@@ -1,0 +1,55 @@
+{
+  "createdAt": "2026-11-15T00:10:54.215Z",
+  "commit": "00d6f2cfd64d1e0a3d8dde7c41c7c909e06ea3e5",
+  "scope": "Independent source/fixture audit only; no app launch/rebuild, AppKit theme override or OS preference changed by this audit",
+  "source": {
+    "app.go": {
+      "sha256": "568edbfebec91f3ca1f6887695915d374569fca371baf5854521ba9a0145f738",
+      "matchesCommit": true
+    },
+    "appearance.go": {
+      "sha256": "ab01ff590078e28ee69474aa7aff52538c3cd28310099526e904b00791ef5e62",
+      "matchesCommit": true
+    },
+    "appearance_test.go": {
+      "sha256": "8a5b5e36e8e1bb3c86b827ba1b11c884610c12336d13be9097b485287481a86e",
+      "matchesCommit": true
+    },
+    "main.go": {
+      "sha256": "edbde4bbf5d97099cd72757da75f033dfaf0058b2e8fae7a86bedc9e44686a76",
+      "matchesCommit": true
+    },
+    "qa/native-appearance-source-review.json": {
+      "sha256": "f34e0a47ce2dca6447d0bd7803729365cf34515749afce4949201ef38acff49f",
+      "matchesCommit": true
+    },
+    "settings_panel.go": {
+      "sha256": "1beb2ea253b66f3aaaa1962df886b36be6918c96f27a4fbbef5705b415ac9b76",
+      "matchesCommit": true
+    },
+    "theme.go": {
+      "sha256": "be60c222e55fe6264560663b5008df7a783832e033d669f6691967595f820dfe",
+      "matchesCommit": true
+    }
+  },
+  "conclusion": "No source blocker found in this narrowly scoped appearance patch; actual NSVisualEffectView/WK composed acceptance still pending.",
+  "evidence": [
+    "Public Theme.SetSource expressly allows startup before Run; internally applies NSApplication appearance Aqua/DarkAqua or nil(System), not system defaults.",
+    "Production SetSource appears only startup and changed explicit selectAppearance. applyAppearance/view and OnUpdated do not set source.",
+    "IsDark is effective application appearance, read after override; returning System never persists inferred dark/light.",
+    "Only settings panel fill resolves original layer2 #fff/#2c2c2e; generic popup/WK CSS remain unchanged."
+  ],
+  "checks": [
+    "Re-ran author TestAppearance/TestSettingsPanelPaint passed",
+    "Independent TestCrossSavedAppearanceReturnsToActualSystemAndRenderNeverSetsSource passed: saved light/dark × desktop light/dark, idempotent intent30times,8actuala.view frames, later system update retained preference=system."
+  ],
+  "commands": [
+    "CGO_ENABLED=0 go test -run 'TestAppearance|TestSettingsPanelPaint' -count=1 .",
+    "CGO_ENABLED=0 go test -overlay=qa/appearance-cross-overlay.json -run '^TestCrossSavedAppearance' -count=1 ."
+  ],
+  "pending": [
+    "Actual opposite-system-theme native vibrancy/title controls",
+    "Actual WK/native settings boundary",
+    "macOS15.8 and M1 device acceptance"
+  ]
+}

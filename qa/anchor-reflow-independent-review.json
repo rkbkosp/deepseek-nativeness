@@ -1,0 +1,27 @@
+{
+  "checkedAt": "2026-11-14T17:26:02.924Z",
+  "checkpoint": "e7c90e4e6958adbeafaae3d8ad4eda316dff66a7",
+  "recompiled": "node compat/build.mjs --engine-test (only .test-build)",
+  "tests": "node --test qa/anchor-cross-source.test.mjs compat/test/menu-anchor.test.mjs",
+  "testsPassed": 19,
+  "inputsChecked": 833,
+  "namespaceInputs": 47,
+  "namespaceRule": "Selected-original-primitives entries hash their importer source; strip namespace as author report does. Generated seam exercised by source component tests.",
+  "assetsChecked": 384,
+  "oldResourceFilesChecked": 7969,
+  "diffs": [],
+  "sourceReview": {
+    "bounded": true,
+    "localReactLayoutCommitSchedulesOnlyMountedOwner": true,
+    "oneCoalescedFrame": true,
+    "frameNeverSelfSchedules": true,
+    "originalKeyboardFocusPreserved": true,
+    "originalCallbackCleanupTested": true,
+    "scope": "80 independent lifecycle cycles incl node listeners, event bursts, four position-only reflow counterexamples now pass; author real TaskMenu/Picker + nested fixtures pass"
+  },
+  "unverified": [
+    "Actual macOS15.8 WK",
+    "M1 composed-screen and full-app performance"
+  ],
+  "reportSHA256": "7d4450d4e4bfab7dd8a3a93c3eb314a7f9bdea4137712cfec990831d6ed895ea"
+}

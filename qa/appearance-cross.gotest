@@ -1,0 +1,46 @@
+package main
+
+import (
+	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/ui"
+	"testing"
+)
+
+func TestCrossSavedAppearanceReturnsToActualSystemAndRenderNeverSetsSource(t *testing.T) {
+	for _, desktopDark := range []bool{false, true} {
+		for _, saved := range []string{"light", "dark"} {
+			a := newApp(true)
+			a.uiPrefs.Theme = saved
+			a.effectiveDark = saved == "dark"
+			calls, reads := 0, 0
+			set := func(source mygo.ThemeSource) {
+				calls++
+				if source != mygo.ThemeSystem {
+					t.Fatal("return to system set forced appearance")
+				}
+			}
+			dark := func() bool { reads++; return desktopDark }
+			if !a.changeAppearance("system", set, dark) || calls != 1 || reads != 1 || a.effectiveDark != desktopDark || a.uiPrefs.Theme != "system" {
+				t.Fatal("saved explicit preference retained old effective state")
+			}
+			for i := 0; i < 30; i++ {
+				if a.changeAppearance("system", set, dark) {
+					t.Fatal("unchanged intent changed preference")
+				}
+			}
+			tt := ui.NewTester(a.view, 1280, 820)
+			for i := 0; i < 8; i++ {
+				tt.Frame()
+			}
+			if calls != 1 || reads != 1 {
+				t.Fatal("render/repeated intent reapplied source", calls, reads)
+			}
+			a.effectiveDark = !desktopDark
+			tt.Frame()
+			if a.theme.Dark == desktopDark || a.uiPrefs.Theme != "system" {
+				t.Fatal("system update failed or rewrote preference")
+			}
+			a.cancel()
+		}
+	}
+}
