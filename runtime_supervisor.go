@@ -26,18 +26,22 @@ import (
 type runtimePhase string
 
 const (
-	runtimeIdle        runtimePhase = "idle"
-	runtimePhaseStart  runtimePhase = "starting"
-	runtimePhaseReady  runtimePhase = "ready"
-	runtimePhaseStop   runtimePhase = "stopping"
+	runtimeIdle         runtimePhase = "idle"
+	runtimePhaseStart   runtimePhase = "starting"
+	runtimePhaseReady   runtimePhase = "ready"
+	runtimePhaseRestart runtimePhase = "restarting"
+	runtimePhaseStop    runtimePhase = "stopping"
 	runtimePhaseStopped runtimePhase = "stopped"
-	runtimePhaseFailed runtimePhase = "failed"
+	runtimePhaseFailed  runtimePhase = "failed"
 )
 
 const (
-	runtimeReadyTimeout    = 180 * time.Second
-	runtimeShutdownGrace   = 12 * time.Second
-	runtimeTerminateGrace  = 5 * time.Second
+	runtimeReadyTimeout   = 180 * time.Second
+	runtimeShutdownGrace  = 12 * time.Second
+	runtimeTerminateGrace = 5 * time.Second
+	// runtimeKillRetry is how often a teardown repeats SIGKILL while the
+	// process is not reaped yet.
+	runtimeKillRetry       = 150 * time.Millisecond
 	runtimeDiagnosticBytes = 64 * 1024
 	runtimeLineBytes       = 8 * 1024 * 1024
 )
@@ -67,17 +71,17 @@ type runtimeReady struct {
 
 // runtimeHostEvent is one decoded launcher line.
 type runtimeHostEvent struct {
-	Type       string          `json:"type"`
-	Phase      string          `json:"phase"`
-	Stage      string          `json:"stage"`
-	Message    string          `json:"message"`
-	Diagnostic string          `json:"diagnostic"`
-	URL        string          `json:"url"`
-	Injections []any           `json:"injections"`
-	Pid        int             `json:"pid"`
-	Code       int             `json:"code"`
-	Signal     string          `json:"signal"`
-	Ready      bool            `json:"ready"`
+	Type       string `json:"type"`
+	Phase      string `json:"phase"`
+	Stage      string `json:"stage"`
+	Message    string `json:"message"`
+	Diagnostic string `json:"diagnostic"`
+	URL        string `json:"url"`
+	Injections []any  `json:"injections"`
+	Pid        int    `json:"pid"`
+	Code       int    `json:"code"`
+	Signal     string `json:"signal"`
+	Ready      bool   `json:"ready"`
 	Seed       struct {
 		Name   string `json:"name"`
 		Value  string `json:"value"`
@@ -91,18 +95,28 @@ type runtimeHostEvent struct {
 type runtimeHost struct {
 	launch runtimeLaunch
 
-	mu      sync.Mutex
-	cmd     *exec.Cmd
-	stdin   io.WriteCloser
-	phase   runtimePhase
-	ready   runtimeReady
-	failure string
-	detail  string
-	pid     int
-	stderr  ringBuffer
-	history []string
-	exited  bool
-	exitErr error
+	mu     sync.Mutex
+	cmd    *exec.Cmd
+	stdin  io.WriteCloser
+	phase  runtimePhase
+	ready  runtimeReady
+	pid    int
+	stderr ringBuffer
+	// failure is the first terminal failure this generation recorded;
+	// failureStage names the launcher stage that reported it, so a restart
+	// policy can tell a broken profile from a Host that went away.
+	failure      string
+	failureStage string
+	detail       string
+	history      []string
+	exited       bool
+	exitErr      error
+	exitCode     int
+	exitSignal   string
+	// stopping records that someone asked this generation to shut down: our
+	// stop() or a launcher `stopping`/`stopped` status. It is what separates a
+	// requested shutdown from a crash, and therefore a restart from silence.
+	stopping bool
 
 	readyOnce  sync.Once
 	readyCh    chan struct{}
@@ -165,7 +179,20 @@ func (h *runtimeHost) start() error {
 		h.mu.Lock()
 		h.exited = true
 		h.exitErr = err
-		unexpected := h.phase == runtimePhaseStart || h.phase == runtimePhaseReady
+		// The launcher's own `exit` line carries the signal; fall back to the
+		// wait status so the reason a restart happens is always explainable.
+		if h.exitSignal == "" && h.exitCode == 0 {
+			if exitErr, ok := err.(*exec.ExitError); ok {
+				if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
+					if status.Signaled() {
+						h.exitSignal = status.Signal().String()
+					} else if status.ExitStatus() != 0 {
+						h.exitCode = status.ExitStatus()
+					}
+				}
+			}
+		}
+		unexpected := !h.stopping
 		if h.phase != runtimePhaseFailed {
 			h.phase = runtimePhaseStopped
 		}
@@ -204,8 +231,12 @@ func (h *runtimeHost) handleLine(line string) {
 		case "preparing", "starting":
 			h.setPhase(runtimePhaseStart)
 		case "stopping":
+			// The launcher is shutting its Host down (our request, or a signal
+			// the launcher itself received). That is not a crash.
+			h.markStopping()
 			h.setPhase(runtimePhaseStop)
 		case "stopped":
+			h.markStopping()
 			h.setPhase(runtimePhaseStopped)
 		case "failed":
 			h.fail(event.Stage, event.Message, event.Diagnostic)
@@ -230,6 +261,8 @@ func (h *runtimeHost) handleLine(line string) {
 	case "exit":
 		h.mu.Lock()
 		h.exited = true
+		h.exitCode = event.Code
+		h.exitSignal = event.Signal
 		if h.phase != runtimePhaseFailed {
 			h.phase = runtimePhaseStopped
 		}
@@ -252,6 +285,84 @@ func (h *runtimeHost) setPhase(phase runtimePhase) {
 	h.phase = phase
 }
 
+// markStopping records that this generation's shutdown was requested, so the
+// exit that follows is reported as a shutdown rather than a crash.
+func (h *runtimeHost) markStopping() {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.stopping = true
+}
+
+// intentional reports whether someone asked this generation to shut down.
+func (h *runtimeHost) intentional() bool {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return h.stopping
+}
+
+// markStartupFailure records that this generation never reached ready, so a
+// restart policy does not spend its budget waiting on the same deadline again.
+func (h *runtimeHost) markStartupFailure() {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if h.failureStage == "" {
+		h.failureStage = "starting"
+	}
+}
+
+// restartable reports whether this generation's failure is worth retrying. A
+// profile that cannot be prepared, a credential handshake the Host refused and a
+// launcher that cannot be spawned all fail the same way every time; the Host
+// process going away does not.
+func (h *runtimeHost) restartable() bool {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	switch h.failureStage {
+	case "preparing", "starting", "authentication", "spawn":
+		return false
+	}
+	return true
+}
+
+// finished reports whether the process has been reaped.
+func (h *runtimeHost) finished() bool {
+	select {
+	case <-h.done:
+		return true
+	default:
+		return false
+	}
+}
+
+// exitReason describes why this generation's process is gone, for the status the
+// supervisor publishes before it restarts.
+func (h *runtimeHost) exitReason() string {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	switch {
+	case h.exitSignal != "":
+		return "Host 进程被信号 " + h.exitSignal + " 终止"
+	case h.exitCode != 0:
+		return fmt.Sprintf("Host 启动器退出码 %d", h.exitCode)
+	case h.failure != "":
+		return strings.Join(strings.Fields(h.failure), " ")
+	}
+	return "Host 进程已退出"
+}
+
+// killIfAlive sends SIGKILL to this generation's process group unless it has
+// already been reaped: a reaped pid can be reused, and killing a reused process
+// group would hit unrelated processes.
+func (h *runtimeHost) killIfAlive() {
+	h.mu.Lock()
+	cmd, exited := h.cmd, h.exited
+	h.mu.Unlock()
+	if cmd == nil || cmd.Process == nil || exited {
+		return
+	}
+	_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+}
+
 // fail records the first terminal failure. Later failures keep the first reason
 // so the message a user sees is the original cause, not its shutdown echo.
 func (h *runtimeHost) fail(stage, message, diagnostic string) {
@@ -262,6 +373,7 @@ func (h *runtimeHost) fail(stage, message, diagnostic string) {
 	already := h.phase == runtimePhaseFailed
 	if !already {
 		h.phase = runtimePhaseFailed
+		h.failureStage = stage
 		h.failure = stageLabel(stage, message)
 		h.detail = strings.TrimSpace(strings.Join(nonEmpty(
 			diagnostic, stderrTail, strings.Join(h.history, "\n")), "\n"))
@@ -350,6 +462,9 @@ func (h *runtimeHost) waitReady(ctx context.Context) (runtimeReady, error) {
 	case <-h.done:
 		return runtimeReady{}, errors.New(h.error())
 	case <-timeout.C:
+		// A Host that never came up is not a crash to retry: it would take the
+		// same time again. Record it as a startup failure and report it once.
+		h.markStartupFailure()
 		h.kill()
 		return runtimeReady{}, fmt.Errorf("本地运行时在 %s 内未就绪\n%s", h.launch.ReadyTimeout, h.error())
 	case <-ctx.Done():
@@ -383,9 +498,35 @@ func (h *runtimeHost) error() string {
 // stop asks the launcher to shut the Host down, then escalates.
 func (h *runtimeHost) stop(ctx context.Context) error {
 	h.mu.Lock()
-	if h.phase == runtimePhaseStop || h.phase == runtimePhaseStopped || h.phase == runtimePhaseFailed {
-		done := h.done
+	// Every shutdown this process asks for is intentional: the supervisor must
+	// never treat it as a crash and restart the Host afterwards.
+	h.stopping = true
+	phase := h.phase
+	done, exited, stdin := h.done, h.exited, h.stdin
+	if phase == runtimePhaseStop || phase == runtimePhaseStopped || phase == runtimePhaseFailed {
 		h.mu.Unlock()
+		// A failed or already-stopping generation can still be alive (a
+		// launcher that reported a fatal Host but kept running), so make sure
+		// it leaves instead of lingering past its supervision.
+		for !exited {
+			// A descendant forked around the signal can outlive the first
+			// SIGKILL and keep the pipes Wait() drains open, so the kill is
+			// repeated until the process is actually reaped.
+			h.killIfAlive()
+			h.mu.Lock()
+			exited = h.exited
+			h.mu.Unlock()
+			if exited {
+				break
+			}
+			select {
+			case <-done:
+				return nil
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(runtimeKillRetry):
+			}
+		}
 		select {
 		case <-done:
 			return nil
@@ -394,7 +535,6 @@ func (h *runtimeHost) stop(ctx context.Context) error {
 		}
 	}
 	h.phase = runtimePhaseStop
-	stdin := h.stdin
 	h.mu.Unlock()
 
 	if stdin != nil {
@@ -413,11 +553,17 @@ func (h *runtimeHost) stop(ctx context.Context) error {
 	case <-time.After(runtimeTerminateGrace):
 	}
 	h.kill()
-	select {
-	case <-h.done:
-		return nil
-	case <-ctx.Done():
-		return ctx.Err()
+	for {
+		select {
+		case <-h.done:
+			return nil
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(runtimeKillRetry):
+			// Repeat the kill: a descendant forked around the first signal can
+			// still be holding the pipes Wait() is draining.
+			h.killIfAlive()
+		}
 	}
 }
 
@@ -447,6 +593,293 @@ func (h *runtimeHost) phaseOf() runtimePhase {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	return h.phase
+}
+
+// --- recovery -------------------------------------------------------------
+//
+// A Host that dies on its own (a crash, the OOM killer, a SIGKILL from outside)
+// leaves the native client pointed at a dead port with a single-use token that
+// can never be replayed. Restarting the launcher produces a new port and a new
+// token, so recovery is two steps: bring a new Host up, then re-point the client
+// at the new `ready` URL.
+//
+// A shutdown this process asked for is not a crash. Every generation therefore
+// carries an intentional flag (see runtimeHost.stopping) and the supervisor only
+// restarts a generation that exited without it.
+
+// runtimeRecovery bounds the restarts one supervision run may perform.
+type runtimeRecovery struct {
+	// MaxAttempts bounds consecutive restarts. Zero disables recovery.
+	MaxAttempts int
+	// BaseDelay is the wait before the first restart; each further attempt
+	// doubles it up to MaxDelay.
+	BaseDelay time.Duration
+	MaxDelay  time.Duration
+	// HealthyFor is how long a generation must have served before its exit
+	// starts a fresh attempt budget, so a Host that crashes once a day does not
+	// exhaust a launch-long budget. Zero keeps one budget for the whole run.
+	HealthyFor time.Duration
+}
+
+// defaultRuntimeRecovery is 1s, 2s, 4s, 8s, then give up: five restarts.
+var defaultRuntimeRecovery = runtimeRecovery{
+	MaxAttempts: 5,
+	BaseDelay:   time.Second,
+	MaxDelay:    8 * time.Second,
+	HealthyFor:  60 * time.Second,
+}
+
+// delay is the backoff before restart attempt (1-based).
+func (r runtimeRecovery) delay(attempt int) time.Duration {
+	if r.BaseDelay <= 0 {
+		return 0
+	}
+	delay := r.BaseDelay
+	for step := 1; step < attempt; step++ {
+		if r.MaxDelay > 0 && delay >= r.MaxDelay {
+			return r.MaxDelay
+		}
+		delay *= 2
+	}
+	if r.MaxDelay > 0 && delay > r.MaxDelay {
+		return r.MaxDelay
+	}
+	return delay
+}
+
+// runtimeRecoveryExhausted is the terminal message after the last restart: it
+// names what happened and what the user can do about it.
+const runtimeRecoveryExhausted = "本地 Host 连续 %d 次异常退出，已停止自动重启。" +
+	"请用菜单「工作区 → 重新加载工作区」（⌘R）重试；若反复失败，请检查 profile 是否损坏、" +
+	"是否有另一个 Harness 进程占用同一 profile，或磁盘空间是否充足。最近一次原因：%s"
+
+// runtimeStatus is one phase change the supervisor publishes, including the
+// restarts that the Host's own phases cannot describe.
+type runtimeStatus struct {
+	Phase   runtimePhase
+	Attempt int
+	Reason  string
+	Message string
+	URL     string
+}
+
+// runtimeSupervisor keeps one Host alive.
+//
+// It owns the process generations rather than the host owning its own restarts,
+// so a restart is a fresh runtimeHost with fresh channels: nothing from the dead
+// generation (its ready URL, its failure, its exit) can be mistaken for the new
+// one.
+type runtimeSupervisor struct {
+	launch   runtimeLaunch
+	recovery runtimeRecovery
+
+	// OnHost receives each generation as it starts, for shell bookkeeping.
+	OnHost func(host *runtimeHost)
+	// OnStatus receives every phase, including restarting and the terminal
+	// failure. It is called from the supervision goroutine.
+	OnStatus func(status runtimeStatus)
+	// OnReady receives each generation's ready URL. restarted is false for the
+	// first generation. A returned error ends supervision with that message.
+	OnReady func(ready runtimeReady, restarted bool) error
+
+	mu       sync.Mutex
+	host     *runtimeHost
+	stopping bool
+	stopCh   chan struct{}
+	stopOnce sync.Once
+}
+
+func newRuntimeSupervisor(launch runtimeLaunch, recovery runtimeRecovery) *runtimeSupervisor {
+	return &runtimeSupervisor{launch: launch, recovery: recovery, stopCh: make(chan struct{})}
+}
+
+// generationOutcome is why one supervised process stopped being supervised.
+type generationOutcome int
+
+const (
+	// generationStopped means supervision was asked to stop.
+	generationStopped generationOutcome = iota
+	// generationFatal means the failure is not worth retrying.
+	generationFatal
+	// generationExited means the Host went away on its own.
+	generationExited
+)
+
+// run starts the Host and restarts it after an unexpected exit, until it is
+// stopped, fails permanently, or the restart budget is spent.
+func (s *runtimeSupervisor) run(ctx context.Context) error {
+	attempt := 0
+	for {
+		outcome, reason, fatal := s.generation(ctx, &attempt)
+		if outcome != generationExited {
+			return fatal
+		}
+		if attempt >= s.recovery.MaxAttempts {
+			reason = strings.TrimSpace(reason)
+			if reason == "" {
+				reason = "未知原因"
+			}
+			message := fmt.Sprintf(runtimeRecoveryExhausted, attempt, reason)
+			s.publish(runtimeStatus{Phase: runtimePhaseFailed, Attempt: attempt, Reason: reason, Message: message})
+			return errors.New(message)
+		}
+		attempt++
+		delay := s.recovery.delay(attempt)
+		s.publish(runtimeStatus{
+			Phase:   runtimePhaseRestart,
+			Attempt: attempt,
+			Reason:  reason,
+			Message: fmt.Sprintf("本地 Host 已异常退出（%s），%s 后第 %d/%d 次重启。",
+				strings.TrimSpace(reason), delay.Round(time.Millisecond), attempt, s.recovery.MaxAttempts),
+		})
+		if !s.sleep(ctx, delay) {
+			return nil
+		}
+	}
+}
+
+// generation starts one Host process and waits until it is ready and gone again.
+func (s *runtimeSupervisor) generation(ctx context.Context, attempt *int) (generationOutcome, string, error) {
+	host := newRuntimeHost(s.launch)
+	s.adopt(host)
+	defer s.adopt(nil)
+	if s.OnHost != nil {
+		s.OnHost(host)
+	}
+	if s.stopped() {
+		return generationStopped, "", nil
+	}
+	if err := host.start(); err != nil {
+		// The launcher itself cannot be executed; a retry cannot help.
+		return generationFatal, "", fmt.Errorf("启动器无法执行：%v", err)
+	}
+	if s.stopped() || ctx.Err() != nil {
+		s.terminate(host)
+		return generationStopped, "", nil
+	}
+	ready, waitErr := host.waitReady(ctx)
+	serving := time.Time{}
+	switch {
+	case waitErr == nil:
+		serving = time.Now()
+		s.publish(runtimeStatus{Phase: runtimePhaseReady, Attempt: *attempt, URL: ready.URL})
+		if s.OnReady != nil {
+			if err := s.OnReady(ready, *attempt > 0); err != nil {
+				s.terminate(host)
+				return generationFatal, "", err
+			}
+		}
+	case s.stopped() || ctx.Err() != nil || host.intentional():
+		// A shutdown we asked for, including one requested while the Host was
+		// still starting, is not a recovery case.
+		s.terminate(host)
+		return generationStopped, "", nil
+	case !host.restartable():
+		s.terminate(host)
+		return generationFatal, "", waitErr
+	}
+	reason, exited := s.waitExit(host, ctx)
+	switch {
+	case !exited || s.stopped() || host.intentional():
+		s.terminate(host)
+		return generationStopped, "", nil
+	case host.restartable():
+		// Only a generation that actually served for a while refreshes the
+		// budget; a Host that dies immediately keeps it shrinking.
+		if s.recovery.HealthyFor > 0 && !serving.IsZero() && time.Since(serving) >= s.recovery.HealthyFor {
+			*attempt = 0
+		}
+		return generationExited, reason, nil
+	default:
+		s.terminate(host)
+		return generationFatal, "", errors.New(host.error())
+	}
+}
+
+// waitExit blocks until this generation's process is gone, supervision is asked
+// to stop, or the context ends. exited is false when the wait was interrupted.
+func (s *runtimeSupervisor) waitExit(host *runtimeHost, ctx context.Context) (string, bool) {
+	select {
+	case <-host.done:
+		return host.exitReason(), true
+	case <-s.stopCh:
+		return "", false
+	case <-ctx.Done():
+		return "", false
+	}
+}
+
+// sleep waits out one backoff, returning false if supervision was stopped.
+func (s *runtimeSupervisor) sleep(ctx context.Context, delay time.Duration) bool {
+	if delay <= 0 {
+		select {
+		case <-s.stopCh:
+			return false
+		case <-ctx.Done():
+			return false
+		default:
+			return true
+		}
+	}
+	timer := time.NewTimer(delay)
+	defer timer.Stop()
+	select {
+	case <-timer.C:
+		return true
+	case <-s.stopCh:
+		return false
+	case <-ctx.Done():
+		return false
+	}
+}
+
+// stop ends supervision and shuts the current Host down.
+func (s *runtimeSupervisor) stop(ctx context.Context) error {
+	s.mu.Lock()
+	host := s.host
+	s.stopping = true
+	s.mu.Unlock()
+	s.stopOnce.Do(func() { close(s.stopCh) })
+	if host == nil {
+		return nil
+	}
+	return host.stop(ctx)
+}
+
+// stopped reports whether supervision was asked to end.
+func (s *runtimeSupervisor) stopped() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.stopping
+}
+
+// current is the generation being supervised, if any.
+func (s *runtimeSupervisor) current() *runtimeHost {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.host
+}
+
+func (s *runtimeSupervisor) adopt(host *runtimeHost) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.host = host
+}
+
+func (s *runtimeSupervisor) publish(status runtimeStatus) {
+	if s.OnStatus != nil {
+		s.OnStatus(status)
+	}
+}
+
+// terminate shuts one generation down without waiting on the caller's context.
+func (s *runtimeSupervisor) terminate(host *runtimeHost) {
+	if host == nil || host.finished() {
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), runtimeShutdownGrace+runtimeTerminateGrace+time.Second)
+	defer cancel()
+	_ = host.stop(ctx)
 }
 
 // ringBuffer keeps the last `limit` bytes written to it.

@@ -28,6 +28,7 @@ func main() {
 	localRuntime := flag.Bool("local", false, "start the bundled local dsh runtime and show the served web client")
 	localNative := flag.Bool("local-native", false, "start the bundled local dsh runtime and drive the native UI over /api/remote.mux")
 	captureAfter := flag.Duration("capture-after", 0, "delay before --capture (QA only)")
+	recoveryProbe := flag.String("recovery-probe", "", "SIGKILL the local Host once and write local recovery evidence (QA only)")
 	theme := flag.String("theme", "", "client appearance: system, light, dark")
 	windowDiagnostics := flag.String("window-diagnostics", "", "write this client's own window visibility and bounds after startup")
 	document := flag.String("demo-document", "", "explicit demo only: long/table/images/structured native render regression")
@@ -37,6 +38,7 @@ func main() {
 	fontCalibration := flag.Bool("font-calibration", false, "explicit demo only: compare native font weights at the original 14 DIP")
 	flag.Parse()
 	localNativeMode = *localNative
+	runtimeRecoveryProbePath = *recoveryProbe
 	if localNativeMode {
 		// The native client is the application in this mode; the web workspace
 		// entry point is not a separate surface.
@@ -91,7 +93,9 @@ func main() {
 		// Show after assigning the handle. This supported call avoids depending
 		// on the deferred first-show callback or a later capture/getter.
 		a.win.Show()
-		a.installShell(*exitAfter > 0)
+		// A recovery probe is a bounded QA launch too: it must not block on the
+		// quit confirmation when it has written its evidence.
+		a.installShell(*exitAfter > 0 || *recoveryProbe != "")
 		mygo.App.Focus()
 		a.win.Focus()
 		a.win.OnFocus(func() { a.win.Invalidate() })

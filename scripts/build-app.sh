@@ -23,6 +23,18 @@ bundle_name="DeepSeek Nativeness"
 # The bundle identifier is the app's stable identity: renaming the product must
 # not make macOS treat a rebuilt app as a different one.
 bundle_id="cn.rkbkosp.native-dsh.remote"
+# Version numbers are what an updater compares, so they must move on every
+# release. The marketing version follows the embedded dsh release (numeric core
+# only; the runtime keeps the full prerelease string), and the build number is
+# a monotonic stamp that can be overridden by CI.
+app_version="0.1.0"
+if [ "$with_runtime" -eq 1 ] && [ -f "build/runtime/manifest.json" ]; then
+  runtime_release=$(sed -n 's/.*"version": *"\([0-9][^"]*\)".*/\1/p' build/runtime/manifest.json | head -1)
+  if [ -n "$runtime_release" ]; then
+    app_version=$(printf '%s' "$runtime_release" | sed 's/[-+].*$//')
+  fi
+fi
+app_build="${APP_BUILD_NUMBER:-$(date -u +%Y%m%d%H%M)}"
 # Build a fresh tree so old chunks/dependencies cannot survive a candidate.
 app="build/.native-dsh-stage-$$"
 assets="dist"
@@ -143,12 +155,17 @@ cat > "$app/Contents/Info.plist" <<PLIST
 <key>CFBundleDisplayName</key><string>$bundle_name</string>
 <key>CFBundleIconFile</key><string>icon.icns</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleShortVersionString</key><string>0.1.0</string>
-<key>CFBundleVersion</key><string>1</string>
+<key>CFBundleShortVersionString</key><string>$app_version</string>
+<key>CFBundleVersion</key><string>$app_build</string>
 <key>LSMinimumSystemVersion</key><string>15.8</string>
 <key>NSHighResolutionCapable</key><true/>
 </dict></plist>
 PLIST
+# One machine-readable record for the About panel and a future updater: what
+# shipped, which runtime it embeds, and when this build was produced.
+cat > "$app/Contents/Resources/app-version.json" <<VERSION
+{"appVersion":"$app_version","buildNumber":"$app_build","runtimeVersion":"${runtime_release:-}","builtAt":"$(date -u +%Y-%m-%dT%H:%M:%SZ)"}
+VERSION
 mkdir -p build/gui-checkpoints
 if [ -d "$bundle" ]; then
   mv "$bundle" "build/gui-checkpoints/retired-bundle-$$"
