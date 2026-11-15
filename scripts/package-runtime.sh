@@ -67,7 +67,7 @@ list_macho() {
   done
 }
 
-if [ "$verify_only" -eq 0 ]; then
+if [ "$verify_only" -eq 0 ] && [ "$no_sign" -eq 0 ]; then
   if [ ! -d "$payload/dsh" ]; then
     echo "package-runtime: no vendored payload at $payload (run node scripts/vendor-runtime.mjs)" >&2
     exit 1
@@ -111,7 +111,7 @@ resources="$bundle/Contents/Resources"
 # notarization: the runtime payload, the frozen Remote helper's native addons
 # (wrtc), and the Node copy in Contents/MacOS.
 nested_count=0
-for directory in "$support" "$resources/remote"; do
+for directory in "$support" "$resources/remote" "$bundle/Contents/Frameworks"; do
   [ -d "$directory" ] || continue
   count=$(list_macho "$directory" | wc -l | tr -d ' ')
   nested_count=$((nested_count + count))
@@ -131,6 +131,7 @@ elif [ -n "$identity" ]; then
   {
     list_macho "$support"
     if [ -d "$resources/remote" ]; then list_macho "$resources/remote"; fi
+    if [ -d "$bundle/Contents/Frameworks" ]; then list_macho "$bundle/Contents/Frameworks"; fi
     if [ -f "$bundle/Contents/MacOS/node" ]; then printf '%s\n' "$bundle/Contents/MacOS/node"; fi
   } | while read -r binary; do
     case "$binary" in
