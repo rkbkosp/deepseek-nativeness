@@ -67,7 +67,12 @@ list_macho() {
   done
 }
 
-if [ "$verify_only" -eq 0 ] && [ "$no_sign" -eq 0 ]; then
+# Copying the payload rewrites Resources/runtime, which invalidates any existing
+# signature. A notarization-only run must therefore never do it: the bundle it
+# submits has to be exactly the one that was signed.
+if [ "$notarize" -eq 1 ] && [ -z "$identity" ]; then
+  echo "package-runtime: notarizing the bundle as it stands (payload not repackaged)"
+elif [ "$verify_only" -eq 0 ] && [ "$no_sign" -eq 0 ]; then
   if [ ! -d "$payload/dsh" ]; then
     echo "package-runtime: no vendored payload at $payload (run node scripts/vendor-runtime.mjs)" >&2
     exit 1
@@ -110,6 +115,29 @@ resources="$bundle/Contents/Resources"
 # Every Mach-O in the bundle must carry a Developer ID signature before
 # notarization: the runtime payload, the frozen Remote helper's native addons
 # (wrtc), and the Node copy in Contents/MacOS.
+# Apple's timestamp service is occasionally unavailable and answers that way per
+# request; a release build must not fail because one of two hundred nested
+# binaries asked at a bad moment. Each signature is retried, and the attempt is
+# reported so a persistent outage is still visible.
+sign_with_retry() {
+  attempts=0
+  while :; do
+    attempts=$((attempts + 1))
+    if /usr/bin/codesign "$@" 2>build/.codesign-stderr; then
+      rm -f build/.codesign-stderr
+      return 0
+    fi
+    if grep -qi "timestamp service is not available\|timestamp service is not reachable\|a timestamp was expected" build/.codesign-stderr && [ "$attempts" -lt 4 ]; then
+      echo "package-runtime: timestamp service unavailable, retrying ($attempts)"
+      sleep $((attempts * 2))
+      continue
+    fi
+    cat build/.codesign-stderr >&2
+    rm -f build/.codesign-stderr
+    return 1
+  done
+}
+
 nested_count=0
 for directory in "$support" "$resources/remote" "$bundle/Contents/Frameworks"; do
   [ -d "$directory" ] || continue
@@ -135,21 +163,29 @@ elif [ -n "$identity" ]; then
     if [ -f "$bundle/Contents/MacOS/node" ]; then printf '%s\n' "$bundle/Contents/MacOS/node"; fi
   } | while read -r binary; do
     case "$binary" in
-      *"/node/bin/node")
-        # The bundled Node keeps the vendor's JIT grants; it runs plugin code.
-        /usr/bin/codesign $sign_flags \
+      *"/node/bin/node"|*"/Contents/MacOS/node")
+        # Both Node copies keep the vendor's JIT grants: the payload one runs the
+        # Host, and Contents/MacOS/node runs the client helper. Under hardened
+        # runtime a Node without allow-jit cannot reserve a code range and dies
+        # at start with "Failed to reserve virtual memory for CodeRange".
+        sign_with_retry $sign_flags \
           --entitlements scripts/node-runtime-entitlements.plist \
           --sign "$identity" "$binary" ;;
       *)
-        /usr/bin/codesign $sign_flags --sign "$identity" "$binary" ;;
+        sign_with_retry $sign_flags --sign "$identity" "$binary" ;;
     esac
   done
   echo "signing bundle"
   # The shell loads third-party plugin code, so the outer signature must not
   # enforce library validation, exactly like the official application.
-  /usr/bin/codesign $sign_flags \
+  sign_with_retry $sign_flags \
     --entitlements scripts/app-entitlements.plist \
     --sign "$identity" "$bundle"
+elif [ "$notarize" -eq 1 ]; then
+  # Submitting re-seals nothing: the bundle must already carry the Developer ID
+  # signature it is being notarized for. Sealing ad hoc here would silently
+  # replace that signature and every submission would come back Invalid.
+  echo "package-runtime: --notarize expects an already signed bundle (no identity given, not re-sealing)"
 else
   echo "no identity available: sealing the bundle ad hoc only"
   /usr/bin/codesign --force --sign - "$bundle"

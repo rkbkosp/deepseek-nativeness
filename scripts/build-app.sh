@@ -14,6 +14,19 @@ for argument in "$@"; do
     *) remaining_args="$remaining_args $argument" ;;
   esac
 done
+# A bare --sign means "sign with whatever Developer ID this machine holds", which
+# is what a release build expects. Resolving it here matters: an empty identity
+# makes the packaging step fall back to an ad-hoc seal, which then fails
+# notarization for a missing certificate, timestamp and hardened runtime.
+if [ "$sign_requested" -eq 1 ] && [ -z "$sign_identity" ]; then
+  sign_identity=$(security find-identity -v -p codesigning 2>/dev/null \
+    | sed -n 's/.*"\(Developer ID Application: [^"]*\)".*/\1/p' | head -1)
+  if [ -z "$sign_identity" ]; then
+    echo "build-app: --sign needs a Developer ID Application identity in the keychain" >&2
+    exit 2
+  fi
+  echo "signing with: $sign_identity"
+fi
 # shellcheck disable=SC2086
 set -- $remaining_args
 if [ $# -eq 0 ]; then set --; fi
@@ -189,7 +202,7 @@ fi
 mv "$app" "$bundle"
 if [ "$with_runtime" -eq 1 ]; then
   if [ "$sign_requested" -eq 1 ]; then
-    sh scripts/package-runtime.sh "$bundle" --sign ${sign_identity:+"$sign_identity"}
+    sh scripts/package-runtime.sh "$bundle" --sign "$sign_identity" --timestamp
   else
     sh scripts/package-runtime.sh "$bundle"
   fi
