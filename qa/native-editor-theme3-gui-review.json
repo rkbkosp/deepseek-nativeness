@@ -1,0 +1,32 @@
+{
+  "checkedAt": "2026-11-15T01:42:27.519Z",
+  "reviewer": "root",
+  "status": "observed-theme-subchecks-passed-component-integration-not-accepted",
+  "acceptedSubchecks": true,
+  "productionAccepted": false,
+  "manifest": "qa/native-editor-themed-next3/build/manifest.json",
+  "manifestSha256": "854c02cf325367e1b1aa0906e89f08ea1aca58f4dde7bb2b36cddad430de819b",
+  "sourceFilesBeforeLaunch": 25,
+  "sourceHashesBeforeLaunchMatched": true,
+  "artifactFilesAfterGui": 6,
+  "artifactHashesAfterGuiMatched": true,
+  "platform": "Apple M4 / macOS27.2.1",
+  "passedSubchecks": [
+    "Plain text retained through two consecutive dark/light/dark cycles; every single click paints coherent native pane, Go body/buttons/text/mirror and window chrome without extra focus or input.",
+    "Actual @Fi/Down and physical [400,780] candidate click inserts canonical file reference; dark/light/dark cycle matches the prior failed chip scene without stale painted Go light body.",
+    "Dark target with inverse light window chrome preserves native and Go dark palette.",
+    "Draft explicitly cleared, Cmd+Q and inventory confirms app exited."
+  ],
+  "evidence": [
+    "/tmp/native-dsh-parity/148-theme-proof3-light-first.png",
+    "/tmp/native-dsh-parity/149-theme-proof3-dark-return.png",
+    "/tmp/native-dsh-parity/150-theme-proof3-light-second.png",
+    "/tmp/native-dsh-parity/151-theme-proof3-dark-second.png",
+    "/tmp/native-dsh-parity/152-theme-proof3-chip-light.png",
+    "/tmp/native-dsh-parity/153-theme-proof3-chip-dark-return.png",
+    "/tmp/native-dsh-parity/154-theme-proof3-dark-light-chrome.png"
+  ],
+  "remoteMutations": [],
+  "cuaCompletion": "通过输入框连续主题实屏复验",
+  "qualification": "This fixed independent proof passed the specifically observed failure scene. Author A/B did not reproduce the external failure, so no universal causal or all-environment claim. Does not integrate production input or qualify real candidate filtering, physical IME, PNG/drop, height, two-window lifecycle, M1 or macOS15.8. Original visual/operation parity remains unaccepted. Historical failed bundles preserved."
+}

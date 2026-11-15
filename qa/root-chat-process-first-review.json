@@ -1,0 +1,68 @@
+{
+  "checkedAt": "2026-11-15T01:21:13.891Z",
+  "reviewer": "root",
+  "status": "seven-source-oracle-actual-view-gates-passed-in-progress-source",
+  "command": "CGO_ENABLED=0 go test -overlay=qa/root-chat-process-view-overlay.json -run ^TestRootChatSourceOracleActualView$ -count=1 -v .",
+  "exitCode": 0,
+  "subcases": [
+    "latestEmptyStep",
+    "latestReasoningOnly",
+    "latestWhitespace",
+    "latestTextAndTool",
+    "latestUnknown",
+    "interruptedReasoning",
+    "mixedResponse"
+  ],
+  "seconds": 1.104,
+  "hashes": {
+    "qa/root-chat-process-oracle.mjs": {
+      "bytes": 2469,
+      "sha256": "f3d89bb64add976f4089362bb3ff94e5cc01ace16664a6a26bc2797d7e054799"
+    },
+    "qa/root-chat-process-view.gotest": {
+      "bytes": 1773,
+      "sha256": "45d3e3410752232d7de17421eba547275543cc340616dd770aa836f45cfbe800"
+    },
+    "chat_presentation.go": {
+      "bytes": 13077,
+      "sha256": "c7c9720a52d22e1afa825e98ac406ad2f7fd0fe82a4ccd469a462ae0cd59b9bb"
+    },
+    "chat_presentation_rows.go": {
+      "bytes": 6169,
+      "sha256": "7ec34f1076ea22261d56dd4aaedc3d7b06c5af2843d64b17776db28107871a45"
+    },
+    "incremental.go": {
+      "bytes": 6995,
+      "sha256": "c9de7a208a99ff3cf6925cfddc0837e41f681c94c2609cd4eab6444d9bc0859d"
+    },
+    "connection.go": {
+      "bytes": 13829,
+      "sha256": "426a85643585bf67115750065d142b9710af5919a1964dcbae8a79831686c2c3"
+    },
+    "conversation.go": {
+      "bytes": 15573,
+      "sha256": "6766281e264e4ed156277ce67e0c9e1c5c51d9a931a1097d7bf0a8b4b3dcfe4b"
+    },
+    "model.go": {
+      "bytes": 7503,
+      "sha256": "f84112a8a4bee60d861013a4eecc53bd50e061e289f0be98ad79cf4a38e3eb59"
+    },
+    "remote/chat-presentation.mjs": {
+      "bytes": 13241,
+      "sha256": "4ecfbe5ff5379d03dc14d9022023a01dbedd5d2796d1ef7628582628b1a0541c"
+    },
+    "remote/projection.mjs": {
+      "bytes": 24717,
+      "sha256": "94a673415ede7c86a1656e0561c782b906998a34725c87b25ae7da292360cfd0"
+    },
+    "remote/updates.mjs": {
+      "bytes": 12181,
+      "sha256": "ef75c081a4749880eb6fd555db450fa4b00a505449897b76a36ed292d88b320a"
+    },
+    "remote/client.mjs": {
+      "bytes": 62769,
+      "sha256": "5accb684f5481f2756e53d6297f53ec950fdf3e03ae21b1cbd0d32050a181db2"
+    }
+  },
+  "qualification": "Synthetic source-derived fixtures from pinned real assembler and current actual SessionProjection->NodeJSON->Go receiver/a.view. Source still in progress; not final source integrity, real Host/stream/page/order/performance/GUI/M1/macOS15.8 acceptance."
+}

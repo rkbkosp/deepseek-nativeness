@@ -19,6 +19,16 @@
       "id": "light-native-wk-settings-seam",
       "detail": "Normal GUI10 restored own saved login/Host/completed session; native settings modal and built-in-plugin original WK page share white background with no former gray/white rectangular seam. Escape closes settings, HTML removed and native empty composer restored.",
       "evidence": "/tmp/native-dsh-parity/130-core10-light-settings-seam.png"
+    },
+    {
+      "id": "native-theme-transition-control",
+      "detail": "Exact frozen normal GUI10 actual own local preference sequence system -> dark -> light -> dark -> system, each single click, complete Go shell/settings/native-vibrancy all painted correctly. Follow-system choice visibly restored and own preferences file re-read as system. No Host settings touched.",
+      "evidence": [
+        "/tmp/native-dsh-parity/144-gui10-theme-dark-click.png",
+        "/tmp/native-dsh-parity/145-gui10-theme-light-click.png",
+        "/tmp/native-dsh-parity/146-gui10-theme-dark-return.png",
+        "/tmp/native-dsh-parity/147-gui10-theme-system-restored.png"
+      ]
     }
   ],
   "failedSubchecks": [],
@@ -28,7 +38,7 @@
     "No full production input integration or visual/operation parity acceptance."
   ],
   "remoteMutations": [],
-  "exit": "Own normal/demo apps quit; CUA inventory confirms not running. Original left unchanged.",
+  "exit": "Own normal/demo apps quit or bounded --exit-after timer elapsed; latest control final Escape/CmdQ attempt reported inactive after timer, CUA inventory independently confirmed not running. No test draft. Original unchanged.",
   "cuaCompletion": "完成主题与输入实屏复验",
   "privateCaptures": true,
   "verification": [
@@ -57,5 +67,12 @@
     "Independent input actual live theme transition failed; new proof fix assigned, no normal-bundle integration.",
     "Original final/process grouping and reasoning order require source-based incremental frontend repair.",
     "Actual macOS15.8/M1 and whole-process CPU/footprint still untested."
-  ]
+  ],
+  "updatedAt": "2026-11-15T01:30:54.920Z",
+  "localPreferenceControl": {
+    "before": "system",
+    "afterVerified": "system",
+    "remoteSettingsChanged": false
+  },
+  "additionalCuaCompletion": "通过正常客户端主题对照验收"
 }

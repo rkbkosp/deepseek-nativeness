@@ -1,0 +1,43 @@
+{
+  "checkedAt": "2026-11-15T01:25:56.758Z",
+  "reviewer": "root",
+  "manifest": "qa/native-editor-themed-next2/build/manifest.json",
+  "manifestSha256": "7b27f736a6468d9d582706766f255b7413d2b77f56e3256bce2248816a31e70f",
+  "app": "/Volumes/SuperDisk/native-dsh/desktop/qa/native-editor-themed-next2/build/Native Composer Theme Proof 2.app",
+  "sourceFilesBeforeLaunch": 28,
+  "sourceHashesBeforeLaunchMatched": true,
+  "artifactsAfterGui": 6,
+  "artifactHashesAfterGuiMatched": true,
+  "accepted": false,
+  "status": "native-instance-theme-subchecks-passed-whole-proof-paint-sync-failed",
+  "platform": "M4 / macOS27.2.1",
+  "passedSubchecks": [
+    "@Fi typed while native focus retained; Down shows second candidate highlighted; physical [400,780] click inserts reference and canonical path.",
+    "First dark-to-light and second light target native backing/foreground/chip readable, no former stale native backing; returning dark native pane also updates immediately.",
+    "Reference chip and canonical text survive at least two palette round trips.",
+    "Native target dark with light chrome and native target light with dark chrome both readable.",
+    "Popup actual field focus accepts local text; Escape dismisses, reference unchanged."
+  ],
+  "failedSubchecks": [
+    {
+      "id": "go-body-paint-stale-after-theme-return",
+      "detail": "First return from light to dark updates AX mirror, titlebar and native input pane to dark, but Go body/buttons/text/rendered mirror remain old light. A separate full AX plus screenshot with no input remains stale. Later dark plus explicit focus-button click refreshes whole Go body.",
+      "evidence": [
+        "/tmp/native-dsh-parity/138-theme-proof2-dark-return.png",
+        "/tmp/native-dsh-parity/139-theme-proof2-dark-settled.png",
+        "/tmp/native-dsh-parity/141-theme-proof2-dark-after-focus.png"
+      ]
+    }
+  ],
+  "evidence": [
+    "/tmp/native-dsh-parity/136-theme-proof2-dark-candidates.png",
+    "/tmp/native-dsh-parity/137-theme-proof2-light-first-click.png",
+    "/tmp/native-dsh-parity/140-theme-proof2-light-second-round.png",
+    "/tmp/native-dsh-parity/142-theme-proof2-dark-light-chrome.png",
+    "/tmp/native-dsh-parity/143-theme-proof2-light-dark-chrome.png"
+  ],
+  "remoteMutations": [],
+  "exit": "Local fixture draft explicitly cleared; Cmd+Q then CUA inventory confirms proof absent. No Host/auth/send/network.",
+  "cuaCompletion": "复验输入主题并记录绘制延迟",
+  "qualification": "Independent proof, not normal application integration or original visual parity. Fixed candidate list does not verify real filtering. Physical IME, PNG/drop/dynamic height and two-window lifecycle remain pending. Author natural property checks and native subtree pixels do not prove whole-window presented pixels. Private screenshots local only."
+}

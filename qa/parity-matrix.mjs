@@ -221,7 +221,8 @@ const reviewMap={
  'structured-replay-gallery':['chat-11'],
  'structured-replay-unknown-stop':['chat-8','chat-11'],
  'forced-dark-native-sidebar':['shell-1','settings-4'],
- 'light-native-wk-settings-seam':['settings-1','plugins-3','shell-1']
+ 'light-native-wk-settings-seam':['settings-1','plugins-3','shell-1'],
+ 'native-theme-transition-control':['shell-1','settings-4']
 };
 for(const n of [6,'6.1',7,8,9,10]){
  const review=laterReviews.find(x=>x.n===n)?.value;if(!review)continue;

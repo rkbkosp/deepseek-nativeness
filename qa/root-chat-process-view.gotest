@@ -1,0 +1,51 @@
+package main
+
+import (
+ "encoding/json"
+ "os/exec"
+ "testing"
+ "github.com/egoist/mygo/ui"
+)
+
+func TestRootChatSourceOracleActualView(t *testing.T) {
+ for _, name := range []string{"latestEmptyStep","latestReasoningOnly","latestWhitespace","latestTextAndTool","latestUnknown","interruptedReasoning","mixedResponse"} {
+  t.Run(name,func(t *testing.T){
+   raw,err:=exec.Command("node","qa/root-chat-process-oracle.mjs",name).Output(); if err!=nil {t.Fatal(err)}
+   var f struct{ Snapshot snapshot `json:"snapshot"`; Original struct{ Process struct{AnswerStep *int `json:"answerStep"`} `json:"process"` } `json:"original"` }
+   if err=json.Unmarshal(raw,&f);err!=nil{t.Fatal(err)}
+   a:=newApp(true);defer a.cancel(); a.uiPrefs.FoldedReplies="final";a.uiPrefs.StepsCollapse="completion";a.uiPrefs.StepsDetail="standard";a.replaceSnapshot(f.Snapshot)
+   tt:=ui.NewTester(a.view,1280,820);tt.Frame()
+   if name=="interruptedReasoning" {
+    if !tt.HasText("Older reply must not become final") {t.Fatal("source aborted turn must remain readable despite final-only stored folding")}
+    return
+   }
+   if tt.HasText("Older reply must not become final") {t.Fatal("completed turn incorrectly promotes earlier step reply")}
+   if name=="latestUnknown" {if f.Original.Process.AnswerStep==nil||*f.Original.Process.AnswerStep!=2||!tt.HasText("未知内容块"){t.Fatal("source final structured reply disappeared")}}
+   if name=="latestTextAndTool"&&tt.HasText("Tool preamble must join process"){t.Fatal("tool-bearing step incorrectly classified as final reply")}
+   if name=="mixedResponse" {if !tt.HasText("Response A")||!tt.HasText("Response B"){t.Fatal("final response parts missing")};if tt.HasText("Reasoning middle"){t.Fatal("reasoning leaked outside closed process")}}
+  })
+ }
+}
+
+func TestRootInterruptedUnicodeMatchesOriginalTerminalTag(t *testing.T) {
+ for _, name := range []string{"interruptedBOM","interruptedNEL"} {
+  t.Run(name,func(t *testing.T){
+   raw,err:=exec.Command("node","qa/root-chat-process-oracle.mjs",name).Output();if err!=nil{t.Fatal(err)}
+   var f struct{Snapshot snapshot `json:"snapshot"`};if err=json.Unmarshal(raw,&f);err!=nil{t.Fatal(err)}
+   a:=newApp(true);defer a.cancel();a.replaceSnapshot(f.Snapshot)
+   // Isolate the assistant terminal tag from the separate turn stopped control.
+   var m *message;for i:=range a.current.Messages{if a.current.Messages[i].Step==2&&a.current.Messages[i].Role=="assistant"{m=&a.current.Messages[i];break}}
+   if m==nil||!m.Interrupted{t.Fatal("actual helper interrupted source row missing")}
+   var step *chatStep;for i:=range a.current.ChatPresentation.Steps{if a.current.ChatPresentation.Steps[i].Step==2{step=&a.current.ChatPresentation.Steps[i];break}}
+   if step==nil{t.Fatal("actual helper step authority missing")}
+   tt:=ui.NewTester(func(c *ui.Context){if step.HasReasoning{ui.Column(c.Key("root-reasoning")).Children(func(){a.messagePartView(c,*m,"reasoning",step.NodeKey)})};if step.HasReply{ui.Column(c.Key("root-response")).Children(func(){a.messagePartView(c,*m,"response",step.NodeKey)})}},1280,820);tt.Frame()
+   count:=0;for _,s:=range tt.Texts(){if s=="已停止"{count++}}
+   // Original AssistantMarkdown uses raw block kinds for marker ownership,
+   // deliberately a different predicate from process-group reply membership.
+   // BOM is JS-trimmed, leaving only a reasoning part: original marker is0.
+   // NEL remains a reply in JS: response owns1 marker, reasoning owns0.
+   want:=1;if name=="interruptedBOM"{want=0}
+   if count!=want{t.Fatalf("native terminal-tag ownership diverged from original AssistantMarkdown: got %d tags (HasReply=%v), want %d",count,step.HasReply,want)}
+  })
+ }
+}
