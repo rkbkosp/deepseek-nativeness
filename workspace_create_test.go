@@ -1,6 +1,10 @@
 package main
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/egoist/mygo/ui"
+)
 
 func TestWorkspaceCreateRequiresHostAbsolutePath(t *testing.T) {
 	a := newApp(false)
@@ -59,5 +63,44 @@ func TestWorkspaceCreateListsHostDirectoriesAndSelectsCreated(t *testing.T) {
 	}
 	if !found {
 		t.Fatalf("created workspace missing from the refreshed registry: %v", names)
+	}
+}
+
+// A Host listing draws one icon per child directory. That glyph used to be
+// named "folder-outline", which has no embedded asset: the first frame that
+// showed a successful listing panicked and took the client down, while the
+// earlier failed list (blank path) only ever drew the error text. The sheet
+// now renders a listing without process death, and the refresh verb stays
+// usable.
+func TestWorkspaceCreateRendersHostDirectoryListing(t *testing.T) {
+	a := newApp(false)
+	t.Cleanup(a.cancel)
+	a.connected = true
+	a.hostID = "listing-host"
+	a.accountScope = "listing/account"
+	a.remoteGeneration = 1
+
+	s := a.workspaceEditor()
+	s.Open = true
+	s.PickerMode = "browse"
+	s.Listed = true
+	s.Path = "/Users/me/projects"
+	s.Listing = workspaceDirectoryListing{
+		Path: "/Users/me/projects",
+		Home: "/Users/me",
+		Entries: []workspaceDirectoryEntry{
+			{Name: "app", Path: "/Users/me/projects/app"},
+			{Name: "lib", Path: "/Users/me/projects/lib"},
+		},
+	}
+
+	tt := ui.NewTester(a.view, 1280, 820)
+	tt.Frame()
+	if err := tt.Click("刷新目录"); err != nil {
+		t.Fatalf("refresh control is not clickable: %v", err)
+	}
+	tt.Frame()
+	if a.workspaceCreate == nil || !a.workspaceCreate.Open {
+		t.Fatal("refreshing a directory must keep the new-Workspace sheet open")
 	}
 }

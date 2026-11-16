@@ -2,6 +2,8 @@ package main
 
 import (
 	"embed"
+	"log"
+
 	"github.com/egoist/mygo/ui"
 )
 
@@ -34,11 +36,25 @@ func loadArtwork(path string) *ui.SVG {
 	}
 	return ui.MustParseSVG(data)
 }
+
+// icon shows one named glyph from the embedded artwork. A name with no asset is
+// a build mistake, not an operator error: report it once and draw the row
+// without the glyph instead of tearing the window down mid-action.
 func icon(c *ui.Context, name string, size float32) ui.Element {
 	s, ok := icons[name]
 	if !ok {
-		s = loadArtwork("assets/icons/" + name + ".svg")
+		path := "assets/icons/" + name + ".svg"
+		data, err := artwork.ReadFile(path)
+		if err != nil {
+			log.Printf("icon: no embedded artwork %s: %v", path, err)
+			icons[name] = nil // negative cache: one report per name
+			return ui.Element{}
+		}
+		s = ui.MustParseSVG(data)
 		icons[name] = s
+	}
+	if s == nil {
+		return ui.Element{}
 	}
 	return ui.Icon(c, s).Size(size, size)
 }

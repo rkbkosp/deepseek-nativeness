@@ -359,7 +359,7 @@ func (a *app) workspaceCreateView(c *ui.Context) {
 							for _, entry := range entries {
 								child := entry
 								if ui.ButtonBase(c.Key("workspace-dir-"+child.Path)).Height(28).Padding(0, 8).Gap(6).Radius(6).Justify(ui.Start).Label("目录 " + child.Name).Children(func() {
-									icon(c, "folder-outline", 15).TextColor(a.theme.TextMuted)
+									icon(c, "folder-close", 15).TextColor(a.theme.TextMuted)
 									ui.Text(c, child.Name).FontSize(13).SingleLine().Ellipsis("…")
 								}).Clicked() {
 									s.Path = child.Path
