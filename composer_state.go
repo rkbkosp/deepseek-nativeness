@@ -571,15 +571,13 @@ func (a *app) composerCommand(line string, done func()) {
 		return
 	}
 	a.composerCommandMutation(s, line, func(raw json.RawMessage) error {
-		var result struct {
-			Matched bool `json:"matched"`
-		}
-		if err := json.Unmarshal(raw, &result); err != nil {
+		matched, err := commandAdmission(raw)
+		if err != nil {
 			return err
 		}
-		if !result.Matched {
+		if !matched {
 			if a.composerCurrent(s) {
-				return fmt.Errorf("主机未识别此指令：%s", strings.Fields(line)[0])
+				return fmt.Errorf("主机未识别此指令：%s（输入 / 可查看主机支持的指令）", strings.Fields(line)[0])
 			}
 			return nil
 		}
@@ -591,6 +589,28 @@ func (a *app) composerCommand(line string, done func()) {
 		}
 		return nil
 	})
+}
+
+// commandAdmission reads the Host's `commands/execute` answer. The endpoint
+// returns the settled execution ({commandId, result}) when the line resolves to
+// a command, and no value at all when its syntax or name does not resolve; the
+// `{matched}` shorthand belongs to DSH's own Web client, which derives it from
+// that same presence test. Absent, null and explicit `{matched}` answers are all
+// read, so the native client never mistakes a settled command for an unknown one.
+func commandAdmission(raw json.RawMessage) (bool, error) {
+	if len(raw) == 0 || strings.TrimSpace(string(raw)) == "null" {
+		return false, nil
+	}
+	var value struct {
+		Matched *bool `json:"matched"`
+	}
+	if err := json.Unmarshal(raw, &value); err != nil {
+		return false, err
+	}
+	if value.Matched != nil {
+		return *value.Matched, nil
+	}
+	return true, nil
 }
 
 // The Host's command acknowledgment is not proof that a browser-side effect

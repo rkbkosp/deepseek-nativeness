@@ -29,8 +29,12 @@ adapter.gateway={
   if(endpoint==='commands/execute'){
    if(payload.args.line==='/unknown')throw Error('Explicit fixture lost receipt');
    if(payload.args.line==='/reject')return{ok:false,error:{code:'fixture/rejected',message:'Explicit fixture rejected'}};
+   // The frozen Host answers with the settled execution, and with no value when the
+   // line names no command. `{matched}` is the Web client's own shorthand, never a
+   // field of this wire.
+   if(payload.args.line==='/unresolved')return{ok:true,value:undefined};
    if(payload.args.line.startsWith('/permission '))permission=payload.args.line.slice('/permission '.length);
-   return{ok:true,value:{matched:true,result:{kind:'success'}}};
+   return{ok:true,value:{commandId:'fixture-command-1',result:{kind:'success'}}};
   }
   if(endpoint==='session/updateQueue'){
    const req=payload.args.request;

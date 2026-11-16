@@ -282,6 +282,33 @@ func TestComposerPermissionRequiresAcknowledgementAndUsesCommandWriter(t *testin
 		t.Fatalf("permission dispatch %+v", last)
 	}
 }
+
+// The frozen Host answers `commands/execute` with the settled execution, not the
+// Web client's `{matched}` shorthand: a settled command consumes the draft, and
+// only an answer without a value reports an unknown command.
+func TestComposerCommandAdmissionReadsTheHostExecutionValue(t *testing.T) {
+	f := newComposerTestPeer(t)
+	a := f.a
+	a.reloadComposer()
+	f.until(t, func() bool { return a.composer.values.Permissions != nil })
+	a.draft = "/unresolved"
+	a.composerSubmit(false)
+	f.settle(t)
+	if a.draft != "/unresolved" {
+		t.Fatal("unresolved command discarded its draft")
+	}
+	if !strings.Contains(a.error, "主机未识别此指令：/unresolved") {
+		t.Fatalf("unresolved command reported %q", a.error)
+	}
+	a.error = ""
+	a.draft = "/permission read-only"
+	a.composerSubmit(false)
+	f.settle(t)
+	f.until(t, func() bool { return a.composerPermissionLabel() == "仅可查看" })
+	if a.draft != "" || a.error != "" {
+		t.Fatalf("settled command kept draft %q and error %q", a.draft, a.error)
+	}
+}
 func TestComposerPendingQueueActionsAndAcceleratedEmptyDraft(t *testing.T) {
 	f := newComposerTestPeer(t)
 	a := f.a
