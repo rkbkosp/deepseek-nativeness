@@ -381,6 +381,11 @@ type sessionNavigation struct {
 }
 
 func (a *app) chooseSession(s session) {
+	// A choice staged on the hero belongs to the next blank Session. Opening a
+	// started one drops it, as the original chip does once its flow is past.
+	if !s.Blank {
+		a.heroPresetStaged = ""
+	}
 	a.releaseComposerImages()
 	a.resetMessageImages()
 	a.invalidateChatRows()

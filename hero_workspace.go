@@ -47,15 +47,27 @@ func heroWorkspaceLabel(w workspace) string {
 // picking another one moves the New Session flow to that Workspace's blank
 // Session, reusing it or creating one, so the switch never leaves two rows.
 func (a *app) heroWorkspaceRow(c *ui.Context) {
-	if !a.connected || a.demo {
-		return
-	}
+	// The preset roster is a Host read, so the seat asks for it on the frame
+	// that draws it. Both seats live in this row, as the original hero's
+	// workspace chip and agent-preset chip do.
+	a.ensureHeroPresets()
+	ui.Row(c).FillWidth().Padding(0, 12).Gap(4).AlignItems(ui.Center).Children(func() {
+		if a.connected && !a.demo {
+			a.heroWorkspaceChip(c)
+		}
+		a.heroPresetChip(c)
+	})
+}
+
+// heroWorkspaceChip is the Workspace seat itself: the switchable half of the
+// row, which the preset chip sits beside.
+func (a *app) heroWorkspaceChip(c *ui.Context) {
 	w, known := a.heroWorkspace()
 	label := "选择工作区"
 	if known {
 		label = heroWorkspaceLabel(w)
 	}
-	ui.Row(c).FillWidth().Padding(0, 12).AlignItems(ui.Center).Children(func() {
+	ui.Row(c).AlignItems(ui.Center).Children(func() {
 		chip := ui.ButtonBase(c).Label("选择工作区").Height(28).Padding(0, 8).Gap(4).Radius(8)
 		chip.Tooltip("切换新会话所在的工作区")
 		chip.Children(func() {

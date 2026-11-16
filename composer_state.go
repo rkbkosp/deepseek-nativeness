@@ -392,6 +392,7 @@ func (a *app) acceptComposerProjections(raw json.RawMessage) error {
 		}
 	}
 	s.refreshLabels()
+	a.applyStagedHeroPreset(s)
 	if s.values.AgentPreset != nil && len(s.presets) == 0 && !s.presetsLoading && a.connected && a.client != nil {
 		s.presetsLoading = true
 		a.composerRead(s, "listAgentPresets", nil, func(raw json.RawMessage) error {

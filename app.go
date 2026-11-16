@@ -86,6 +86,11 @@ type app struct {
 	feedbackOpen                                             bool
 	feedbackRating, feedbackMessage, feedbackNote            string
 	subagentTitles                                           map[string]string
+	heroPresets                                              []heroPresetEntry
+	heroPresetStaged                                         string
+	heroPresetsHost                                          string
+	heroPresetsGen                                           uint64
+	heroPresetsAsked, heroPresetsLoading, heroPresetsLoaded  bool
 	demo                                                     bool
 	connectionOpen                                           bool
 	status, detail, error                                    string
