@@ -226,6 +226,14 @@ func (a *app) toolBody(c *ui.Context, m *message, key string) {
 		}
 	}
 	args := parseToolArgs(t.ArgsRaw)
+	// An activation has its own receipt card, so its raw argument JSON never
+	// stands in for the readable form the original shows.
+	if t.Name == "subagent" || t.Name == "subagent_fork" {
+		if a.subagentToolBody(c, m, key) {
+			a.toolSubCalls(c, t, key)
+			return
+		}
+	}
 	if t.Name == "write" || t.Name == "edit" || t.Name == "apply_patch" {
 		if a.toolDiffBody(c, t.Name, args, m.Text) {
 			a.toolSubCalls(c, t, key)
