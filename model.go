@@ -30,6 +30,11 @@ type session struct {
 	Archived    bool            `json:"archived"`
 	Blank       bool            `json:"blank"`
 	Preset      json.RawMessage `json:"preset,omitempty"`
+	// A subagent Session names the Session that spawned it; the catalog row
+	// carries the same lineage. They are the only client-visible way to draw
+	// the header breadcrumb without reading the parent's catalog first.
+	ParentSessionID string `json:"parentSessionId,omitempty"`
+	Origin          string `json:"origin,omitempty"`
 }
 
 func (s session) updated() time.Time { return time.UnixMilli(int64(s.UpdatedAt)) }
