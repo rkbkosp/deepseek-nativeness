@@ -514,6 +514,21 @@ func composerSubmitMode(preferred string, running, accelerated bool) string {
 	}
 	return preferred
 }
+
+// humanInboxInput reports whether a pending Inbox message is human input. The
+// original Chat keeps next-step echoes for source.kind === "user" only; a
+// notice, runtime snapshot or relay queues on the same target yet belongs to
+// the transcript's process rows.
+func humanInboxInput(row composerQueueItem) bool {
+	var source struct {
+		Kind string `json:"kind"`
+	}
+	if len(row.Source) == 0 || json.Unmarshal(row.Source, &source) != nil {
+		return false
+	}
+	return source.Kind == "user"
+}
+
 func queueText(row composerQueueItem) (string, bool) {
 	parts := []string{}
 	for _, p := range row.Content {

@@ -173,6 +173,13 @@ func (a *app) conversation(c *ui.Context) {
 		}
 		if a.composer != nil {
 			for _, item := range a.composer.values.Inbox["next-step"] {
+				// Original Chat filters Inbox steering echoes by human input
+				// (source.kind === "user"): approval notices, runtime context and
+				// cross-session relays queue on the same target but stay process
+				// rows, never a user bubble at the tail.
+				if !humanInboxInput(item) {
+					continue
+				}
 				text, _ := queueText(item)
 				if text == "" {
 					text = queueBlockLabel(item)

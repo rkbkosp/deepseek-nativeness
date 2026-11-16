@@ -22,7 +22,7 @@ func TestHistoryHeroSteeringAndStatsSurfaces(t *testing.T) {
 	a.sessionID = "s"
 	a.current = snapshot{SessionID: "s", HasMore: true, Messages: []message{{ID: "a", Role: "assistant", Kind: "assistant", Turn: 1, Text: "answer", Usage: json.RawMessage(`{"inputTokens":10,"outputTokens":20,"cacheReadTokens":70,"totalTokens":100}`), AssistantBlocks: []assistantBlock{{Kind: "text", Text: "answer"}}}}}
 	a.composer = &composerState{sessionID: "s", values: composerProjectionValues{Inbox: map[string][]composerQueueItem{
-		"next-step": {{ID: "steer", Content: []struct {
+		"next-step": {{ID: "steer", Source: json.RawMessage(`{"kind":"user","rpcId":"r-1"}`), Content: []struct {
 			Type       string          `json:"type"`
 			Text       string          `json:"text"`
 			Attachment json.RawMessage `json:"attachment"`
