@@ -261,3 +261,16 @@ test("frozen carrier incompatibilities are rejected before any Host write", asyn
   assert.equal(writes, 0);
   await a.close();
 });
+test("listDirectories omits a blank path so the Host lists its home", () => {
+  // The Host's directoryPicker/list schema accepts path only when non-blank.
+  // Sending "" is refused as INVALID_MESSAGE ("The RPC parameters are
+  // invalid."), which is what the new-Workspace sheet used to show before any
+  // directory list had been read.
+  assert.deepEqual(operationArgs("listDirectories", { path: "" }), {});
+  assert.deepEqual(operationArgs("listDirectories", { path: "  " }), {});
+  assert.deepEqual(operationArgs("listDirectories", {}), {});
+  assert.deepEqual(
+    operationArgs("listDirectories", { path: "/Users/me/projects" }),
+    { path: "/Users/me/projects" },
+  );
+});

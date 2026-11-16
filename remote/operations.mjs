@@ -410,7 +410,14 @@ export const OPERATIONS = {
   describeCredentials: r("credentials/describe", flat(["refs"], ["refs"])),
   setCredential: w("credentials/set", flat(["ref", "value"], ["ref", "value"])),
   unsetCredential: w("credentials/unset", flat(["ref"], ["ref"])),
-  listDirectories: r("directoryPicker/list", flat(["path"])),
+  // The Host's wire schema takes `path` only when non-blank: omitting it lists
+  // the Host home directory, while an empty string is refused as
+  // INVALID_MESSAGE ("The RPC parameters are invalid."). Trim here so a blank
+  // field and a blank refresh both mean "home".
+  listDirectories: r(
+    "directoryPicker/list",
+    (p) => (typeof p.path === "string" && p.path.trim() ? { path: p.path } : {}),
+  ),
   // The Host's own chooser. A profile that composes the native picker serves
   // this instead of the in-app browser.
   pickDirectory: r("directoryPicker/pick", () => ({})),
