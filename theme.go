@@ -33,6 +33,7 @@ type viewPreferences struct {
 	CodeWorkView       bool                `json:"codeWorkView"`
 	LinkOpen           string              `json:"linkOpen"`
 	UsageDetail        string              `json:"usageDetail"`
+	PaneWidth          float32             `json:"paneWidth"`
 }
 
 func defaultViewPreferences() viewPreferences {
@@ -47,7 +48,7 @@ func (a *app) applyAppearance(c *ui.Context) {
 	} else if a.uiPrefs.Theme == "light" {
 		dark = false
 	}
-	if a.theme.Dark != dark || a.contentFontSize != a.uiPrefs.FontSize || a.appearanceSignature != a.fontSignature() || a.colors.Sidebar.A == 0 {
+	if a.theme.Dark != dark || a.contentFontSize != a.uiPrefs.FontSize || a.appearanceSignature != a.fontSignature() || a.colors.Sidebar.A == 0 || a.md.Theme == nil {
 		t := ui.LightTheme()
 		if dark {
 			t = ui.DarkTheme()
@@ -66,7 +67,7 @@ func (a *app) applyAppearance(c *ui.Context) {
 			t.Accent = ui.Hex("#8aaef0")
 			t.AccentHover = ui.Hex("#9dbcf3")
 			a.colors = palette{
-				Sidebar: ui.Hex("#303033"), RowHover: ui.Hex("#3d3d40"), Selected: ui.Hex("#414144"),
+				Sidebar: ui.Hex("#1b1b1c"), RowHover: ui.Hex("#262628"), Selected: ui.Hex("#303033"),
 				Composer: ui.Hex("#2c2c2e"), Popup: ui.Hex("#2c2c2e"), Subtle: ui.Hex("#232324"),
 				Secondary: ui.Hex("#cfd3d6"), Tertiary: ui.Hex("#adb2b8"), Caption: ui.Hex("#81858c"),
 				Bubble: ui.Hex("#2c2c2e"), CodeBlock: ui.Hex("#1b1b1c"), CodeBanner: ui.Hex("#2c2c2e"),
@@ -123,7 +124,7 @@ func (a *app) applyAppearance(c *ui.Context) {
 		md.CodeLineHeight = 19 / codeSize
 		md.CodeBlockPadding = 16 / size
 		md.CodeBlockRadius = 16
-		md.LineHeight = (size + 10) / size
+		md.LineHeight = (size + 8) / size
 		md.BlockSpacing = 16 / size
 		md.ListIndent = 18 / size
 		md.ItemSpacing = 6 / size
@@ -155,7 +156,7 @@ func (a *app) applyAppearance(c *ui.Context) {
 			}
 		}
 		a.md.Theme = md
-		compact := md
+		compact := *md
 		compact.FontSize = 13
 		compact.LineHeight = 20.0 / 13
 		compact.BlockSpacing = 4.0 / 13
@@ -170,7 +171,7 @@ func (a *app) applyAppearance(c *ui.Context) {
 			compact.Headings[i].Top = 8.0 / 13
 			compact.Headings[i].Bottom = 4.0 / 13
 		}
-		a.mdCompact.Theme = compact
+		a.mdCompact.Theme = &compact
 	}
 	c.SetTheme(a.theme)
 }

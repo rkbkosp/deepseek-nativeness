@@ -97,10 +97,10 @@ func TestGeneralSettingsShowsVersionAndReferenceSections(t *testing.T) {
 			t.Fatalf("settings page missing %q", want)
 		}
 	}
-	// The language row stays absent: this build ships Chinese only, and a
-	// selector for one option promises a choice that does not exist.
-	if tt.HasText("语言") {
-		t.Fatal("a language control is back in General settings")
+	// The reference layout keeps the language row; the build ships Chinese
+	// only, so the row names that one locale and offers no false choice.
+	if !tt.HasText("语言") || !tt.HasText("中文") {
+		t.Fatal("General settings lost the single-locale language row")
 	}
 }
 

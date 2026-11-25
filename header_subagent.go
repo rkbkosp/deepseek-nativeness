@@ -233,7 +233,7 @@ func (a *app) headerLineageView(c *ui.Context, title string) bool {
 		}
 		icon(c, "chevron-right-outline", 12).Shrink(0).TextColor(a.colors.Caption)
 	}
-	ui.Text(c, title).FontWeight(500).SingleLine().Ellipsis("…").MaxWidth(220).MinWidth(0).Shrink(1).Label("会话标题")
+	ui.Text(c, title).FontSize(14).FontWeight(500).SingleLine().Ellipsis("…").MaxWidth(220).MinWidth(0).Shrink(1).Label("会话标题")
 	if child && a.composer != nil && len(a.composer.values.SubagentCatalog) > 0 {
 		a.subagentCountView(c, a.composer.values.SubagentCatalog)
 		return true

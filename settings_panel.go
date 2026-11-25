@@ -212,7 +212,7 @@ func (a *app) settingsControlFill() ui.Color {
 func (a *app) settingsView(c *ui.Context) {
 	width, height := c.Size()
 	panelWidth := min(float32(800), width-48)
-	panelHeight := min(float32(800), height-136)
+	panelHeight := min(float32(800), height-48)
 	if a.settingsSection == "" {
 		a.settingsSection = "general"
 	}
@@ -346,11 +346,25 @@ func (a *app) settingsView(c *ui.Context) {
 }
 
 func (a *app) settingRow(c *ui.Context, title, description string, control func()) {
-	ui.Row(c).Padding(16, 0).Gap(18).BorderWidth(0, 0, 0.5, 0).BorderColor(a.theme.Border).AlignItems(ui.Center).Children(func() {
+	a.settingRowHeight(c, title, description, 0, control)
+}
+
+func (a *app) settingRowHeight(c *ui.Context, title, description string, height float32, control func()) {
+	row := ui.Row(c.Key("setting:"+title)).Padding(16, 0).Margin(0, 5, 0, 0).Gap(18).BorderWidth(0, 0, 0.5, 0).BorderColor(a.theme.Border).AlignItems(ui.Center)
+	if height > 0 {
+		row.Height(height)
+	}
+	if description == "" {
+		// The reference's one-line row (language) is 68.5px, not the
+		// two-line 76.5px body used everywhere else.
+		row.MinHeight(68.5)
+	}
+	row.Draw(func(_ *ui.Painter, r ui.Rect) { a.qaLayout("setting:"+title, r) })
+	row.Children(func() {
 		ui.Column(c).Grow(1).MinWidth(0).Gap(6).Children(func() {
-			ui.Text(c, title).FontSize(14).FontWeight(300).Wrap()
+			ui.Text(c, title).FontSize(14).FontWeight(300).FixedLineHeight(20).Wrap()
 			if description != "" {
-				ui.Text(c, description).FontSize(12).TextColor(a.theme.TextMuted).Wrap()
+				ui.Text(c, description).FontSize(12).FixedLineHeight(18).TextColor(a.theme.TextMuted).Wrap()
 			}
 		})
 		if control != nil {
@@ -399,10 +413,15 @@ func (a *app) settingsChoice(c *ui.Context, title, description string, value *st
 
 func (a *app) generalSettings(c *ui.Context, host *settingsHostState) {
 	a.hostPermissionSetting(c, host)
-	// The interface ships in Chinese only. A disabled selector would advertise a
-	// choice that does not exist, so the row is absent until another locale is
-	// actually packaged.
-	ui.Column(c).Padding(20, 0, 16).Gap(12).BorderWidth(0, 0, 1, 0).BorderColor(a.theme.Border).Children(func() {
+	// The release ships Chinese only. The row remains in the reference layout
+	// and names the one available locale; it opens no false choice.
+	a.settingRow(c, "语言", "", func() {
+		ui.ButtonBase(c).Height(36).Padding(8, 14).Gap(10).Radius(10).Background(a.settingsControlFill()).Label("语言").Tooltip("当前仅提供简体中文").Children(func() {
+			ui.Text(c, "中文").FontSize(14).FontWeight(300)
+			icon(c, "chevron-down-outline", 12)
+		})
+	})
+	ui.Column(c).Padding(16, 0, 15).Gap(10).BorderWidth(0, 0, 1, 0).BorderColor(a.theme.Border).Children(func() {
 		ui.Text(c, "外观").FontSize(14)
 		ui.Row(c).Gap(8).Children(func() {
 			for _, option := range []struct{ value, title, glyph string }{{"light", "浅色", "light-outline"}, {"dark", "深色", "dark-outline"}, {"system", "跟随系统", "followsystem-outline"}} {
@@ -438,13 +457,13 @@ func (a *app) generalSettings(c *ui.Context, host *settingsHostState) {
 	if a.uiPrefs.StepsDetail != "verbose" {
 		a.settingsChoice(c, "收起后显示的回复", "工作步骤收起后，保留哪些助手回复", &a.uiPrefs.FoldedReplies, []settingsOption{{"all", "全部回复"}, {"final", "仅最终回答"}})
 	}
-	a.settingRow(c, "显示代码工作视图", "开启后，显示轨迹、本轮代码差异，可选择完整的 Agent 预设切换", func() {
+	a.settingRowHeight(c, "显示代码工作视图", "开启后，显示轨迹、本轮代码差异，可选择完整的 Agent 预设切换", 74.5, func() {
 		if ui.Switch(c, &a.uiPrefs.CodeWorkView).Label("显示代码工作视图").Changed() {
 			a.savePreferences()
 		}
 	})
 	a.settingRow(c, "快捷键", "查看当前可用的快捷键和输入操作", func() {
-		if ui.Button(c, "查看快捷键").Clicked() {
+		if ui.Button(c, "编辑快捷键").Clicked() {
 			a.settingsSection = "shortcuts"
 		}
 	})
@@ -792,7 +811,7 @@ func (a *app) settingsReadOnlyBlock(c *ui.Context, key, title, description strin
 	ui.Column(c.Key("settings-reference-"+key)).Padding(20, 0, 16).Gap(10).BorderWidth(0, 0, 1, 0).BorderColor(a.theme.Border).Children(func() {
 		ui.Text(c, title).FontSize(14)
 		if description != "" {
-			ui.Text(c, description).FontSize(12).TextColor(a.theme.TextMuted).Wrap()
+			ui.Text(c, description).FontSize(12).FixedLineHeight(18).TextColor(a.theme.TextMuted).Wrap()
 		}
 		for _, row := range rows {
 			ui.Row(c).Gap(12).AlignItems(ui.Start).Children(func() {
