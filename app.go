@@ -28,7 +28,11 @@ type app struct {
 	draftAttempted                                           bool
 	scheduleCounts                                           map[string]int
 	schedules                                                []scheduleRecord
+	jobDetail                                                *backgroundJob
+	jobDetailPolling                                         string
 	savedFiles                                               map[string]string
+	goalEdit                                                 *goalSnapshot
+	goalEditText                                             string
 	presentedFiles                                           map[int][]presentedFile
 	sessionPreviews                                          map[string]string
 	sessionPreviewLoading                                    map[string]bool
@@ -272,6 +276,8 @@ func (a *app) view(c *ui.Context) {
 		a.settingsView(c)
 	}
 	a.mutationReviewView(c)
+	a.jobDetailView(c)
+	a.goalEditView(c)
 	a.scheduleDetailView(c)
 	a.workspaceCreateView(c)
 	if a.compat != nil && a.compatPlacement == "imagePreview" {

@@ -118,6 +118,7 @@ type composerProjectionValues struct {
 	Permissions *struct {
 		CurrentValue string `json:"currentValue"`
 	} `json:"permissions"`
+	Goal            *goalProjection                `json:"goal"`
 	Inbox           map[string][]composerQueueItem `json:"inbox"`
 	Todos           *[]todoItem                    `json:"todos"`
 	SubagentCatalog []subagentEntry                `json:"subagentCatalog"`
