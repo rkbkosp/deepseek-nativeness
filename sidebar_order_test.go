@@ -3,7 +3,11 @@ package main
 import "testing"
 
 func TestSidebarSessionIDsOnlyOwnershipDoesNotDuplicateInUngrouped(t *testing.T) {
-	a := &app{uiPrefs: defaultViewPreferences(), workspaces: []workspace{{ID: "w", SessionIDs: []string{"owned"}}}, sessions: []session{{ID: "owned", Title: "A"}, {ID: "loose", Title: "B"}}}
+	a := &app{workspaceID: "w", uiPrefs: func() viewPreferences {
+		p := defaultViewPreferences()
+		p.Expanded = map[string]bool{"w": true, "": true}
+		return p
+	}(), workspaces: []workspace{{ID: "w", SessionIDs: []string{"owned"}}}, sessions: []session{{ID: "owned", Title: "A"}, {ID: "loose", Title: "B"}}}
 	counts := map[string]int{}
 	var ungrouped []string
 	for _, r := range a.sidebarRows() {
@@ -19,7 +23,11 @@ func TestSidebarSessionIDsOnlyOwnershipDoesNotDuplicateInUngrouped(t *testing.T)
 	}
 }
 func TestSidebarManualFreezesRecencyAcrossUpdatesAndSeparatesHost(t *testing.T) {
-	a := &app{hostID: "h", uiPrefs: defaultViewPreferences(), workspaces: []workspace{{ID: "w", SessionIDs: []string{"old", "new"}}}, sessions: []session{{ID: "old", UpdatedAt: 1}, {ID: "new", UpdatedAt: 2}}}
+	a := &app{hostID: "h", workspaceID: "w", uiPrefs: func() viewPreferences {
+		p := defaultViewPreferences()
+		p.Expanded = map[string]bool{"w": true}
+		return p
+	}(), workspaces: []workspace{{ID: "w", SessionIDs: []string{"old", "new"}}}, sessions: []session{{ID: "old", UpdatedAt: 1}, {ID: "new", UpdatedAt: 2}}}
 	a.setSidebarOrder("manual")
 	a.sessions[0].UpdatedAt = 99
 	var ids []string

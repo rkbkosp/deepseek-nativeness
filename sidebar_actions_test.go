@@ -381,6 +381,9 @@ func newSidebarHost(t *testing.T, opts sidebarHostOptions) *sidebarHost {
 	}
 	a.workspaces = append([]workspace(nil), opts.workspaces...)
 	a.sessions = append([]session(nil), opts.sessions...)
+	for _, w := range a.workspaces {
+		a.uiPrefs.Expanded[w.ID] = true
+	}
 	a.testDispatch = func(fn func()) { f.updates <- fn }
 	f.a, f.client, f.ctx = a, client, ctx
 	return f
@@ -806,6 +809,73 @@ func TestSessionMenuOffersArchiveAndRestore(t *testing.T) {
 }
 
 // --- new session ------------------------------------------------------------
+
+// The row's hover button is offered only where the Workspace may take a
+// Session: a real Workspace on a Host that allows createSession. The ungrouped
+// bucket has no Workspace to start one in, as in the original client.
+func TestWorkspaceRowNewSessionButtonFollowsTheRowsAccess(t *testing.T) {
+	a := sidebarActionsApp(t, false)
+	real := workspace{ID: "w1", Name: "项目甲"}
+	if a.workspaceRowOffersNewSession(real) {
+		t.Error("a disconnected client offered the row button")
+	}
+	a.connected = true
+	a.operationCaps = sidebarActionCaps(false)
+	if a.workspaceRowOffersNewSession(real) {
+		t.Error("a Host refusing createSession offered the row button")
+	}
+	a.operationCaps["createSession"] = operationCapability{Supported: true}
+	if !a.workspaceRowOffersNewSession(real) {
+		t.Error("an allowed Workspace offered no row button")
+	}
+	if a.workspaceRowOffersNewSession(workspace{Name: "未分组"}) {
+		t.Error("the ungrouped bucket offered a row button")
+	}
+	a.busy = true
+	if a.workspaceRowOffersNewSession(real) {
+		t.Error("a busy client offered the row button")
+	}
+}
+
+// The hover button starts the Session in the row's own Workspace and opens the
+// group so the new row is drawn there; the row itself still toggles on a click.
+func TestWorkspaceRowHoverNewSessionStartsInItsWorkspace(t *testing.T) {
+	ws := workspace{ID: "w1", Name: "项目甲", Path: "/tmp/w1"}
+	other := workspace{ID: "w2", Name: "项目乙", Path: "/tmp/w2"}
+	f := newSidebarHost(t, sidebarHostOptions{
+		caps:       []string{"createSession"},
+		workspaces: []workspace{ws, other},
+	})
+	f.a.uiPrefs.Expanded = map[string]bool{"w1": false, "w2": true}
+	tt := ui.NewTester(func(c *ui.Context) { f.a.sidebarView(c) }, 300, 400)
+	row, ok := tt.Find("项目甲")
+	if !ok {
+		t.Fatal("the Workspace row is not drawn")
+	}
+	tt.Move(row.X+row.W/2, row.Y+row.H/2)
+	if err := tt.Click("在「项目甲」中新建会话"); err != nil {
+		t.Fatalf("the hover button is not clickable: %v", err)
+	}
+	f.settle(t)
+
+	created := f.requestsFor(t, "createSession")
+	if len(created) != 1 || created[0].Params["workspaceId"] != "w1" {
+		t.Fatalf("createSession requests = %v, want one for w1", created)
+	}
+	if !f.a.uiPrefs.Expanded["w1"] {
+		t.Error("the Workspace group stayed closed")
+	}
+	if f.a.sessionID != "created-session" {
+		t.Errorf("the new Session did not open: %q", f.a.sessionID)
+	}
+	tt.Frame()
+	if err := tt.Click("项目甲"); err != nil {
+		t.Fatalf("the row title: %v", err)
+	}
+	if f.a.uiPrefs.Expanded["w1"] {
+		t.Error("clicking the row no longer toggles its group")
+	}
+}
 
 // "新建会话" on a Workspace row creates the Session in that Workspace, not in
 // whichever one happens to be selected.

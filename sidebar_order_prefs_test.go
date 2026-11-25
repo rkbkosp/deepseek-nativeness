@@ -19,9 +19,11 @@ import (
 // sidebarMatrixApp is one catalog with a nested workspace, a pinned session
 // and two recencies, so every matrix cell differs from its neighbours.
 func sidebarMatrixApp() *app {
+	prefs := defaultViewPreferences()
+	prefs.Expanded = map[string]bool{"w1": true, "w2": true, "": true}
 	return &app{
 		hostID:  "h",
-		uiPrefs: defaultViewPreferences(),
+		uiPrefs: prefs,
 		workspaces: []workspace{
 			{ID: "w1", Name: "项目", Path: "/proj"},
 			{ID: "w2", Name: "子项目", Path: "/proj/sub"},

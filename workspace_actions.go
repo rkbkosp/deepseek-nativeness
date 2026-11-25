@@ -416,6 +416,7 @@ const (
 	workspaceCommandRename     = "rename"
 	workspaceCommandDelete     = "delete"
 	workspaceCommandReveal     = "reveal"
+	workspaceCommandOpen       = "open"
 	workspaceCommandArchive    = "archive"
 	workspaceCommandUnarchive  = "unarchive"
 )
@@ -481,7 +482,13 @@ func (a *app) workspaceMenuEntries(w workspace) []workspaceMenuEntry {
 		Visible: a.workspaceRevealAvailable(w),
 		Enabled: a.workspaceRevealAvailable(w),
 	}
-	entries = append(entries, reveal, workspaceMenuEntry{Separator: true, Visible: real})
+	open := workspaceMenuEntry{
+		Command: workspaceCommandOpen,
+		Label:   "在默认应用中打开",
+		Visible: a.workspaceRevealAvailable(w),
+		Enabled: a.workspaceRevealAvailable(w),
+	}
+	entries = append(entries, reveal, open, workspaceMenuEntry{Separator: true, Visible: real})
 
 	active := a.workspaceMenuSessionEntries(w, false)
 	archived := a.workspaceMenuSessionEntries(w, true)
@@ -606,6 +613,28 @@ func (a *app) workspaceMenu(m *ui.Menu, w workspace) {
 	}
 }
 
+// workspaceRowOffersNewSession reports whether the Workspace row draws its
+// hover New Session button. The original row offers one only where the
+// Workspace's own access allows a Session, and the ungrouped bucket has no
+// Workspace to start one in.
+func (a *app) workspaceRowOffersNewSession(w workspace) bool {
+	return w.ID != "" && a.can("createSession")
+}
+
+// startWorkspaceSession opens a new Session in w from that row's button. The
+// group opens first, as the original client does, so the row the create lands
+// on is already drawn when the catalog refresh arrives.
+func (a *app) startWorkspaceSession(w workspace) {
+	if !a.workspaceRowOffersNewSession(w) {
+		return
+	}
+	if !a.uiPrefs.Expanded[w.ID] {
+		a.uiPrefs.Expanded[w.ID] = true
+		a.savePreferences()
+	}
+	a.createSessionIn(w.ID)
+}
+
 // runWorkspaceCommand is the one dispatcher for the entries above, so a menu
 // item cannot be drawn enabled and then do nothing.
 func (a *app) runWorkspaceCommand(command string, w workspace, sessionID string) {
@@ -616,6 +645,18 @@ func (a *app) runWorkspaceCommand(command string, w workspace, sessionID string)
 		a.beginWorkspaceRename(w)
 	case workspaceCommandReveal:
 		a.revealWorkspace(w)
+	case workspaceCommandOpen:
+		if !a.workspaceRevealAvailable(w) {
+			a.error = "工作区目录在主机上，这个窗口无法打开。"
+			return
+		}
+		if _, err := os.Stat(w.Path); err != nil {
+			a.error = "工作区目录已不存在：" + w.Path
+			return
+		}
+		if err := mygo.Shell.OpenPath(w.Path); err != nil {
+			a.error = "无法打开工作区：" + err.Error()
+		}
 	case workspaceCommandDelete:
 		a.confirmDeleteWorkspace(w)
 	case workspaceCommandArchive, workspaceCommandUnarchive:
@@ -809,6 +850,17 @@ func (a *app) forgetWorkspace(id string) {
 
 // revealWorkspace selects the Host directory in this Mac's Finder. A missing
 // directory is reported instead of opening its former parent.
+// openCurrentWorkspaceLocal opens the selected Workspace's directory in the
+// default application, the reference's ⌘⌥O.
+func (a *app) openCurrentWorkspaceLocal() {
+	for _, w := range a.workspaces {
+		if w.ID == a.workspaceID {
+			a.runWorkspaceCommand(workspaceCommandOpen, w, "")
+			return
+		}
+	}
+}
+
 func (a *app) revealWorkspace(w workspace) {
 	if !a.workspaceRevealAvailable(w) {
 		a.error = "工作区目录在主机上，这个窗口无法显示。"

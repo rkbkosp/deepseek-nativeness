@@ -106,7 +106,13 @@ func (a *app) sidebarRows() []sidebarRow {
 		}
 		out = append(out, sidebarRow{Key: "w:" + w.ID, Kind: "workspace", Workspace: w, Depth: depth, Count: len(rows)})
 		expanded, ok := a.uiPrefs.Expanded[w.ID]
-		if ok && !expanded && a.search == "" {
+		// The reference starts with only the selected Workspace open; the
+		// others are headers until the reader opens them. Defaulting every
+		// Workspace open made the sidebar taller than the original on first run.
+		if !ok {
+			expanded = w.ID == a.workspaceID
+		}
+		if !expanded && a.search == "" {
 			continue
 		}
 		limit := a.watermarks[w.ID]

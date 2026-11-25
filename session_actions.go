@@ -216,6 +216,36 @@ func (a *app) setSessionArchived(s session, archived bool) {
 	})
 }
 
+func (a *app) renameCurrentSession() {
+	for _, s := range a.sessions {
+		if s.ID != a.sessionID || s.Blank || !a.can("renameSession") {
+			continue
+		}
+		a.renameID, a.renameHost, a.renameScope, a.renameTitle = s.ID, a.hostID, a.accountScope, s.Title
+		return
+	}
+}
+
+func (a *app) forkCurrentSession() {
+	if a.sessionID == "" || !a.can("forkSession") {
+		return
+	}
+	a.mutate("forkSession", map[string]any{"sessionId": a.sessionID}, func(json.RawMessage) error {
+		a.fetchWorkspaces()
+		a.fetchSessions()
+		return nil
+	})
+}
+
+func (a *app) archiveCurrentSession() {
+	for _, s := range a.sessions {
+		if s.ID == a.sessionID && !s.Archived {
+			a.setSessionArchived(s, true)
+			return
+		}
+	}
+}
+
 func (a *app) renameView(c *ui.Context) {
 	open := a.renameID != ""
 	ui.Modal(c, &open, func() {

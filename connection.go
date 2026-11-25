@@ -223,11 +223,15 @@ func (a *app) notification(ev bridge.Notification) {
 	case "sessions":
 		if rows, err := decodeRows[session](ev.Params, "sessions", "items"); err == nil {
 			a.sessions = rows
+			a.ensureDraftSession()
+			a.qaCatalog("sessions", rows)
 			a.notifyCompatCatalog("sessions", rows)
 		}
 	case "workspaces":
 		if rows, err := decodeRows[workspace](ev.Params, "workspaces", "items"); err == nil {
 			a.workspaces = rows
+			a.ensureDefaultWorkspace()
+			a.qaCatalog("workspaces", rows)
 			a.notifyCompatCatalog("workspaces", rows)
 		}
 	case "snapshot":
@@ -337,6 +341,9 @@ func (a *app) refreshWorkspaces(after func()) {
 			return err
 		}
 		a.workspaces = rows
+		a.ensureDefaultWorkspace()
+		a.ensureDraftSession()
+		a.qaCatalog("workspaces", rows)
 		if after != nil {
 			after()
 		}
@@ -460,6 +467,52 @@ func (a *app) chooseSession(s session) {
 		a.openSessionWith(s.ID, failed)
 	}
 }
+
+// ensureDefaultWorkspace gives a launch without a stored selection the same
+// real Workspace the reference shows: the most recently used Session's
+// Workspace, then the first catalog row. It never replaces a live selection.
+func (a *app) ensureDefaultWorkspace() {
+	if a.workspaceID != "" {
+		for _, w := range a.workspaces {
+			if w.ID == a.workspaceID {
+				return
+			}
+		}
+	}
+	best, bestAt := "", float64(-1)
+	for _, s := range a.sessions {
+		if s.Blank || s.WorkspaceID == "" || s.UpdatedAt <= bestAt {
+			continue
+		}
+		best, bestAt = s.WorkspaceID, s.UpdatedAt
+	}
+	if best != "" {
+		for _, w := range a.workspaces {
+			if w.ID == best {
+				a.workspaceID = best
+				return
+			}
+		}
+	}
+	if len(a.workspaces) > 0 {
+		a.workspaceID = a.workspaces[0].ID
+	}
+}
+
+// ensureDraftSession gives the hero a real blank Session, so the composer
+// projections (default permission and model) have a Session scope to read.
+// The reference's New Session screen is such a draft, not a disabled preview.
+func (a *app) ensureDraftSession() {
+	if a.demo || a.draftAttempted || a.sessionID != "" || !a.connected || a.workspaceID == "" || qaSessionTitle != "" || a.restoreTarget != nil {
+		return
+	}
+	if !a.can("createSession") {
+		return
+	}
+	a.draftAttempted = true
+	a.createSessionIn(a.workspaceID)
+}
+
 func (a *app) viewKey(id string) string {
 	if a.accountScope != "" {
 		return a.accountScope + "\x00" + a.hostID + "\x00" + id

@@ -214,31 +214,46 @@ func (a *app) openSearchPick(rows []sidebarRow) bool {
 	return false
 }
 
-// searchView builds the search field under the sidebar title and reads the
-// keyboard path it owns. The hits are the sidebar's own session rows, which
-// the query already filtered, so the list draws the choice the keys move.
-func (a *app) searchView(c *ui.Context, rows []sidebarRow) {
+// searchHeader replaces the sidebar's section header with the inline search
+// control, as the reference does: the title and its action cluster give way to
+// one pill, and the hits remain the list body below it. It also owns the
+// keyboard path (Up/Down, Enter, Esc) while the field is focused.
+// chooseSearchRow moves the list choice only when there is a hit. Choosing a
+// sentinel -1 made the list fall back to a real row, which opened a Session and
+// could start a Host file read (and a TCC prompt) on an empty search.
+func (a *app) chooseSearchRow() {
+	if a.searchRow >= 0 {
+		a.sessionList.Choose(a.searchRow)
+	}
+}
+
+func (a *app) searchHeader(c *ui.Context, rows []sidebarRow) {
 	a.sessionList.Selected = &a.searchRow
-	input := ui.TextInput(c, &a.search).Placeholder("搜索会话").Label("搜索会话输入框").AutoFocus()
-	switch {
-	case input.Shortcut(0, ui.KeyDown):
-		a.moveSearchPick(rows, 1)
-	case input.Shortcut(0, ui.KeyUp):
-		a.moveSearchPick(rows, -1)
-	}
-	a.syncSearchPick(rows)
-	// The choice is made here, not left as the number it had: the row behind a
-	// hit moves as the query narrows, and the list would otherwise take a row
-	// whose item changed as the chosen item going away.
-	a.sessionList.Choose(a.searchRow)
-	if input.Submitted() {
-		a.openSearchPick(rows)
-	}
-	if input.Shortcut(0, ui.KeyEscape) {
-		a.closeSearch()
-	}
+	ui.Row(c).FillWidth().Height(40).Padding(4, 8, 3).Children(func() {
+		ui.Row(c).FillWidth().Height(32).Padding(0, 6).Gap(6).AlignItems(ui.Center).Radius(10).Border(1, a.theme.Border).Background(a.settingsControlFill()).Children(func() {
+			icon(c, "search-outline", 15).TextColor(a.theme.TextMuted)
+			input := ui.TextInput(c, &a.search).Placeholder("搜索会话名称").Label("搜索会话输入框").Height(30).Padding(0).Grow(1).BorderWidth(0).Background(ui.Transparent).FocusRing(false).AutoFocus()
+			switch {
+			case input.Shortcut(0, ui.KeyDown):
+				a.moveSearchPick(rows, 1)
+			case input.Shortcut(0, ui.KeyUp):
+				a.moveSearchPick(rows, -1)
+			}
+			a.syncSearchPick(rows)
+			a.chooseSearchRow()
+			if input.Submitted() {
+				a.openSearchPick(rows)
+			}
+			if input.Shortcut(0, ui.KeyEscape) {
+				a.closeSearch()
+			}
+			if ui.ButtonBase(c).Size(24, 24).Padding(0).Label("关闭搜索").Tooltip("关闭搜索 Esc").Children(func() { icon(c, "close-outline", 14).TextColor(a.theme.TextMuted) }).Clicked() {
+				a.closeSearch()
+			}
+		})
+	})
 	if a.search != "" && a.searchRow < 0 {
-		ui.Text(c, "没有匹配的会话").FontSize(12).TextColor(a.theme.TextMuted).Padding(4, 8)
-		ui.Text(c, "换个关键词，或者按 Esc 关闭搜索").FontSize(11).TextColor(a.theme.TextMuted).Padding(0, 8, 6)
+		ui.Text(c, "没有匹配的会话").FontSize(12).TextColor(a.theme.TextMuted).Padding(4, 12)
+		ui.Text(c, "换个关键词，或者按 Esc 关闭搜索").FontSize(11).TextColor(a.theme.TextMuted).Padding(0, 12, 6)
 	}
 }

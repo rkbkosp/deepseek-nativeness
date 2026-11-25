@@ -24,10 +24,14 @@ type app struct {
 	composerDrafts                                           map[string]*composerDraftState
 	composerBaselineKey                                      string
 	sidebarLayoutWidth                                       float32
+	revealedSession                                          string
+	draftAttempted                                           bool
 	scheduleCounts                                           map[string]int
 	schedules                                                []scheduleRecord
 	savedFiles                                               map[string]string
 	presentedFiles                                           map[int][]presentedFile
+	sessionPreviews                                          map[string]string
+	sessionPreviewLoading                                    map[string]bool
 	scheduleDetail                                           *scheduleRecord
 	scheduleDetailOpen                                       bool
 	modelMenuWidth, modelMenuHeight                          float32
