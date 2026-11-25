@@ -86,12 +86,16 @@ func (a *app) qaWorkspace() *workspace {
 // one used to need a click that automation cannot make.
 var qaUIStates = map[string]string{
 	"none":                  "connected transcript only",
+	"hero":                  "blank Session in the first Workspace",
+	"transcript":            "conversation tab of the most recent Session",
+	"transcript-top":        "conversation tab scrolled to the start",
 	"sidebar-collapsed":     "sidebar hidden",
 	"settings":              "settings panel",
 	"settings-models":       "settings panel on the model section",
 	"settings-plugins":      "settings panel on the plugin section",
 	"search":                "search field open",
 	"right-pane":            "right pane open on its start surface",
+	"right-pane-full":       "right pane expanded to the main area",
 	"trajectory":            "trajectory tab",
 	"plugins":               "compatibility page: plugins",
 	"automation":            "compatibility page: automations",
@@ -109,10 +113,16 @@ var qaUIStates = map[string]string{
 // open Session. The trajectory, terminal and compatibility pages are
 // Session-scoped: opening them without one fails instead of showing a surface.
 var qaUIStateNeedsSession = map[string]bool{
-	"trajectory": true,
-	"terminal":   true,
-	"plugins":    true,
-	"automation": true,
+	// A local launch starts on the hero: it connects to its own Host without a
+	// stored selection to restore, so the transcript is only reachable by
+	// opening a Session from the catalog the same way a sidebar row does.
+	"transcript":     true,
+	"transcript-top": true,
+	"search":         true,
+	"trajectory":     true,
+	"terminal":       true,
+	"plugins":        true,
+	"automation":     true,
 	// The model page reads a Session's selection and reports "请先选择会话。"
 	// without one, so a capture of it needs a Session open.
 	"models": true,
@@ -132,11 +142,16 @@ func (a *app) applyQAUIStateWhenReady(state string) {
 		log.Printf("qa: ui state %q never applied: no connection within 60s", state)
 		return
 	}
+	if (state == "hero" || state == "right-pane") && !a.qaWaitFor(20*time.Second, func() bool { return len(a.workspaces) > 0 }) {
+		log.Printf("qa: %s has no Workspace catalog", state)
+		return
+	}
 	if qaUIStateNeedsSession[state] {
 		// `connected` becomes true before the catalog it triggers has been read
 		// back, so wait for the rows themselves; opening a Session-scoped surface
 		// against an empty catalog has nothing to scope it.
 		a.qaWaitFor(30*time.Second, func() bool { return len(a.sessions) > 0 })
+		var chosen session
 		opened := a.qaRunOnMain(func() bool {
 			if a.sessionID != "" {
 				return true
@@ -144,8 +159,19 @@ func (a *app) applyQAUIStateWhenReady(state string) {
 			if len(a.sessions) == 0 {
 				return false
 			}
-			// The same call the first sidebar row makes.
-			a.chooseSession(a.sessions[0])
+			// The same call the first sidebar row makes, unless a parity run
+			// named the exact Session the reference capture opened.
+			target := a.sessions[0]
+			if qaSessionTitle != "" {
+				for _, s := range a.sessions {
+					if strings.Contains(s.Title, qaSessionTitle) {
+						target = s
+						break
+					}
+				}
+			}
+			chosen = target
+			a.chooseSession(target)
 			return true
 		})
 		if !opened {
@@ -155,16 +181,35 @@ func (a *app) applyQAUIStateWhenReady(state string) {
 		// A compatibility page registers an owner bound to the Session it was
 		// opened under; opening it before the load settles races that
 		// registration and the page is answered with STALE_CONTEXT.
-		if !a.qaWaitFor(20*time.Second, func() bool {
+		settled := func() bool {
 			return a.sessionID != "" && a.sessionOpening == "" && a.current.SessionID == a.sessionID
-		}) {
-			log.Printf("qa: ui state %q applied while the session was still loading", state)
+		}
+		if !a.qaWaitFor(20*time.Second, settled) {
+			// The catalog watch can replace an in-flight session-open answer.
+			// One explicit retry is enough for a capture; three failed attempts
+			// would only repeat the same remote race.
+			for attempt := 0; attempt < 2 && !settled(); attempt++ {
+				a.qaRunOnMain(func() bool {
+					if chosen.ID == "" {
+						return false
+					}
+					a.chooseSession(chosen)
+					return true
+				})
+				if a.qaWaitFor(10*time.Second, settled) {
+					break
+				}
+			}
+			if !settled() {
+				log.Printf("qa: ui state %q applied while the session was still loading", state)
+			}
 		}
 	}
 	a.qaRunOnMain(func() bool {
 		a.applyQAUIState(state)
 		return true
 	})
+
 }
 
 // applyQAUIState performs the calls the corresponding click performs. It reads
@@ -173,8 +218,34 @@ func (a *app) applyQAUIState(state string) {
 	if state == "" || state == "none" {
 		return
 	}
+	if qaFontSizeOverride > 0 {
+		a.uiPrefs.FontSize = qaFontSizeOverride
+	}
+	if qaStepsOverride != "" {
+		a.uiPrefs.StepsDetail = qaStepsOverride
+	}
+	if qaCodeWorkViewOverride == "true" || qaCodeWorkViewOverride == "false" {
+		a.uiPrefs.CodeWorkView = qaCodeWorkViewOverride == "true"
+	}
 	log.Printf("qa: applying ui state %q", state)
 	switch state {
+	case "hero":
+		// A blank Session in a real Workspace, exactly what the New Session
+		// button creates. Capturing the bare no-selection launch showed a
+		// placeholder Workspace seat that the product path does not.
+		if w := a.qaWorkspace(); w != nil {
+			a.workspaceID = w.ID
+			a.startWorkspaceSession(*w)
+		}
+	case "transcript":
+		// The conversation tab a Session opens on; the Session itself was
+		// opened by the needs-session step above. A parity run fixes the
+		// sidebar at scrollTop 0, so suppress the reveal-on-open scroll.
+		a.currentTab = "chat"
+		a.revealedSession = a.sessionID
+	case "transcript-top":
+		a.currentTab = "chat"
+		a.scrollConversationTop()
 	case "sidebar-collapsed":
 		a.sidebar = false
 	case "settings":
@@ -184,10 +255,15 @@ func (a *app) applyQAUIState(state string) {
 	case "settings-plugins":
 		a.openSettingsSection("plugins")
 	case "search":
+		a.currentTab = "chat"
 		a.sidebar = true
 		a.searchOpen = true
-	case "right-pane":
+	case "right-pane", "right-pane-full":
+		if w := a.qaWorkspace(); w != nil {
+			a.workspaceID = w.ID
+		}
 		a.rightPaneOpen = true
+		a.rightPaneFull = state == "right-pane-full"
 	case "trajectory":
 		a.currentTab = "trajectory"
 		a.openCompatAt("trajectory", "trajectory")

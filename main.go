@@ -30,6 +30,14 @@ func main() {
 	uiState := flag.String("ui-state", "", "open one reviewable surface on the first connected frame (QA only; see qa_ui_state.go)")
 	theme := flag.String("theme", "", "client appearance: system, light, dark")
 	windowDiagnostics := flag.String("window-diagnostics", "", "write this client's own window visibility and bounds after startup")
+	layoutLog := flag.Bool("layout-log", false, "log key native layout rectangles once (QA only)")
+	catalogLog := flag.Bool("catalog-log", false, "log workspace/session catalogs once (QA only)")
+	catalogJSON := flag.String("catalog-json", "", "write decoded workspace catalog to this JSON path (QA only)")
+	uiSession := flag.String("ui-session", "", "open the Session whose title contains this text (QA only)")
+	uiSteps := flag.String("ui-steps", "", "override the step-detail preference for a capture (QA only: compact/standard/detailed/verbose)")
+	uiWorkspace := flag.String("ui-workspace", "", "select the Workspace whose name or path contains this text (QA only)")
+	uiFontSize := flag.Float64("ui-font-size", 0, "override the content font size for a capture (QA only)")
+	uiCodeWorkView := flag.String("ui-code-work-view", "", "override the code-work-view preference for a capture (QA only: true/false)")
 	document := flag.String("demo-document", "", "explicit demo only: long/table/images/structured native render regression")
 	listClip := flag.Bool("qa-list-clip", false, "explicit demo only: reproduce redundant list clip")
 	defaultTables := flag.Bool("qa-default-tables", false, "explicit demo only: use framework table renderer")
@@ -37,6 +45,15 @@ func main() {
 	fontCalibration := flag.Bool("font-calibration", false, "explicit demo only: compare native font weights at the original 14 DIP")
 	checkUpdateOnce := flag.String("check-update-once", "", "run one update check without a window and write its JSON evidence (development builds; QA only)")
 	flag.Parse()
+	qaLayoutLog = *layoutLog
+	qaCatalogLog = *catalogLog
+	qaCatalogPath = *catalogJSON
+	qaSessionTitle = *uiSession
+
+	qaStepsOverride = *uiSteps
+	qaWorkspaceName = *uiWorkspace
+	qaFontSizeOverride = float32(*uiFontSize)
+	qaCodeWorkViewOverride = *uiCodeWorkView
 	// A headless QA check runs before the single-instance lock: a real client
 	// may already own it, and this launch must not hand its command line over
 	// and exit instead of checking. It never opens a window.

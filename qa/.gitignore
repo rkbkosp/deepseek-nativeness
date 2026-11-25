@@ -14,3 +14,7 @@
 /_native-semantic-cross/build/independent-swift-fixed
 /_native-semantic-cross/build/stage3-author-recompiled
 /_native-semantic-cross/build/stage3-author-fixed-recompiled
+
+# Per-run pixel parity captures: the harness and its report conventions are
+# committed, the screenshots and their generated diffs are machine output.
+/parity-*/
