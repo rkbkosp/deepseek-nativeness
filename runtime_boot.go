@@ -181,6 +181,7 @@ func (a *app) applyLocalStatus(local *localRuntime, status runtimeStatus) {
 	switch status.Phase {
 	case runtimePhaseReady:
 		local.status = ""
+		a.fatalLocal = ""
 	case runtimePhaseRestart:
 		local.restarts = status.Attempt
 		local.lastRestart = status.Reason
@@ -196,6 +197,9 @@ func (a *app) applyLocalStatus(local *localRuntime, status runtimeStatus) {
 		local.err = status.Message
 		a.status = "本地 Host 已停止"
 		a.error = status.Message
+		if strings.Contains(status.Message, "已停止自动重启") {
+			a.fatalLocal = status.Message
+		}
 	}
 }
 

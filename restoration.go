@@ -94,6 +94,10 @@ func (a *app) finishRestore() {
 	if saved == nil || saved.HostID != a.hostID {
 		return
 	}
+	// A restore that finds nothing should still leave the hero usable. Wait
+	// until the saved target is consumed, so a draft Session is never created
+	// ahead of the selection it would replace.
+	defer a.ensureDraftSession()
 	if saved.WorkspaceID == "" && saved.SessionID == "" {
 		a.restoreTarget = nil
 		a.connectionOpen = true

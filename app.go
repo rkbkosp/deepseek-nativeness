@@ -35,8 +35,12 @@ type app struct {
 	goalEdit                                                 *goalSnapshot
 	goalEditText                                             string
 	presentedFiles                                           map[int][]presentedFile
+	fatalLocal                                               string
 	sessionPreviews                                          map[string]string
 	sessionPreviewLoading                                    map[string]bool
+	fullscreen                                               bool
+	commandManagerOpen                                       bool
+	commandManagerError                                      string
 	updateOfferOpen                                          bool
 	updateOffer                                              *updateRelease
 	mandatoryUpdate                                          *updateRelease
@@ -55,6 +59,7 @@ type app struct {
 	restoreTarget                                            *savedSelection
 	composer                                                 *composerState
 	sidebarShown                                             float32
+	heroFade                                                 float32
 	modelPopoverOpen                                         bool
 	compatPlacement                                          string
 	fontCalibration                                          bool
@@ -319,6 +324,8 @@ func (a *app) view(c *ui.Context) {
 	a.mutationReviewView(c)
 	a.jobDetailView(c)
 	a.goalEditView(c)
+	a.fatalLocalView(c)
+	a.commandManagerView(c)
 	a.updateDialogView(c)
 	a.scheduleDetailView(c)
 	a.discoverView(c)
@@ -329,4 +336,5 @@ func (a *app) view(c *ui.Context) {
 	if a.compat != nil && a.compatPlacement == "imagePreview" {
 		a.imagePreviewView(c)
 	}
+	a.fullscreenCaption(c)
 }

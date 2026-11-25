@@ -1,12 +1,21 @@
 package main
 
-import "github.com/egoist/mygo/ui"
+import (
+	"time"
+
+	"github.com/egoist/mygo/ui"
+)
 
 // heroView is the original blank-Session chrome: the fish mark, the headline,
 // and the preview badge centered above the composer.
 func (a *app) heroView(c *ui.Context) {
-	ui.Column(c).Grow(1).MinHeight(0).Center().Padding(24).Children(func() {
-		ui.Column(c).FillWidth().MaxWidth(a.chatContentWidth(c) + 64).Gap(12).Children(func() {
+	if a.heroFade == 0 {
+		a.heroFade = 0.001
+	}
+	hero := ui.Column(c).Grow(1).MinHeight(0).Center().Padding(24).Opacity(a.heroFade)
+	a.heroFade = hero.AnimateTo("hero-fade-in", 1, ui.Animation{Duration: 240 * time.Millisecond, Ease: ui.EaseOut})
+	hero.Children(func() {
+		ui.Column(c).FillWidth().MaxWidth(a.chatContentWidth(c) + 64).Gap(8).Children(func() {
 			ui.Row(c).Center().Gap(10).AlignItems(ui.Center).Children(func() {
 				icon(c, "fish-logo", 34).TextColor(a.theme.Text)
 				ui.Text(c, "探索未至之境").FontSize(26).FixedLineHeight(32).FontWeight(500).TextColor(a.theme.Text)

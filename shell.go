@@ -165,6 +165,23 @@ func (a *app) applicationMenu() *mygo.Menu {
 	if check := a.checkForUpdatesMenuItem(); check != nil {
 		appSubmenu = append(appSubmenu, check)
 	}
+	appSubmenu = append(appSubmenu, &mygo.MenuItem{
+		ID:    "app.manageDsh",
+		Label: "管理 dsh 命令…",
+		Click: func(*mygo.MenuItem, *mygo.Window) { a.commandManagerOpen = true },
+	})
+	if a.isDevRuntime() {
+		appSubmenu = append(appSubmenu, &mygo.MenuItem{
+			ID:    "app.reloadPage",
+			Label: "重新加载页面",
+			Click: func(*mygo.MenuItem, *mygo.Window) { a.reloadPage() },
+		})
+		appSubmenu = append(appSubmenu, &mygo.MenuItem{
+			ID:    "app.restartHost",
+			Label: "重启本地 Host",
+			Click: func(*mygo.MenuItem, *mygo.Window) { a.restartLocalHost() },
+		})
+	}
 	appSubmenu = append(appSubmenu,
 		mygo.Separator(),
 		// An empty submenu (rather than no submenu) is what makes AppKit

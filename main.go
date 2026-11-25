@@ -99,6 +99,8 @@ func main() {
 		}
 		a.metrics.indicators = newIndicatorViewPool()
 		a.win = mygo.NewWindow(mygo.WindowOptions{Title: productName, Width: 1280, Height: 820, MinWidth: 780, MinHeight: 560, TitleBarStyle: mygo.TitleBarHiddenInset, Transparent: true, Vibrancy: mygo.VibrancySidebar, BackgroundColor: "#00000000", Content: ui.View(a.view)})
+		a.win.OnEnterFullScreen(func() { a.update(func() { a.fullscreen = true }) })
+		a.win.OnLeaveFullScreen(func() { a.update(func() { a.fullscreen = false }) })
 		// Show after assigning the handle. This supported call avoids depending
 		// on the deferred first-show callback or a later capture/getter.
 		a.win.Show()
