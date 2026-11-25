@@ -3,6 +3,7 @@ package main
 import (
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/egoist/mygo/ui"
 )
@@ -77,7 +78,7 @@ var shortcutBindings = buildShortcutBindings()
 
 func buildShortcutBindings() []shortcutBinding {
 	bindings := []shortcutBinding{
-		{ID: "escape.dismiss", Key: shortcutKey{Key: ui.KeyEscape}, Title: "关闭浮层；取消当前等待的审批或提问", Scope: scopeGlobal, Run: (*app).dismissOverlay},
+		{ID: "escape.dismiss", Key: shortcutKey{Key: ui.KeyEscape}, Title: "关闭浮层；双击停止当前任务", Scope: scopeGlobal, Run: (*app).dismissOverlay},
 		{ID: "sidebar.left.toggle", Key: shortcutKey{Mods: ui.Cmd, Key: ui.KeyB}, Title: "展开或收起侧边栏", Scope: scopeGlobal, Run: (*app).toggleSidebar},
 		{ID: "session.search", Key: shortcutKey{Mods: ui.Cmd, Key: ui.KeyK}, Title: "搜索会话", Scope: scopeGlobal, Run: (*app).openSessionSearch},
 		// The original registers no session-wide text search, and neither does
@@ -85,6 +86,12 @@ func buildShortcutBindings() []shortcutBinding {
 		// cannot find anything inside a transcript.
 		{ID: "session.find", Key: shortcutKey{Mods: ui.Cmd, Key: ui.KeyF}, Title: "查找：本构建没有会话内全文查找，打开的是会话搜索", Scope: scopeGlobal, Run: (*app).openSessionSearch},
 		{ID: "settings.open", Key: shortcutKey{Mods: ui.Cmd, Key: ui.KeyComma}, Title: "打开设置", Scope: scopeGlobal, Run: (*app).openSettingsPanel},
+		shortcutBinding{ID: "fontSize.text.increase", Key: shortcutKey{Mods: ui.Cmd, Key: ui.KeyEqual}, Title: "增大正文字号", Scope: scopeGlobal, Run: func(a *app) { a.adjustFont("text", 1) }},
+		shortcutBinding{ID: "fontSize.text.decrease", Key: shortcutKey{Mods: ui.Cmd, Key: ui.KeyMinus}, Title: "减小正文字号", Scope: scopeGlobal, Run: func(a *app) { a.adjustFont("text", -1) }},
+		shortcutBinding{ID: "fontSize.code.increase", Key: shortcutKey{Mods: ui.Cmd | ui.Shift, Key: ui.KeyEqual}, Title: "增大代码字号", Scope: scopeGlobal, Run: func(a *app) { a.adjustFont("code", 1) }},
+		shortcutBinding{ID: "fontSize.code.decrease", Key: shortcutKey{Mods: ui.Cmd | ui.Shift, Key: ui.KeyMinus}, Title: "减小代码字号", Scope: scopeGlobal, Run: func(a *app) { a.adjustFont("code", -1) }},
+		shortcutBinding{ID: "fontSize.terminal.increase", Key: shortcutKey{Mods: ui.Cmd | ui.Alt, Key: ui.KeyEqual}, Title: "增大终端字号", Scope: scopeGlobal, Run: func(a *app) { a.adjustFont("terminal", 1) }},
+		shortcutBinding{ID: "fontSize.terminal.decrease", Key: shortcutKey{Mods: ui.Cmd | ui.Alt, Key: ui.KeyMinus}, Title: "减小终端字号", Scope: scopeGlobal, Run: func(a *app) { a.adjustFont("terminal", -1) }},
 		{ID: "shortcuts.open", Key: shortcutKey{Mods: ui.Cmd, Key: ui.KeySlash}, Title: "打开快捷键速查", Scope: scopeGlobal, Run: (*app).openShortcutReference},
 		{ID: "session.new", Key: shortcutKey{Mods: ui.Cmd, Key: ui.KeyN}, Title: "新建会话", Scope: scopeGlobal, Run: (*app).applyNewSessionIntent},
 		// workspace.add is the original's ⌘O; openWorkspaceCreate already decides
@@ -110,7 +117,14 @@ func buildShortcutBindings() []shortcutBinding {
 		shortcutBinding{ID: "conversation.scrollTop", Key: shortcutKey{Mods: ui.Cmd, Key: ui.KeyUp}, Title: "滚动到对话顶部", Scope: scopeSession, Run: (*app).scrollConversationTop, Repeat: true},
 		shortcutBinding{ID: "conversation.scrollBottom", Key: shortcutKey{Mods: ui.Cmd, Key: ui.KeyDown}, Title: "滚动到对话底部", Scope: scopeSession, Run: (*app).scrollConversationBottom, Repeat: true},
 		shortcutBinding{ID: "sidebar.right.toggle", Key: shortcutKey{Mods: ui.Cmd | ui.Shift, Key: ui.KeyB}, Title: "展开或收起右栏", Scope: scopePanel, Run: (*app).toggleRightPane},
-		shortcutBinding{ID: "terminal.new", Key: shortcutKey{Mods: ui.Cmd | ui.Shift, Key: ui.KeyT}, Title: "在右栏打开终端", Scope: scopePanel, Run: (*app).openTerminalPane},
+		shortcutBinding{ID: "terminal.new", Key: shortcutKey{Mods: ui.Ctrl, Key: ui.KeyBackquote}, Title: "在右栏打开终端", Scope: scopePanel, Run: (*app).openTerminalPane},
+		shortcutBinding{ID: "workspace.files", Key: shortcutKey{Mods: ui.Cmd, Key: ui.KeyP}, Title: "在右栏打开工作区文件", Scope: scopePanel, Run: (*app).openFilesPane},
+		shortcutBinding{ID: "browser.new", Key: shortcutKey{Mods: ui.Cmd, Key: ui.KeyT}, Title: "打开浏览器", Scope: scopeGlobal, Run: (*app).openBrowser},
+		shortcutBinding{ID: "workspace.openLocal", Key: shortcutKey{Mods: ui.Cmd | ui.Alt, Key: ui.KeyO}, Title: "在默认应用中打开工作区", Scope: scopeGlobal, Run: (*app).openCurrentWorkspaceLocal},
+		shortcutBinding{ID: "pane.fullscreen.toggle", Key: shortcutKey{Mods: ui.Cmd | ui.Alt, Key: ui.KeyEnter}, Title: "右栏全屏/还原", Scope: scopePanel, Run: (*app).toggleRightPaneFullscreen},
+		shortcutBinding{ID: "session.rename", Key: shortcutKey{Mods: ui.Cmd | ui.Alt, Key: ui.KeyG}, Title: "重命名当前会话", Scope: scopeSession, Run: (*app).renameCurrentSession},
+		shortcutBinding{ID: "session.fork", Key: shortcutKey{Mods: ui.Cmd | ui.Alt, Key: ui.KeyF}, Title: "分叉当前会话", Scope: scopeSession, Run: (*app).forkCurrentSession},
+		shortcutBinding{ID: "session.archive", Key: shortcutKey{Mods: ui.Cmd | ui.Shift, Key: ui.KeyA}, Title: "归档当前会话", Scope: scopeSession, Run: (*app).archiveCurrentSession},
 	)
 }
 
@@ -236,12 +250,18 @@ func shortcutKeySymbol(key ui.Key) string {
 		return "Enter"
 	case ui.KeyComma:
 		return ","
+	case ui.KeyEqual:
+		return "="
+	case ui.KeyMinus:
+		return "-"
 	case ui.KeySlash:
 		return "/"
 	case ui.KeyBracketLeft:
 		return "["
 	case ui.KeyBracketRight:
 		return "]"
+	case ui.KeyBackquote:
+		return "`"
 	case ui.KeyUp:
 		return "↑"
 	case ui.KeyDown:
@@ -313,7 +333,17 @@ func (a *app) stepSession(delta int) {
 // toggleRightPane is the header's "切换右侧栏" button, and it releases the
 // page the pane was hosting when the pane closes: a closed pane must not keep
 // an owner registered on the Host.
+func (a *app) toggleRightPaneFullscreen() {
+	if !a.rightPaneOpen {
+		a.rightPaneOpen = true
+	}
+	a.rightPaneFull = !a.rightPaneFull
+}
+
 func (a *app) toggleRightPane() {
+	if a.rightPaneOpen {
+		a.rightPaneFull = false
+	}
 	a.rightPaneOpen = !a.rightPaneOpen
 	if !a.rightPaneOpen && a.compatPlacement == "right" {
 		a.closeCompat()
@@ -325,6 +355,34 @@ func (a *app) toggleRightPane() {
 
 // openTerminalPane is the header's terminal chip: show the pane, then open
 // the terminal page in it.
+// openBrowser is the reference's ⌘T. The native client has one web surface,
+// not yet a right-pane browser tab, so it opens that surface.
+// adjustFont moves one role's font size within the range the settings page
+// accepts, then persists the preference. The reference exposes the six
+// commands even though its bindings table no longer ships defaults.
+func (a *app) adjustFont(role string, delta float32) {
+	clamp := func(v float32) float32 { return min(max(v, 10), 22) }
+	switch role {
+	case "text":
+		a.uiPrefs.FontSize = clamp(a.uiPrefs.FontSize + delta)
+	case "code":
+		a.uiPrefs.CodeFontSize = clamp(a.uiPrefs.CodeFontSize + delta)
+	case "terminal":
+		a.uiPrefs.TerminalFontSize = clamp(a.uiPrefs.TerminalFontSize + delta)
+	default:
+		return
+	}
+	a.savePreferences()
+}
+
+func (a *app) openBrowser() {
+	if a.webURL == "" {
+		a.error = "没有配置兼容页面地址。"
+		return
+	}
+	a.openWeb()
+}
+
 func (a *app) openTerminalPane() {
 	a.rightPaneOpen = true
 	a.openCompatAt("terminal", "right")
@@ -362,6 +420,7 @@ func (a *app) dismissOverlay() {
 	if len(a.current.Pending) > 0 {
 		return
 	}
+	handled := true
 	switch {
 	case a.compatPlacement == "modelPopover":
 		a.closeCompat()
@@ -369,9 +428,28 @@ func (a *app) dismissOverlay() {
 		a.closeCompat()
 	case a.web != nil && a.webPlacement == "right":
 		a.closeWeb()
+	case a.rightPaneFull:
+		a.rightPaneFull = false
 	case a.searchOpen:
 		a.closeSearch()
 	case a.connectionOpen:
 		a.connectionOpen = false
+	default:
+		handled = false
+	}
+	if handled {
+		return
+	}
+	// Nothing else owned Escape: two presses close together stop the running
+	// Turn, as the reference's response.stop command does. A lone Escape only
+	// arms the gesture, so it never cancels by accident.
+	if a.current.Running && a.sessionID != "" {
+		now := time.Now()
+		if !a.lastEscapeAt.IsZero() && now.Sub(a.lastEscapeAt) < 600*time.Millisecond {
+			a.lastEscapeAt = time.Time{}
+			a.mutate("cancel", map[string]any{"sessionId": a.sessionID}, nil)
+			return
+		}
+		a.lastEscapeAt = now
 	}
 }

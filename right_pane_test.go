@@ -154,13 +154,18 @@ func TestPaneTabsStateWhatTheLaunchCanDo(t *testing.T) {
 	a := newApp(true)
 	defer a.cancel()
 	s := &rightPaneState{SessionID: "session-1"}
+	start := a.paneTabs(s)
+	if len(start) != 1 || start[0].ID != "start" {
+		t.Fatalf("start face should be a single title, got %+v", start)
+	}
+	s.Tab = "files"
 	tabs := map[string]paneTab{}
 	for _, tab := range a.paneTabs(s) {
 		tabs[tab.ID] = tab
 	}
 	files, ok := tabs["files"]
 	if !ok {
-		t.Fatal("files tab is missing")
+		t.Fatal("files tab is missing after opening files")
 	}
 	if files.Enabled != a.can("listFiles") {
 		t.Fatalf("files tab enabled=%v, capability=%v", files.Enabled, a.can("listFiles"))
@@ -168,9 +173,13 @@ func TestPaneTabsStateWhatTheLaunchCanDo(t *testing.T) {
 	if !files.Enabled && files.Reason == "" {
 		t.Fatal("a disabled tab must state why")
 	}
-	plan, ok := tabs["plan"]
+	if _, ok := tabs["plan"]; ok {
+		t.Fatal("start/files must not advertise a plan tab before it is opened")
+	}
+	s.Tab = "plan"
+	plan, ok := tabByID(a.paneTabs(s), "plan")
 	if !ok || !plan.Enabled {
-		t.Fatalf("an open Session must offer the plan tab: %+v", plan)
+		t.Fatalf("an opened plan must offer the plan tab: %+v", plan)
 	}
 	if _, ok := tabs["document"]; ok {
 		t.Fatal("no document tab before a file is open")
@@ -285,5 +294,78 @@ func TestPaneFilesChoosesThenOpensOnDoubleClick(t *testing.T) {
 	}
 	if s.CurrentDir != "src" {
 		t.Fatalf("breadcrumb did not follow the opened directory: %q", s.CurrentDir)
+	}
+}
+
+func TestPaneCloseTabReturnsToStart(t *testing.T) {
+	s := &rightPaneState{Tab: "document", Selected: "main.go"}
+	a := &app{}
+	a.paneCloseTab(s, "document")
+	if s.Tab != "start" || s.Selected != "" {
+		t.Fatalf("document close = %q %q", s.Tab, s.Selected)
+	}
+	s = &rightPaneState{Tab: "files", Selected: "keep"}
+	a.paneCloseTab(s, "files")
+	if s.Tab != "start" || s.Selected != "keep" {
+		t.Fatalf("files close = %q %q", s.Tab, s.Selected)
+	}
+}
+
+func TestPaneReopenRestoresTheClosedDocument(t *testing.T) {
+	a := &app{}
+	s := &rightPaneState{Tab: "document", Selected: "main.go"}
+	a.paneCloseTab(s, "document")
+	if s.Tab != "start" || s.LastClosed != "document" || s.LastSelected != "main.go" {
+		t.Fatalf("closed state = %+v", s)
+	}
+	a.paneReopenTab(s)
+	if s.Tab != "document" || s.Selected != "main.go" {
+		t.Fatalf("reopened state = %+v", s)
+	}
+}
+
+func TestImagePreviewPath(t *testing.T) {
+	for _, name := range []string{"a.png", "b.JPG", "c.jpeg", "d.gif"} {
+		if !imagePreviewPath(name) {
+			t.Fatalf("%s not recognized", name)
+		}
+	}
+	if imagePreviewPath("a.go") || imagePreviewPath("a.webp") {
+		t.Fatal("non-preview path accepted")
+	}
+}
+
+func TestMarkdownPreviewPath(t *testing.T) {
+	for _, name := range []string{"a.md", "b.MARKDOWN", "c.mdx"} {
+		if !markdownPreviewPath(name) {
+			t.Fatalf("%s not markdown", name)
+		}
+	}
+	if markdownPreviewPath("a.go") {
+		t.Fatal("go file treated as markdown")
+	}
+}
+
+func TestQuicklookPreviewPath(t *testing.T) {
+	for _, name := range []string{"a.pdf", "b.DOCX", "c.xlsx", "d.pptx"} {
+		if !quicklookPreviewPath(name) {
+			t.Fatalf("%s not quicklook", name)
+		}
+	}
+	if quicklookPreviewPath("a.md") || quicklookPreviewPath("a.png") {
+		t.Fatal("non-document treated as quicklook")
+	}
+}
+
+func TestParsePaneChanges(t *testing.T) {
+	changes := parsePaneChanges(" M desktop/app.go\n?? new.txt\nA  added.go\n")
+	if len(changes) != 3 {
+		t.Fatalf("changes = %+v", changes)
+	}
+	if changes[0].Path != "added.go" || changes[0].Status != "A" {
+		t.Fatalf("sorted first = %+v", changes[0])
+	}
+	if changes[2].Path != "new.txt" || changes[2].Status != "?" {
+		t.Fatalf("untracked = %+v", changes[2])
 	}
 }

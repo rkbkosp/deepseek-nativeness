@@ -1,9 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"image"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 	"path"
 	"sort"
 	"strings"
@@ -60,12 +66,25 @@ type rightPaneState struct {
 	ShowHidden bool
 	Text       paneTextFile
 	TextReady  bool
+	Image      *ui.Bitmap
+	ImageError string
 	Plan       panePlan
 	Generation uint64
 	TreeList   ui.ListState
 	// TreeRow is TreeList's chosen row, -1 for none. It is state because the
 	// list needs a stable *int across frames.
 	TreeRow int
+	// LastClosed and LastSelected let the tab menu reopen the tab a close just
+	// removed, including the document it was showing.
+	LastClosed, LastSelected string
+	Changes                  []paneChange
+	ChangesLoading           bool
+	ChangesError             string
+	ChangesAt                time.Time
+	ChangesDiff              string
+	ChangesDiffPath          string
+	ChangesDiffError         string
+	ChangesDiffLoading       bool
 }
 
 func (a *app) currentRightPane() *rightPaneState {
@@ -305,23 +324,39 @@ func (a *app) paneCapReason(name, fallback string) string {
 }
 
 func (a *app) paneTabs(s *rightPaneState) []paneTab {
-	tabs := []paneTab{
-		{ID: "start", Title: "开始", Glyph: "browse-outline", Enabled: true},
-		{ID: "files", Title: "工作区文件", Glyph: "folder-open-outline", Enabled: a.can("listFiles"), Reason: a.paneCapReason("listFiles", "请先连接主机并打开会话")},
+	// The start face is a single title in the original, not a three-tab strip:
+	// files and the plan appear only after the reader opens them from the
+	// start cards or the session history. Keeping the strip empty here also
+	// keeps the start face's three cards aligned with the reference.
+	tabs := []paneTab{{ID: "start", Title: "开始", Glyph: "browse-outline", Enabled: true}}
+	if s.Tab == "files" || s.Selected != "" {
+		tabs = append(tabs, paneTab{ID: "files", Title: "工作区文件", Glyph: "folder-open-outline", Enabled: a.can("listFiles"), Reason: a.paneCapReason("listFiles", "请先连接主机并打开会话")})
 	}
-	// A plan lives in the Session history this client already follows; a
-	// Session with no history read has nothing to show.
-	planReason := "请先打开会话"
-	if s.SessionID != "" {
-		planReason = "本会话已加载的历史中没有提交过的计划"
+	// A plan lives in the Session history this client already follows. It is a
+	// title in the strip only once the reader opened it or a submitted plan is
+	// already known; the start face does not advertise a plan tab.
+	if s.Tab == "changes" || len(s.Changes) > 0 {
+		tabs = append(tabs, paneTab{ID: "changes", Title: "变更", Glyph: "compare-split-outline", Enabled: true})
 	}
-	tabs = append(tabs, paneTab{ID: "plan", Title: "计划", Glyph: "plan-outline", Enabled: s.SessionID != "", Reason: planReason})
+	if s.Tab == "plan" || s.Plan.Found {
+		planReason := "请先打开会话"
+		if s.SessionID != "" {
+			planReason = "本会话已加载的历史中没有提交过的计划"
+		}
+		tabs = append(tabs, paneTab{ID: "plan", Title: "计划", Glyph: "plan-outline", Enabled: s.SessionID != "", Reason: planReason})
+	}
 	// The document tab exists once a file is chosen, so a read in flight and a
 	// later return to the preview both have a visible entry.
 	if s.Selected != "" {
 		tabs = append(tabs, paneTab{ID: "document", Title: path.Base(s.Selected), Glyph: "code-outline", Enabled: true})
 	}
 	return tabs
+}
+
+func (a *app) openFilesPane() {
+	a.rightPaneOpen = true
+	s := a.currentRightPane()
+	a.paneShowTab(s, "files")
 }
 
 func (a *app) paneShowTab(s *rightPaneState, id string) {
@@ -331,6 +366,9 @@ func (a *app) paneShowTab(s *rightPaneState, id string) {
 	s.Tab = id
 	if id == "files" && len(s.Directories) == 0 {
 		a.loadPaneDirectory(s, s.CurrentDir)
+	}
+	if id == "changes" {
+		a.loadPaneChanges(s)
 	}
 	if id == "plan" {
 		a.refreshPanePlan(s)
@@ -401,6 +439,8 @@ func (a *app) rightPaneView(c *ui.Context) {
 			a.paneDocument(c, s)
 		case "plan":
 			a.panePlanView(c, s)
+		case "changes":
+			a.paneChanges(c, s)
 		default:
 			a.paneStart(c, s)
 		}
@@ -410,8 +450,18 @@ func (a *app) rightPaneView(c *ui.Context) {
 // paneHeader is the tab bar. Every entry states whether this launch can use it,
 // so a click never lands on a control that cannot act.
 func (a *app) paneHeader(c *ui.Context, s *rightPaneState) {
+	tabs := a.paneTabs(s)
 	ui.Row(c).Height(48).Shrink(0).Padding(10, 12).Gap(4).AlignItems(ui.Center).Children(func() {
-		for _, tab := range a.paneTabs(s) {
+		// With only the start face, the reference draws a plain section title
+		// and its actions; tab chrome appears once a second tab exists.
+		if len(tabs) == 1 && tabs[0].ID == "start" {
+			icon(c, "browse-outline", 14).TextColor(a.theme.TextMuted)
+			ui.Text(c, "开始").FontSize(13).TextColor(a.theme.Text)
+			ui.Spacer(c)
+			a.paneHeaderActions(c)
+			return
+		}
+		for _, tab := range tabs {
 			tab := tab
 			active := s.Tab == tab.ID
 			button := ui.ButtonBase(c.Key("pane-tab-"+tab.ID)).Height(28).Padding(0, 9).Radius(8).Gap(5).Label(tab.Title).Disabled(!tab.Enabled)
@@ -425,6 +475,26 @@ func (a *app) paneHeader(c *ui.Context, s *rightPaneState) {
 			} else if tab.ID == "plan" {
 				button.Tooltip("查看本会话已提交的计划")
 			}
+			if tab.ID != "start" && tab.Enabled {
+				button.Menu(func(m *ui.Menu) {
+					if tab.ID == "files" && m.Item("刷新文件树").Chosen() {
+						a.loadPaneDirectory(s, s.CurrentDir)
+					}
+					if m.Item("关闭标签页").Chosen() {
+						a.paneCloseTab(s, tab.ID)
+					}
+					if m.Item("关闭其他标签页").Chosen() {
+						a.paneCloseTab(s, "start")
+					}
+					if s.LastClosed != "" && m.Item("重新打开标签页").Chosen() {
+						a.paneReopenTab(s)
+					}
+					if m.Item("关闭所有标签页").Chosen() {
+						s.Selected = ""
+						s.Tab = "start"
+					}
+				})
+			}
 			button.Children(func() {
 				icon(c, tab.Glyph, 14).TextColor(a.theme.TextMuted)
 				ui.Text(c, tab.Title).FontSize(13).Ellipsis("…")
@@ -434,64 +504,117 @@ func (a *app) paneHeader(c *ui.Context, s *rightPaneState) {
 			}
 		}
 		ui.Spacer(c)
-		if ui.ButtonBase(c).Size(24, 24).Label("收起右侧边栏").Children(func() { icon(c, "panel-left-outline", 16) }).Clicked() {
-			a.rightPaneOpen = false
-		}
+		a.paneHeaderActions(c)
 	})
 }
 
+// paneCloseTab returns to the start face and drops the document selection a
+// closed document tab owned.
+func (a *app) paneReopenTab(s *rightPaneState) {
+	if s.LastClosed == "" {
+		return
+	}
+	if s.LastClosed == "document" {
+		s.Selected = s.LastSelected
+	}
+	s.Tab = s.LastClosed
+}
+
+func (a *app) paneCloseTab(s *rightPaneState, id string) {
+	if id != "start" {
+		s.LastClosed, s.LastSelected = id, s.Selected
+	}
+	if id == "document" {
+		s.Selected = ""
+	}
+	if s.Tab == id || id == "start" {
+		s.Tab = "start"
+	}
+}
+
+func (a *app) paneHeaderActions(c *ui.Context) {
+	if ui.ButtonBase(c).Size(24, 24).Label("右栏全屏").Tooltip("右栏全屏/还原").Children(func() { icon(c, "fullscreen-outline", 15) }).Clicked() {
+		a.toggleRightPaneFullscreen()
+	}
+	if ui.ButtonBase(c).Size(24, 24).Label("收起右侧边栏").Children(func() { icon(c, "panel-left-outline", 16) }).Clicked() {
+		a.rightPaneFull = false
+		a.rightPaneOpen = false
+	}
+}
+
 func (a *app) paneStart(c *ui.Context, s *rightPaneState) {
-	ui.Column(c).Grow(1).Justify(ui.Center).Padding(28, 32).Gap(14).Children(func() {
-		ui.Row(c).Justify(ui.Center).Padding(0, 0, 20).Children(func() { icon(c, "browse-outline", 44).TextColor(a.theme.TextMuted) })
-		card := func(title, description, glyph, shortcut string, enabled bool, reason string, run func()) ui.Element {
-			b := ui.ButtonBase(c.Key(title)).Height(68).Padding(14, 24).Radius(16).Border(1, a.theme.Border).Background(a.theme.Surface).Gap(18).Justify(ui.Start).Label(title).Disabled(!enabled)
-			if !enabled && reason != "" {
-				b.Tooltip(reason)
-			}
-			b.Children(func() {
-				icon(c, glyph, 20).TextColor(a.theme.Accent)
-				ui.Column(c).Grow(1).Gap(4).Children(func() {
-					ui.Text(c, title).FontSize(14)
-					if description != "" {
-						ui.Text(c, description).FontSize(12).TextColor(a.theme.TextMuted).Wrap()
+	ui.Column(c).Grow(1).Justify(ui.Center).AlignItems(ui.Center).Padding(28, 0, 136, 0).Children(func() {
+		ui.Column(c).Width(370).MaxWidth(370).Gap(14).Children(func() {
+			ui.Row(c).Justify(ui.Center).Padding(0, 0, 20).Draw(func(_ *ui.Painter, r ui.Rect) { a.qaLayout("pane-hero", r) }).Children(func() { icon(c, "compass-outline", 56).TextColor(a.theme.TextMuted) })
+			card := func(title, description, glyph, shortcut string, enabled bool, reason string, run func()) ui.Element {
+				b := ui.ButtonBase(c.Key(title)).Height(68).Padding(14, 14).Radius(16).Border(1, a.theme.Border).Background(a.colors.Subtle).Gap(12).Justify(ui.Start).Label(title).Disabled(!enabled)
+				b.Draw(func(_ *ui.Painter, r ui.Rect) { a.qaLayout("pane-card:"+title, r) })
+				if !enabled && reason != "" {
+					b.Tooltip(reason)
+				}
+				b.Children(func() {
+					color := a.theme.Accent
+					switch glyph {
+					case "folder-open-outline":
+						color = ui.Hex("#e0b16b")
+					case "code-outline":
+						color = ui.Hex("#6fa8ff")
+					case "apps-add-outline":
+						color = a.theme.TextMuted
+					}
+					icon(c, glyph, 20).TextColor(color)
+					ui.Column(c).Grow(1).Gap(4).Children(func() {
+						ui.Row(c).Gap(4).AlignItems(ui.Center).Children(func() {
+							ui.Text(c, title).FontSize(14)
+							if title == "新建终端" {
+								icon(c, "chevron-down-outline", 12).TextColor(a.theme.TextMuted)
+							}
+						})
+						if description != "" {
+							ui.Text(c, description).FontSize(12).TextColor(a.theme.TextMuted).Wrap()
+						}
+					})
+					if shortcut != "" {
+						ui.Text(c, shortcut).FontSize(12).TextColor(a.theme.TextMuted)
 					}
 				})
-				if shortcut != "" {
-					ui.Text(c, shortcut).FontSize(12).TextColor(a.theme.TextMuted)
+				if b.Clicked() && run != nil && a.paneCurrent(s) {
+					run()
 				}
-			})
-			if b.Clicked() && run != nil && a.paneCurrent(s) {
-				run()
+				return b
 			}
-			return b
-		}
-		card("工作区文件", "浏览会话工作区的文件", "folder-open-outline", "", a.can("listFiles"), a.paneCapReason("listFiles", "请先连接主机并打开会话"), func() {
-			s.Tab = "files"
-			a.loadPaneDirectory(s, s.CurrentDir)
-		})
-		card("计划", "查看本会话已提交的计划", "plan-outline", "", s.SessionID != "", "请先打开会话", func() {
-			a.paneShowTab(s, "plan")
-		})
-		card("新建终端", "打开会话终端", "code-outline", "", a.can("listTerminals"), a.paneCapReason("listTerminals", "请先连接主机并打开会话"), func() { a.openCompatAt("terminal", "right") })
-		// The Browser card hosts the Remote web page; a launch that owns its Host
-		// has no Remote server to browse.
-		card("浏览器", "浏览网页", "globe-outline", "", !a.localMode(), "本地工作区没有可浏览的 Remote 网页", func() { a.openWeb() })
-		more := card("更多工具", "选择工作区工具", "apps-add-outline", "", true, "", nil)
-		more.Menu(func(m *ui.Menu) {
-			current := a.paneCurrent(s)
-			if m.Item("工作区文件").Disabled(!current || !a.can("listFiles")).Chosen() {
+			card("工作区文件", "浏览会话工作区的文件", "folder-open-outline", "⌘P", a.can("listFiles"), a.paneCapReason("listFiles", "请先连接主机并打开会话"), func() {
 				s.Tab = "files"
 				a.loadPaneDirectory(s, s.CurrentDir)
-			}
-			if m.Item("计划").Disabled(!current || s.SessionID == "").Chosen() {
-				a.paneShowTab(s, "plan")
-			}
-			if m.Item("终端").Disabled(!current || !a.can("listTerminals")).Chosen() {
+			})
+			card("新建终端", "在会话工作区运行命令", "terminal-outline", "⌃`", true, "", func() {
+				if !a.can("listTerminals") {
+					a.copyNotice = "当前 Host 不提供终端能力。"
+					return
+				}
 				a.openCompatAt("terminal", "right")
-			}
-			if m.Item("浏览器").Disabled(!current || a.localMode()).Chosen() {
-				a.openWeb()
-			}
+			})
+			more := card("更多工具", "", "apps-add-outline", "", true, "", nil)
+			more.Height(56)
+			more.Menu(func(m *ui.Menu) {
+				current := a.paneCurrent(s)
+				if m.Item("工作区文件").Disabled(!current || !a.can("listFiles")).Chosen() {
+					s.Tab = "files"
+					a.loadPaneDirectory(s, s.CurrentDir)
+				}
+				if m.Item("变更").Disabled(!current).Chosen() {
+					a.paneShowTab(s, "changes")
+				}
+				if m.Item("计划").Disabled(!current || s.SessionID == "").Chosen() {
+					a.paneShowTab(s, "plan")
+				}
+				if m.Item("终端").Disabled(!current || !a.can("listTerminals")).Chosen() {
+					a.openCompatAt("terminal", "right")
+				}
+				if m.Item("浏览器").Disabled(!current || a.localMode()).Chosen() {
+					a.openWeb()
+				}
+			})
 		})
 	})
 }
@@ -622,6 +745,16 @@ func (a *app) paneActivateRow(s *rightPaneState, row paneTreeRow) {
 		return
 	}
 	s.TextReady = false
+	s.Image = nil
+	s.ImageError = ""
+	if imagePreviewPath(row.Path) {
+		a.loadPaneImage(s, row.Path)
+		return
+	}
+	if quicklookPreviewPath(row.Path) {
+		a.loadPaneQuicklook(s, row.Path)
+		return
+	}
 	a.loadPaneText(s, row.Path, 1)
 }
 
@@ -690,6 +823,49 @@ func (a *app) panePlanView(c *ui.Context, s *rightPaneState) {
 	})
 }
 
+func markdownPreviewPath(name string) bool {
+	switch strings.ToLower(path.Ext(name)) {
+	case ".md", ".markdown", ".mdx":
+		return true
+	}
+	return false
+}
+
+func imagePreviewPath(name string) bool {
+	switch strings.ToLower(path.Ext(name)) {
+	case ".png", ".jpg", ".jpeg", ".gif":
+		return true
+	}
+	return false
+}
+
+// loadPaneImage reads one workspace image with the bytes API; text preview
+// would be useless for it.
+func (a *app) loadPaneImage(s *rightPaneState, name string) {
+	a.paneRead(s, "readFileBytes", "image:"+name, map[string]any{"path": name, "options": map[string]any{}}, func(raw json.RawMessage) error {
+		var reply struct {
+			Data string `json:"data"`
+		}
+		if json.Unmarshal(raw, &reply) != nil || reply.Data == "" {
+			s.ImageError = "无法读取图片"
+			return nil
+		}
+		encoded, err := base64.StdEncoding.DecodeString(reply.Data)
+		if err != nil {
+			s.ImageError = "图片编码无效"
+			return nil
+		}
+		img, _, err := image.Decode(bytes.NewReader(encoded))
+		if err != nil {
+			s.ImageError = "无法解码图片"
+			return nil
+		}
+		s.Image = ui.NewBitmap(img)
+		s.TextReady = true
+		return nil
+	})
+}
+
 func (a *app) paneDocument(c *ui.Context, s *rightPaneState) {
 	ui.Row(c).Shrink(0).Padding(8, 16).Gap(8).Children(func() {
 		if ui.Button(c, "文件").Clicked() {
@@ -698,9 +874,28 @@ func (a *app) paneDocument(c *ui.Context, s *rightPaneState) {
 		ui.Text(c, path.Base(s.Selected)).FontSize(13).Grow(1).Ellipsis("…")
 		if ui.ButtonBase(c).Size(24, 24).Label("刷新文件").Disabled(!a.can("readFile")).Children(func() { icon(c, "refresh-outline", 14) }).Clicked() {
 			s.TextReady = false
-			a.loadPaneText(s, s.Selected, 1)
+			s.Image = nil
+			s.ImageError = ""
+			if imagePreviewPath(s.Selected) {
+				a.loadPaneImage(s, s.Selected)
+			} else if quicklookPreviewPath(s.Selected) {
+				a.loadPaneQuicklook(s, s.Selected)
+			} else {
+				a.loadPaneText(s, s.Selected, 1)
+			}
 		}
 	})
+	if s.Image != nil {
+		ui.Row(c).Grow(1).Justify(ui.Center).AlignItems(ui.Center).Padding(16).Children(func() {
+			ui.Image(c, s.Image).Fit(ui.Contain).MaxWidth(560).MaxHeight(560)
+		})
+		return
+	}
+	if s.ImageError != "" {
+		ui.Text(c, s.ImageError).FontSize(12).TextColor(a.theme.TextMuted).Padding(16)
+		ui.Spacer(c).Grow(1)
+		return
+	}
 	if !s.TextReady {
 		label := "正在读取文件…"
 		if s.Error != "" {
@@ -712,6 +907,12 @@ func (a *app) paneDocument(c *ui.Context, s *rightPaneState) {
 	}
 	ui.Text(c, s.Text.AbsolutePath).Shrink(0).FontSize(11).TextColor(a.theme.TextMuted).Wrap().Selectable().Padding(0, 16, 8)
 	ui.Scroll(c.Key(fmt.Sprintf("file:%s:%d", s.Selected, s.Text.Offset))).Grow(1).Shrink(1).MinHeight(0).Clip().Children(func() {
+		if markdownPreviewPath(s.Selected) {
+			ui.Column(c).Padding(12, 16).Children(func() {
+				markdown.View(c.Key("file-md:"+s.Selected), s.Text.Text, &a.md)
+			})
+			return
+		}
 		font := "SF Mono, Menlo, monospace"
 		if a.uiPrefs.CodeFontFamily != "" {
 			font = a.uiPrefs.CodeFontFamily + ", " + font

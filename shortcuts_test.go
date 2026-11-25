@@ -88,7 +88,7 @@ func TestShortcutTableCoversThePromisedKeys(t *testing.T) {
 	for _, label := range []string{
 		"⌘N", "⌘1", "⌘2", "⌘3", "⌘4", "⌘5", "⌘6", "⌘7", "⌘8", "⌘9",
 		"⌘⇧[", "⌘⇧]", "⌘R", "⌘/", "⌘F", "Esc", "⌘↑", "⌘↓",
-		"⌘⇧B", "⌘⇧T", "⌘⇧P",
+		"⌘⇧B", "⌃`", "⌘⇧P",
 	} {
 		if !has(label) {
 			t.Fatalf("速查表缺 %s: %v", label, rows)
@@ -121,11 +121,17 @@ func TestShortcutReferenceIsDerivedFromTheDispatchedTable(t *testing.T) {
 			t.Fatalf("%s 的键 %s 不在速查表里", binding.ID, label)
 		}
 	}
-	// A key nothing installs stays absent: the archive shortcut (⌘⇧A) is not
-	// wired in this client yet, so the reference must not list it.
-	for _, row := range rows {
-		if strings.Contains(row[0], "⌘⇧A") {
-			t.Fatalf("速查表列出了没有接线的键: %v", row)
+	// Archive, rename and fork are wired now, so their keys must be listed.
+	for _, key := range []string{"⌘⇧A", "⌘⌥G", "⌘⌥F"} {
+		found := false
+		for _, row := range rows {
+			if strings.Contains(row[0], key) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("速查表缺 %s: %v", key, rows)
 		}
 	}
 }
@@ -298,7 +304,7 @@ func TestRightPaneKeyTogglesAndReleasesItsPage(t *testing.T) {
 	}
 }
 
-// ⌘⇧T and ⌘⇧P open the pages the sidebar and the session header open, by the
+// ⌃` and ⌘⇧P open the pages the sidebar and the session header open, by the
 // same entry points: the terminal in the right pane, the plugins page in the
 // main area.
 func TestTerminalAndPluginsKeysOpenTheirPages(t *testing.T) {
@@ -307,12 +313,12 @@ func TestTerminalAndPluginsKeysOpenTheirPages(t *testing.T) {
 	t.Cleanup(func() { compatOpenedForTest = nil })
 
 	a, tt := shortcutApp(t)
-	press(t, tt, ui.Cmd|ui.Shift, ui.KeyT)
+	press(t, tt, ui.Ctrl, ui.KeyBackquote)
 	if len(opened) != 1 || opened[0] != "terminal" {
-		t.Fatalf("⌘⇧T opened %v", opened)
+		t.Fatalf("⌃` opened %v", opened)
 	}
 	if !a.rightPaneOpen {
-		t.Fatal("⌘⇧T did not show the pane the terminal belongs in")
+		t.Fatal("⌃` did not show the pane the terminal belongs in")
 	}
 	press(t, tt, ui.Cmd|ui.Shift, ui.KeyP)
 	if len(opened) != 2 || opened[1] != "plugins" {

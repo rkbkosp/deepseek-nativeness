@@ -25,6 +25,7 @@ type app struct {
 	composerBaselineKey                                      string
 	sidebarLayoutWidth                                       float32
 	revealedSession                                          string
+	lastEscapeAt                                             time.Time
 	draftAttempted                                           bool
 	scheduleCounts                                           map[string]int
 	schedules                                                []scheduleRecord
@@ -88,6 +89,10 @@ type app struct {
 	trajectoryList                                           ui.ListState
 	rightPane                                                *rightPaneState
 	rightPaneOpen                                            bool
+	rightPaneFull                                            bool
+	paneWidth                                                float32
+	paneDragStart                                            float32
+	paneDragging                                             bool
 	navigationGeneration                                     uint64
 	messageIndex                                             map[string]int
 	reasoningOpen                                            map[string]*bool
@@ -165,6 +170,7 @@ func newApp(demo bool) *app {
 	t.Font = "system-ui, PingFang SC"
 	a := &app{ctx: ctx, cancel: cancel, theme: t, epoch: time.Now(), demo: demo, status: "尚未连接", sidebar: true, server: "https://dsh.rkbkosp.cn", webURL: "https://dsh.rkbkosp.cn/app", uiPrefs: defaultViewPreferences(), watermarks: map[string]int{}, flowOpen: map[string]*bool{}, currentTab: "chat", settingsSection: "general", subagentTitles: map[string]string{}}
 	a.loadPreferences()
+	a.paneWidth = a.uiPrefs.PaneWidth
 	a.md.Reveal = &markdown.Reveal{Unit: markdown.AtOnce, Fade: -1}
 	a.md.Block = a.markdownBlock
 	a.md.OnLink = a.openMarkdownLink
@@ -238,21 +244,30 @@ func (a *app) view(c *ui.Context) {
 					}
 				})
 			}
-			ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Children(func() {
-				if a.compat != nil && a.compatPlacement == "main" {
-					a.compatView(c)
-				} else if a.web != nil && a.webPlacement != "right" {
-					a.webView(c)
-				} else if a.connectionOpen {
-					a.connectionView(c)
-				} else {
-					a.conversation(c)
-				}
-			})
+			if !a.rightPaneFull {
+				ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Children(func() {
+					if a.compat != nil && a.compatPlacement == "main" {
+						a.compatView(c)
+					} else if a.web != nil && a.webPlacement != "right" {
+						a.webView(c)
+					} else if a.connectionOpen {
+						a.connectionView(c)
+					} else {
+						a.conversation(c)
+					}
+				})
+			}
 		})
 		if a.rightPaneOpen && (a.web == nil || a.webPlacement == "right") && (a.compat == nil || a.compatPlacement != "main") {
 			width, _ := c.Size()
-			ui.Column(c).Width(min(576, width*.45)).Shrink(0).MinHeight(0).FillHeight().Background(a.theme.Background).BorderWidth(0, 0, 0, .5).BorderColor(a.theme.Border).Children(func() {
+			paneWidth := min(576, width*.45)
+			if a.rightPaneFull {
+				paneWidth = width - a.sidebarShown*280
+			}
+			if a.paneWidth > 0 && !a.rightPaneFull {
+				paneWidth = min(max(a.paneWidth, 320), width*.7)
+			}
+			ui.Column(c).Width(paneWidth).Shrink(0).MinHeight(0).FillHeight().Background(a.theme.Background).BorderWidth(0, 0, 0, .5).BorderColor(a.theme.Border).Children(func() {
 				if a.web != nil && a.webPlacement == "right" {
 					a.browserPaneView(c)
 				} else if a.compat != nil && a.compatPlacement == "right" {
@@ -269,6 +284,22 @@ func (a *app) view(c *ui.Context) {
 					})
 					ui.WebView(c.Key("right-compat-"+a.compatOwner), a.compat).Grow(1).MinHeight(0).MinWidth(0)
 				} else {
+					if !a.rightPaneFull {
+						handle := ui.Row(c).Absolute().Left(-3).Top(0).Width(6).FillHeight().Cursor(ui.CursorResizeEW)
+						if handle.Hovered() || handle.Dragging() {
+							handle.Background(a.theme.Border)
+						}
+						if dx, _, ok := handle.Dragged(); ok {
+							if !a.paneDragging {
+								a.paneDragStart = paneWidth
+								a.paneDragging = true
+							}
+							a.paneWidth = min(max(a.paneDragStart-dx, 320), width*.7)
+						}
+						if !handle.Dragging() {
+							a.paneDragging = false
+						}
+					}
 					a.rightPaneView(c)
 				}
 			})
