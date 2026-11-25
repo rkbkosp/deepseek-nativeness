@@ -42,6 +42,11 @@ type app struct {
 	mandatoryUpdate                                          *updateRelease
 	scheduleDetail                                           *scheduleRecord
 	scheduleDetailOpen                                       bool
+	discoverOpen                                             bool
+	discover                                                 discoverState
+	discoverInstallOpen                                      bool
+	discoverInstallName                                      string
+	discoverDetailOpen                                       bool
 	mandatoryRestored                                        bool
 	modelMenuWidth, modelMenuHeight                          float32
 	sendIntents                                              map[string]*sendIntent
@@ -316,6 +321,9 @@ func (a *app) view(c *ui.Context) {
 	a.goalEditView(c)
 	a.updateDialogView(c)
 	a.scheduleDetailView(c)
+	a.discoverView(c)
+	a.discoverInstallView(c)
+	a.discoverDetailView(c)
 	a.mandatoryUpdateView(c)
 	a.workspaceCreateView(c)
 	if a.compat != nil && a.compatPlacement == "imagePreview" {
