@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 	"math"
 	"native-dsh/desktop/internal/bridge"
@@ -270,6 +271,15 @@ func (a *app) messageImageGallery(c *ui.Context, m message) {
 			// The decoded bitmap is shared by reference, while every visible
 			// occurrence has its own identity, including repeated attachments.
 			button := ui.ButtonBase(c.Key(fmt.Sprintf("%s:occurrence:%d", key, occurrence))).Size(w, h).Padding(0).Shrink(0).Radius(20).Border(.5, border).Background(background).Clip().Label(label)
+			ref := ref
+			button.ContextMenu(func(m *ui.Menu) {
+				if m.Item("保存图片").Chosen() {
+					go a.saveAttachment(fileAttachment{AttachmentID: ref.AttachmentID, Name: ref.Name, MediaType: ref.MediaType, Bytes: ref.Bytes})
+				}
+				if saved := a.savedFiles[ref.AttachmentID]; saved != "" && m.Item("在 Finder 中显示").Chosen() {
+					mygo.Shell.ShowItemInFolder(saved)
+				}
+			})
 			if entry.Bitmap != nil && !previewAvailable {
 				button.Disabled(true).DimDisabled(false).Tooltip("原图预览页面尚未打包")
 			}

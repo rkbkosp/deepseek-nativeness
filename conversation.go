@@ -447,6 +447,7 @@ func (a *app) messagePartViewTerminal(c *ui.Context, m message, part, nodeKey st
 			ui.Column(c).MaxWidth(a.chatContentWidth(c) * .702).Gap(6).Children(func() {
 				ui.Column(c).Gap(8).Children(func() {
 					a.messageImageGallery(c, m)
+					a.messageFileCards(c, m)
 					if m.Text != "" {
 						// Display masking only: the message text, the copy action and
 						// the wire keep the original characters (ui-secret-mask).

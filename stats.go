@@ -106,9 +106,6 @@ func (a *app) composerStatsView(c *ui.Context, hasError bool) {
 			summary += " · " + formatTokensPerSecond(tps) + " tok/s"
 		}
 		a.statPill(c, "gauge-outline", summary)
-		if pressure := a.composerContextPercent(); pressure >= 0 {
-			a.statPill(c, "gauge-outline", fmt.Sprintf("上下文 %d%%", pressure))
-		}
 		if reading.tokens > 0 {
 			label := formatTokenCount(reading.tokens) + " tok"
 			if reading.promptTokens > 0 {
@@ -116,6 +113,11 @@ func (a *app) composerStatsView(c *ui.Context, hasError bool) {
 				label += fmt.Sprintf(" · 缓存命中 %d%%", percent)
 			}
 			a.statPill(c, "database-outline", label)
+		}
+		// The reference ends with a bare ring percentage, not a labelled
+		// "上下文 N%" pill in the middle of the row.
+		if pressure := a.composerContextPercent(); pressure >= 0 {
+			a.statPill(c, "gauge-outline", fmt.Sprintf("%d%%", pressure))
 		}
 	})
 }

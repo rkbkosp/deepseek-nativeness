@@ -22,7 +22,7 @@ func (a *app) composerView(c *ui.Context) {
 		a.composer = &composerState{hostID: a.hostID, sessionID: a.sessionID, accountScope: a.accountScope, generation: a.remoteGeneration}
 	}
 	s := a.composer
-	frame := ui.Row(c.Key("composer-frame")).Shrink(0).FillWidth().Justify(ui.Center).Padding(0, 16, 4)
+	frame := ui.Row(c.Key("composer-frame")).Shrink(0).FillWidth().Justify(ui.Center).Padding(0, 16, 4).Draw(func(_ *ui.Painter, r ui.Rect) { a.qaLayout("composer-frame", r) })
 	// ConversationRoot.module.css: clamp(680px, column * .64, 920px) +32.
 	cardMax := a.chatContentWidth(c) + 32
 	frame.Children(func() {
@@ -41,12 +41,16 @@ func (a *app) composerView(c *ui.Context) {
 			card := ui.Column(c).FillWidth().MinWidth(0).Padding(8, 0, 0).Gap(12).Radius(28).InsetShadow(0, 0, 0, .5, a.theme.Border).Shadow(0, 8, 24, 0, ui.RGBA(0, 0, 0, .12)).Background(a.colors.Composer)
 			if a.connected && !a.busy && s.values.ImageLimits.available() && !a.composerArtifacts().Loading {
 				if paths := card.DroppedFiles(); len(paths) > 0 {
-					a.composerAddImageFiles(paths)
+					a.composerHandleDrop(paths)
 				}
 			}
 			card.Children(func() {
+				a.composerFileRail(c)
 				a.composerAttachmentRail(c)
-				input := ui.TextAreaBase(c, &a.draft).Placeholder(a.composerPlaceholder()).Font(a.messageFontFamily()).FontWeight(a.messageNormalWeight()).FontSize(a.uiPrefs.FontSize).FixedLineHeight(a.uiPrefs.FontSize+10).Lines(1, 14).MinHeight(36).Padding(4, 8, 0, 14).MarginEnd(4).Label("消息输入框")
+				input := ui.TextAreaBase(c, &a.draft).Placeholder(a.composerPlaceholder()).Font(a.messageFontFamily()).FontWeight(a.messageNormalWeight()).FontSize(a.uiPrefs.FontSize).FixedLineHeight(a.uiPrefs.FontSize+10).Lines(1, 14).MinHeight(36).Padding(4, 8, 0, 14).MarginEnd(4).Label("消息输入框").Draw(func(_ *ui.Painter, r ui.Rect) { a.qaLayout("composer-input", r) })
+				if !input.Focused() {
+					a.composerMentionChips(c)
+				}
 				if s.pendingPasteText != "" {
 					start, end := input.TextSelection()
 					input.ReplaceText(start, end, s.pendingPasteText)
@@ -133,6 +137,15 @@ func (a *app) composerModelPopover(c *ui.Context, anchor ui.Element) {
 		panel.Width(min(max(width, 240), 420)).Height(min(max(height, 40), 360)).Padding(0).Radius(12).Clip().Background(a.colors.Popup)
 		if a.compat != nil && a.compatPlacement == "modelPopover" {
 			ui.WebView(c, a.compat).Fill()
+		} else if a.composer != nil && len(a.composer.catalog.Groups) == 0 {
+			ui.Column(c).Padding(16).Gap(10).Children(func() {
+				ui.Text(c, "还没有可用的模型").FontSize(13).TextColor(a.theme.Text)
+				ui.Text(c, "先在模型设置里添加一个提供商和模型，再回来选择。").FontSize(11).TextColor(a.theme.TextMuted).Wrap()
+				if ui.PrimaryButton(c, "打开模型设置").Clicked() {
+					a.modelPopoverOpen = false
+					a.openSettingsSection("models")
+				}
+			})
 		} else {
 			ui.Text(c, "正在加载模型…").Padding(16).FontSize(12).TextColor(a.theme.TextMuted)
 		}
@@ -265,7 +278,12 @@ func (a *app) composerCompletionView(c *ui.Context, s *composerState, input ui.E
 		panel.Width(420).MaxHeight(240).Radius(10).Border(.5, a.theme.Border).Background(a.colors.Popup)
 		ui.Scroll(c).MaxHeight(240).Children(func() {
 			ui.Column(c).FillWidth().Padding(4).Children(func() {
+				lastGroup := ""
 				for i, item := range s.completions {
+					if item.Group != "" && item.Group != lastGroup {
+						ui.Text(c, item.Group).FontSize(10).TextColor(a.theme.TextMuted).Padding(4, 8, 2)
+						lastGroup = item.Group
+					}
 					key := item.ID
 					if key == "" {
 						key = item.Kind + ":" + item.Replacement
@@ -279,6 +297,10 @@ func (a *app) composerCompletionView(c *ui.Context, s *composerState, input ui.E
 							glyph = "new-chat-outline"
 						case "file-action":
 							glyph = "paperclip-outline"
+						case "skill":
+							glyph = "skill-outline"
+						case "command":
+							glyph = "code-outline"
 						}
 						icon(c, glyph, 16).Shrink(0).TextColor(a.theme.TextMuted)
 						ui.Text(c, item.Label).FontSize(13).SingleLine()

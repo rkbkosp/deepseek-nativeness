@@ -31,6 +31,7 @@ type composerState struct {
 	values                                    composerProjectionValues
 	permissions                               []settingsPermissionOption
 	commands                                  []composerCommand
+	skills                                    []composerCommand
 	completions                               []composerCompletion
 	referenceFiles, referenceSessions         []composerCompletion
 	completionToken                           string
@@ -160,7 +161,9 @@ func (u tokenUsageProjection) billedInput() int64 {
 
 func (u tokenUsageProjection) total() int64 { return u.billedInput() + u.OutputTokens }
 
-type composerCompletion struct{ ID, Label, Description, Replacement, Kind, Unavailable, Value string }
+type composerCompletion struct {
+	ID, Label, Description, Replacement, Kind, Unavailable, Value, Group string
+}
 type composerSessionReference struct {
 	SessionID, Label, DisplayTitle, Mention, Cwd string
 	SameWorkspace                                bool
@@ -181,7 +184,7 @@ func (a *app) reloadComposer() {
 	if len(a.current.Projections) > 0 {
 		_ = a.acceptComposerProjections(a.current.Projections)
 	}
-	if !a.connected || a.client == nil || a.sessionID == "" || a.demo {
+	if !a.connected || a.client == nil || a.demo {
 		return
 	}
 	// Projections stay a live read: another client can change this Session's
@@ -189,10 +192,12 @@ func (a *app) reloadComposer() {
 	// behind the composer only change through Host invalidation rows, so a Host
 	// or Session scope answer is reused instead of re-read on every open.
 	hostScope, sessionScope := a.hostScope(), a.sessionScope()
-	a.composerRead(s, "sessionProjections", nil, func(raw json.RawMessage) error {
-		a.applySessionTitle(s.sessionID, raw)
-		return a.acceptComposerProjections(raw)
-	})
+	if a.sessionID != "" {
+		a.composerRead(s, "sessionProjections", nil, func(raw json.RawMessage) error {
+			a.applySessionTitle(s.sessionID, raw)
+			return a.acceptComposerProjections(raw)
+		})
+	}
 	if a.scopeCache != nil {
 		if catalog, ok := a.scopeCache.modelCatalog[hostScope]; ok {
 			s.catalog = catalog
@@ -207,17 +212,24 @@ func (a *app) reloadComposer() {
 		} else {
 			a.loadPermissionCatalog(s, hostScope)
 		}
-		if commands, ok := a.scopeCache.commands[sessionScope]; ok {
-			s.commands = usableCommands(commands)
-			s.completionToken = ""
-		} else {
-			a.loadCommands(s, sessionScope)
+		if a.sessionID != "" {
+			if commands, ok := a.scopeCache.commands[sessionScope]; ok {
+				s.commands = usableCommands(commands)
+				s.completionToken = ""
+			} else {
+				a.loadCommands(s, sessionScope)
+			}
 		}
 		return
 	}
 	a.loadModelCatalog(s, hostScope)
 	a.loadPermissionCatalog(s, hostScope)
-	a.loadCommands(s, sessionScope)
+	if a.sessionID != "" {
+		a.loadCommands(s, sessionScope)
+		if a.operationCaps["listSkills"].Supported {
+			a.loadSkills(s, sessionScope)
+		}
+	}
 }
 
 func (a *app) loadModelCatalog(s *composerState, scope string) {
@@ -245,6 +257,17 @@ func (a *app) loadPermissionCatalog(s *composerState, scope string) {
 		s.completionToken = ""
 		s.refreshLabels()
 		a.rememberPermissionCatalog(scope, v.Options)
+		return nil
+	})
+}
+
+func (a *app) loadSkills(s *composerState, scope string) {
+	a.composerRead(s, "listSkills", nil, func(raw json.RawMessage) error {
+		rows, err := decodeRows[composerCommand](raw, "skills", "items")
+		if err != nil {
+			return err
+		}
+		s.skills = rows
 		return nil
 	})
 }
@@ -479,6 +502,18 @@ func (s *composerState) refreshLabels() {
 			}
 		}
 	}
+	// The hero has no Session projection, but the Host already served the
+	// permission catalog. Show its default rather than the bare "权限" seat.
+	if s.permissionLabel == "" && len(s.permissions) > 0 {
+		chosen := s.permissions[0]
+		for _, p := range s.permissions {
+			if p.Value == "workspace-write" {
+				chosen = p
+				break
+			}
+		}
+		s.permissionLabel = permissionDisplay(chosen)
+	}
 }
 func permissionDisplay(p settingsPermissionOption) string {
 	if p.Value == "auto" {
@@ -665,9 +700,9 @@ func (a *app) composerSubmit(accelerated bool) {
 		artifacts.Error = "图片仍在读取，请稍候。"
 		return
 	}
-	if len(artifacts.Images) > 0 {
+	if len(artifacts.Images) > 0 || len(artifacts.Files) > 0 {
 		if strings.HasPrefix(strings.TrimSpace(a.draft), "/") {
-			artifacts.Error = "此连接不支持命令携带图片，草稿和图片已保留。"
+			artifacts.Error = "此连接不支持命令携带附件，草稿和附件已保留。"
 			return
 		}
 		content, ids, err := a.composerImagePayload()
@@ -863,13 +898,18 @@ func (a *app) updateComposerCompletions(s *composerState, caret int) {
 			}
 			s.completions = append(s.completions, composerCompletion{ID: "client-file", Label: "文件", Description: "添加图片；普通文件附件暂不可用", Kind: "file-action", Unavailable: reason})
 		}
+		for _, cmd := range s.skills {
+			if strings.Contains(strings.ToLower(cmd.Name), query) {
+				s.completions = append(s.completions, composerCompletion{ID: "skill:" + cmd.Name, Label: "/" + cmd.Name, Description: cmd.Description, Replacement: "/" + cmd.Name + " ", Kind: "skill", Group: "技能"})
+			}
+		}
 		for _, cmd := range s.commands {
 			if strings.Contains(strings.ToLower(cmd.Name), query) {
 				description := cmd.Description
 				if cmd.Unavailable != "" {
 					description = cmd.Unavailable
 				}
-				s.completions = append(s.completions, composerCompletion{ID: "command:" + cmd.Name, Label: "/" + cmd.Name, Description: description, Replacement: "/" + cmd.Name + " ", Kind: "command", Unavailable: cmd.Unavailable})
+				s.completions = append(s.completions, composerCompletion{ID: "command:" + cmd.Name, Label: "/" + cmd.Name, Description: description, Replacement: "/" + cmd.Name + " ", Kind: "command", Unavailable: cmd.Unavailable, Group: "命令"})
 			}
 		}
 		return

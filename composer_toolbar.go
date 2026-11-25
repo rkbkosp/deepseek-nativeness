@@ -94,6 +94,9 @@ func (a *app) composerToolbar(c *ui.Context, s *composerState, input ui.Element,
 					a.updateComposerCompletions(s, caret)
 				}
 			}
+			if ui.ButtonBase(c).Size(28, 28).Shrink(0).Radius(14).Background(a.settingsControlFill()).Label("添加附件").Disabled(!a.connected || a.busy).Tooltip("添加附件").Children(func() { icon(c, "paperclip-outline", 14).TextColor(a.theme.TextMuted) }).Clicked() {
+				a.composerChooseFiles()
+			}
 			ui.Row(c).MinWidth(0).Shrink(1).Gap(layout.gap).AlignItems(ui.Center).Children(func() {
 				permission := ui.ButtonBase(c).Label("权限模式").Height(28).MinWidth(0).MaxWidth(220).Shrink(1).Padding(0, 4, 0, 8).Radius(8).Gap(4).Tooltip(a.composerPermissionLabel()).Disabled(!a.can("executeCommand") || s.values.Permissions == nil).Children(func() {
 					if layout.permissionGlyph {

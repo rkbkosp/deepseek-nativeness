@@ -23,6 +23,7 @@ import (
 // same-session receipt, which the current Remote carrier does not expose.
 type composerContentPart struct {
 	Type      string `json:"type"`
+	ReceiptID string `json:"receiptId,omitempty"`
 	Text      string `json:"text,omitempty"`
 	MediaType string `json:"mediaType,omitempty"`
 	Data      string `json:"data,omitempty"`
@@ -56,6 +57,14 @@ type composerDraftState struct {
 	ThumbnailWorkers int
 	ThumbnailClock   uint64
 	ThumbnailEpoch   uint64
+	Files            []composerDraftFile
+	FileLoading      bool
+	FileError        string
+}
+
+type composerDraftFile struct {
+	ID, Name, ReceiptID, Path string
+	Bytes                     int64
 }
 
 func (a *app) composerArtifacts() *composerDraftState {
@@ -97,6 +106,7 @@ func (a *app) acceptComposerAttachments(intent *sendIntent) {
 		state.PreviewID = ""
 		state.Preview = nil
 	}
+	state.Files = nil
 }
 func (l *composerImageLimits) available() bool {
 	return l != nil && l.MaxImageBytes > 0 && l.MaxImagesPerMessage > 0 && l.MaxMessageImageBytes > 0 && l.MaxImagePixels > 0 && l.MaxImageDimension > 0 && len(l.MediaTypes) > 0
@@ -166,6 +176,22 @@ func (a *app) composerChooseImages() {
 		})
 	}()
 }
+func validateDroppedImagePaths(paths []string) error {
+	for _, path := range paths {
+		info, err := os.Stat(path)
+		if err != nil {
+			return fmt.Errorf("无法读取拖入的文件。")
+		}
+		if info.IsDir() {
+			return fmt.Errorf("暂不支持拖入文件夹，请选择图片文件。")
+		}
+		if !info.Mode().IsRegular() {
+			return fmt.Errorf("请选择图片文件。")
+		}
+	}
+	return nil
+}
+
 func (a *app) composerAddImageFiles(paths []string) {
 	s := a.composer
 	if !a.composerCurrent(s) || !a.connected || a.busy {
@@ -178,6 +204,10 @@ func (a *app) composerAddImageFiles(paths []string) {
 	limits := s.values.ImageLimits
 	if !limits.available() {
 		state.Error = "图片限制尚未加载，请重新打开会话。"
+		return
+	}
+	if err := validateDroppedImagePaths(paths); err != nil {
+		state.Error = err.Error()
 		return
 	}
 	if len(state.Images)+len(paths) > limits.MaxImagesPerMessage {
@@ -253,8 +283,29 @@ func (a *app) composerImagePayload() (parts []composerContentPart, ids []string,
 	if state.Loading {
 		return nil, nil, fmt.Errorf("图片仍在读取，请稍候。")
 	}
-	if len(state.Images) == 0 {
+	if len(state.Images) == 0 && len(state.Files) == 0 {
 		return nil, nil, nil
+	}
+	if len(state.Images) == 0 {
+		if text := strings.TrimSpace(a.draft); text != "" {
+			parts = append(parts, composerContentPart{Type: "text", Text: text})
+		}
+		mentions := ""
+		for _, file := range state.Files {
+			if file.Path != "" {
+				mentions += " @" + file.Path
+			} else {
+				parts = append(parts, composerContentPart{Type: "file", ReceiptID: file.ReceiptID, Name: file.Name})
+			}
+		}
+		if mentions != "" {
+			if len(parts) > 0 && parts[0].Type == "text" {
+				parts[0].Text += mentions
+			} else {
+				parts = append([]composerContentPart{{Type: "text", Text: strings.TrimSpace(mentions)}}, parts...)
+			}
+		}
+		return parts, nil, nil
 	}
 	s := a.composer
 	if !a.composerCurrent(s) || !s.values.ImageLimits.available() {
@@ -278,6 +329,21 @@ func (a *app) composerImagePayload() (parts []composerContentPart, ids []string,
 	}
 	if total > limits.MaxMessageImageBytes {
 		return nil, nil, fmt.Errorf("图片总大小超过当前会话限制。")
+	}
+	mentions := ""
+	for _, file := range state.Files {
+		if file.Path != "" {
+			mentions += " @" + file.Path
+		} else {
+			parts = append(parts, composerContentPart{Type: "file", ReceiptID: file.ReceiptID, Name: file.Name})
+		}
+	}
+	if mentions != "" {
+		if len(parts) > 0 && parts[0].Type == "text" {
+			parts[0].Text += mentions
+		} else {
+			parts = append([]composerContentPart{{Type: "text", Text: strings.TrimSpace(mentions)}}, parts...)
+		}
 	}
 	return parts, ids, nil
 }

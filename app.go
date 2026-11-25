@@ -24,6 +24,7 @@ type app struct {
 	composerDrafts                                           map[string]*composerDraftState
 	composerBaselineKey                                      string
 	sidebarLayoutWidth                                       float32
+	savedFiles                                               map[string]string
 	modelMenuWidth, modelMenuHeight                          float32
 	sendIntents                                              map[string]*sendIntent
 	accountScope, authServer, restoreAttempted               string
