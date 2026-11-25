@@ -1,12 +1,32 @@
 import { readFile, writeFile } from "node:fs/promises";
+import { execSync } from "node:child_process";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { OPERATIONS } from "./operations.mjs";
+const root = dirname(fileURLToPath(import.meta.url));
+/** `--reference <path>` repoints at another pinned ds-harness-remote checkout. */
+const referenceFlag = process.argv.indexOf("--reference");
+const reference = resolve(
+  root,
+  referenceFlag >= 0 && process.argv[referenceFlag + 1]
+    ? process.argv[referenceFlag + 1]
+    : "../remote_reference",
+);
 const source = await readFile(
-  new URL(
-    "../remote_reference/packages/plugin/src/harness-remote-bridge.ts",
-    import.meta.url,
-  ),
+  resolve(reference, "packages/plugin/src/harness-remote-bridge.ts"),
   "utf8",
 );
+/** Never record a pin the checkout does not actually carry. */
+function referenceCommit() {
+  try {
+    return execSync("git rev-parse HEAD", { cwd: reference, encoding: "utf8" }).trim();
+  } catch {
+    return "unknown";
+  }
+}
+const remoteCommit = referenceCommit();
+const dshCommit =
+  process.env.DSH_COMMIT ?? "9c2670d3bce5275e0d1610272958121af87787bb";
 const section = source.match(
   /export const HARNESS_REMOTE_ALLOWLIST = \[([\s\S]*?)\] as const/,
 )[1];
@@ -83,8 +103,8 @@ const gaps = [
   ],
 ];
 const data = {
-  remoteCommit: "4670ae67cde91e1ac4c9df9d3400fb317c8eedf7",
-  dshCommit: "39163dd30f703a79079e2d2446545cff3c453738",
+  remoteCommit,
+  dshCommit,
   scope:
     "Source capability inventory; not runtime availability, UI parity, or live-write acceptance.",
   typert: endpoints.map((endpoint) => ({

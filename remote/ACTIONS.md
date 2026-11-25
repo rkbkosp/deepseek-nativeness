@@ -1,6 +1,6 @@
 # Session actions: supported wire contracts and acceptance limits
 
-These are frontend/helper contracts for frozen Remote v0.6.4 and dsh 0.2.2-rc.3. No new server API is required. All mutation validation below used local fixtures; no real feedback was recorded and no real session was forked. Native UI wiring and real read-only full export acceptance are separate stages. GUI7 resources remain frozen; this source belongs to the next helper candidate.
+These are frontend/helper contracts for Remote v0.6.7 and dsh 0.2.2-rc.5. No new server API is required. All mutation validation below used local fixtures; no real feedback was recorded and no real session was forked. Native UI wiring and real read-only full export acceptance are separate stages. GUI7 resources remain frozen; this source belongs to the next helper candidate.
 
 ## Complete Session Markdown
 

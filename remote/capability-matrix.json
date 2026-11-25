@@ -1,6 +1,6 @@
 {
-  "remoteCommit": "4670ae67cde91e1ac4c9df9d3400fb317c8eedf7",
-  "dshCommit": "39163dd30f703a79079e2d2446545cff3c453738",
+  "remoteCommit": "e42ea703d9e8b0e73eb4e1f20e78a1fceeaf7941",
+  "dshCommit": "9c2670d3bce5275e0d1610272958121af87787bb",
   "scope": "Source capability inventory; not runtime availability, UI parity, or live-write acceptance.",
   "typert": [
     {
@@ -37,6 +37,16 @@
       "endpoint": "commands/list",
       "frontend": "listCommands",
       "status": "wired"
+    },
+    {
+      "endpoint": "cotTranslation/limits",
+      "frontend": null,
+      "status": "allowed-not-yet-wired"
+    },
+    {
+      "endpoint": "cotTranslation/translate",
+      "frontend": null,
+      "status": "allowed-not-yet-wired"
     },
     {
       "endpoint": "credentials/describe",
@@ -225,13 +235,18 @@
     },
     {
       "endpoint": "schedule/edit",
-      "frontend": "editSchedule",
+      "frontend": "deleteSchedule",
       "status": "wired"
     },
     {
       "endpoint": "schedule/run",
       "frontend": "runSchedule",
       "status": "wired"
+    },
+    {
+      "endpoint": "fileUploads/upload",
+      "frontend": null,
+      "status": "allowed-not-yet-wired"
     },
     {
       "endpoint": "session/attachment",
@@ -295,8 +310,8 @@
     },
     {
       "endpoint": "remoteAccess/follow",
-      "frontend": null,
-      "status": "allowed-not-yet-wired"
+      "frontend": "followRemoteAccess",
+      "status": "wired"
     },
     {
       "endpoint": "session/projections",
@@ -385,8 +400,8 @@
     },
     {
       "endpoint": "userQuestions/attachWait",
-      "frontend": null,
-      "status": "allowed-not-yet-wired"
+      "frontend": "followQuestionWait",
+      "status": "wired"
     },
     {
       "endpoint": "claudeCodeMods/watchBand",
@@ -395,6 +410,16 @@
     },
     {
       "endpoint": "claudeCodeMods/pressBand",
+      "frontend": null,
+      "status": "allowed-not-yet-wired"
+    },
+    {
+      "endpoint": "speech/catalog",
+      "frontend": null,
+      "status": "allowed-not-yet-wired"
+    },
+    {
+      "endpoint": "speech/transcribe",
       "frontend": null,
       "status": "allowed-not-yet-wired"
     },
@@ -427,6 +452,11 @@
       "endpoint": "workspaceFiles/readRelated",
       "frontend": null,
       "status": "allowed-not-yet-wired"
+    },
+    {
+      "endpoint": "workspaceFiles/search",
+      "frontend": "searchWorkspaceFiles",
+      "status": "blocked-frozen-compatibility"
     },
     {
       "endpoint": "workspaceFiles/changes",
@@ -490,8 +520,8 @@
     },
     {
       "endpoint": "workspace/initializeDefault",
-      "frontend": null,
-      "status": "allowed-not-yet-wired"
+      "frontend": "initializeDefaultWorkspace",
+      "status": "wired"
     },
     {
       "endpoint": "workspace/pinSession",

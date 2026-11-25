@@ -4,7 +4,7 @@ This is a client-only Node communication helper for Native DSH. It does not laun
 
 ## Source and build
 
-The selected transport, Noise handshake, identity, credentials, capability discovery and Typert carrier come from `liguobao/ds-harness-remote` tag `v0.6.4`, commit `4670ae67cde91e1ac4c9df9d3400fb317c8eedf7`. `../remote_reference` is an unchanged reference checkout. `src/upstream.ts` lists the selected modules. `UPSTREAM-LICENSE` preserves the upstream MIT license; dependency licenses remain in the installed runtime packages.
+The selected transport, Noise handshake, identity, credentials, capability discovery and Typert carrier come from `liguobao/ds-harness-remote` tag `v0.6.7`, commit `e42ea703d9e8b0e73eb4e1f20e78a1fceeaf7941`, selected with `--reference <path>` (default `../remote_reference`). `../remote_reference` is an unchanged reference checkout. `src/upstream.ts` lists the selected modules. `UPSTREAM-LICENSE` preserves the upstream MIT license; dependency licenses remain in the installed runtime packages.
 
 From `desktop/`:
 
@@ -75,4 +75,4 @@ The frontend-only versioned Turn/Step metadata and atomic payload contract is do
 
 The incremental transport budget test retains 1,000 completed messages of about 1 KiB each and flushes 100 short chunks. It emits one transient upsert and 99 suffix deltas, totalling 16,598 serialized method/params bytes (excluding the stdio scope envelope), with no completed history in those frames. This is a protocol fixture measurement, not end-to-end screen latency. A single passive core `session/control` stream also forwards the selected session's actual projection values as small `sessionProjections` notifications; it does not reload history or poll models on each token.
 
-The frozen dsh `0.2.2-rc.3` generated descriptor names the `session/list` argument `_request`, so this client sends `{args:{_request:{}}}` there. `session/follow`, `page`, `prompt`, and `cancel` retain the parameter name `request`; `workspace/follow` has no application arguments. This was corrected from an actual read-only Host rejection, then covered by the fixture and independent contract test.
+The bundled dsh `0.2.2-rc.5` generated descriptor names the `session/list` argument `_request`, so this client sends `{args:{_request:{}}}` there. `session/follow`, `page`, `prompt`, and `cancel` retain the parameter name `request`; `workspace/follow` has no application arguments. This was corrected from an actual read-only Host rejection, then covered by the fixture and independent contract test.

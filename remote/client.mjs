@@ -874,7 +874,8 @@ export class RemoteAdapter {
             args: {
               request: {
                 address: { kind: "session", sessionId: projection.sessionId },
-                maxMessages: 80,
+                maxMessages: 500,
+                turnWindow: { minMessages: 50, minTurns: 2 },
                 assistantStream: true,
               },
             },
@@ -993,7 +994,8 @@ export class RemoteAdapter {
           address: { kind: "session", sessionId: projection.sessionId },
           throughSeq: p.throughSeq ?? projection.cursor,
           beforeSeq: p.beforeSeq ?? first?.seq,
-          maxMessages: 80,
+          maxMessages: 500,
+          turnWindow: { minMessages: 50, minTurns: 2 },
         },
       },
       signal: this.lifetime.signal,

@@ -176,7 +176,7 @@ export class LocalAdapter extends RemoteAdapter {
     this.transport = transport;
     return {
       client: transport,
-      features: { remoteGateway: true, sessionFormat: LOCAL_SESSION_FORMAT },
+      features: { remoteGateway: true, sessionFormat: LOCAL_SESSION_FORMAT, terminal: true },
       harnessVersion: this.version,
       target: {
         hostId: LOCAL_HOST_ID,

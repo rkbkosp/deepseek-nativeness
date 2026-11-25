@@ -1,11 +1,32 @@
 import { build } from "esbuild";
+import { execSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { readFile, readdir, mkdir, writeFile, cp, rm } from "node:fs/promises";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 const root = dirname(fileURLToPath(import.meta.url)),
-  source = resolve(root, "../../deepseek-harness"),
   packages = new Map();
+/**
+ * The dsh checkout the original components are bundled from. The frozen
+ * `../../deepseek-harness` stays the default so existing builds stay valid;
+ * `--source <path>` repoints at another pinned checkout (for example
+ * `.cache/upstream/dsh-0.2.2-rc.5`) without touching the frozen tree.
+ */
+const sourceFlag = process.argv.indexOf("--source");
+const source = resolve(
+  root,
+  sourceFlag >= 0 && process.argv[sourceFlag + 1]
+    ? process.argv[sourceFlag + 1]
+    : "../../deepseek-harness",
+);
+/** The commit actually bundled, so a manifest can never claim the wrong pin. */
+function sourceCommit() {
+  try {
+    return execSync("git rev-parse HEAD", { cwd: source, encoding: "utf8" }).trim();
+  } catch {
+    return process.env.DSH_COMMIT ?? "unknown";
+  }
+}
 const forceMenuAnchorFallback = process.argv.includes(
   "--force-menu-anchor-fallback",
 );
@@ -59,6 +80,20 @@ for (const match of primitivesIndex.matchAll(
 const plugin = {
   name: "frozen-source-workspace",
   setup(b) {
+    /**
+     * compat/src spells its original-component imports out relatively as
+     * `../../../deepseek-harness/packages/...`, which always resolves into the
+     * frozen checkout. Redirect those requests onto the selected checkout, so
+     * `--source` cannot bundle a mixture of two dsh versions. With the default
+     * source this resolves to the very same file as before.
+     */
+    b.onResolve({ filter: /deepseek-harness[/\\]packages[/\\]/ }, (args) => {
+      const marker = "deepseek-harness/";
+      const relative = args.path
+        .slice(args.path.indexOf(marker) + marker.length)
+        .replace(/^\.\//, "");
+      return { path: resolve(source, relative) };
+    });
     b.onLoad(
       { filter: /ui-schedule\/src\/client\/TaskMenu\.tsx$/, namespace: "file" },
       async (args) => {
@@ -288,39 +323,60 @@ const plugin = {
         contents =
           `import {useModelPickerAnchor} from ${JSON.stringify(join(root, "src/menu-anchor-fallback.ts"))};\n` +
           contents;
+        // Two source generations carry this component: the pane-object model
+        // in the master-ahead checkout compat was first cut from, and the
+        // string-union pane model shipped by the 0.2.2-rc.5 release tree.
+        // Each seam applies to whichever generation the file actually carries;
+        // a seam matching neither still fails loudly.
+        const stringUnionPanes = contents.includes(
+          "const [pane, setPane] = useState<Pane>('root')",
+        );
+        const seam = (from, to) => ({ from, to });
         const edits = [
-          [
+          seam(
             "const menuRef = useRef<HTMLDivElement | null>(null)",
             "const menuRef = useRef<HTMLDivElement | null>(null)\n  useModelPickerAnchor(menuRef,triggerRef,open,embedded)",
-          ],
-          [
+          ),
+          seam(
             "  const [open, setOpen] = useState(false)",
             "  const embedded = new URLSearchParams(location.search).get('page') === 'model-menu'\n  const [open, setOpen] = useState(embedded)",
-          ],
-          [
+          ),
+          seam(
             "  const close = (restoreFocus = false): void => {",
             "  const close = (restoreFocus = false): void => {\n    if (embedded) void (window as any).mygo.call('CompatAPI.Close').catch(() => {})",
-          ],
-          [
-            "const paneFocus = useRef<'drill' | DrilledPane | null>(null)",
-            "const paneFocus = useRef<'drill' | DrilledPane | null>(embedded ? 'drill' : null)",
-          ],
-          [
+          ),
+        ];
+        if (!stringUnionPanes)
+          edits.push(
+            seam(
+              "const paneFocus = useRef<'drill' | DrilledPane | null>(null)",
+              "const paneFocus = useRef<'drill' | DrilledPane | null>(embedded ? 'drill' : null)",
+            ),
+          );
+        edits.push(
+          seam(
             "      <button\n        ref={triggerRef}",
             "      {!embedded && (<button\n        ref={triggerRef}",
-          ],
-          [
+          ),
+          seam(
             "      </button>\n\n      {/* Portaled",
             "      </button>)}\n\n      {/* Portaled",
-          ],
-          [
-            '          data-model-menu=""',
-            '          data-model-menu=""\n          data-native-model-pane={embedded ? pane.kind : undefined}',
-          ],
-        ];
-        for (const [from, to] of edits) {
+          ),
+          stringUnionPanes
+            ? seam(
+                "        <MenuSurface\n          ref={menuRef}",
+                "        <MenuSurface\n          data-model-menu=\"\"\n          data-native-model-pane={embedded ? pane : undefined}\n          ref={menuRef}",
+              )
+            : seam(
+                '          data-model-menu=""',
+                '          data-model-menu=""\n          data-native-model-pane={embedded ? pane.kind : undefined}',
+              ),
+        );
+        for (const { from, to } of edits) {
           if (!contents.includes(from))
-            throw Error("Frozen ModelSelect embedding seam changed");
+            throw Error(
+              `Frozen ModelSelect embedding seam changed: ${JSON.stringify(from.slice(0, 60))} in ${args.path}`,
+            );
           contents = contents.replace(from, to);
         }
         return { contents, loader: "tsx", resolveDir: dirname(args.path) };
@@ -567,7 +623,7 @@ await writeFile(
   join(output, "source-manifest.json"),
   JSON.stringify(
     {
-      dshCommit: "39163dd30f703a79079e2d2446545cff3c453738",
+      dshCommit: sourceCommit(),
       compileDefines: menuAnchorDefine,
       buildWorkingDirectory: process.cwd(),
       platformBaseline: {

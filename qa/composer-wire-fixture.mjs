@@ -19,6 +19,7 @@ adapter.gateway={
   if(namespace==='session'&&method==='projections')return projections();
   if(namespace==='session'&&method==='modelCatalog')return{default:{provider:'fixture-provider',model:'fixture-model'},groups:[{id:'fixture-provider',name:'Fixture Provider',models:[{id:'fixture-model',name:'Fixture Model',reasoning:{defaultEffort:'default',efforts:[{id:'default',name:'Default'}]}}]}]};
   if(namespace==='permissionPresets'&&method==='catalog')return{options:[{value:'read-only',name:'Read Only'},{value:'workspace-write',name:'Workspace Write'},{value:'danger-full-access',name:'Full Access'},{value:'auto',name:'auto'}]};
+  if(namespace==='skills'&&method==='list')return[{name:'fixture-skill',description:'Fixture skill'}];
   if(namespace==='commands'&&method==='list')return[{definitionId:'fixture.permission',name:'permission',description:'Fixture permission command'},{definitionId:'fixture.help',name:'help',description:'Fixture help'}];
   if(namespace==='fileReferences'&&method==='list')return[{path:'docs/中文 file.md',kind:'file'},{path:'docs/with space',kind:'directory'}];
   if(namespace==='sessionReferenceResolver'&&method==='candidates')return[{sessionId:'other-session',label:'Fixture source',displayTitle:'Fixture source',sameWorkspace:true,createdAt:1,mention:'@[Fixture source](dsh-session:'+Buffer.from(JSON.stringify('other-session')).toString('base64url')+')'}];

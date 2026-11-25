@@ -2,7 +2,9 @@
 
 This local static bundle runs only inside a dedicated trusted mygo WKWebView. It calls the existing native app's stdio client through `CompatAPI`; it creates no second Remote connection, login, `$events` answerer or HTTP server. Native chat, sidebar and composer remain native views.
 
-The frozen upstream is dsh `0.2.2-rc.3`, commit `39163dd30f703a79079e2d2446545cff3c453738`. Original components and pure state machinery are bundled from that read-only checkout. `dist/source-manifest.json` records the selected source closure and the narrow transforms. `dist/DSH-LICENSE` preserves the source license.
+The bundled upstream is dsh `0.2.2-rc.5`, commit `9c2670d3bce5275e0d1610272958121af87787bb` — the release tree that also produced the runtime payload the app carries. Original components and pure state machinery are bundled from a pinned checkout selected with `--source <path>`; the default is the frozen `../../deepseek-harness` master snapshot (`39163dd`) and only exists to reproduce pre-alignment builds. `dist/source-manifest.json` records the commit actually bundled, read from the checkout itself, together with the selected source closure and the narrow transforms. `dist/DSH-LICENSE` preserves the source license.
+
+Two source generations carry the same component names. The master snapshot has a pane-object model menu with plugin-owned panes (including `TeamModePane`); the 0.2.2 release trees dropped that model for a string-union pane set. The build applies seam variants per generation instead of assuming one, and names the exact seam when neither matches. `--source` also redirects the literal `../../../deepseek-harness/packages/...` imports in `src/`, so a non-default checkout can never produce a bundle that mixes two dsh versions.
 
 Current routes:
 

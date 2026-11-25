@@ -1,9 +1,39 @@
 import { build } from "esbuild";
+import { execSync } from "node:child_process";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 const root = dirname(fileURLToPath(import.meta.url));
-const reference = resolve(root, "../remote_reference");
+/**
+ * The ds-harness-remote checkout the transport modules are selected from.
+ * `../remote_reference` stays the default; `--reference <path>` repoints at a
+ * different pinned checkout without editing the reference tree in place.
+ */
+const referenceFlag = process.argv.indexOf("--reference");
+const reference = resolve(
+  root,
+  referenceFlag >= 0 && process.argv[referenceFlag + 1]
+    ? process.argv[referenceFlag + 1]
+    : "../remote_reference",
+);
+/** The exact reference tag/commit actually bundled, read from the checkout. */
+function referencePin() {
+  try {
+    return {
+      tag: execSync("git describe --tags --exact-match HEAD", {
+        cwd: reference,
+        encoding: "utf8",
+      }).trim(),
+      commit: execSync("git rev-parse HEAD", {
+        cwd: reference,
+        encoding: "utf8",
+      }).trim(),
+    };
+  } catch {
+    return { tag: "unknown", commit: "unknown" };
+  }
+}
+const pinned = referencePin();
 const output = resolve(
   root,
   process.argv.includes("--out-chat-process-next")
@@ -45,9 +75,10 @@ await build({
     JSON.stringify(
       {
         upstream: "https://github.com/liguobao/ds-harness-remote",
-        tag: "v0.6.4",
-        dshCommit: "39163dd30f703a79079e2d2446545cff3c453738",
-        commit: "4670ae67cde91e1ac4c9df9d3400fb317c8eedf7",
+        tag: pinned.tag,
+        dshCommit:
+          process.env.DSH_COMMIT ?? "9c2670d3bce5275e0d1610272958121af87787bb",
+        commit: pinned.commit,
         inputs: Object.keys(result.metafile.inputs),
         outputs: result.metafile.outputs,
       },

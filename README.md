@@ -15,7 +15,7 @@
 
 ### 1. 原生远程客户端（Remote 模式）
 
-- **端到端加密连接**：兼容 `ds-harness-remote`（`v0.6.4`）协议，使用固定的 `Noise_IK_25519_ChaChaPoly_SHA256` 套件进行端到端加密，按 `LAN -> P2P -> TURN -> Relay` 顺序自动协商传输路径，Host 无需开放公网端口。
+- **端到端加密连接**：兼容 `ds-harness-remote`（`v0.6.7`）协议，使用固定的 `Noise_IK_25519_ChaChaPoly_SHA256` 套件进行端到端加密，按 `LAN -> P2P -> TURN -> Relay` 顺序自动协商传输路径，Host 无需开放公网端口。
 - **原生对话与工作区界面**：
   - 使用 MyGo 原生绘制侧边栏、工作区列表、多会话管理与搜索。
   - 原生支持流式 Markdown 渲染、思考过程（Reasoning）与上下文（Context）折叠行、工具调用（Bash / Read / Edit / Search / Diff）详情行、过程分组（Process Groups）、子代理状态、Todo 面板与上下文统计。

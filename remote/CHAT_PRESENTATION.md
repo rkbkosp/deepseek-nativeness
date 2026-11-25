@@ -9,6 +9,12 @@ The pinned semantic oracle is dsh `39163dd` `assistant.ts`, `turn-process.ts`,
 `assistant-content.ts` and `ClientAssistantStream`. The full original assembler
 is used **only by QA**, never imported by the helper runtime.
 
+The alignment to dsh `0.2.2-rc.5` (`9c2670d3bce5275e0d1610272958121af87787bb`)
+left `assistant.ts`, `turn-process.ts` and `turn-process-presentation.ts`
+byte-identical to that pin, so the rules below still describe the bundled
+runtime. `conversation/assembler.ts` differs only in a type-import path
+(`dsh-llm/types` → `dsh-llm/brand`), not in behaviour.
+
 ## Baselines and ordering
 
 A genuine snapshot, rebaseline or history-window merge mints a positive,

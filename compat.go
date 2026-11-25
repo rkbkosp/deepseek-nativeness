@@ -119,6 +119,9 @@ func (api *CompatAPI) GetContext(ctx context.Context) (map[string]any, error) {
 	mygo.RunOnMain(func() {
 		a := api.a
 		if a.compat == nil || a.compat.Page() != page || a.compatHost != a.hostID || a.compatGeneration != a.remoteGeneration {
+			if os.Getenv("DSH_QA_LOG") != "" {
+				log.Printf("compat context rejected: compat=%v page=%v host=%q/%q generation=%d/%d", a.compat != nil, a.compat != nil && a.compat.Page() == page, a.compatHost, a.hostID, a.compatGeneration, a.remoteGeneration)
+			}
 			return
 		}
 		ops := map[string]bool{}
@@ -133,6 +136,9 @@ func (api *CompatAPI) GetContext(ctx context.Context) (map[string]any, error) {
 		theme := "light"
 		if a.theme.Dark {
 			theme = "dark"
+		}
+		if os.Getenv("DSH_QA_LOG") != "" && a.compatPage == "terminal" {
+			log.Printf("terminal ops listTerminals=%v watchTerminal=%v caps=%d", ops["listTerminals"], ops["watchTerminal"], len(ops))
 		}
 		result = map[string]any{"hostId": a.hostID, "workspaceId": a.workspaceID, "sessionId": a.sessionID, "connectionGeneration": a.compatGeneration, "ownerId": a.compatOwner, "theme": theme, "language": "zh", "fontSize": a.uiPrefs.FontSize, "terminalFontSize": a.uiPrefs.TerminalFontSize, "terminalFontFamily": a.uiPrefs.TerminalFontFamily, "operations": ops}
 		width := float32(a.win.ContentBounds().Width)
@@ -356,6 +362,12 @@ func (a *app) openCompatAt(page, placement string) {
 				e.PreventDefault()
 			}
 		})
+		if a.compatPage == "trajectory" && os.Getenv("DSH_QA_TRAJECTORY_TOP") != "" {
+			go func() {
+				time.Sleep(5 * time.Second)
+				_, _ = v.Page().Eval(`document.querySelector("tr")?.scrollIntoView({ block: "start" })`)
+			}()
+		}
 		v.Page().OnDidFailLoad(func(e *mygo.LoadError) {
 			if a.compatOwner == owner {
 				a.error = "兼容页面加载失败，请重新打开。"
@@ -427,9 +439,9 @@ func (a *app) deferCompatOpen(page, placement string) {
 }
 
 func (a *app) compatView(c *ui.Context) {
-	if a.compatPlacement == "main" {
-		ui.Box(c).Height(48).Shrink(0).DragWindow()
-	}
+	// The compatibility page owns its own top inset and drag region, as the
+	// reference web page does. A native 48px strip here doubled that inset and
+	// pushed every WK surface ~50px below the original.
 	if a.compatPlacement != "main" {
 		ui.Row(c).Shrink(0).Padding(8, 20).Gap(10).Children(func() {
 			title := "插件"

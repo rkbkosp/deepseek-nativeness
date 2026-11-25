@@ -1,14 +1,19 @@
 import React, { useEffect, useMemo, useCallback, useState } from "react";
 import { ModelSelect } from "../../../deepseek-harness/packages/client/ui-model-selection/src/client/ModelSelect.tsx";
 import { zh as modelZh } from "../../../deepseek-harness/packages/client/ui-model-selection/src/client/locales.ts";
-import {
-  TeamModeToggle,
-  TeamModePane,
-} from "../../../deepseek-harness/packages/client/ui-agent-team/src/client/TeamModeToggle.tsx";
+import { TeamModeToggle } from "../../../deepseek-harness/packages/client/ui-agent-team/src/client/TeamModeToggle.tsx";
+import * as agentTeamSurface from "../../../deepseek-harness/packages/client/ui-agent-team/src/client/TeamModeToggle.tsx";
 import { zh as teamZh } from "../../../deepseek-harness/packages/client/ui-agent-team/src/client/locales.ts";
 import { modelDirectoryState } from "./model-state.mjs";
 import { request, store, operationId, onNotification } from "./bridge";
 import { translate, resolveText, no } from "./presentation";
+/**
+ * The plugin-owned team pane exists only in the master-ahead frontend. The
+ * 0.2.2 release tree dropped it together with the pane-object menu model, so
+ * the pane slot resolves to nothing there instead of failing the bundle.
+ */
+const TeamModePane = (agentTeamSurface as { TeamModePane?: any }).TeamModePane;
+
 export default function Models({ ctx }: { ctx: any }) {
   useEffect(() => {
     if (new URLSearchParams(location.search).get("page") !== "model-menu")
@@ -174,7 +179,7 @@ export function createModelSlot(ctx: any, projected: any) {
       <div title="当前Remote未开放团队开关API">
         <TeamModeToggle {...common} />
       </div>
-    ) : name === "conversation.input.model.pane" ? (
+    ) : name === "conversation.input.model.pane" && TeamModePane !== undefined ? (
       <div title="当前Remote未开放agentTeams/setEnabled">
         <TeamModePane
           {...common}

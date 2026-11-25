@@ -34,3 +34,14 @@ A future compatibility change would need to understand the installed Host's `upd
 ## Other boundaries
 
 The full source-level inventory remains in `capability-matrix.json`. An allowlisted endpoint is not automatically compatible with the current Host's generated descriptor or its Remote interceptor. Existing read-only Host probes are recorded separately in `dist/live-surfaces.json` and `../qa/runtime-results/live-readonly.json`. Existing loopback describe returned zero allowed ports (`dist/live-loopback.json`): the protocol has an HTTP/WS carrier, but this deployment currently offers no permitted original HTTP resource entry through it. No port or configuration was changed.
+
+## Re-inspection 2026-11-23: dsh 0.2.2-rc.5 / Remote 0.6.7
+
+Read-only re-inspection after aligning the client to dsh `0.2.2-rc.5` (commit `9c2670d3bce5275e0d1610272958121af87787bb`) and `ds-harness-remote` `v0.6.7` (`e42ea703d9e8b0e73eb4e1f20e78a1fceeaf7941`).
+
+- The installed archive is now sha256 `6f019878f523428f452957dbaad601c6468051df4093eda8af751ec65226f88e`; its `dsh/desktop-runtime.json` reports version `0.2.2-rc.5`, host protocol `4`, Node `24.21.0`. The vendored payload was byte-verified against that sealed manifest (20,667 files, 0 problems) into `build/runtime`.
+- Both mismatches documented above are resolved by the release tree, not by the client:
+  - `@deepseek-ai/dsh-schedule` now exposes `remoteCreate(request, signal)`, and the typed modern envelope is accepted by the Host: a probe with invalid timing returns a business refusal (`schedule/input-invalid: every_seconds must be at least 60`), and `schedule/update` on a missing task returns a structured `schedule_not_found` value instead of a legacy-envelope rejection.
+  - `@deepseek-ai/dsh-plugin-manager` emits the `updatable` eligibility field, and `control/update` reaches the application stage and returns a structured receipt (`result.application: "failed"` for an unknown bundle) rather than being refused by the carrier gate.
+- The client-side capability gates for schedule creation and plugin update remain in place. Enabling them is a separate change with its own QA; this note only records that the backend blocker is gone.
+- Local carrier acceptance against the new runtime: `scripts/spike-local-runtime.mjs` and `scripts/probe-local-endpoints.mjs` both pass (host ready, cookie exchange, `/api/remote.mux` upgrade, 20/20 local capabilities). Evidence: `qa/runtime-results/local-runtime-spike-rc5.json`, `qa/runtime-results/local-endpoints-rc5.json`.
