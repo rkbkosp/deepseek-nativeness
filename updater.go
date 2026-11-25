@@ -415,6 +415,7 @@ func (s updateSnapshot) Summary() string {
 type updatePreferenceState struct {
 	FeedURL   string             `json:"feedUrl,omitempty"`
 	LastCheck *updateCheckRecord `json:"lastCheck,omitempty"`
+	Mandatory *updateRelease     `json:"mandatoryUpdate,omitempty"`
 }
 
 // updateCheckRecord is what the last check concluded, as preferences keep it.
@@ -877,26 +878,14 @@ func (a *app) recordUpdateCheck(result updateResult) {
 // offerUpdate asks once, and only acts on the button that was clicked. Nothing
 // here downloads or installs: the person leaves for the download page.
 func (a *app) offerUpdate(release updateRelease) {
-	result, err := updateDialog(mygo.MessageOptions{
-		Parent:        a.win,
-		Type:          mygo.MessageInfo,
-		Message:       "发现新版本 " + release.Version,
-		Detail:        updateOfferDetail(release, currentAppVersion()),
-		Buttons:       []string{"稍后", "复制链接", "打开下载页"},
-		DefaultButton: 2,
-		CancelButton:  0,
-	})
-	if err != nil {
-		log.Printf("updater: showing the update offer: %v", err)
-		a.notifyUpdate("发现新版本 " + release.Version + "（无法显示提示窗口）")
+	if updateIsMandatory(release, a.hostProtocol()) {
+		a.mandatoryUpdate = &release
+		updatePrefs.Mandatory = &release
+		a.savePreferences()
 		return
 	}
-	switch result.Button {
-	case 2:
-		a.openUpdateDownloadPage(release)
-	case 1:
-		a.copyUpdateDownloadLink(release)
-	}
+	a.updateOffer = &release
+	a.updateOfferOpen = true
 }
 
 // openUpdateDownloadPage opens the URL the signed feed named. A failure to open

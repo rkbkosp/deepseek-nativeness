@@ -36,8 +36,12 @@ type app struct {
 	presentedFiles                                           map[int][]presentedFile
 	sessionPreviews                                          map[string]string
 	sessionPreviewLoading                                    map[string]bool
+	updateOfferOpen                                          bool
+	updateOffer                                              *updateRelease
+	mandatoryUpdate                                          *updateRelease
 	scheduleDetail                                           *scheduleRecord
 	scheduleDetailOpen                                       bool
+	mandatoryRestored                                        bool
 	modelMenuWidth, modelMenuHeight                          float32
 	sendIntents                                              map[string]*sendIntent
 	accountScope, authServer, restoreAttempted               string
@@ -191,6 +195,7 @@ func (a *app) view(c *ui.Context) {
 	a.builds++
 	a.metrics.Builds++
 	a.applyAppearance(c)
+	a.restoreMandatoryUpdate()
 	// The local web workspace replaces the whole window; the native local mode
 	// only owns the Host, so the normal native surfaces stay in place.
 	if a.localRuntime != nil && !a.localRuntime.native {
@@ -278,7 +283,9 @@ func (a *app) view(c *ui.Context) {
 	a.mutationReviewView(c)
 	a.jobDetailView(c)
 	a.goalEditView(c)
+	a.updateDialogView(c)
 	a.scheduleDetailView(c)
+	a.mandatoryUpdateView(c)
 	a.workspaceCreateView(c)
 	if a.compat != nil && a.compatPlacement == "imagePreview" {
 		a.imagePreviewView(c)

@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/ui"
 )
 
 // The fixture below is the output of the release tooling, not of this package:
@@ -603,25 +604,27 @@ func TestCheckForUpdatesOffersTheDownloadPage(t *testing.T) {
 	server := httptest.NewServer(updateTestFeedHandler(t, privateKey, feed))
 	t.Cleanup(server.Close)
 	updateFeedURL = server.URL + "/feed.json"
-	shown, opened := setUpdatableDialog(t), setUpdatableOpener(t)
+	opened := setUpdatableOpener(t)
 	setUpdatableClipboard(t)
 	a.checkForUpdates()
-	options := waitForUpdateChannel(t, shown)
-	if !strings.Contains(options.Message, "0.2.3") {
-		t.Errorf("dialog message = %q", options.Message)
+	deadline := time.Now().Add(10 * time.Second)
+	for !a.updateOfferOpen && time.Now().Before(deadline) {
+		time.Sleep(10 * time.Millisecond)
 	}
-	if !strings.Contains(options.Detail, "修复本地工作区恢复时的崩溃") {
-		t.Errorf("dialog detail = %q", options.Detail)
+	if !a.updateOfferOpen || a.updateOffer == nil {
+		t.Fatal("the check did not offer the release")
 	}
-	if !strings.Contains(options.Detail, "手动安装") {
-		t.Errorf("dialog detail does not say the install is manual: %q", options.Detail)
+	if a.updateOffer.Version != release.Version {
+		t.Errorf("offered %q", a.updateOffer.Version)
 	}
-	if strings.Join(options.Buttons, "|") != "稍后|复制链接|打开下载页" {
-		t.Errorf("buttons = %v", options.Buttons)
+	detail := updateOfferDetail(*a.updateOffer, currentAppVersion())
+	if !strings.Contains(detail, "修复本地工作区恢复时的崩溃") {
+		t.Errorf("detail = %q", detail)
 	}
-	if options.DefaultButton != 2 || options.CancelButton != 0 {
-		t.Errorf("default/cancel = %d/%d", options.DefaultButton, options.CancelButton)
+	if !strings.Contains(detail, "手动安装") {
+		t.Errorf("detail does not say the install is manual: %q", detail)
 	}
+	a.openUpdateDownloadPage(*a.updateOffer)
 	if url := waitForUpdateChannel(t, opened); url != release.DownloadURL {
 		t.Errorf("opened %q, want %q", url, release.DownloadURL)
 	}
@@ -753,25 +756,26 @@ func TestOfferUpdateRespectsLaterAndCopy(t *testing.T) {
 	release := updateTestRelease()
 	for _, test := range []struct {
 		name   string
-		button int
+		label  string
 		open   bool
 		clip   bool
 		notice string
 	}{
-		{name: "later does nothing", button: 0},
-		{name: "copy link copies it", button: 1, clip: true, notice: "下载链接已复制。"},
-		{name: "open page opens it", button: 2, open: true},
+		{name: "later does nothing", label: "稍后"},
+		{name: "copy link copies it", label: "复制链接", clip: true, notice: "下载链接已复制。"},
+		{name: "open page opens it", label: "打开下载页", open: true},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			a := updateTestApp()
-			previous := updateDialog
-			updateDialog = func(mygo.MessageOptions) (mygo.MessageResult, error) {
-				return mygo.MessageResult{Button: test.button}, nil
-			}
-			t.Cleanup(func() { updateDialog = previous })
 			opened := setUpdatableOpener(t)
 			written := setUpdatableClipboard(t)
 			a.offerUpdate(release)
+			tt := ui.NewTester(func(c *ui.Context) { a.updateDialogView(c) }, 800, 600)
+			tt.Frame()
+			if err := tt.Click(test.label); err != nil {
+				t.Fatal(err)
+			}
+			tt.Frame()
 			if test.open {
 				if url := waitForUpdateChannel(t, opened); url != release.DownloadURL {
 					t.Errorf("opened %q", url)
@@ -1004,5 +1008,30 @@ func TestRunUpdateCheckOnceNeedsAVersion(t *testing.T) {
 	}
 	if evidence.Message != updateUnknownVersionNotice {
 		t.Errorf("message = %q", evidence.Message)
+	}
+}
+
+func TestUpdateIsMandatoryComparesHostProtocol(t *testing.T) {
+	release := updateRelease{MinimumRuntimeHostProtocol: 3}
+	if !updateIsMandatory(release, 2) {
+		t.Fatal("older protocol not mandatory")
+	}
+	if updateIsMandatory(release, 3) || updateIsMandatory(release, 0) {
+		t.Fatal("mandatory for current/unknown protocol")
+	}
+	if itoa(12) != "12" || itoa(0) != "0" {
+		t.Fatal("itoa")
+	}
+}
+
+func TestRestoreMandatoryUpdateBlocksOlderRuntime(t *testing.T) {
+	previous := updatePrefs.Mandatory
+	t.Cleanup(func() { updatePrefs.Mandatory = previous })
+	release := updateRelease{Version: "9.9.9", MinimumRuntimeHostProtocol: 3, DownloadURL: "https://example.com/app"}
+	updatePrefs.Mandatory = &release
+	a := &app{localRuntime: &localRuntime{payload: &runtimePayload{HostProtocol: 2}}}
+	a.restoreMandatoryUpdate()
+	if a.mandatoryUpdate == nil || a.mandatoryUpdate.Version != "9.9.9" {
+		t.Fatalf("mandatory = %+v", a.mandatoryUpdate)
 	}
 }
