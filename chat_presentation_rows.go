@@ -169,6 +169,7 @@ func (a *app) buildPresentationTurnRows(turn int, ids []string, cache *chatRowsC
 	type item struct {
 		ref              chatPartRef
 		assistant, input bool
+		context          bool
 		barrier          bool
 	}
 	items := make([]item, 0, len(ids)*2)
@@ -180,7 +181,11 @@ func (a *app) buildPresentationTurnRows(turn int, ids []string, cache *chatRowsC
 		}
 		m := &a.current.Messages[i]
 		segment := cache.segments[id]
-		barrier := previousSegment != segment
+		contextPart := m.Context != nil || m.Kind == "context" || m.Kind == "compaction"
+		// A context injection belongs to the process that consumed it. The
+		// reference keeps it inside the activity group; treating its segment
+		// as a barrier is what produced two standalone "上下文注入" rows.
+		barrier := previousSegment != segment && !contextPart
 		if key, ok := index.payloads[id]; ok {
 			step := p.Steps[index.steps[key]]
 			ref := chatPartRef{NodeKey: step.NodeKey, PayloadID: step.PayloadID, AnchorSeq: step.AnchorSeq, Turn: step.Turn, Step: step.Step}
@@ -204,7 +209,7 @@ func (a *app) buildPresentationTurnRows(turn int, ids []string, cache *chatRowsC
 		if m.Kind == "attempt" || m.Role == "assistant" {
 			continue
 		}
-		items = append(items, item{ref: chatPartRef{NodeKey: m.ID, PayloadID: m.ID, AnchorSeq: float64(m.Seq), Turn: turn, Step: m.Step, cachedKey: index.partKey(m.ID, "")}, input: m.Role == "user" && m.Kind != "context", barrier: barrier})
+		items = append(items, item{ref: chatPartRef{NodeKey: m.ID, PayloadID: m.ID, AnchorSeq: float64(m.Seq), Turn: turn, Step: m.Step, cachedKey: index.partKey(m.ID, "")}, input: m.Role == "user" && m.Kind != "context", context: contextPart, barrier: barrier})
 		previousSegment = segment
 	}
 	rows := make([]chatRow, 0, len(items))
@@ -272,6 +277,11 @@ func (a *app) buildPresentationTurnRows(turn int, ids []string, cache *chatRowsC
 		if ready && !it.input {
 			s := t.Spec
 			process = r.AnchorSeq >= s.ProcessStartSeq && (s.AnswerAnchorSeq == nil || r.AnchorSeq < *s.AnswerAnchorSeq || (r.Part == "reasoning" && s.AnswerStep != nil && r.Step == *s.AnswerStep))
+			// Context injections after the answer still belong to the process
+			// the Turn ran, so they must not become standalone transcript rows.
+			if it.context {
+				process = true
+			}
 			if it.assistant && r.Part == "response" && cache.replies == "all" {
 				process = false
 			}
@@ -301,7 +311,7 @@ func (a *app) buildPresentationTurnRows(turn int, ids []string, cache *chatRowsC
 		}
 	}
 	flush("tail")
-	if kind := string(t.EndReasonKind); kind == "error" || kind == "max-tokens" || kind == "max_tokens" {
+	if kind := string(t.EndReasonKind); kind == "error" || kind == "max-tokens" || kind == "max_tokens" || kind == "interrupted" {
 		notice := chatRow{ID: fmt.Sprintf("notice:%d", turn), Notice: true, Turn: turn, NoticeKind: kind}
 		if detail := a.turnErrorDetail(turn); detail != "" {
 			notice.NoticeText = detail
@@ -329,5 +339,46 @@ func (a *app) buildPresentationTurnRows(turn int, ids []string, cache *chatRowsC
 			rows[i].CanCollapse = canCollapse && t.FoldEligible && cache.detail != "verbose"
 		}
 	}
-	return rows
+	return a.mergeContextProcessGroups(rows)
+}
+
+// mergeContextProcessGroups folds a context-only activity group into the
+// Turn's other activity group. The reference keeps injected context inside the
+// process that consumed it; a segment boundary here otherwise leaves a second
+// "已注入上下文" summary row that the original never draws.
+func (a *app) mergeContextProcessGroups(rows []chatRow) []chatRow {
+	isContext := func(part chatPartRef) bool {
+		m := a.chatPartMessage(part)
+		return m != nil && (m.Context != nil || m.Kind == "context" || m.Kind == "compaction")
+	}
+	contextOnly := func(row chatRow) bool {
+		if !row.Group || len(row.GroupParts) == 0 {
+			return false
+		}
+		for _, part := range row.GroupParts {
+			if !isContext(part) {
+				return false
+			}
+		}
+		return true
+	}
+	target := -1
+	for i, row := range rows {
+		if row.Group && len(row.GroupParts) > 0 && !contextOnly(row) {
+			target = i
+			break
+		}
+	}
+	if target < 0 {
+		return rows
+	}
+	merged := make([]chatRow, 0, len(rows))
+	for i, row := range rows {
+		if i != target && contextOnly(row) {
+			rows[target].GroupParts = append(rows[target].GroupParts, row.GroupParts...)
+			continue
+		}
+		merged = append(merged, row)
+	}
+	return merged
 }

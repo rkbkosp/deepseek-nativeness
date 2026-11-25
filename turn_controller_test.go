@@ -29,7 +29,7 @@ func TestTurnControllerIsSingleForAllRepliesAndSharesFoldState(t *testing.T) {
 	}
 	tt := ui.NewTester(a.view, 1280, 820)
 	tt.Frame()
-	if !tt.HasText("latest response") || tt.HasText("思考") {
+	if !tt.HasText("latest response") || tt.HasText("已完成分析") {
 		t.Fatal("all replies must remain visible while their independent reasoning folds")
 	}
 	if err := tt.Click("轮次执行过程 1"); err != nil {
@@ -37,7 +37,7 @@ func TestTurnControllerIsSingleForAllRepliesAndSharesFoldState(t *testing.T) {
 	}
 	tt.Frame()
 	tt.Frame()
-	if !tt.HasText("思考") || !tt.HasText("latest response") {
+	if !tt.HasText("已完成分析") || !tt.HasText("latest response") {
 		t.Fatal("shared turn control did not reveal all reasoning groups")
 	}
 	count := 0
@@ -54,7 +54,7 @@ func TestTurnControllerIsSingleForAllRepliesAndSharesFoldState(t *testing.T) {
 	}
 	tt.Frame()
 	tt.Frame()
-	if tt.HasText("思考") {
+	if tt.HasText("已完成分析") {
 		t.Fatal("one control failed to close every process segment")
 	}
 	after, _ := json.Marshal(a.current.Messages)

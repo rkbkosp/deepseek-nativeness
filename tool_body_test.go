@@ -122,7 +122,10 @@ func TestTodoRowExpandsItsPlanWithoutOutput(t *testing.T) {
 		t.Fatalf("plan row is not clickable: %v", err)
 	}
 	tt.Frame()
-	if !tt.HasText(`"content": "补齐工具行详情"`) || !tt.HasText(`"status": "in_progress"`) {
-		t.Fatalf("plan arguments did not open: %v", tt.Texts())
+	if !tt.HasText("任务清单") || !tt.HasText("补齐工具行详情") || !tt.HasText("1 项") {
+		t.Fatalf("plan checklist did not open: %v", tt.Texts())
+	}
+	if tt.HasText(`"content": "补齐工具行详情"`) {
+		t.Fatalf("plan fell back to raw JSON: %v", tt.Texts())
 	}
 }

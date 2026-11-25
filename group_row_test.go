@@ -11,7 +11,7 @@ func TestActivityGroupDescriptorUsesProcessCategories(t *testing.T) {
 	}}
 	parts := []chatPartRef{{NodeKey: "r", PayloadID: "r", Part: "reasoning"}, {NodeKey: "t", PayloadID: "t"}}
 	title, icon := a.groupDescriptor(parts)
-	if title != "思考、运行命令" || icon != "think-outline" {
+	if title != "执行了命令" || icon != "api-outline" {
 		t.Fatalf("descriptor=%q %q", title, icon)
 	}
 }

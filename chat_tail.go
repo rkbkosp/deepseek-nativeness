@@ -70,16 +70,7 @@ func assistantPlainText(m *message) string {
 }
 
 func formatMessageClock(ms float64) string {
-	t := time.UnixMilli(int64(ms))
-	now := time.Now()
-	clock := t.Format("15:04")
-	if t.Year() == now.Year() && t.YearDay() == now.YearDay() {
-		return clock
-	}
-	if t.Year() == now.Year() {
-		return fmt.Sprintf("%d月%d日 %s", t.Month(), t.Day(), clock)
-	}
-	return fmt.Sprintf("%d年%d月%d日 %s", t.Year(), t.Month(), t.Day(), clock)
+	return time.UnixMilli(int64(ms)).Format("15:04")
 }
 
 func (a *app) runningStartedAt() time.Time {
@@ -166,6 +157,13 @@ func (a *app) tailActionsView(c *ui.Context, row chatRow, hovered bool, latest i
 	if m == nil || m.Role != "assistant" || m.Streaming || !a.turnHasEnded(row.Turn, latest) {
 		return
 	}
+	// A Turn the restart recovery closed (interrupted/error) ends with the
+	// terminal failure row, not with a reply's hover actions. The reference
+	// draws no invisible 28px action rail there; leaving it in the flow pushed
+	// the failure row up and added a gap before the composer.
+	if row.ProcessReason == "interrupted" || row.ProcessReason == "error" {
+		return
+	}
 	visible := hovered || row.Turn == latest
 	opacity := float32(.0)
 	if visible {
@@ -181,15 +179,48 @@ func (a *app) tailActionsView(c *ui.Context, row chatRow, hovered bool, latest i
 		a.actionButton(c, "无帮助 "+m.ID, "不喜欢这条回复", "dislike-outline", 17, feedbackID != "", func() {
 			a.openFeedback("negative", feedbackID)
 		})
+		if quote := quoteMessageText(*m); quote != "" {
+			a.actionButton(c, "引用消息 "+m.ID, "引用到输入框", "new-chat-outline", 17, true, func() {
+				a.quoteMessage(quote)
+			})
+		}
 		forkEnabled := a.can("forkSession") && m.Seq > 0
 		a.actionButton(c, "分叉消息 "+m.ID, "在新对话中分支", "branch-outline", 17, forkEnabled, func() {
 			a.forkAtMessage(*m)
 		})
 		if a.uiPrefs.UsageDetail == "detailed" {
 			if usage, ok := parseMessageUsage(m.Usage); ok {
-				ui.Row(c).Gap(4).AlignItems(ui.Center).Children(func() {
+				open := a.foldState("usage:"+m.ID, false)
+				anchor := ui.ButtonBase(c).Padding(0).Gap(4).Label("单轮用量").Children(func() {
 					icon(c, "data-outline", 14).TextColor(a.colors.Tertiary)
 					ui.Text(c, "用量 "+formatTokenCount(usage.total())+" tok").FontSize(12).TextColor(a.colors.Tertiary)
+				})
+				ui.PopoverBase(c, anchor, open, func(panel ui.Element) {
+					panel.Padding(12).Radius(12).Background(a.colors.Popup).Border(1, a.theme.Border).Gap(6)
+					ui.Text(c, "本轮用量").FontSize(12).FontWeight(500)
+					for _, row := range []struct {
+						label string
+						value int64
+					}{
+						{"输入", usage.InputTokens},
+						{"输出", usage.OutputTokens},
+						{"缓存读取", usage.CacheReadTokens},
+						{"缓存写入", usage.CacheWriteTokens},
+						{"推理", usage.ReasoningTokens},
+						{"总计", usage.total()},
+					} {
+						if row.value == 0 && row.label != "总计" {
+							continue
+						}
+						ui.Row(c).Gap(18).Children(func() {
+							ui.Text(c, row.label).FontSize(12).TextColor(a.colors.Tertiary).Grow(1)
+							value := formatTokenCount(row.value) + " tok"
+							if total := usage.total(); total > 0 && row.label != "总计" {
+								value += fmt.Sprintf(" · %.0f%%", float64(row.value)*100/float64(total))
+							}
+							ui.Text(c, value).Font(monoFont(a)).FontSize(11).TextColor(a.colors.Secondary)
+						})
+					}
 				})
 			}
 		}
@@ -197,6 +228,30 @@ func (a *app) tailActionsView(c *ui.Context, row chatRow, hovered bool, latest i
 			ui.Text(c, formatMessageClock(m.Time)).FontSize(12).TextColor(a.colors.Tertiary)
 		}
 	})
+}
+
+// quoteMessageText is the text a quote-to-composer action can quote: the
+// message's own text, or its assistant blocks when the prose lives there.
+func quoteMessageText(m message) string {
+	text := strings.TrimSpace(m.Text)
+	if text == "" {
+		var parts []string
+		for _, block := range m.AssistantBlocks {
+			if block.Kind == "text" && strings.TrimSpace(block.Text) != "" {
+				parts = append(parts, strings.TrimSpace(block.Text))
+			}
+		}
+		text = strings.Join(parts, "\n\n")
+	}
+	if len(text) > 2000 {
+		text = text[:2000] + "…"
+	}
+	return text
+}
+
+func (a *app) quoteMessage(text string) {
+	quoted := "> " + strings.ReplaceAll(text, "\n", "\n> ") + "\n\n"
+	a.draft = quoted
 }
 
 func (a *app) forkAtMessage(m message) {
