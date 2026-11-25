@@ -24,7 +24,12 @@ type app struct {
 	composerDrafts                                           map[string]*composerDraftState
 	composerBaselineKey                                      string
 	sidebarLayoutWidth                                       float32
+	scheduleCounts                                           map[string]int
+	schedules                                                []scheduleRecord
 	savedFiles                                               map[string]string
+	presentedFiles                                           map[int][]presentedFile
+	scheduleDetail                                           *scheduleRecord
+	scheduleDetailOpen                                       bool
 	modelMenuWidth, modelMenuHeight                          float32
 	sendIntents                                              map[string]*sendIntent
 	accountScope, authServer, restoreAttempted               string
@@ -263,6 +268,7 @@ func (a *app) view(c *ui.Context) {
 		a.settingsView(c)
 	}
 	a.mutationReviewView(c)
+	a.scheduleDetailView(c)
 	a.workspaceCreateView(c)
 	if a.compat != nil && a.compatPlacement == "imagePreview" {
 		a.imagePreviewView(c)

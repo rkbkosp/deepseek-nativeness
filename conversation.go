@@ -227,6 +227,7 @@ func (a *app) conversation(c *ui.Context) {
 							a.messageView(c, r.Messages[0])
 						}
 						if r.Tail {
+							a.turnDeliverablesView(c, r.Turn)
 							a.tailActionsView(c, r, item.Hovered(), latestTurn(rows))
 						}
 					})

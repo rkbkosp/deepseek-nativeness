@@ -175,6 +175,7 @@ func (a *app) notification(ev bridge.Notification) {
 		// Adapters, settings and credential rows can change catalogs, grants and
 		// the command list; the original client refreshes its stores here too.
 		a.invalidateScopeAnswers()
+		a.fetchSchedules()
 	}
 	if a.compat != nil && ev.Method == "status" {
 		_ = compatNotifications.EmitPage(a.compat.Page(), ev)
@@ -344,7 +345,10 @@ func (a *app) refreshWorkspaces(after func()) {
 }
 
 func (a *app) fetchWorkspaces() {
-	a.refreshWorkspaces(func() { a.fetchSessions() })
+	a.refreshWorkspaces(func() {
+		a.fetchSessions()
+		a.fetchSchedules()
+	})
 }
 
 func (a *app) selectWorkspace(id string) {
@@ -485,6 +489,7 @@ func (a *app) openSessionWith(id string, failed func(error)) {
 			return err
 		}
 		a.replaceSnapshot(s)
+		a.fetchDeliverables()
 		if !a.applyCachedCapabilities() {
 			a.fetchCapabilities()
 		}
