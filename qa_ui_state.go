@@ -12,11 +12,75 @@ package main
 // performs the same calls a click would.
 
 import (
+	"encoding/json"
 	"log"
+	"os"
+	"strings"
 	"time"
+
+	"github.com/egoist/mygo/ui"
 
 	"github.com/egoist/mygo"
 )
+
+var qaLayoutLog bool
+var qaCatalogLog bool
+var qaCatalogPath string
+var qaSessionTitle string
+var qaStepsOverride string
+var qaWorkspaceName string
+var qaFontSizeOverride float32
+var qaCodeWorkViewOverride string
+var qaLayoutSeen = map[string]bool{}
+var qaCatalogSeen = map[string]bool{}
+
+// qaLayout logs one element's laid-out rectangle once per process. It exists
+// so a parity run can compare numbers with the reference DOM instead of
+// guessing vertical offsets from screenshots.
+func (a *app) qaLayout(name string, r ui.Rect) {
+	if !qaLayoutLog || qaLayoutSeen[name] {
+		return
+	}
+	qaLayoutSeen[name] = true
+	log.Printf("qa-layout %s x=%.1f y=%.1f w=%.1f h=%.1f", name, r.X, r.Y, r.W, r.H)
+}
+
+// qaCatalog logs the catalog rows the client actually decoded, once per kind.
+// It answers whether a visible sidebar difference is ordering or missing data.
+func (a *app) qaCatalog(kind string, value any) {
+	if !qaCatalogLog || qaCatalogSeen[kind] {
+		return
+	}
+	qaCatalogSeen[kind] = true
+	switch rows := value.(type) {
+	case []workspace:
+		if qaCatalogPath != "" {
+			data, err := json.MarshalIndent(rows, "", "  ")
+			if err == nil {
+				err = os.WriteFile(qaCatalogPath, append(data, '\n'), 0600)
+			}
+			if err != nil {
+				log.Printf("qa-catalog write %s: %v", qaCatalogPath, err)
+			}
+		}
+		for _, w := range rows {
+			log.Printf("qa-catalog workspace id=%q name=%q path=%q sessions=%d", w.ID, w.Name, w.Path, len(w.SessionIDs))
+		}
+	case []session:
+		log.Printf("qa-catalog sessions count=%d", len(rows))
+	}
+}
+
+// qaWorkspace returns the named Workspace, or the first one when no name was
+// given. It keeps a capture on the same Workspace the reference selected.
+func (a *app) qaWorkspace() *workspace {
+	for i := range a.workspaces {
+		if qaWorkspaceName == "" || strings.Contains(a.workspaces[i].Name, qaWorkspaceName) || strings.Contains(a.workspaces[i].Path, qaWorkspaceName) {
+			return &a.workspaces[i]
+		}
+	}
+	return nil
+}
 
 // qaUIStates are the states a review run may request. They exist because each
 // one used to need a click that automation cannot make.
